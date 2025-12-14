@@ -56,7 +56,7 @@ export default class EncryptionService {
       const combined = Buffer.from(encryptedData, 'base64')
 
       // Extract components
-      const salt = combined.subarray(0, SALT_LENGTH)
+      // const salt = combined.subarray(0, SALT_LENGTH)
       const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH)
       const authTag = combined.subarray(
         SALT_LENGTH + IV_LENGTH,

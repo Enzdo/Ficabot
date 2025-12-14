@@ -29,9 +29,9 @@ export default class ChatMessage extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  @belongsTo(() => import('#models/user'))
+  @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
 
-  @belongsTo(() => import('#models/pet'))
+  @belongsTo(() => Pet)
   declare pet: BelongsTo<typeof Pet>
 }

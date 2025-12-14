@@ -30,6 +30,18 @@ export default class Pet extends BaseModel {
   @column()
   declare avatarUrl: string | null
 
+  @column()
+  declare shareToken: string | null
+
+  @column()
+  declare isPublic: boolean
+
+  @column()
+  declare vetToken: string | null
+
+  @column.dateTime()
+  declare vetTokenExpiresAt: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
