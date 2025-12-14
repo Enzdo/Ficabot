@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface-50 text-gray-900 antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Empêche le centrage vertical global appliqué par le wrapper Nuxt */
+  div.min-h-screen.bg-surface-50.flex.flex-col.justify-center {
+    justify-content: flex-start;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-3 sm:py-2 border border-transparent text-base sm:text-sm font-semibold rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98];
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 shadow-primary-600/20;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 shadow-secondary-600/20;
+  }
+  
+  .btn-outline {
+    @apply btn border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 focus:ring-primary-500;
+  }
+  
+  .btn-danger {
+    @apply btn bg-red-50 text-red-600 hover:bg-red-100 border border-red-100 focus:ring-red-500;
+  }
+  
+  .input {
+    @apply block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors sm:text-sm;
+  }
+  
+  .label {
+    @apply block text-sm font-semibold text-gray-700 mb-1.5;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 overflow-hidden;
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
