@@ -8,7 +8,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </NuxtLink>
-        <h1 class="font-bold text-gray-900 text-lg truncate">🏥 Vétérinaires proches</h1>
+        <h1 class="font-bold text-gray-900 text-lg truncate">{{ $t('vets.title') }}</h1>
       </div>
       <button @click="locateMe" class="p-2 bg-primary-100 text-primary-600 rounded-full shrink-0" :disabled="locating">
         <svg v-if="!locating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
@@ -26,28 +26,28 @@
         :class="filter === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700'"
         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
       >
-        🐾 Tous
+        🐾 {{ $t('vets.filters.all') }}
       </button>
       <button 
         @click="filter = 'dog'" 
         :class="filter === 'dog' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700'"
         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
       >
-        🐕 Chiens
+        🐕 {{ $t('vets.filters.dog') }}
       </button>
       <button 
         @click="filter = 'cat'" 
         :class="filter === 'cat' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700'"
         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
       >
-        🐱 Chats
+        🐱 {{ $t('vets.filters.cat') }}
       </button>
       <button 
         @click="filter = 'emergency'" 
         :class="filter === 'emergency' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'"
         class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
       >
-        🆘 Urgences 24h
+        🆘 {{ $t('vets.filters.emergency') }}
       </button>
     </div>
 
@@ -59,7 +59,7 @@
       <div v-if="loading" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
         <div class="text-center">
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto mb-3"></div>
-          <p class="text-gray-600 text-sm">Recherche des vétérinaires...</p>
+          <p class="text-gray-600 text-sm">{{ $t('vets.searching') }}</p>
         </div>
       </div>
 
@@ -67,10 +67,10 @@
       <div v-if="!loading && vets.length === 0 && !userLocation" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto">
           <div class="text-4xl mb-3">📍</div>
-          <h3 class="font-bold text-gray-900 mb-2">Géolocalisation requise</h3>
-          <p class="text-gray-500 text-sm mb-4">Pour trouver les vétérinaires autour de vous, nous avons besoin de votre position.</p>
+          <h3 class="font-bold text-gray-900 mb-2">{{ $t('vets.location_required.title') }}</h3>
+          <p class="text-gray-500 text-sm mb-4">{{ $t('vets.location_required.message') }}</p>
           <button @click="locateMe" class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg shadow-primary-600/20 active:scale-95 transition-all">
-            Activer ma position
+            {{ $t('vets.location_required.enable') }}
           </button>
         </div>
       </div>
@@ -87,9 +87,9 @@
       </div>
       
       <div class="px-4 pb-2 flex items-center justify-between">
-        <h2 class="font-bold text-gray-900">{{ filteredVets.length }} vétérinaires trouvés</h2>
+        <h2 class="font-bold text-gray-900">{{ $t('vets.found', { count: filteredVets.length }) }}</h2>
         <button @click="sheetExpanded = !sheetExpanded" class="text-primary-600 text-sm font-medium">
-          {{ sheetExpanded ? 'Réduire' : 'Voir tout' }}
+          {{ sheetExpanded ? $t('vets.reduce') : $t('vets.view_all') }}
         </button>
       </div>
 
@@ -147,7 +147,7 @@
                 @click.stop="openDirections(vet)"
                 class="flex-1 py-2 bg-primary-100 text-primary-700 rounded-xl text-sm font-medium"
               >
-                🧭 Y aller
+                🧭 {{ $t('vets.open_gps') }}
               </button>
             </div>
           </div>
@@ -169,6 +169,8 @@ definePageMeta({
   middleware: 'auth',
   layout: false,
 })
+
+const { t } = useI18n()
 
 interface Vet {
   id: string

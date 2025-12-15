@@ -2,8 +2,8 @@
   <div class="space-y-6 pb-20">
     <div class="flex items-center justify-between sticky top-0 bg-surface-50/95 backdrop-blur z-10 py-2">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900">Mes animaux</h1>
-        <p class="text-gray-500 text-sm mt-1">Gérez vos compagnons</p>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $t('pets.title') }}</h1>
+        <p class="text-gray-500 text-sm mt-1">{{ $t('pets.subtitle') }}</p>
       </div>
       <button 
         @click="showAddModal = true"
@@ -25,13 +25,13 @@
       <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-4xl">
         🐾
       </div>
-      <h3 class="text-lg font-bold text-gray-900 mb-2">Aucun animal</h3>
-      <p class="text-gray-500 mb-6 text-sm max-w-[200px]">Ajoutez votre premier compagnon pour commencer à suivre sa santé</p>
+      <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $t('pets.no_pets') }}</h3>
+      <p class="text-gray-500 mb-6 text-sm max-w-[200px]">{{ $t('pets.no_pets_desc') }}</p>
       <button 
         @click="showAddModal = true"
         class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-md shadow-primary-600/20 active:scale-95 transition-all"
       >
-        Ajouter un animal
+        {{ $t('pets.add_pet') }}
       </button>
     </div>
 
@@ -49,16 +49,16 @@
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start">
             <h3 class="text-lg font-bold text-gray-900 truncate">{{ pet.name }}</h3>
-            <span v-if="pet.species === 'dog'" class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-medium">Chien</span>
-            <span v-else class="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-medium">Chat</span>
+            <span v-if="pet.species === 'dog'" class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-medium">{{ $t('pets.dog') }}</span>
+            <span v-else class="bg-orange-50 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-medium">{{ $t('pets.cat') }}</span>
           </div>
-          <p class="text-gray-500 text-sm truncate">{{ pet.breed || 'Race non spécifiée' }}</p>
+          <p class="text-gray-500 text-sm truncate">{{ pet.breed || $t('pets.breed_unspecified') }}</p>
           <div class="flex items-center mt-1.5 space-x-3 text-xs text-gray-400">
             <span v-if="pet.birthDate" class="flex items-center">
               <span class="mr-1">🎂</span> {{ calculateAge(pet.birthDate) }}
             </span>
             <span v-if="pet.weight" class="flex items-center">
-              <span class="mr-1">⚖️</span> {{ pet.weight }}kg
+              <span class="mr-1">⚖️</span> {{ $t('pets.weight_unit', { value: pet.weight }) }}
             </span>
           </div>
         </div>
@@ -74,7 +74,7 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-gray-50">
-          <h2 class="text-xl font-bold text-gray-900">Ajouter un animal</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('pets.add_pet_title') }}</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -84,49 +84,49 @@
 
         <form @submit.prevent="handleSubmit" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">Espèce</label>
+            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $t('pets.species') }}</label>
             <div class="grid grid-cols-2 gap-4">
               <label class="cursor-pointer group">
                 <input type="radio" v-model="form.species" value="dog" class="peer sr-only">
                 <div class="bg-white border-2 border-gray-200 peer-checked:border-primary-500 peer-checked:bg-primary-50/50 rounded-2xl p-4 text-center transition-all group-active:scale-95">
                   <div class="text-4xl mb-2 transition-transform peer-checked:scale-110">🐕</div>
-                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">Chien</span>
+                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">{{ $t('pets.dog') }}</span>
                 </div>
               </label>
               <label class="cursor-pointer group">
                 <input type="radio" v-model="form.species" value="cat" class="peer sr-only">
                 <div class="bg-white border-2 border-gray-200 peer-checked:border-primary-500 peer-checked:bg-primary-50/50 rounded-2xl p-4 text-center transition-all group-active:scale-95">
                   <div class="text-4xl mb-2 transition-transform peer-checked:scale-110">🐱</div>
-                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">Chat</span>
+                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">{{ $t('pets.cat') }}</span>
                 </div>
               </label>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.name') }}</label>
             <input type="text" v-model="form.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Rex">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Race (optionnel)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.breed_optional') }}</label>
             <input type="text" v-model="form.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Labrador">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Date de naissance</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.birthdate') }}</label>
               <input type="date" v-model="form.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Poids (kg)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.weight') }} (kg)</label>
               <input type="number" v-model="form.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="25.5">
             </div>
           </div>
 
           <div class="pt-2">
             <button type="submit" class="w-full bg-primary-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-primary-600/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed" :disabled="loading">
-              {{ loading ? 'Création en cours...' : 'Ajouter mon animal' }}
+              {{ loading ? $t('pets.creating') : $t('pets.submit') }}
             </button>
           </div>
         </form>
@@ -142,6 +142,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t } = useI18n()
 const petsStore = usePetsStore()
 const showAddModal = ref(false)
 const loading = ref(false)
@@ -189,8 +190,8 @@ const calculateAge = (date: string | Date) => {
   const years = Math.floor(now.diff(birth, 'years').years)
   const months = Math.floor(now.diff(birth, 'months').months % 12)
   
-  if (years > 0) return `${years} an${years > 1 ? 's' : ''}`
-  return `${months} mois`
+  if (years > 0) return t('pets.age.year', years, { count: years })
+  return t('pets.age.month', months, { count: months })
 }
 </script>
 

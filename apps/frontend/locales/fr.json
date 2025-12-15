@@ -8,7 +8,9 @@
     "edit": "Modifier",
     "delete": "Supprimer",
     "confirm": "Confirmer",
-    "back": "Retour"
+    "back": "Retour",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -81,5 +83,336 @@
     "general_option": "Général (aucun animal)",
     "create": "Créer",
     "conversation_placeholder": "Ex: Questions sur mon chien"
+  },
+  "public_profile": {
+    "not_found_title": "Profil non trouvé",
+    "not_found_desc": "Ce profil n'existe pas ou est privé",
+    "back_home": "Retour à l'accueil",
+    "badges": "Badges",
+    "health": "Santé",
+    "vaccines": "Vaccins",
+    "allergies": "Allergies",
+    "conditions": "Conditions",
+    "owner": "Propriétaire",
+    "footer": "Profil créé avec Ficabot 🐾",
+    "cta": "Créer le profil de mon animal →"
+  },
+  "vet_view": {
+    "loading": "Chargement du dossier médical...",
+    "error_title": "Accès non disponible",
+    "mode_badge": "Mode Vétérinaire",
+    "readonly_badge": "Lecture seule",
+    "title": "Dossier médical",
+    "valid_until": "Accès valide jusqu'au {date}",
+    "unknown_breed": "Race inconnue",
+    "owner": "Propriétaire",
+    "history_title": "Historique médical",
+    "no_records": "Aucun enregistrement médical",
+    "next_appointment": "Prochain RDV : {date}",
+    "summary": "Résumé",
+    "vaccines": "Vaccins",
+    "treatments": "Traitements",
+    "visits": "Visites",
+    "disclaimer": "Cet accès est en lecture seule et expire automatiquement.",
+    "provider": "Données fournies par Ficabot.",
+    "invalid_link": "Lien invalide ou expiré",
+    "connection_error": "Erreur de connexion"
+  },
+  "auth": {
+    "email": "Email",
+    "email_placeholder": "votre@email.com",
+    "password": "Mot de passe",
+    "password_placeholder": "••••••••",
+    "password_min_length": "Minimum 8 caractères",
+    "confirm_password": "Confirmer le mot de passe",
+    "forgot_password": "Oublié ?",
+    "login": {
+      "title": "Connexion",
+      "welcome": "Heureux de vous revoir ! 👋",
+      "loading": "Connexion...",
+      "submit": "Se connecter",
+      "no_account": "Pas encore de compte ?",
+      "create_account": "Créer un compte",
+      "error_credentials": "Identifiants incorrects"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "welcome": "Rejoignez l'aventure Ficabot ! 🚀",
+      "loading": "Création...",
+      "submit": "Créer mon compte",
+      "has_account": "Déjà un compte ?",
+      "login": "Se connecter",
+      "password_mismatch": "Les mots de passe ne correspondent pas",
+      "error": "Erreur lors de la création du compte"
+    }
+  },
+  "landing": {
+    "subtitle": "Le compagnon santé intelligent pour vos animaux de compagnie 🐕🐱",
+    "features": {
+      "tracking": "Suivi",
+      "reminders": "Rappels",
+      "ai": "IA"
+    },
+    "cta": {
+      "start": "Commencer maintenant",
+      "login": "J'ai déjà un compte"
+    },
+    "footer": "Prenez soin d'eux comme ils prennent soin de vous ❤️"
+  },
+  "pets": {
+    "title": "Mes animaux",
+    "subtitle": "Gérez vos compagnons",
+    "no_pets": "Aucun animal",
+    "no_pets_desc": "Ajoutez votre premier compagnon pour commencer à suivre sa santé",
+    "add_pet": "Ajouter un animal",
+    "add_pet_title": "Ajouter un animal",
+    "species": "Espèce",
+    "dog": "Chien",
+    "cat": "Chat",
+    "name": "Nom",
+    "breed": "Race",
+    "breed_optional": "Race (optionnel)",
+    "breed_unspecified": "Race non spécifiée",
+    "birthdate": "Date de naissance",
+    "weight": "Poids",
+    "creating": "Création en cours...",
+    "submit": "Ajouter mon animal",
+    "age": {
+      "year": "{count} an | {count} ans",
+      "month": "{count} mois"
+    },
+    "weight_unit": "{value}kg",
+    "not_found": "Animal non trouvé",
+    "back_to_list": "Retour à la liste",
+    "age_label": "Âge",
+    "actions": {
+      "health_book": "Carnet de santé",
+      "full_info": "Infos complètes",
+      "ai_assistant": "Assistant IA",
+      "ask_question": "Poser une question",
+      "photos": "Galerie photos",
+      "memories": "Album souvenirs",
+      "symptoms": "Symptômes",
+      "health_log": "Journal de santé",
+      "food": "Alimentation",
+      "meal_tracking": "Suivi repas",
+      "history": "Historique",
+      "medical_events": "Événements médicaux",
+      "diet": "Programme",
+      "weight_loss": "Perte de poids",
+      "ai_analysis": "Analyse IA",
+      "health_photo": "Photo santé"
+    },
+    "share": {
+      "public_profile": "Profil public",
+      "share_desc": "Partager le profil de {name}",
+      "make_public": "Rendre public",
+      "is_public": "Public",
+      "link": "Lien de partage",
+      "copy": "Copier",
+      "copied": "Lien copié !",
+      "copy_error": "Impossible de copier le lien"
+    },
+    "vet_access": {
+      "title": "Accès vétérinaire",
+      "desc": "Partager le dossier médical avec votre véto",
+      "generate": "Générer",
+      "revoke": "Révoquer",
+      "link_label": "Lien pour le vétérinaire (valide 7 jours)",
+      "revoke_confirm": "Révoquer l'accès vétérinaire ?"
+    },
+    "pdf": {
+      "title": "Export PDF",
+      "desc": "Télécharger le carnet de santé complet",
+      "download": "Télécharger",
+      "generating": "Génération...",
+      "error": "Impossible d'ouvrir la fenêtre d'export"
+    },
+    "records": {
+      "recent": "Activités récentes",
+      "see_all": "Tout voir",
+      "empty": "Aucun historique médical",
+      "add": "Ajouter un événement"
+    },
+    "owners": {
+      "title": "Propriétaires",
+      "invite": "Inviter",
+      "main": "Propriétaire principal",
+      "co_owner": "Co-propriétaire",
+      "pending": "En attente d'acceptation",
+      "remove_confirm": "Retirer ce propriétaire ?",
+      "invite_modal": {
+        "title": "Inviter un propriétaire",
+        "email_label": "Email de la personne",
+        "hint": "Cette personne doit avoir un compte Ficabot",
+        "submit": "Envoyer l'invitation",
+        "sending": "Envoi..."
+      }
+    },
+    "shared": {
+      "notice": "Animal partagé",
+      "desc": "Vous avez été invité à suivre cet animal.",
+      "leave": "Quitter cet animal",
+      "leave_confirm": "Quitter cet animal ? Vous n'y aurez plus accès."
+    },
+    "delete": {
+      "button": "Supprimer la fiche de {name}",
+      "confirm": "Êtes-vous sûr de vouloir supprimer cet animal ? Cette action est irréversible."
+    },
+    "edit": {
+      "title": "Modifier {name}",
+      "save": "Enregistrer les modifications"
+    }
+  },
+  "reminders": {
+    "title": "Rappels",
+    "new": "+ Nouveau",
+    "upcoming": "À venir",
+    "completed": "Terminés",
+    "no_reminders": "Aucun rappel à venir",
+    "create_reminder": "Créer un rappel",
+    "types": {
+      "vaccine": "Vaccin",
+      "antiparasitic": "Antiparasitaire",
+      "weighing": "Pesée",
+      "appointment": "RDV véto",
+      "custom": "Autre"
+    },
+    "form": {
+      "title": "Nouveau rappel",
+      "type": "Type",
+      "title_label": "Titre",
+      "title_placeholder": "Ex: Rappel vaccin rage",
+      "pet": "Animal",
+      "date": "Date",
+      "recurring": "Récurrent",
+      "frequency": "Fréquence",
+      "intervals": {
+        "weekly": "Chaque semaine",
+        "monthly": "Chaque mois",
+        "yearly": "Chaque année"
+      },
+      "submit": "Créer le rappel",
+      "submitting": "Création..."
+    },
+    "confirm_delete": "Supprimer ce rappel ?"
+  },
+  "appointments": {
+    "title": "RDV Vétérinaire",
+    "new": "+ Nouveau",
+    "upcoming": "À venir",
+    "history": "Historique",
+    "no_appointments": "Aucun RDV prévu",
+    "plan_appointment": "Planifier un RDV",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "cancel": "Annuler",
+    "mark_completed": "Terminé",
+    "form": {
+      "title": "Nouveau RDV",
+      "reason": "Motif",
+      "reason_placeholder": "Ex: Vaccination annuelle",
+      "pet": "Animal",
+      "date": "Date",
+      "time": "Heure",
+      "vet_name": "Vétérinaire",
+      "vet_placeholder": "Nom du cabinet",
+      "address": "Adresse",
+      "address_placeholder": "Adresse du cabinet",
+      "phone": "Téléphone",
+      "phone_placeholder": "01 23 45 67 89",
+      "notes": "Notes",
+      "notes_placeholder": "Informations complémentaires...",
+      "submit": "Créer le RDV",
+      "submitting": "Création..."
+    },
+    "confirm_cancel": "Annuler ce RDV ?"
+  },
+  "vets": {
+    "title": "Vétérinaires proches",
+    "filters": {
+      "all": "Tous",
+      "dog": "Chiens",
+      "cat": "Chats",
+      "emergency": "Urgences 24h"
+    },
+    "searching": "Recherche des vétérinaires...",
+    "location_required": {
+      "title": "Géolocalisation requise",
+      "message": "Pour trouver les vétérinaires autour de vous, nous avons besoin de votre position.",
+      "enable": "Activer ma position"
+    },
+    "found": "{count} vétérinaires trouvés",
+    "view_all": "Voir tout",
+    "reduce": "Réduire",
+    "open_gps": "Itinéraire"
+  },
+  "expenses": {
+    "title": "Dépenses",
+    "add": "+ Ajouter",
+    "this_month": "Ce mois",
+    "this_year": "Cette année",
+    "no_expenses": "Aucune dépense enregistrée",
+    "delete": "Supprimer",
+    "confirm_delete": "Supprimer cette dépense ?",
+    "categories": {
+      "all": "Tout",
+      "vet": "Vétérinaire",
+      "food": "Nourriture",
+      "accessories": "Accessoires",
+      "grooming": "Toilettage",
+      "insurance": "Assurance",
+      "other": "Autre"
+    },
+    "form": {
+      "title": "Ajouter une dépense",
+      "label": "Titre",
+      "label_placeholder": "Consultation véto...",
+      "amount": "Montant (€)",
+      "date": "Date",
+      "category": "Catégorie",
+      "pet": "Animal (optionnel)",
+      "no_pet": "Aucun",
+      "description": "Description (optionnel)",
+      "submit": "Ajouter",
+      "submitting": "Ajout..."
+    }
+  },
+  "shopping": {
+    "title": "Liste de courses",
+    "add": "+ Ajouter",
+    "no_items": "Aucun article dans la liste",
+    "clear_completed": "Supprimer les {count} articles cochés",
+    "categories": {
+      "all": "Tout",
+      "food": "Nourriture",
+      "treats": "Friandises",
+      "toys": "Jouets",
+      "accessories": "Accessoires",
+      "hygiene": "Hygiène",
+      "health": "Santé",
+      "other": "Autre"
+    },
+    "form": {
+      "title": "Ajouter un article",
+      "name": "Nom de l'article",
+      "name_placeholder": "Croquettes, jouet...",
+      "quantity": "Quantité",
+      "unit": "Unité",
+      "unit_placeholder": "kg, pcs...",
+      "category": "Catégorie",
+      "submit": "Ajouter",
+      "submitting": "Ajout..."
+    }
+  },
+  "badges": {
+    "title": "Mes badges",
+    "points_earned": "{points} points gagnés",
+    "total_points": "Total des points",
+    "earned": "Badges obtenus",
+    "available": "Badges à débloquer",
+    "no_earned": "Aucun badge obtenu pour l'instant",
+    "keep_going": "Continuez à utiliser l'app pour débloquer des badges !",
+    "pts": "pts"
   }
 }

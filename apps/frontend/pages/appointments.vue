@@ -1,16 +1,16 @@
 <template>
   <div class="pb-24">
     <div class="sticky top-0 bg-surface-50/95 backdrop-blur z-10 px-4 py-3 flex items-center justify-between border-b border-gray-100">
-      <h1 class="font-bold text-gray-900 text-xl">📅 RDV Vétérinaire</h1>
+      <h1 class="font-bold text-gray-900 text-xl">{{ $t('appointments.title') }}</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm">
-        + Nouveau
+        {{ $t('appointments.new') }}
       </button>
     </div>
 
     <div class="p-4 space-y-4">
       <!-- Upcoming Appointments -->
       <div v-if="upcomingAppointments.length > 0">
-        <h2 class="font-bold text-gray-700 mb-3">À venir</h2>
+        <h2 class="font-bold text-gray-700 mb-3">{{ $t('appointments.upcoming') }}</h2>
         <div class="space-y-3">
           <div 
             v-for="apt in upcomingAppointments" 
@@ -32,10 +32,10 @@
 
             <div class="flex gap-2 mt-3">
               <button @click="markCompleted(apt.id)" class="flex-1 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium">
-                ✓ Terminé
+                ✓ {{ $t('appointments.mark_completed') }}
               </button>
               <button @click="cancelAppointment(apt.id)" class="flex-1 py-2 bg-red-100 text-red-700 rounded-xl text-sm font-medium">
-                Annuler
+                {{ $t('appointments.cancel') }}
               </button>
             </div>
           </div>
@@ -44,13 +44,13 @@
 
       <div v-else class="text-center py-12">
         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">📅</div>
-        <p class="text-gray-500">Aucun RDV prévu</p>
-        <button @click="showAddModal = true" class="mt-4 text-primary-600 font-medium">Planifier un RDV</button>
+        <p class="text-gray-500">{{ $t('appointments.no_appointments') }}</p>
+        <button @click="showAddModal = true" class="mt-4 text-primary-600 font-medium">{{ $t('appointments.plan_appointment') }}</button>
       </div>
 
       <!-- Past Appointments -->
       <div v-if="pastAppointments.length > 0" class="mt-8">
-        <h2 class="font-bold text-gray-400 mb-3">Historique</h2>
+        <h2 class="font-bold text-gray-400 mb-3">{{ $t('appointments.history') }}</h2>
         <div class="space-y-2">
           <div 
             v-for="apt in pastAppointments" 
@@ -62,7 +62,7 @@
               <p class="text-xs text-gray-400">{{ formatDate(apt.appointmentDate) }} • {{ apt.pet?.name }}</p>
             </div>
             <span :class="apt.status === 'completed' ? 'text-green-600' : 'text-red-400'" class="text-xs font-medium">
-              {{ apt.status === 'completed' ? '✓ Terminé' : '✕ Annulé' }}
+              {{ apt.status === 'completed' ? '✓ ' + $t('appointments.completed') : '✕ ' + $t('appointments.cancelled') }}
             </span>
           </div>
         </div>
@@ -73,18 +73,18 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Nouveau RDV</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('appointments.form.title') }}</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="createAppointment" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Motif *</label>
-            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Vaccination annuelle">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.reason') }} *</label>
+            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.reason_placeholder')">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Animal *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.pet') }} *</label>
             <select v-model="form.petId" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option :value="null" disabled>Sélectionner</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
@@ -93,37 +93,37 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.date') }} *</label>
               <input type="date" v-model="form.appointmentDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.time') }}</label>
               <input type="time" v-model="form.appointmentTime" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Vétérinaire</label>
-            <input type="text" v-model="form.vetName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Nom du cabinet">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.vet_name') }}</label>
+            <input type="text" v-model="form.vetName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.vet_placeholder')">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-            <input type="text" v-model="form.vetAddress" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Adresse du cabinet">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.address') }}</label>
+            <input type="text" v-model="form.vetAddress" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.address_placeholder')">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-            <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="01 23 45 67 89">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.phone') }}</label>
+            <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.phone_placeholder')">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="form.notes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Informations complémentaires..."></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.notes') }}</label>
+            <textarea v-model="form.notes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.notes_placeholder')"></textarea>
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="loading">
-            {{ loading ? 'Création...' : 'Créer le RDV' }}
+            {{ loading ? $t('appointments.form.submitting') : $t('appointments.form.submit') }}
           </button>
         </form>
       </div>
@@ -136,6 +136,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t, locale } = useI18n()
 const petsStore = usePetsStore()
 
 const showAddModal = ref(false)
@@ -165,7 +166,7 @@ const pastAppointments = computed(() =>
 )
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+  return new Date(date).toLocaleDateString(locale.value, { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 const fetchAppointments = async () => {
@@ -195,7 +196,7 @@ const markCompleted = async (id: number) => {
 }
 
 const cancelAppointment = async (id: number) => {
-  if (!confirm('Annuler ce RDV ?')) return
+  if (!confirm(t('appointments.confirm_cancel'))) return
   const api = useApi()
   await api.put(`/appointments/${id}`, { status: 'cancelled' })
   await fetchAppointments()

@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">Créer un compte</h2>
-    <p class="text-center text-gray-500 text-sm mb-8">Rejoignez l'aventure Ficabot ! 🚀</p>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">{{ $t('auth.register.title') }}</h2>
+    <p class="text-center text-gray-500 text-sm mb-8">{{ $t('auth.register.welcome') }}</p>
     
     <form @submit.prevent="handleRegister" class="space-y-5">
       <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
@@ -12,7 +12,7 @@
       </div>
 
       <div class="space-y-1.5">
-        <label for="email" class="text-sm font-semibold text-gray-700 ml-1">Email</label>
+        <label for="email" class="text-sm font-semibold text-gray-700 ml-1">{{ $t('auth.email') }}</label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
@@ -25,14 +25,14 @@
             v-model="form.email"
             type="email"
             class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
-            placeholder="votre@email.com"
+            :placeholder="$t('auth.email_placeholder')"
             required
           />
         </div>
       </div>
 
       <div class="space-y-1.5">
-        <label for="password" class="text-sm font-semibold text-gray-700 ml-1">Mot de passe</label>
+        <label for="password" class="text-sm font-semibold text-gray-700 ml-1">{{ $t('auth.password') }}</label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
@@ -44,7 +44,7 @@
             v-model="form.password"
             type="password"
             class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
-            placeholder="Minimum 8 caractères"
+            :placeholder="$t('auth.password_min_length')"
             minlength="8"
             required
           />
@@ -52,7 +52,7 @@
       </div>
 
       <div class="space-y-1.5">
-        <label for="confirmPassword" class="text-sm font-semibold text-gray-700 ml-1">Confirmer le mot de passe</label>
+        <label for="confirmPassword" class="text-sm font-semibold text-gray-700 ml-1">{{ $t('auth.confirm_password') }}</label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
@@ -64,7 +64,7 @@
             v-model="form.confirmPassword"
             type="password"
             class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
-            placeholder="••••••••"
+            :placeholder="$t('auth.password_placeholder')"
             required
           />
         </div>
@@ -80,17 +80,17 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Création...
+          {{ $t('auth.register.loading') }}
         </span>
-        <span v-else>Créer mon compte</span>
+        <span v-else>{{ $t('auth.register.submit') }}</span>
       </button>
     </form>
 
     <div class="mt-8 text-center">
       <p class="text-sm text-gray-600">
-        Déjà un compte ?
+        {{ $t('auth.register.has_account') }}
         <NuxtLink to="/login" class="text-primary-600 hover:text-primary-700 font-bold ml-1 hover:underline">
-          Se connecter
+          {{ $t('auth.register.login') }}
         </NuxtLink>
       </p>
     </div>

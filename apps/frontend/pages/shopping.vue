@@ -1,9 +1,9 @@
 <template>
   <div class="pb-24">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">🛒 Liste de courses</h1>
+      <h1 class="text-2xl font-bold text-gray-900">🛒 {{ $t('shopping.title') }}</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium">
-        + Ajouter
+        {{ $t('shopping.add') }}
       </button>
     </div>
 
@@ -27,7 +27,7 @@
 
     <div v-else-if="filteredItems.length === 0" class="text-center py-12">
       <div class="text-4xl mb-3">🛒</div>
-      <p class="text-gray-500">Aucun article dans la liste</p>
+      <p class="text-gray-500">{{ $t('shopping.no_items') }}</p>
     </div>
 
     <div v-else class="space-y-2">
@@ -61,7 +61,7 @@
     <!-- Clear completed -->
     <div v-if="completedCount > 0" class="mt-6 text-center">
       <button @click="clearCompleted" class="text-gray-500 text-sm">
-        Supprimer les {{ completedCount }} articles cochés
+        {{ $t('shopping.clear_completed', { count: completedCount }) }}
       </button>
     </div>
 
@@ -69,27 +69,27 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Ajouter un article</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('shopping.form.title') }}</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="addItem" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom de l'article</label>
-            <input type="text" v-model="newItem.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Croquettes, jouet...">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('shopping.form.name') }}</label>
+            <input type="text" v-model="newItem.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('shopping.form.name_placeholder')">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('shopping.form.quantity') }}</label>
               <input type="number" v-model.number="newItem.quantity" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Unité</label>
-              <input type="text" v-model="newItem.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="kg, pcs...">
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('shopping.form.unit') }}</label>
+              <input type="text" v-model="newItem.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('shopping.form.unit_placeholder')">
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('shopping.form.category') }}</label>
             <select v-model="newItem.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
                 {{ cat.icon }} {{ cat.label }}
@@ -97,7 +97,7 @@
             </select>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Ajout...' : 'Ajouter' }}
+            {{ saving ? $t('shopping.form.submitting') : $t('shopping.form.submit') }}
           </button>
         </form>
       </div>
@@ -108,22 +108,23 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
+const { t } = useI18n()
 const loading = ref(true)
 const saving = ref(false)
 const showAddModal = ref(false)
 const filterCategory = ref('all')
 const items = ref<any[]>([])
 
-const categories = [
-  { value: 'all', label: 'Tout', icon: '📋' },
-  { value: 'food', label: 'Nourriture', icon: '🍖' },
-  { value: 'treats', label: 'Friandises', icon: '🦴' },
-  { value: 'toys', label: 'Jouets', icon: '🎾' },
-  { value: 'accessories', label: 'Accessoires', icon: '🎀' },
-  { value: 'hygiene', label: 'Hygiène', icon: '🧴' },
-  { value: 'health', label: 'Santé', icon: '💊' },
-  { value: 'other', label: 'Autre', icon: '📦' },
-]
+const categories = computed(() => [
+  { value: 'all', label: t('shopping.categories.all'), icon: '📋' },
+  { value: 'food', label: t('shopping.categories.food'), icon: '🍖' },
+  { value: 'treats', label: t('shopping.categories.treats'), icon: '🦴' },
+  { value: 'toys', label: t('shopping.categories.toys'), icon: '🎾' },
+  { value: 'accessories', label: t('shopping.categories.accessories'), icon: '🎀' },
+  { value: 'hygiene', label: t('shopping.categories.hygiene'), icon: '🧴' },
+  { value: 'health', label: t('shopping.categories.health'), icon: '💊' },
+  { value: 'other', label: t('shopping.categories.other'), icon: '📦' },
+])
 
 const newItem = reactive({
   name: '',
@@ -140,7 +141,7 @@ const filteredItems = computed(() => {
 const completedCount = computed(() => items.value.filter(i => i.isCompleted).length)
 
 const getCategoryLabel = (cat: string) => {
-  return categories.find(c => c.value === cat)?.label || cat
+  return categories.value.find(c => c.value === cat)?.label || cat
 }
 
 const fetchItems = async () => {

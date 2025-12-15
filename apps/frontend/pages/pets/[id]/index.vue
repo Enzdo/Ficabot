@@ -6,9 +6,9 @@
 
     <div v-else-if="!petsStore.currentPet" class="flex flex-col items-center justify-center py-12 text-center px-4">
       <div class="text-6xl mb-4">🤔</div>
-      <p class="text-gray-900 font-bold mb-2">Animal non trouvé</p>
+      <p class="text-gray-900 font-bold mb-2">{{ $t('pets.not_found') }}</p>
       <NuxtLink to="/pets" class="btn-primary">
-        Retour à la liste
+        {{ $t('pets.back_to_list') }}
       </NuxtLink>
     </div>
 
@@ -24,7 +24,7 @@
           <span class="font-bold text-gray-900 truncate block">{{ petsStore.currentPet.name }}</span>
         </div>
         <button @click="showEditModal = true" class="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors text-primary-600 font-medium text-sm">
-          Modifier
+          {{ $t('common.edit') }}
         </button>
       </div>
 
@@ -39,17 +39,17 @@
             </div>
             
             <h1 class="text-2xl font-bold text-gray-900 mb-1 truncate px-4">{{ petsStore.currentPet.name }}</h1>
-            <p class="text-gray-500">{{ petsStore.currentPet.breed || 'Race non spécifiée' }}</p>
+            <p class="text-gray-500">{{ petsStore.currentPet.breed || $t('pets.breed_unspecified') }}</p>
             
             <div class="flex justify-center gap-6 mt-6">
               <div class="text-center">
-                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">Âge</p>
+                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">{{ $t('pets.age_label') }}</p>
                 <p class="font-semibold text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
                   {{ petsStore.currentPet.birthDate ? calculateAge(petsStore.currentPet.birthDate) : '-' }}
                 </p>
               </div>
               <div class="text-center">
-                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">Poids</p>
+                <p class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-1">{{ $t('pets.weight') }}</p>
                 <p class="font-semibold text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">
                   {{ petsStore.currentPet.weight ? `${petsStore.currentPet.weight} kg` : '-' }}
                 </p>
@@ -66,8 +66,8 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.967 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.967 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
               </svg>
             </div>
-            <p class="font-bold text-blue-900">Carnet de santé</p>
-            <p class="text-xs text-blue-700/70 mt-0.5">Infos complètes</p>
+            <p class="font-bold text-blue-900">{{ $t('pets.actions.health_book') }}</p>
+            <p class="text-xs text-blue-700/70 mt-0.5">{{ $t('pets.actions.full_info') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/chat?petId=${route.params.id}`" class="bg-purple-50 p-4 rounded-2xl border border-purple-100 active:scale-[0.98] transition-transform">
@@ -76,56 +76,56 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
               </svg>
             </div>
-            <p class="font-bold text-purple-900">Assistant IA</p>
-            <p class="text-xs text-purple-700/70 mt-0.5">Poser une question</p>
+            <p class="font-bold text-purple-900">{{ $t('pets.actions.ai_assistant') }}</p>
+            <p class="text-xs text-purple-700/70 mt-0.5">{{ $t('pets.actions.ask_question') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/photos`" class="bg-pink-50 p-4 rounded-2xl border border-pink-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pink-600 mb-3 shadow-sm text-xl">
               📸
             </div>
-            <p class="font-bold text-pink-900">Galerie photos</p>
-            <p class="text-xs text-pink-700/70 mt-0.5">Album souvenirs</p>
+            <p class="font-bold text-pink-900">{{ $t('pets.actions.photos') }}</p>
+            <p class="text-xs text-pink-700/70 mt-0.5">{{ $t('pets.actions.memories') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/symptoms`" class="bg-red-50 p-4 rounded-2xl border border-red-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-600 mb-3 shadow-sm text-xl">
               🩺
             </div>
-            <p class="font-bold text-red-900">Symptômes</p>
-            <p class="text-xs text-red-700/70 mt-0.5">Journal de santé</p>
+            <p class="font-bold text-red-900">{{ $t('pets.actions.symptoms') }}</p>
+            <p class="text-xs text-red-700/70 mt-0.5">{{ $t('pets.actions.health_log') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/feeding`" class="bg-amber-50 p-4 rounded-2xl border border-amber-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-amber-600 mb-3 shadow-sm text-xl">
               🍽️
             </div>
-            <p class="font-bold text-amber-900">Alimentation</p>
-            <p class="text-xs text-amber-700/70 mt-0.5">Suivi repas</p>
+            <p class="font-bold text-amber-900">{{ $t('pets.actions.food') }}</p>
+            <p class="text-xs text-amber-700/70 mt-0.5">{{ $t('pets.actions.meal_tracking') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/medical`" class="bg-green-50 p-4 rounded-2xl border border-green-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 mb-3 shadow-sm text-xl">
               📋
             </div>
-            <p class="font-bold text-green-900">Historique</p>
-            <p class="text-xs text-green-700/70 mt-0.5">Événements médicaux</p>
+            <p class="font-bold text-green-900">{{ $t('pets.actions.history') }}</p>
+            <p class="text-xs text-green-700/70 mt-0.5">{{ $t('pets.actions.medical_events') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/diet`" class="bg-pink-50 p-4 rounded-2xl border border-pink-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pink-600 mb-3 shadow-sm text-xl">
               ⚖️
             </div>
-            <p class="font-bold text-pink-900">Programme</p>
-            <p class="text-xs text-pink-700/70 mt-0.5">Perte de poids</p>
+            <p class="font-bold text-pink-900">{{ $t('pets.actions.diet') }}</p>
+            <p class="text-xs text-pink-700/70 mt-0.5">{{ $t('pets.actions.weight_loss') }}</p>
           </NuxtLink>
 
           <NuxtLink :to="`/pets/${route.params.id}/analyze`" class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-indigo-600 mb-3 shadow-sm text-xl">
               📸
             </div>
-            <p class="font-bold text-indigo-900">Analyse IA</p>
-            <p class="text-xs text-indigo-700/70 mt-0.5">Photo santé</p>
+            <p class="font-bold text-indigo-900">{{ $t('pets.actions.ai_analysis') }}</p>
+            <p class="text-xs text-indigo-700/70 mt-0.5">{{ $t('pets.actions.health_photo') }}</p>
           </NuxtLink>
         </div>
 
@@ -133,19 +133,19 @@
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-bold text-gray-900">🔗 Profil public</h3>
-              <p class="text-xs text-gray-500 mt-0.5">Partager le profil de {{ petsStore.currentPet?.name }}</p>
+              <h3 class="font-bold text-gray-900">🔗 {{ $t('pets.share.public_profile') }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5">{{ $t('pets.share.share_desc', { name: petsStore.currentPet?.name }) }}</p>
             </div>
             <button 
               @click="togglePublicProfile" 
               class="px-4 py-2 rounded-xl font-medium text-sm"
               :class="isPublic ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'"
             >
-              {{ isPublic ? '✓ Public' : 'Rendre public' }}
+              {{ isPublic ? '✓ ' + $t('pets.share.is_public') : $t('pets.share.make_public') }}
             </button>
           </div>
           <div v-if="shareUrl" class="mt-3 p-3 bg-gray-50 rounded-xl">
-            <p class="text-xs text-gray-500 mb-1">Lien de partage :</p>
+            <p class="text-xs text-gray-500 mb-1">{{ $t('pets.share.link') }} :</p>
             <div class="flex items-center gap-2">
               <input 
                 type="text" 
@@ -154,7 +154,7 @@
                 class="flex-1 text-sm bg-white px-3 py-2 rounded-lg border border-gray-200"
               >
               <button @click="copyShareUrl" class="bg-primary-600 text-white px-3 py-2 rounded-lg text-sm">
-                Copier
+                {{ $t('pets.share.copy') }}
               </button>
             </div>
           </div>
@@ -164,8 +164,8 @@
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-bold text-gray-900">🩺 Accès vétérinaire</h3>
-              <p class="text-xs text-gray-500 mt-0.5">Partager le dossier médical avec votre véto</p>
+              <h3 class="font-bold text-gray-900">🩺 {{ $t('pets.vet_access.title') }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5">{{ $t('pets.vet_access.desc') }}</p>
             </div>
             <button 
               v-if="!vetAccess.hasAccess"
@@ -173,18 +173,18 @@
               class="px-4 py-2 rounded-xl font-medium text-sm bg-teal-100 text-teal-700"
               :disabled="generatingVetAccess"
             >
-              {{ generatingVetAccess ? '...' : 'Générer' }}
+              {{ generatingVetAccess ? '...' : $t('pets.vet_access.generate') }}
             </button>
             <button 
               v-else
               @click="revokeVetAccess" 
               class="px-4 py-2 rounded-xl font-medium text-sm bg-red-100 text-red-700"
             >
-              Révoquer
+              {{ $t('pets.vet_access.revoke') }}
             </button>
           </div>
           <div v-if="vetAccess.hasAccess" class="mt-3 p-3 bg-teal-50 rounded-xl">
-            <p class="text-xs text-teal-600 mb-1">Lien pour le vétérinaire (valide 7 jours) :</p>
+            <p class="text-xs text-teal-600 mb-1">{{ $t('pets.vet_access.link_label') }} :</p>
             <div class="flex items-center gap-2">
               <input 
                 type="text" 
@@ -193,7 +193,7 @@
                 class="flex-1 text-sm bg-white px-3 py-2 rounded-lg border border-teal-200"
               >
               <button @click="copyVetUrl" class="bg-teal-600 text-white px-3 py-2 rounded-lg text-sm">
-                Copier
+                {{ $t('pets.share.copy') }}
               </button>
             </div>
           </div>
@@ -203,15 +203,15 @@
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-bold text-gray-900">📄 Export PDF</h3>
-              <p class="text-xs text-gray-500 mt-0.5">Télécharger le carnet de santé complet</p>
+              <h3 class="font-bold text-gray-900">📄 {{ $t('pets.pdf.title') }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5">{{ $t('pets.pdf.desc') }}</p>
             </div>
             <button 
               @click="exportPDF" 
               class="px-4 py-2 rounded-xl font-medium text-sm bg-indigo-100 text-indigo-700"
               :disabled="exportingPDF"
             >
-              {{ exportingPDF ? 'Génération...' : '📥 Télécharger' }}
+              {{ exportingPDF ? $t('pets.pdf.generating') : '📥 ' + $t('pets.pdf.download') }}
             </button>
           </div>
         </div>
@@ -219,13 +219,13 @@
         <!-- Recent Records -->
         <div>
           <div class="flex justify-between items-center mb-4 px-1">
-            <h2 class="text-lg font-bold text-gray-900">Activités récentes</h2>
-            <NuxtLink :to="`/pets/${route.params.id}/medical`" class="text-primary-600 text-sm font-medium">Tout voir</NuxtLink>
+            <h2 class="text-lg font-bold text-gray-900">{{ $t('pets.records.recent') }}</h2>
+            <NuxtLink :to="`/pets/${route.params.id}/medical`" class="text-primary-600 text-sm font-medium">{{ $t('pets.records.see_all') }}</NuxtLink>
           </div>
 
           <div v-if="petsStore.medicalRecords.length === 0" class="bg-gray-50 rounded-2xl p-8 text-center border border-gray-100">
-            <p class="text-gray-500 text-sm">Aucun historique médical</p>
-            <NuxtLink :to="`/pets/${route.params.id}/medical`" class="text-primary-600 font-medium text-sm mt-2 inline-block">Ajouter un événement</NuxtLink>
+            <p class="text-gray-500 text-sm">{{ $t('pets.records.empty') }}</p>
+            <NuxtLink :to="`/pets/${route.params.id}/medical`" class="text-primary-600 font-medium text-sm mt-2 inline-block">{{ $t('pets.records.add') }}</NuxtLink>
           </div>
 
           <div v-else class="space-y-3">
@@ -251,8 +251,8 @@
         <!-- Owners Section -->
         <div v-if="(petsStore.currentPet as any)?.isOwner" class="pt-4">
           <div class="flex justify-between items-center mb-3">
-            <h2 class="text-lg font-bold text-gray-900">👥 Propriétaires</h2>
-            <button @click="showInviteModal = true" class="text-primary-600 text-sm font-medium">+ Inviter</button>
+            <h2 class="text-lg font-bold text-gray-900">👥 {{ $t('pets.owners.title') }}</h2>
+            <button @click="showInviteModal = true" class="text-primary-600 text-sm font-medium">+ {{ $t('pets.owners.invite') }}</button>
           </div>
           
           <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
@@ -263,7 +263,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-medium text-gray-900">{{ authStore.user?.email }}</p>
-                <p class="text-xs text-primary-600 font-medium">Propriétaire principal</p>
+                <p class="text-xs text-primary-600 font-medium">{{ $t('pets.owners.main') }}</p>
               </div>
             </div>
 
@@ -274,7 +274,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-medium text-gray-900">{{ owner.email }}</p>
-                <p class="text-xs text-gray-500">Co-propriétaire</p>
+                <p class="text-xs text-gray-500">{{ $t('pets.owners.co_owner') }}</p>
               </div>
               <button @click="removeOwner(owner.id)" class="p-2 text-red-400 hover:bg-red-50 rounded-lg">
                 ✕
@@ -288,7 +288,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-medium text-gray-900">{{ pending.email }}</p>
-                <p class="text-xs text-yellow-600">En attente d'acceptation</p>
+                <p class="text-xs text-yellow-600">{{ $t('pets.owners.pending') }}</p>
               </div>
               <button @click="removeOwner(pending.id)" class="p-2 text-red-400 hover:bg-red-50 rounded-lg">
                 ✕
@@ -301,16 +301,16 @@
         <div v-else-if="(petsStore.currentPet as any)?.isShared" class="pt-4">
           <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
             <p class="text-blue-700 text-sm">
-              <span class="font-bold">Animal partagé</span> — Vous avez été invité à suivre cet animal.
+              <span class="font-bold">{{ $t('pets.shared.notice') }}</span> — {{ $t('pets.shared.desc') }}
             </p>
-            <button @click="leavePet" class="mt-2 text-blue-600 text-sm font-medium">Quitter cet animal</button>
+            <button @click="leavePet" class="mt-2 text-blue-600 text-sm font-medium">{{ $t('pets.shared.leave') }}</button>
           </div>
         </div>
 
         <!-- Danger Zone -->
         <div v-if="(petsStore.currentPet as any)?.isOwner" class="pt-8">
           <button @click="handleDelete" class="w-full py-3 text-red-600 bg-red-50 rounded-xl text-sm font-medium border border-red-100 active:scale-[0.98] transition-transform">
-            Supprimer la fiche de {{ petsStore.currentPet.name }}
+            {{ $t('pets.delete.button', { name: petsStore.currentPet.name }) }}
           </button>
         </div>
       </div>
@@ -320,7 +320,7 @@
     <div v-if="showEditModal && petsStore.currentPet" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showEditModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-gray-50">
-          <h2 class="text-xl font-bold text-gray-900">Modifier {{ petsStore.currentPet.name }}</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('pets.edit.title', { name: petsStore.currentPet.name }) }}</h2>
           <button @click="showEditModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -330,49 +330,49 @@
 
         <form @submit.prevent="handleUpdate" class="space-y-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">Espèce</label>
+            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $t('pets.species') }}</label>
             <div class="grid grid-cols-2 gap-4">
               <label class="cursor-pointer group">
                 <input type="radio" v-model="editForm.species" value="dog" class="peer sr-only">
                 <div class="bg-white border-2 border-gray-200 peer-checked:border-primary-500 peer-checked:bg-primary-50/50 rounded-2xl p-4 text-center transition-all group-active:scale-95">
                   <div class="text-4xl mb-2 transition-transform peer-checked:scale-110">🐕</div>
-                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">Chien</span>
+                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">{{ $t('pets.dog') }}</span>
                 </div>
               </label>
               <label class="cursor-pointer group">
                 <input type="radio" v-model="editForm.species" value="cat" class="peer sr-only">
                 <div class="bg-white border-2 border-gray-200 peer-checked:border-primary-500 peer-checked:bg-primary-50/50 rounded-2xl p-4 text-center transition-all group-active:scale-95">
                   <div class="text-4xl mb-2 transition-transform peer-checked:scale-110">🐱</div>
-                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">Chat</span>
+                  <span class="font-bold text-gray-700 peer-checked:text-primary-700">{{ $t('pets.cat') }}</span>
                 </div>
               </label>
             </div>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.name') }}</label>
             <input type="text" v-model="editForm.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Race</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.breed') }}</label>
             <input type="text" v-model="editForm.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Naissance</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.birthdate') }}</label>
               <input type="date" v-model="editForm.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Poids (kg)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.weight') }} (kg)</label>
               <input type="number" v-model.number="editForm.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
           </div>
 
           <div class="pt-4">
             <button type="submit" class="w-full bg-primary-600 text-white py-3.5 rounded-xl font-bold text-lg shadow-lg shadow-primary-600/30 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed" :disabled="updating">
-              {{ updating ? 'Enregistrement...' : 'Enregistrer les modifications' }}
+              {{ updating ? $t('common.saving') : $t('pets.edit.save') }}
             </button>
           </div>
         </form>
@@ -383,13 +383,13 @@
     <div v-if="showInviteModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showInviteModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Inviter un propriétaire</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('pets.owners.invite_modal.title') }}</h2>
           <button @click="showInviteModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="inviteOwner" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email de la personne</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('pets.owners.invite_modal.email_label') }}</label>
             <input 
               type="email" 
               v-model="inviteEmail" 
@@ -397,7 +397,7 @@
               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"
               placeholder="exemple@email.com"
             >
-            <p class="text-xs text-gray-500 mt-2">Cette personne doit avoir un compte Ficabot</p>
+            <p class="text-xs text-gray-500 mt-2">{{ $t('pets.owners.invite_modal.hint') }}</p>
           </div>
 
           <button 
@@ -405,7 +405,7 @@
             class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold"
             :disabled="inviting"
           >
-            {{ inviting ? 'Envoi...' : 'Envoyer l\'invitation' }}
+            {{ inviting ? $t('pets.owners.invite_modal.sending') : $t('pets.owners.invite_modal.submit') }}
           </button>
         </form>
       </div>
@@ -422,6 +422,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const petsStore = usePetsStore()
@@ -456,9 +457,9 @@ const togglePublicProfile = async () => {
 const copyShareUrl = async () => {
   try {
     await navigator.clipboard.writeText(fullShareUrl.value)
-    alert('Lien copié !')
+    alert(t('pets.share.copied'))
   } catch {
-    alert('Impossible de copier le lien')
+    alert(t('pets.share.copy_error'))
   }
 }
 
@@ -502,7 +503,7 @@ const generateVetAccess = async () => {
 }
 
 const revokeVetAccess = async () => {
-  if (!confirm('Révoquer l\'accès vétérinaire ?')) return
+  if (!confirm(t('pets.vet_access.revoke_confirm'))) return
   const api = useApi()
   await api.del(`/pets/${route.params.id}/vet-access`)
   vetAccess.value = { hasAccess: false, vetUrl: '' }
@@ -511,9 +512,9 @@ const revokeVetAccess = async () => {
 const copyVetUrl = async () => {
   try {
     await navigator.clipboard.writeText(fullVetUrl.value)
-    alert('Lien copié !')
+    alert(t('pets.share.copied'))
   } catch {
-    alert('Impossible de copier le lien')
+    alert(t('pets.share.copy_error'))
   }
 }
 
@@ -529,7 +530,7 @@ const exportPDF = async () => {
   // Ouvre une nouvelle fenêtre imprimable que l'utilisateur pourra exporter en PDF
   const win = window.open('', '_blank')
   if (!win) {
-    alert('Impossible d\'ouvrir la fenêtre d\'export')
+    alert(t('pets.pdf.error'))
     exportingPDF.value = false
     return
   }
@@ -629,7 +630,7 @@ const exportPDF = async () => {
           </div>
 
           <div class="footer">
-            <p>Ce document est fourni à titre informatif et ne remplace pas l\'avis d\'un vétérinaire.</p>
+            <p>Ce document est fourni à titre informatif et ne remplace pas l'avis d'un vétérinaire.</p>
           </div>
         </div>
       </body>
@@ -689,8 +690,8 @@ const calculateAge = (date: string | Date) => {
   const years = Math.floor(now.diff(birth, 'years').years)
   const months = Math.floor(now.diff(birth, 'months').months % 12)
   
-  if (years > 0) return `${years} an${years > 1 ? 's' : ''}`
-  return `${months} mois`
+  if (years > 0) return t('pets.age.year', years, { count: years })
+  return t('pets.age.month', months, { count: months })
 }
 
 const handleUpdate = async () => {
@@ -709,7 +710,7 @@ const handleUpdate = async () => {
 }
 
 const handleDelete = async () => {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cet animal ? Cette action est irréversible.')) {
+  if (confirm(t('pets.delete.confirm'))) {
     const success = await petsStore.deletePet(route.params.id as string)
     if (success) {
       router.push('/pets')
@@ -736,20 +737,20 @@ const inviteOwner = async () => {
     showInviteModal.value = false
     await fetchOwners()
   } else {
-    alert(response.message || 'Erreur lors de l\'invitation')
+    alert(response.message || t('common.error'))
   }
   inviting.value = false
 }
 
 const removeOwner = async (ownerId: number) => {
-  if (!confirm('Retirer ce propriétaire ?')) return
+  if (!confirm(t('pets.owners.remove_confirm'))) return
   const api = useApi()
   await api.del(`/pets/${route.params.id}/owners/${ownerId}`)
   await fetchOwners()
 }
 
 const leavePet = async () => {
-  if (!confirm('Quitter cet animal ? Vous n\'y aurez plus accès.')) return
+  if (!confirm(t('pets.shared.leave_confirm'))) return
   const api = useApi()
   await api.post(`/pets/${route.params.id}/owners/leave`, {})
   router.push('/pets')

@@ -8,7 +8,9 @@
     "edit": "Bearbeiten",
     "delete": "Löschen",
     "confirm": "Bestätigen",
-    "back": "Zurück"
+    "back": "Zurück",
+    "today": "Heute",
+    "tomorrow": "Morgen"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -81,5 +83,336 @@
     "general_option": "Allgemein (kein Tier)",
     "create": "Erstellen",
     "conversation_placeholder": "Z.B.: Fragen zu meinem Hund"
+  },
+  "public_profile": {
+    "not_found_title": "Profil nicht gefunden",
+    "not_found_desc": "Dieses Profil existiert nicht oder ist privat",
+    "back_home": "Zurück zur Startseite",
+    "badges": "Abzeichen",
+    "health": "Gesundheit",
+    "vaccines": "Impfungen",
+    "allergies": "Allergien",
+    "conditions": "Erkrankungen",
+    "owner": "Besitzer",
+    "footer": "Profil erstellt mit Ficabot 🐾",
+    "cta": "Profil meines Tieres erstellen →"
+  },
+  "vet_view": {
+    "loading": "Lade Krankenakte...",
+    "error_title": "Zugriff nicht verfügbar",
+    "mode_badge": "Tierarzt-Modus",
+    "readonly_badge": "Nur Lesen",
+    "title": "Krankenakte",
+    "valid_until": "Zugriff gültig bis {date}",
+    "unknown_breed": "Unbekannte Rasse",
+    "owner": "Besitzer",
+    "history_title": "Krankengeschichte",
+    "no_records": "Keine medizinischen Aufzeichnungen",
+    "next_appointment": "Nächster Termin: {date}",
+    "summary": "Zusammenfassung",
+    "vaccines": "Impfungen",
+    "treatments": "Behandlungen",
+    "visits": "Besuche",
+    "disclaimer": "Dieser Zugriff ist schreibgeschützt und läuft automatisch ab.",
+    "provider": "Daten bereitgestellt von Ficabot.",
+    "invalid_link": "Ungültiger oder abgelaufener Link",
+    "connection_error": "Verbindungsfehler"
+  },
+  "auth": {
+    "email": "E-Mail",
+    "email_placeholder": "ihre@email.com",
+    "password": "Passwort",
+    "password_placeholder": "••••••••",
+    "password_min_length": "Mindestens 8 Zeichen",
+    "confirm_password": "Passwort bestätigen",
+    "forgot_password": "Vergessen?",
+    "login": {
+      "title": "Anmelden",
+      "welcome": "Schön, Sie wiederzusehen! 👋",
+      "loading": "Anmelden...",
+      "submit": "Anmelden",
+      "no_account": "Noch kein Konto?",
+      "create_account": "Konto erstellen",
+      "error_credentials": "Ungültige Anmeldeinformationen"
+    },
+    "register": {
+      "title": "Konto erstellen",
+      "welcome": "Treten Sie dem Ficabot-Abenteuer bei! 🚀",
+      "loading": "Erstellen...",
+      "submit": "Mein Konto erstellen",
+      "has_account": "Bereits ein Konto?",
+      "login": "Anmelden",
+      "password_mismatch": "Passwörter stimmen nicht überein",
+      "error": "Fehler beim Erstellen des Kontos"
+    }
+  },
+  "landing": {
+    "subtitle": "Der intelligente Gesundheitsbegleiter für Ihre Haustiere 🐕🐱",
+    "features": {
+      "tracking": "Tracking",
+      "reminders": "Erinnerungen",
+      "ai": "KI"
+    },
+    "cta": {
+      "start": "Jetzt starten",
+      "login": "Ich habe bereits ein Konto"
+    },
+    "footer": "Kümmern Sie sich um sie, wie sie sich um Sie kümmern ❤️"
+  },
+  "pets": {
+    "title": "Meine Haustiere",
+    "subtitle": "Verwalten Sie Ihre Begleiter",
+    "no_pets": "Keine Haustiere",
+    "no_pets_desc": "Fügen Sie Ihren ersten Begleiter hinzu, um seine Gesundheit zu überwachen",
+    "add_pet": "Tier hinzufügen",
+    "add_pet_title": "Tier hinzufügen",
+    "species": "Spezies",
+    "dog": "Hund",
+    "cat": "Katze",
+    "name": "Name",
+    "breed": "Rasse",
+    "breed_optional": "Rasse (optional)",
+    "breed_unspecified": "Rasse nicht angegeben",
+    "birthdate": "Geburtsdatum",
+    "weight": "Gewicht",
+    "creating": "Erstellen...",
+    "submit": "Mein Tier hinzufügen",
+    "age": {
+      "year": "{count} Jahr | {count} Jahre",
+      "month": "{count} Monat | {count} Monate"
+    },
+    "weight_unit": "{value}kg",
+    "not_found": "Tier nicht gefunden",
+    "back_to_list": "Zurück zur Liste",
+    "age_label": "Alter",
+    "actions": {
+      "health_book": "Gesundheitsbuch",
+      "full_info": "Volle Info",
+      "ai_assistant": "KI-Assistent",
+      "ask_question": "Frage stellen",
+      "photos": "Fotogalerie",
+      "memories": "Erinnerungen",
+      "symptoms": "Symptome",
+      "health_log": "Gesundheitstagebuch",
+      "food": "Ernährung",
+      "meal_tracking": "Mahlzeiten-Tracking",
+      "history": "Verlauf",
+      "medical_events": "Medizinische Ereignisse",
+      "diet": "Diätplan",
+      "weight_loss": "Gewichtsverlust",
+      "ai_analysis": "KI-Analyse",
+      "health_photo": "Gesundheitsfoto"
+    },
+    "share": {
+      "public_profile": "Öffentliches Profil",
+      "share_desc": "Profil von {name} teilen",
+      "make_public": "Öffentlich machen",
+      "is_public": "Öffentlich",
+      "link": "Teilen-Link",
+      "copy": "Kopieren",
+      "copied": "Link kopiert!",
+      "copy_error": "Link konnte nicht kopiert werden"
+    },
+    "vet_access": {
+      "title": "Tierarzt-Zugriff",
+      "desc": "Medizinische Akten mit Tierarzt teilen",
+      "generate": "Generieren",
+      "revoke": "Widerrufen",
+      "link_label": "Tierarzt-Link (7 Tage gültig)",
+      "revoke_confirm": "Tierarzt-Zugriff widerrufen?"
+    },
+    "pdf": {
+      "title": "PDF Export",
+      "desc": "Vollständige Gesundheitsakte herunterladen",
+      "download": "Herunterladen",
+      "generating": "Generieren...",
+      "error": "Exportfenster konnte nicht geöffnet werden"
+    },
+    "records": {
+      "recent": "Letzte Aktivitäten",
+      "see_all": "Alle sehen",
+      "empty": "Keine medizinische Geschichte",
+      "add": "Ereignis hinzufügen"
+    },
+    "owners": {
+      "title": "Besitzer",
+      "invite": "Einladen",
+      "main": "Hauptbesitzer",
+      "co_owner": "Mitbesitzer",
+      "pending": "Ausstehende Annahme",
+      "remove_confirm": "Diesen Besitzer entfernen?",
+      "invite_modal": {
+        "title": "Besitzer einladen",
+        "email_label": "E-Mail der Person",
+        "hint": "Diese Person muss ein Ficabot-Konto haben",
+        "submit": "Einladung senden",
+        "sending": "Senden..."
+      }
+    },
+    "shared": {
+      "notice": "Geteiltes Tier",
+      "desc": "Sie wurden eingeladen, diesem Tier zu folgen.",
+      "leave": "Dieses Tier verlassen",
+      "leave_confirm": "Dieses Tier verlassen? Sie verlieren den Zugriff."
+    },
+    "delete": {
+      "button": "Profil von {name} löschen",
+      "confirm": "Sind Sie sicher, dass Sie dieses Tier löschen möchten? Diese Aktion ist unwiderruflich."
+    },
+    "edit": {
+      "title": "{name} bearbeiten",
+      "save": "Änderungen speichern"
+    }
+  },
+  "reminders": {
+    "title": "Erinnerungen",
+    "new": "+ Neu",
+    "upcoming": "Demnächst",
+    "completed": "Erledigt",
+    "no_reminders": "Keine anstehenden Erinnerungen",
+    "create_reminder": "Erinnerung erstellen",
+    "types": {
+      "vaccine": "Impfung",
+      "antiparasitic": "Antiparasitikum",
+      "weighing": "Wiegen",
+      "appointment": "Tierarzttermin",
+      "custom": "Andere"
+    },
+    "form": {
+      "title": "Neue Erinnerung",
+      "type": "Typ",
+      "title_label": "Titel",
+      "title_placeholder": "Z.B.: Tollwutimpfung",
+      "pet": "Tier",
+      "date": "Datum",
+      "recurring": "Wiederkehrend",
+      "frequency": "Häufigkeit",
+      "intervals": {
+        "weekly": "Wöchentlich",
+        "monthly": "Monatlich",
+        "yearly": "Jährlich"
+      },
+      "submit": "Erinnerung erstellen",
+      "submitting": "Erstellen..."
+    },
+    "confirm_delete": "Diese Erinnerung löschen?"
+  },
+  "appointments": {
+    "title": "Tierarzttermine",
+    "new": "+ Neu",
+    "upcoming": "Demnächst",
+    "history": "Verlauf",
+    "no_appointments": "Keine geplanten Termine",
+    "plan_appointment": "Termin vereinbaren",
+    "completed": "Erledigt",
+    "cancelled": "Abgesagt",
+    "cancel": "Absagen",
+    "mark_completed": "Erledigt",
+    "form": {
+      "title": "Neuer Termin",
+      "reason": "Grund",
+      "reason_placeholder": "Z.B.: Jährliche Impfung",
+      "pet": "Tier",
+      "date": "Datum",
+      "time": "Uhrzeit",
+      "vet_name": "Tierarzt",
+      "vet_placeholder": "Praxisname",
+      "address": "Adresse",
+      "address_placeholder": "Praxisadresse",
+      "phone": "Telefon",
+      "phone_placeholder": "01 23 45 67 89",
+      "notes": "Notizen",
+      "notes_placeholder": "Zusätzliche Infos...",
+      "submit": "Termin erstellen",
+      "submitting": "Erstellen..."
+    },
+    "confirm_cancel": "Diesen Termin absagen?"
+  },
+  "vets": {
+    "title": "Tierärzte in der Nähe",
+    "filters": {
+      "all": "Alle",
+      "dog": "Hunde",
+      "cat": "Katzen",
+      "emergency": "24h Notfall"
+    },
+    "searching": "Suche nach Tierärzten...",
+    "location_required": {
+      "title": "Standort erforderlich",
+      "message": "Um Tierärzte in Ihrer Nähe zu finden, benötigen wir Ihren Standort.",
+      "enable": "Standort aktivieren"
+    },
+    "found": "{count} Tierärzte gefunden",
+    "view_all": "Alle anzeigen",
+    "reduce": "Einklappen",
+    "open_gps": "Route"
+  },
+  "expenses": {
+    "title": "Ausgaben",
+    "add": "+ Hinzufügen",
+    "this_month": "Diesen Monat",
+    "this_year": "Dieses Jahr",
+    "no_expenses": "Keine Ausgaben aufgezeichnet",
+    "delete": "Löschen",
+    "confirm_delete": "Diese Ausgabe löschen?",
+    "categories": {
+      "all": "Alle",
+      "vet": "Tierarzt",
+      "food": "Futter",
+      "accessories": "Zubehör",
+      "grooming": "Pflege",
+      "insurance": "Versicherung",
+      "other": "Andere"
+    },
+    "form": {
+      "title": "Ausgabe hinzufügen",
+      "label": "Titel",
+      "label_placeholder": "Tierarztbesuch...",
+      "amount": "Betrag (€)",
+      "date": "Datum",
+      "category": "Kategorie",
+      "pet": "Tier (optional)",
+      "no_pet": "Keins",
+      "description": "Beschreibung (optional)",
+      "submit": "Hinzufügen",
+      "submitting": "Hinzufügen..."
+    }
+  },
+  "shopping": {
+    "title": "Einkaufsliste",
+    "add": "+ Hinzufügen",
+    "no_items": "Keine Artikel in der Liste",
+    "clear_completed": "{count} erledigte Artikel löschen",
+    "categories": {
+      "all": "Alle",
+      "food": "Futter",
+      "treats": "Leckerlis",
+      "toys": "Spielzeug",
+      "accessories": "Zubehör",
+      "hygiene": "Hygiene",
+      "health": "Gesundheit",
+      "other": "Andere"
+    },
+    "form": {
+      "title": "Artikel hinzufügen",
+      "name": "Artikelname",
+      "name_placeholder": "Futter, Spielzeug...",
+      "quantity": "Menge",
+      "unit": "Einheit",
+      "unit_placeholder": "kg, Stk...",
+      "category": "Kategorie",
+      "submit": "Hinzufügen",
+      "submitting": "Hinzufügen..."
+    }
+  },
+  "badges": {
+    "title": "Meine Abzeichen",
+    "points_earned": "{points} Punkte verdient",
+    "total_points": "Gesamtpunkte",
+    "earned": "Erhaltene Abzeichen",
+    "available": "Verfügbare Abzeichen",
+    "no_earned": "Noch keine Abzeichen erhalten",
+    "keep_going": "Nutzen Sie die App weiter, um Abzeichen freizuschalten!",
+    "pts": "Pkt"
   }
 }

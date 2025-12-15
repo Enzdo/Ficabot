@@ -1,9 +1,9 @@
 <template>
   <div class="pb-24">
     <div class="sticky top-0 bg-surface-50/95 backdrop-blur z-10 px-4 py-3 flex items-center justify-between border-b border-gray-100">
-      <h1 class="font-bold text-gray-900 text-xl">🔔 Rappels</h1>
+      <h1 class="font-bold text-gray-900 text-xl">{{ $t('reminders.title') }}</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium text-sm">
-        + Nouveau
+        {{ $t('reminders.new') }}
       </button>
     </div>
 
@@ -11,7 +11,7 @@
       <!-- Upcoming Reminders -->
       <div v-if="upcomingReminders.length > 0">
         <h2 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
-          <span>⏰</span> À venir
+          <span>⏰</span> {{ $t('reminders.upcoming') }}
         </h2>
         <div class="space-y-2">
           <div 
@@ -25,7 +25,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <p class="font-medium text-gray-900 truncate">{{ reminder.title }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || 'Général' }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || $t('chat.general') }}</p>
               </div>
             </div>
             <div class="flex items-center gap-2 shrink-0">
@@ -42,13 +42,13 @@
 
       <div v-else class="text-center py-12">
         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">🔔</div>
-        <p class="text-gray-500">Aucun rappel à venir</p>
-        <button @click="showAddModal = true" class="mt-4 text-primary-600 font-medium">Créer un rappel</button>
+        <p class="text-gray-500">{{ $t('reminders.no_reminders') }}</p>
+        <button @click="showAddModal = true" class="mt-4 text-primary-600 font-medium">{{ $t('reminders.create_reminder') }}</button>
       </div>
 
       <!-- Completed Reminders -->
       <div v-if="completedReminders.length > 0" class="mt-8">
-        <h2 class="font-bold text-gray-400 mb-3">Terminés</h2>
+        <h2 class="font-bold text-gray-400 mb-3">{{ $t('reminders.completed') }}</h2>
         <div class="space-y-2 opacity-60">
           <div 
             v-for="reminder in completedReminders" 
@@ -71,56 +71,56 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Nouveau rappel</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('reminders.form.title') }}</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="createReminder" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.type') }}</label>
             <select v-model="form.type" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
-              <option value="vaccine">💉 Vaccin</option>
-              <option value="antiparasitic">🐛 Antiparasitaire</option>
-              <option value="weighing">⚖️ Pesée</option>
-              <option value="appointment">🏥 RDV véto</option>
-              <option value="custom">📝 Autre</option>
+              <option value="vaccine">{{ $t('reminders.types.vaccine') }}</option>
+              <option value="antiparasitic">{{ $t('reminders.types.antiparasitic') }}</option>
+              <option value="weighing">{{ $t('reminders.types.weighing') }}</option>
+              <option value="appointment">{{ $t('reminders.types.appointment') }}</option>
+              <option value="custom">{{ $t('reminders.types.custom') }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Rappel vaccin rage">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.title_label') }} *</label>
+            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('reminders.form.title_placeholder')">
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Animal</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.pet') }}</label>
             <select v-model="form.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
-              <option :value="null">Général</option>
+              <option :value="null">{{ $t('chat.general') }}</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.date') }} *</label>
             <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
 
           <div class="flex items-center gap-3">
             <input type="checkbox" v-model="form.isRecurring" id="recurring" class="w-5 h-5 rounded">
-            <label for="recurring" class="text-sm text-gray-700">Récurrent</label>
+            <label for="recurring" class="text-sm text-gray-700">{{ $t('reminders.form.recurring') }}</label>
           </div>
 
           <div v-if="form.isRecurring">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Fréquence</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.frequency') }}</label>
             <select v-model="form.recurrenceInterval" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
-              <option value="weekly">Chaque semaine</option>
-              <option value="monthly">Chaque mois</option>
-              <option value="yearly">Chaque année</option>
+              <option value="weekly">{{ $t('reminders.form.intervals.weekly') }}</option>
+              <option value="monthly">{{ $t('reminders.form.intervals.monthly') }}</option>
+              <option value="yearly">{{ $t('reminders.form.intervals.yearly') }}</option>
             </select>
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="loading">
-            {{ loading ? 'Création...' : 'Créer le rappel' }}
+            {{ loading ? $t('reminders.form.submitting') : $t('reminders.form.submit') }}
           </button>
         </form>
       </div>
@@ -133,6 +133,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t, locale } = useI18n()
 const petsStore = usePetsStore()
 
 const showAddModal = ref(false)
@@ -173,9 +174,9 @@ const formatDate = (date: string) => {
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
 
-  if (d.toDateString() === today.toDateString()) return "Aujourd'hui"
-  if (d.toDateString() === tomorrow.toDateString()) return 'Demain'
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (d.toDateString() === today.toDateString()) return t('common.today')
+  if (d.toDateString() === tomorrow.toDateString()) return t('common.tomorrow')
+  return d.toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 }
 
 const fetchReminders = async () => {
@@ -206,7 +207,7 @@ const completeReminder = async (id: number) => {
 }
 
 const deleteReminder = async (id: number) => {
-  if (!confirm('Supprimer ce rappel ?')) return
+  if (!confirm(t('reminders.confirm_delete'))) return
   const api = useApi()
   await api.del(`/reminders/${id}`)
   await fetchReminders()

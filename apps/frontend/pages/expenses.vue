@@ -1,20 +1,20 @@
 <template>
   <div class="pb-24">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-900">💰 Dépenses</h1>
+      <h1 class="text-2xl font-bold text-gray-900">💰 {{ $t('expenses.title') }}</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium">
-        + Ajouter
+        {{ $t('expenses.add') }}
       </button>
     </div>
 
     <!-- Stats cards -->
     <div class="grid grid-cols-2 gap-3 mb-6">
       <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-4">
-        <p class="text-white/80 text-sm">Ce mois</p>
+        <p class="text-white/80 text-sm">{{ $t('expenses.this_month') }}</p>
         <p class="text-2xl font-bold truncate">{{ stats.monthly.toFixed(2) }}€</p>
       </div>
       <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-4">
-        <p class="text-white/80 text-sm">Cette année</p>
+        <p class="text-white/80 text-sm">{{ $t('expenses.this_year') }}</p>
         <p class="text-2xl font-bold truncate">{{ stats.yearly.toFixed(2) }}€</p>
       </div>
     </div>
@@ -39,7 +39,7 @@
 
     <div v-else-if="filteredExpenses.length === 0" class="text-center py-12">
       <div class="text-4xl mb-3">💰</div>
-      <p class="text-gray-500">Aucune dépense enregistrée</p>
+      <p class="text-gray-500">{{ $t('expenses.no_expenses') }}</p>
     </div>
 
     <div v-else class="space-y-3">
@@ -56,7 +56,7 @@
           </div>
           <div class="text-right shrink-0">
             <p class="text-lg font-bold text-gray-900">{{ parseFloat(expense.amount).toFixed(2) }}€</p>
-            <button @click="deleteExpense(expense.id)" class="text-red-400 text-sm mt-1">Supprimer</button>
+            <button @click="deleteExpense(expense.id)" class="text-red-400 text-sm mt-1">{{ $t('expenses.delete') }}</button>
           </div>
         </div>
       </div>
@@ -66,27 +66,27 @@
     <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Ajouter une dépense</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('expenses.form.title') }}</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="addExpense" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-            <input type="text" v-model="newExpense.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Consultation véto...">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.label') }}</label>
+            <input type="text" v-model="newExpense.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('expenses.form.label_placeholder')">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Montant (€)</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.amount') }}</label>
               <input type="number" v-model.number="newExpense.amount" step="0.01" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.date') }}</label>
               <input type="date" v-model="newExpense.expenseDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.category') }}</label>
             <select v-model="newExpense.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
                 {{ cat.icon }} {{ cat.label }}
@@ -94,20 +94,20 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Animal (optionnel)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.pet') }}</label>
             <select v-model="newExpense.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
-              <option :value="null">Aucun</option>
+              <option :value="null">{{ $t('expenses.form.no_pet') }}</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">
                 {{ pet.name }}
               </option>
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.description') }}</label>
             <textarea v-model="newExpense.description" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Ajout...' : 'Ajouter' }}
+            {{ saving ? $t('expenses.form.submitting') : $t('expenses.form.submit') }}
           </button>
         </form>
       </div>
@@ -118,6 +118,7 @@
 <script setup lang="ts">
 definePageMeta({ middleware: 'auth' })
 
+const { t, locale } = useI18n()
 const petsStore = usePetsStore()
 const loading = ref(true)
 const saving = ref(false)
@@ -126,15 +127,15 @@ const filterCategory = ref('all')
 const expenses = ref<any[]>([])
 const stats = ref({ monthly: 0, yearly: 0 })
 
-const categories = [
-  { value: 'all', label: 'Tout', icon: '📋' },
-  { value: 'vet', label: 'Vétérinaire', icon: '🏥' },
-  { value: 'food', label: 'Nourriture', icon: '🍖' },
-  { value: 'accessories', label: 'Accessoires', icon: '🎀' },
-  { value: 'grooming', label: 'Toilettage', icon: '✂️' },
-  { value: 'insurance', label: 'Assurance', icon: '📄' },
-  { value: 'other', label: 'Autre', icon: '📦' },
-]
+const categories = computed(() => [
+  { value: 'all', label: t('expenses.categories.all'), icon: '📋' },
+  { value: 'vet', label: t('expenses.categories.vet'), icon: '🏥' },
+  { value: 'food', label: t('expenses.categories.food'), icon: '🍖' },
+  { value: 'accessories', label: t('expenses.categories.accessories'), icon: '🎀' },
+  { value: 'grooming', label: t('expenses.categories.grooming'), icon: '✂️' },
+  { value: 'insurance', label: t('expenses.categories.insurance'), icon: '📄' },
+  { value: 'other', label: t('expenses.categories.other'), icon: '📦' },
+])
 
 const newExpense = reactive({
   title: '',
@@ -151,11 +152,11 @@ const filteredExpenses = computed(() => {
 })
 
 const getCategoryLabel = (cat: string) => {
-  return categories.find(c => c.value === cat)?.label || cat
+  return categories.value.find(c => c.value === cat)?.label || cat
 }
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR')
+  return new Date(date).toLocaleDateString(locale.value)
 }
 
 const fetchExpenses = async () => {
@@ -191,7 +192,7 @@ const addExpense = async () => {
 }
 
 const deleteExpense = async (id: number) => {
-  if (!confirm('Supprimer cette dépense ?')) return
+  if (!confirm(t('expenses.confirm_delete'))) return
   const api = useApi()
   await api.del(`/expenses/${id}`)
   await fetchExpenses()

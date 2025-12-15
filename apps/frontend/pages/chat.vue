@@ -258,6 +258,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t, locale } = useI18n()
 const route = useRoute()
 const petsStore = usePetsStore()
 const chatStore = useChatStore()
@@ -272,7 +273,7 @@ const newConversationPetId = ref<string | null>(null)
 
 const formatTime = (date: Date | string) => {
   const d = typeof date === 'string' ? new Date(date) : date
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' })
 }
 
 const handlePetChange = () => {
@@ -280,7 +281,7 @@ const handlePetChange = () => {
 }
 
 const createNewConversation = async () => {
-  const title = newConversationTitle.value.trim() || 'Nouvelle conversation'
+  const title = newConversationTitle.value.trim() || t('chat.new_conversation')
   const petId = newConversationPetId.value || undefined
   
   await chatStore.createConversation(petId, title)
@@ -301,7 +302,7 @@ const selectConversation = async (conversationId: string) => {
 }
 
 const deleteConversation = async (conversationId: string) => {
-  if (confirm('Supprimer cette conversation ?')) {
+  if (confirm(t('chat.delete_confirm'))) {
     await chatStore.deleteConversation(conversationId)
   }
 }

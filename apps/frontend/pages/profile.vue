@@ -183,7 +183,8 @@
             v-for="lang in availableLanguages" 
             :key="lang.code"
             @click="updateLanguage(lang.code)"
-            class="w-full px-4 py-3 rounded-xl border flex items-center justify-between transition-colors"
+            :disabled="saving"
+            class="w-full px-4 py-3 rounded-xl border flex items-center justify-between transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             :class="profile.language === lang.code ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-gray-200 hover:border-primary-200'"
           >
             <span class="font-medium">{{ lang.name }}</span>
@@ -306,15 +307,21 @@ const fetchProfile = async () => {
 }
 
 const updateLanguage = async (lang: string) => {
+  if (saving.value) return
   saving.value = true
-  const api = useApi()
-  const response = await api.put('/auth/profile', { language: lang })
-  if (response.success) {
-    await fetchProfile()
-    setLocale(lang as any)
-    showLanguageModal.value = false
+  try {
+    const api = useApi()
+    const response = await api.put('/auth/profile', { language: lang })
+    if (response.success) {
+      await setLocale(lang as any)
+      await fetchProfile()
+      showLanguageModal.value = false
+    }
+  } catch (error) {
+    console.error('Failed to update language:', error)
+  } finally {
+    saving.value = false
   }
-  saving.value = false
 }
 
 const updateProfile = async () => {

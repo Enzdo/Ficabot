@@ -1,7 +1,7 @@
 <template>
   <div>
-    <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">Connexion</h2>
-    <p class="text-center text-gray-500 text-sm mb-8">Heureux de vous revoir ! 👋</p>
+    <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">{{ $t('auth.login.title') }}</h2>
+    <p class="text-center text-gray-500 text-sm mb-8">{{ $t('auth.login.welcome') }}</p>
     
     <form @submit.prevent="handleLogin" class="space-y-5">
       <div v-if="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
@@ -12,7 +12,7 @@
       </div>
 
       <div class="space-y-1.5">
-        <label for="email" class="text-sm font-semibold text-gray-700 ml-1">Email</label>
+        <label for="email" class="text-sm font-semibold text-gray-700 ml-1">{{ $t('auth.email') }}</label>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
@@ -25,7 +25,7 @@
             v-model="form.email"
             type="email"
             class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
-            placeholder="votre@email.com"
+            :placeholder="$t('auth.email_placeholder')"
             required
           />
         </div>
@@ -33,8 +33,8 @@
 
       <div class="space-y-1.5">
         <div class="flex items-center justify-between ml-1">
-          <label for="password" class="text-sm font-semibold text-gray-700">Mot de passe</label>
-          <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700">Oublié ?</a>
+          <label for="password" class="text-sm font-semibold text-gray-700">{{ $t('auth.password') }}</label>
+          <a href="#" class="text-xs font-medium text-primary-600 hover:text-primary-700">{{ $t('auth.forgot_password') }}</a>
         </div>
         <div class="relative">
           <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
@@ -47,7 +47,7 @@
             v-model="form.password"
             type="password"
             class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
-            placeholder="••••••••"
+            :placeholder="$t('auth.password_placeholder')"
             required
           />
         </div>
@@ -63,17 +63,17 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          Connexion...
+          {{ $t('auth.login.loading') }}
         </span>
-        <span v-else>Se connecter</span>
+        <span v-else>{{ $t('auth.login.submit') }}</span>
       </button>
     </form>
 
     <div class="mt-8 text-center">
       <p class="text-sm text-gray-600">
-        Pas encore de compte ?
+        {{ $t('auth.login.no_account') }}
         <NuxtLink to="/register" class="text-primary-600 hover:text-primary-700 font-bold ml-1 hover:underline">
-          Créer un compte
+          {{ $t('auth.login.create_account') }}
         </NuxtLink>
       </p>
     </div>

@@ -16,7 +16,7 @@
         Ficabot
       </h1>
       <p class="text-primary-50 text-xl mb-12 font-medium leading-relaxed max-w-xs mx-auto">
-        Le compagnon santé intelligent pour vos animaux de compagnie 🐕🐱
+        {{ $t('landing.subtitle') }}
       </p>
 
       <!-- Cards Feature Preview -->
@@ -24,15 +24,15 @@
         <div class="grid grid-cols-3 gap-6">
           <div class="flex flex-col items-center group">
             <span class="text-3xl mb-3 group-hover:scale-110 transition-transform">📋</span>
-            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">Suivi</span>
+            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ $t('landing.features.tracking') }}</span>
           </div>
           <div class="flex flex-col items-center group">
             <span class="text-3xl mb-3 group-hover:scale-110 transition-transform">💉</span>
-            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">Rappels</span>
+            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ $t('landing.features.reminders') }}</span>
           </div>
           <div class="flex flex-col items-center group">
             <span class="text-3xl mb-3 group-hover:scale-110 transition-transform">🤖</span>
-            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">IA</span>
+            <span class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ $t('landing.features.ai') }}</span>
           </div>
         </div>
       </div>
@@ -40,16 +40,16 @@
       <!-- Actions -->
       <div class="w-full space-y-4">
         <NuxtLink to="/register" class="block w-full bg-primary-600 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-primary-600/30 active:scale-[0.98] transition-all hover:bg-primary-500 hover:shadow-primary-600/40">
-          Commencer maintenant
+          {{ $t('landing.cta.start') }}
         </NuxtLink>
         <NuxtLink to="/login" class="block w-full bg-white text-primary-700 py-4 rounded-2xl font-bold text-lg border border-primary-100 shadow-lg shadow-gray-200/50 active:scale-[0.98] transition-all hover:bg-gray-50">
-          J'ai déjà un compte
+          {{ $t('landing.cta.login') }}
         </NuxtLink>
       </div>
 
       <!-- Footer -->
       <p class="mt-10 text-sm text-gray-400 font-medium">
-        Prenez soin d'eux comme ils prennent soin de vous ❤️
+        {{ $t('landing.footer') }}
       </p>
     </div>
   </div>
