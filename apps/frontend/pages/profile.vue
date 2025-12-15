@@ -51,6 +51,20 @@
       </div>
     </div>
 
+    <!-- Preferences -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="font-bold text-gray-900">Préférences</h3>
+        <button @click="showLanguageModal = true" class="text-primary-600 text-sm font-medium">Modifier</button>
+      </div>
+      <div class="px-6 py-4 flex justify-between">
+        <span class="text-gray-500">Langue</span>
+        <span class="font-medium text-gray-900">
+          {{ profile.language === 'en' ? 'English' : profile.language === 'de' ? 'Deutsch' : 'Français' }}
+        </span>
+      </div>
+    </div>
+
     <!-- Email -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -201,14 +215,22 @@ const profile = ref({
   lastName: '',
   phone: '',
   avatarUrl: '',
+  language: 'fr',
   createdAt: '',
 })
 
 const showEditProfileModal = ref(false)
 const showAvatarModal = ref(false)
+const showLanguageModal = ref(false)
 const showEmailModal = ref(false)
 const showPasswordModal = ref(false)
 const saving = ref(false)
+
+const availableLanguages = [
+  { code: 'fr', name: 'Français' },
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+]
 
 const editForm = reactive({
   firstName: '',
@@ -248,12 +270,27 @@ const fetchProfile = async () => {
   const response = await api.get<any>('/auth/me')
   if (response.success && response.data) {
     profile.value = response.data
+    if (response.data.language) {
+      profile.value.language = response.data.language
+    }
+    authStore.updateUser(response.data)
     editForm.firstName = response.data.firstName || ''
     editForm.lastName = response.data.lastName || ''
     editForm.phone = response.data.phone || ''
     avatarUrl.value = response.data.avatarUrl || ''
     emailForm.email = response.data.email
   }
+}
+
+const updateLanguage = async (lang: string) => {
+  saving.value = true
+  const api = useApi()
+  const response = await api.put('/auth/profile', { language: lang })
+  if (response.success) {
+    await fetchProfile()
+    showLanguageModal.value = false
+  }
+  saving.value = false
 }
 
 const updateProfile = async () => {

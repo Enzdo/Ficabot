@@ -98,14 +98,16 @@ IMPORTANT: Retourne UNIQUEMENT le JSON, sans texte avant ou après.`
     }
   }
 
-  private buildSystemPrompt(pet: Pet | null, healthBook: HealthBook | null = null): string {
+  private buildSystemPrompt(pet: Pet | null, healthBook: HealthBook | null = null, language: string = 'fr'): string {
+    const langName = language === 'en' ? 'English' : language === 'de' ? 'German' : 'French'
+    
     let prompt = `Tu es un assistant vétérinaire virtuel bienveillant et compétent appelé Ficabot.
 Tu aides les propriétaires d'animaux de compagnie avec des conseils sur la santé, le bien-être et les soins de leurs animaux.
 
 Règles importantes:
 - Sois toujours empathique et rassurant
 - Donne des conseils généraux mais rappelle toujours de consulter un vétérinaire pour les cas sérieux
-- Réponds en français
+- Réponds en ${langName} (${language})
 - Sois concis mais informatif
 - N'hésite pas à poser des questions de suivi si nécessaire
 - Utilise les données du carnet de santé pour donner des réponses précises et personnalisées

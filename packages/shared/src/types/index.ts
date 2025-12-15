@@ -7,6 +7,11 @@ export type ChatRole = 'user' | 'assistant'
 export interface User {
   id: string
   email: string
+  firstName?: string
+  lastName?: string
+  avatarUrl?: string
+  phone?: string
+  language?: string
   createdAt: Date
   updatedAt: Date
   user_metadata?: {

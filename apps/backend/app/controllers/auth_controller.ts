@@ -53,18 +53,20 @@ export default class AuthController {
         avatarUrl: user.avatarUrl,
         phone: user.phone,
         createdAt: user.createdAt,
+        language: user.language,
       },
     })
   }
 
   async updateProfile({ auth, request, response }: HttpContext) {
     const user = auth.user!
-    const data = request.only(['firstName', 'lastName', 'phone', 'avatarUrl'])
+    const data = request.only(['firstName', 'lastName', 'phone', 'avatarUrl', 'language'])
 
     if (data.firstName !== undefined) user.firstName = data.firstName
     if (data.lastName !== undefined) user.lastName = data.lastName
     if (data.phone !== undefined) user.phone = data.phone
     if (data.avatarUrl !== undefined) user.avatarUrl = data.avatarUrl
+    if (data.language !== undefined) user.language = data.language
 
     await user.save()
 
@@ -78,6 +80,7 @@ export default class AuthController {
         lastName: user.lastName,
         avatarUrl: user.avatarUrl,
         phone: user.phone,
+        language: user.language,
       },
     })
   }
