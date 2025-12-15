@@ -17,9 +17,10 @@ export default class OpenAIService {
     userMessage: string,
     pet: Pet | null,
     previousMessages: ChatMessage[],
-    healthBook: HealthBook | null = null
+    healthBook: HealthBook | null = null,
+    language: string = 'fr' // Langue de l'utilisateur
   ): Promise<string> {
-    const systemPrompt = this.buildSystemPrompt(pet, healthBook)
+    const systemPrompt = this.buildSystemPrompt(pet, healthBook, language)
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
