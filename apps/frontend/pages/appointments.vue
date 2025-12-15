@@ -18,16 +18,16 @@
             class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
           >
             <div class="flex items-start justify-between mb-3">
-              <div>
-                <p class="font-bold text-gray-900">{{ apt.title }}</p>
-                <p class="text-sm text-primary-600 font-medium">{{ formatDate(apt.appointmentDate) }} {{ apt.appointmentTime ? `à ${apt.appointmentTime}` : '' }}</p>
+              <div class="flex-1 min-w-0 mr-2">
+                <p class="font-bold text-gray-900 truncate">{{ apt.title }}</p>
+                <p class="text-sm text-primary-600 font-medium truncate">{{ formatDate(apt.appointmentDate) }} {{ apt.appointmentTime ? `à ${apt.appointmentTime}` : '' }}</p>
               </div>
-              <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">{{ apt.pet?.name }}</span>
+              <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full shrink-0">{{ apt.pet?.name }}</span>
             </div>
             
             <div v-if="apt.vetName" class="text-sm text-gray-600 mb-2">
-              <p class="font-medium">🏥 {{ apt.vetName }}</p>
-              <p v-if="apt.vetAddress" class="text-gray-400">{{ apt.vetAddress }}</p>
+              <p class="font-medium truncate">🏥 {{ apt.vetName }}</p>
+              <p v-if="apt.vetAddress" class="text-gray-400 truncate">{{ apt.vetAddress }}</p>
             </div>
 
             <div class="flex gap-2 mt-3">

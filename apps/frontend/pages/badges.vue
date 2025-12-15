@@ -11,7 +11,7 @@
         <div class="text-5xl">🏆</div>
         <div>
           <p class="text-white/80 text-sm">Total des points</p>
-          <p class="text-4xl font-bold">{{ totalPoints }}</p>
+          <p class="text-4xl font-bold truncate">{{ totalPoints }}</p>
         </div>
       </div>
     </div>
@@ -36,8 +36,8 @@
         class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center"
       >
         <div class="text-4xl mb-2">{{ ub.badge.icon }}</div>
-        <p class="font-bold text-gray-900 text-sm">{{ ub.badge.name }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ ub.badge.description }}</p>
+        <p class="font-bold text-gray-900 text-sm truncate px-1">{{ ub.badge.name }}</p>
+        <p class="text-xs text-gray-500 mt-1 line-clamp-2 px-1">{{ ub.badge.description }}</p>
         <p class="text-xs text-primary-600 mt-2">+{{ ub.badge.points }} pts</p>
       </div>
     </div>
@@ -52,8 +52,8 @@
         class="bg-gray-100 rounded-2xl p-4 text-center opacity-60"
       >
         <div class="text-4xl mb-2 grayscale">{{ badge.icon }}</div>
-        <p class="font-bold text-gray-700 text-sm">{{ badge.name }}</p>
-        <p class="text-xs text-gray-500 mt-1">{{ badge.description }}</p>
+        <p class="font-bold text-gray-700 text-sm truncate px-1">{{ badge.name }}</p>
+        <p class="text-xs text-gray-500 mt-1 line-clamp-2 px-1">{{ badge.description }}</p>
         <p class="text-xs text-gray-400 mt-2">{{ badge.points }} pts</p>
       </div>
     </div>

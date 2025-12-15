@@ -103,7 +103,7 @@
                   : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
               ]"
             >
-              <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ message.message }}</p>
+              <p class="whitespace-pre-wrap text-sm leading-relaxed break-words">{{ message.message }}</p>
               <p 
                 class="text-[10px] mt-1 text-right opacity-0 group-hover:opacity-70 transition-opacity absolute -bottom-5 right-0 text-gray-400 w-20"
                 :class="message.role === 'user' ? 'mr-1' : 'ml-1'"
@@ -131,7 +131,7 @@
           <select 
             v-model="selectedPetId" 
             @change="handlePetChange" 
-            class="text-base border border-gray-200 bg-gray-50 rounded-xl py-2.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-100 font-medium text-gray-700 min-w-[120px]"
+            class="text-base border border-gray-200 bg-gray-50 rounded-xl py-2.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-100 font-medium text-gray-700 w-[130px] flex-shrink-0 text-ellipsis overflow-hidden"
           >
             <option :value="null">Général</option>
             <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">

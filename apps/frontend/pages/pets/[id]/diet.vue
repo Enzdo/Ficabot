@@ -1,15 +1,15 @@
 <template>
   <div class="pb-24">
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100">
+    <div class="flex items-center gap-3 mb-6 min-w-0">
+      <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100 shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
       </NuxtLink>
-      <div>
-        <h1 class="text-xl font-bold text-gray-900">Programme Minceur</h1>
-        <p class="text-sm text-gray-500">{{ pet?.name }}</p>
+      <div class="min-w-0">
+        <h1 class="text-xl font-bold text-gray-900 truncate">Programme Minceur</h1>
+        <p class="text-sm text-gray-500 truncate">{{ pet?.name }}</p>
       </div>
     </div>
 
@@ -37,11 +37,11 @@
         <div class="flex items-center justify-between mb-4">
           <div>
             <p class="text-white/80 text-sm">Objectif</p>
-            <p class="text-3xl font-bold">{{ goal.targetWeight }} kg</p>
+            <p class="text-3xl font-bold truncate">{{ goal.targetWeight }} kg</p>
           </div>
           <div class="text-right">
             <p class="text-white/80 text-sm">Actuel</p>
-            <p class="text-3xl font-bold">{{ goal.currentWeight }} kg</p>
+            <p class="text-3xl font-bold truncate">{{ goal.currentWeight }} kg</p>
           </div>
         </div>
         

@@ -2,15 +2,15 @@
   <div class="pb-24">
     <!-- Sticky Header -->
     <div class="sticky top-0 bg-surface-50/95 backdrop-blur z-10 px-4 py-3 flex items-center justify-between border-b border-gray-100">
-      <div class="flex items-center gap-3">
-        <NuxtLink :to="`/pets/${route.params.id}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+      <div class="flex items-center gap-3 min-w-0">
+        <NuxtLink :to="`/pets/${route.params.id}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-600">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </NuxtLink>
-        <div>
-          <h1 class="font-bold text-gray-900 text-lg leading-tight">Carnet de santé</h1>
-          <p class="text-xs text-gray-500 font-medium" v-if="petsStore.currentPet">{{ petsStore.currentPet.name }}</p>
+        <div class="min-w-0">
+          <h1 class="font-bold text-gray-900 text-lg leading-tight truncate">Carnet de santé</h1>
+          <p class="text-xs text-gray-500 font-medium truncate" v-if="petsStore.currentPet">{{ petsStore.currentPet.name }}</p>
         </div>
       </div>
       <button 
@@ -67,21 +67,21 @@
           class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 active:scale-[0.99] transition-transform"
         >
           <div class="flex items-start justify-between mb-3">
-            <div class="flex items-start gap-3">
+            <div class="flex items-start gap-3 flex-1 min-w-0 mr-3">
               <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 mt-0.5" :class="getRecordTypeBg(record.type)">
                 {{ getRecordIcon(record.type) }}
               </div>
-              <div>
-                <h3 class="font-bold text-gray-900 leading-tight">{{ record.title }}</h3>
-                <p class="text-xs text-gray-500 font-medium mt-1">{{ formatDate(record.date) }}</p>
+              <div class="min-w-0 flex-1">
+                <h3 class="font-bold text-gray-900 leading-tight truncate">{{ record.title }}</h3>
+                <p class="text-xs text-gray-500 font-medium mt-1 truncate">{{ formatDate(record.date) }}</p>
               </div>
             </div>
-            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide" :class="getRecordTypeClass(record.type)">
+            <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide shrink-0" :class="getRecordTypeClass(record.type)">
               {{ getRecordTypeLabel(record.type) }}
             </span>
           </div>
           
-          <div v-if="record.description" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-xl mb-3">
+          <div v-if="record.description" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-xl mb-3 break-words">
             {{ record.description }}
           </div>
 

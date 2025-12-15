@@ -11,11 +11,11 @@
     <div class="grid grid-cols-2 gap-3 mb-6">
       <div class="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-4">
         <p class="text-white/80 text-sm">Ce mois</p>
-        <p class="text-2xl font-bold">{{ stats.monthly.toFixed(2) }}€</p>
+        <p class="text-2xl font-bold truncate">{{ stats.monthly.toFixed(2) }}€</p>
       </div>
       <div class="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-4">
         <p class="text-white/80 text-sm">Cette année</p>
-        <p class="text-2xl font-bold">{{ stats.yearly.toFixed(2) }}€</p>
+        <p class="text-2xl font-bold truncate">{{ stats.yearly.toFixed(2) }}€</p>
       </div>
     </div>
 
@@ -49,12 +49,12 @@
         class="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
       >
         <div class="flex items-start justify-between">
-          <div>
-            <p class="font-bold text-gray-900">{{ expense.title }}</p>
-            <p class="text-sm text-gray-500">{{ getCategoryLabel(expense.category) }} • {{ formatDate(expense.expenseDate) }}</p>
-            <p v-if="expense.pet" class="text-xs text-primary-600 mt-1">🐾 {{ expense.pet.name }}</p>
+          <div class="flex-1 min-w-0 pr-2">
+            <p class="font-bold text-gray-900 truncate">{{ expense.title }}</p>
+            <p class="text-sm text-gray-500 truncate">{{ getCategoryLabel(expense.category) }} • {{ formatDate(expense.expenseDate) }}</p>
+            <p v-if="expense.pet" class="text-xs text-primary-600 mt-1 truncate">🐾 {{ expense.pet.name }}</p>
           </div>
-          <div class="text-right">
+          <div class="text-right shrink-0">
             <p class="text-lg font-bold text-gray-900">{{ parseFloat(expense.amount).toFixed(2) }}€</p>
             <button @click="deleteExpense(expense.id)" class="text-red-400 text-sm mt-1">Supprimer</button>
           </div>

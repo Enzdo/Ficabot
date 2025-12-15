@@ -1,15 +1,15 @@
 <template>
   <div class="pb-24">
     <!-- Header -->
-    <div class="flex items-center gap-3 mb-6">
-      <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100">
+    <div class="flex items-center gap-3 mb-6 min-w-0">
+      <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100 shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
       </NuxtLink>
-      <div>
-        <h1 class="text-xl font-bold text-gray-900">📸 Analyse Photo IA</h1>
-        <p class="text-sm text-gray-500">{{ pet?.name }}</p>
+      <div class="min-w-0">
+        <h1 class="text-xl font-bold text-gray-900 truncate">📸 Analyse Photo IA</h1>
+        <p class="text-sm text-gray-500 truncate">{{ pet?.name }}</p>
       </div>
     </div>
 
@@ -101,7 +101,7 @@
         <!-- AI Answer to user question -->
         <div v-if="result.analysis?.answer" class="mb-4 bg-white/50 rounded-xl p-4">
           <h4 class="font-bold text-gray-900 mb-2">💬 Réponse à votre question</h4>
-          <p class="text-gray-700 whitespace-pre-line">{{ result.analysis.answer }}</p>
+          <p class="text-gray-700 whitespace-pre-line break-words">{{ result.analysis.answer }}</p>
         </div>
 
         <!-- Findings -->
@@ -109,8 +109,8 @@
           <h4 class="font-bold text-gray-900 mb-2">🔍 Observations</h4>
           <ul class="space-y-1">
             <li v-for="(finding, i) in result.analysis.findings" :key="i" class="text-sm text-gray-700 flex items-start gap-2">
-              <span>•</span>
-              <span>{{ finding }}</span>
+              <span class="shrink-0">•</span>
+              <span class="flex-1 break-words">{{ finding }}</span>
             </li>
           </ul>
         </div>
@@ -120,8 +120,8 @@
           <h4 class="font-bold text-gray-900 mb-2">💡 Recommandations</h4>
           <ul class="space-y-1">
             <li v-for="(rec, i) in result.analysis.recommendations" :key="i" class="text-sm text-gray-700 flex items-start gap-2">
-              <span>•</span>
-              <span>{{ rec }}</span>
+              <span class="shrink-0">•</span>
+              <span class="flex-1 break-words">{{ rec }}</span>
             </li>
           </ul>
         </div>
@@ -155,7 +155,7 @@
       <!-- Raw response fallback -->
       <div v-if="result.analysis?.raw" class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
         <h4 class="font-bold text-gray-900 mb-2">Réponse de l'IA</h4>
-        <p class="text-sm text-gray-700 whitespace-pre-line">{{ result.analysis.raw }}</p>
+        <p class="text-sm text-gray-700 whitespace-pre-line break-words">{{ result.analysis.raw }}</p>
       </div>
     </div>
 

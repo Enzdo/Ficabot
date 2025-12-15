@@ -19,16 +19,16 @@
             :key="reminder.id"
             class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between"
           >
-            <div class="flex items-center gap-3">
-              <div :class="getReminderIcon(reminder.type).bg" class="w-10 h-10 rounded-full flex items-center justify-center text-lg">
+            <div class="flex items-center gap-3 flex-1 min-w-0 mr-3">
+              <div :class="getReminderIcon(reminder.type).bg" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
                 {{ getReminderIcon(reminder.type).icon }}
               </div>
-              <div>
-                <p class="font-medium text-gray-900">{{ reminder.title }}</p>
-                <p class="text-xs text-gray-500">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || 'Général' }}</p>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-900 truncate">{{ reminder.title }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || 'Général' }}</p>
               </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
               <button @click="completeReminder(reminder.id)" class="p-2 text-green-600 hover:bg-green-50 rounded-lg">
                 ✓
               </button>

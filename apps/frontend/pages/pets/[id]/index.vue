@@ -20,7 +20,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </NuxtLink>
-        <span class="font-bold text-gray-900">{{ petsStore.currentPet.name }}</span>
+        <div class="flex-1 min-w-0 mx-2 text-center">
+          <span class="font-bold text-gray-900 truncate block">{{ petsStore.currentPet.name }}</span>
+        </div>
         <button @click="showEditModal = true" class="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors text-primary-600 font-medium text-sm">
           Modifier
         </button>
@@ -36,7 +38,7 @@
               {{ petsStore.currentPet.species === 'dog' ? '🐕' : '🐱' }}
             </div>
             
-            <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ petsStore.currentPet.name }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900 mb-1 truncate px-4">{{ petsStore.currentPet.name }}</h1>
             <p class="text-gray-500">{{ petsStore.currentPet.breed || 'Race non spécifiée' }}</p>
             
             <div class="flex justify-center gap-6 mt-6">
@@ -247,7 +249,7 @@
         </div>
 
         <!-- Owners Section -->
-        <div v-if="petsStore.currentPet?.isOwner" class="pt-4">
+        <div v-if="(petsStore.currentPet as any)?.isOwner" class="pt-4">
           <div class="flex justify-between items-center mb-3">
             <h2 class="text-lg font-bold text-gray-900">👥 Propriétaires</h2>
             <button @click="showInviteModal = true" class="text-primary-600 text-sm font-medium">+ Inviter</button>
@@ -306,7 +308,7 @@
         </div>
 
         <!-- Danger Zone -->
-        <div v-if="petsStore.currentPet?.isOwner" class="pt-8">
+        <div v-if="(petsStore.currentPet as any)?.isOwner" class="pt-8">
           <button @click="handleDelete" class="w-full py-3 text-red-600 bg-red-50 rounded-xl text-sm font-medium border border-red-100 active:scale-[0.98] transition-transform">
             Supprimer la fiche de {{ petsStore.currentPet.name }}
           </button>

@@ -5,7 +5,7 @@
     <!-- Profile Header -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
       <div class="flex items-center gap-4">
-        <div class="relative">
+        <div class="relative shrink-0">
           <div 
             class="w-20 h-20 rounded-full bg-primary-100 flex items-center justify-center text-3xl font-bold text-primary-600 overflow-hidden"
           >
@@ -19,12 +19,12 @@
             📷
           </button>
         </div>
-        <div>
-          <h2 class="text-xl font-bold text-gray-900">
+        <div class="flex-1 min-w-0">
+          <h2 class="text-xl font-bold text-gray-900 truncate">
             {{ profile.firstName || profile.lastName ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() : 'Utilisateur' }}
           </h2>
-          <p class="text-gray-500">{{ profile.email }}</p>
-          <p class="text-xs text-gray-400 mt-1">Membre depuis {{ formatDate(profile.createdAt) }}</p>
+          <p class="text-gray-500 truncate">{{ profile.email }}</p>
+          <p class="text-xs text-gray-400 mt-1 truncate">Membre depuis {{ formatDate(profile.createdAt) }}</p>
         </div>
       </div>
     </div>

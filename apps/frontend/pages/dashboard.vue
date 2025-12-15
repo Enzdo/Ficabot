@@ -19,7 +19,7 @@
             🐾
           </div>
           <div>
-            <p class="text-3xl font-bold text-gray-900 tracking-tight">{{ petsStore.pets.length }}</p>
+            <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ petsStore.pets.length }}</p>
             <p class="text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">Animaux</p>
           </div>
         </div>
@@ -31,7 +31,7 @@
             🔔
           </div>
           <div>
-            <p class="text-3xl font-bold text-gray-900 tracking-tight">{{ upcomingReminders }}</p>
+            <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ upcomingReminders }}</p>
             <p class="text-sm font-medium text-gray-500 group-hover:text-amber-600 transition-colors">Rappels</p>
           </div>
         </div>
@@ -43,7 +43,7 @@
             📅
           </div>
           <div>
-            <p class="text-3xl font-bold text-gray-900 tracking-tight">{{ upcomingAppointments }}</p>
+            <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ upcomingAppointments }}</p>
             <p class="text-sm font-medium text-gray-500 group-hover:text-green-600 transition-colors">RDV à venir</p>
           </div>
         </div>
@@ -55,7 +55,7 @@
             💬
           </div>
           <div>
-            <p class="text-3xl font-bold text-gray-900 tracking-tight">{{ conversations }}</p>
+            <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ conversations }}</p>
             <p class="text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors">Conversations</p>
           </div>
         </div>

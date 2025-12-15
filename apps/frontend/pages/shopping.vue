@@ -45,10 +45,10 @@
           <span v-if="item.isCompleted">✓</span>
         </button>
         <div class="flex-1 min-w-0">
-          <p class="font-medium text-gray-900" :class="item.isCompleted ? 'line-through' : ''">
+          <p class="font-medium text-gray-900 truncate" :class="item.isCompleted ? 'line-through' : ''">
             {{ item.name }}
           </p>
-          <p class="text-sm text-gray-500">
+          <p class="text-sm text-gray-500 truncate">
             {{ item.quantity }}{{ item.unit ? ` ${item.unit}` : '' }} • {{ getCategoryLabel(item.category) }}
           </p>
         </div>
