@@ -11,7 +11,18 @@
 
 import { Env } from '@adonisjs/core/env'
 
-export default await Env.create(new URL('../', import.meta.url), {
+let appRoot = new URL('../', import.meta.url)
+
+/**
+ * When running from the "build" directory, the "env.js" file is located
+ * inside "build/start" directory. So we need to go up 2 levels to
+ * reach the application root.
+ */
+if (appRoot.pathname.endsWith('/build/')) {
+  appRoot = new URL('../', appRoot)
+}
+
+export default await Env.create(appRoot, {
   NODE_ENV: Env.schema.enum(['development', 'production', 'test'] as const),
   PORT: Env.schema.number(),
   APP_KEY: Env.schema.string(),

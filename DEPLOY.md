@@ -2,7 +2,7 @@
 
 This guide details the steps to deploy the full Ficabot stack:
 1. **Database:** Supabase
-2. **Backend:** Railway (NestJS)
+2. **Backend:** Railway (AdonisJS)
 3. **Frontend:** Vercel (Nuxt 3)
 
 ## 1. Database Setup (Supabase)
@@ -31,18 +31,25 @@ This guide details the steps to deploy the full Ficabot stack:
 2.  **Configure Monorepo:**
     *   Railway needs to know it's a monorepo.
     *   **Root Directory:** `apps/backend`
-    *   **Build Command:** `pnpm build` (or leave default if Railway auto-detects NestJS, but it's safer to specify). *Note: Since this is a pnpm monorepo, you might need a custom start command.*
-    *   **Start Command:** `node dist/main`
+    *   **Build Command:** `pnpm build`
+    *   **Start Command:** `node build/bin/server.js`
 
     *Alternative Strategy (Docker):*
     *   If the default build fails due to monorepo structure, add a `Dockerfile` in `apps/backend` that copies necessary packages.
 
 3.  **Environment Variables:**
     Add the following variables in Railway:
-    *   `DATABASE_URL`: Your Supabase connection string.
-    *   `PORT`: `8080` (or let Railway assign one and bind to `0.0.0.0`).
-    *   `SUPABASE_URL`: Your Supabase Project URL.
-    *   `SUPABASE_KEY`: Your Supabase Anon Key (or Service Role if needed).
+    *   `APP_KEY`: Generate one using `node ace generate:key` locally.
+    *   `HOST`: `0.0.0.0`
+    *   `LOG_LEVEL`: `info`
+    *   `NODE_ENV`: `production`
+    *   `DB_HOST`: Your Supabase Host (e.g., `db.PROJECT_ID.supabase.co`)
+    *   `DB_PORT`: `5432`
+    *   `DB_USER`: `postgres`
+    *   `DB_PASSWORD`: Your Database Password
+    *   `DB_DATABASE`: `postgres`
+    *   `DB_SSL`: `true` (Supabase requires SSL)
+    *   `PORT`: `8080` (Railway provides this, but good to have a default)
 
 4.  **Generate Domain:**
     *   In Railway settings, generate a domain (e.g., `ficabot-backend.up.railway.app`). You'll need this for the frontend.
@@ -68,8 +75,8 @@ This guide details the steps to deploy the full Ficabot stack:
 
 ## 4. Post-Deployment Checks
 
-*   **CORS:** Ensure your NestJS backend allows CORS from your Vercel frontend domain.
-    *   In `apps/backend/src/main.ts`, update `app.enableCors()` to include your Vercel domain.
+*   **CORS:** Ensure your backend allows CORS from your Vercel frontend domain.
+    *   In `apps/backend/config/cors.ts`, you can update the `origin` property to strictly allow only your Vercel domain if needed. Currently it is set to `true` (allow all).
 *   **Redirect URLs:** In Supabase Authentication -> URL Configuration, add your Vercel production URL to "Site URL" and "Redirect URLs" to ensure auth redirects work correctly.
 
 ## Local Development
