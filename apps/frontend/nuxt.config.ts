@@ -5,7 +5,20 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     '@vueuse/nuxt',
+    '@nuxtjs/i18n',
   ],
+
+  i18n: {
+    locales: [
+      { code: 'fr', file: 'fr.json', name: 'Français' },
+      { code: 'en', file: 'en.json', name: 'English' },
+      { code: 'de', file: 'de.json', name: 'Deutsch' },
+    ],
+    lazy: true,
+    langDir: 'locales',
+    defaultLocale: 'fr',
+    strategy: 'no_prefix',
+  },
 
   ssr: true,
 

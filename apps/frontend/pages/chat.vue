@@ -7,13 +7,13 @@
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          Nouvelle conversation
+          {{ $t('chat.new_conversation') }}
         </button>
       </div>
       
       <div class="flex-1 overflow-y-auto p-2 space-y-1">
         <div v-if="chatStore.conversations.length === 0" class="text-center py-8 text-gray-400 text-sm">
-          Aucune conversation
+          {{ $t('chat.no_conversation') }}
         </div>
         <button
           v-for="conv in chatStore.conversations"
@@ -25,7 +25,7 @@
           <div class="flex items-start justify-between">
             <div class="flex-1 min-w-0">
               <p class="font-medium text-sm truncate">{{ conv.title }}</p>
-              <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMessage || 'Nouvelle conversation' }}</p>
+              <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMessage || $t('chat.new_conversation') }}</p>
             </div>
             <button 
               @click.stop="deleteConversation(conv.id)" 
@@ -57,7 +57,7 @@
             <h1 class="font-bold text-gray-900 leading-tight truncate">Ficabot</h1>
             <div class="flex items-center text-xs text-primary-600 font-medium truncate">
               <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse shrink-0"></span>
-              En ligne
+              {{ $t('chat.online') }}
             </div>
           </div>
         </div>
@@ -69,15 +69,15 @@
           <div class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center text-4xl mb-4 animate-bounce-slow">
             👋
           </div>
-          <h2 class="text-lg font-bold text-gray-900 mb-2">Bonjour ! Je suis Ficabot.</h2>
+          <h2 class="text-lg font-bold text-gray-900 mb-2">{{ $t('chat.welcome_title') }}</h2>
           <p class="text-gray-500 text-sm mb-8 max-w-xs">
-            Créez une nouvelle conversation pour commencer à discuter.
+            {{ $t('chat.welcome_text') }}
           </p>
           <button @click="showNewConversationModal = true" class="flex items-center gap-2 bg-primary-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-primary-700 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Nouvelle conversation
+            {{ $t('chat.new_conversation') }}
           </button>
         </div>
 
@@ -86,7 +86,7 @@
             <div class="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center text-3xl mb-4">
               💬
             </div>
-            <p class="text-gray-500 text-sm">Envoyez un message pour commencer</p>
+            <p class="text-gray-500 text-sm">{{ $t('chat.start_message') }}</p>
           </div>
 
           <div
@@ -134,7 +134,7 @@
               @change="handlePetChange" 
               class="w-full text-base border border-gray-200 bg-gray-50 rounded-xl py-2.5 pl-2 pr-6 focus:ring-2 focus:ring-primary-100 font-medium text-gray-700 text-ellipsis overflow-hidden appearance-none"
             >
-              <option :value="null">Général</option>
+              <option :value="null">{{ $t('chat.general') }}</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">
                 {{ pet.name }}
               </option>
@@ -150,7 +150,7 @@
               v-model="newMessage"
               type="text"
               class="flex-1 bg-transparent border-none focus:ring-0 px-3 sm:px-4 py-2 text-gray-900 placeholder-gray-400 text-base min-w-0"
-              placeholder="Écrivez..."
+              :placeholder="$t('chat.placeholder')"
               :disabled="chatStore.loading || !chatStore.currentConversationId"
             />
             <button
@@ -165,7 +165,7 @@
           </div>
         </form>
         <p class="text-[10px] text-gray-400 text-center mt-2">
-          Les conseils de l'IA ne remplacent pas l'avis d'un vétérinaire.
+          {{ $t('chat.disclaimer') }}
         </p>
       </div>
     </div>
@@ -174,7 +174,7 @@
     <div v-if="showMobileSidebar" class="fixed inset-0 bg-black/50 z-[60] sm:hidden" @click="showMobileSidebar = false">
       <div class="w-72 max-w-[80vw] h-full bg-white flex flex-col shadow-2xl" @click.stop>
         <div class="p-3 border-b border-gray-100 flex justify-between items-center">
-          <span class="font-bold text-gray-900">Conversations</span>
+          <span class="font-bold text-gray-900">{{ $t('dashboard.stats.conversations') }}</span>
           <button @click="showMobileSidebar = false" class="p-2 rounded-lg hover:bg-gray-100">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -186,7 +186,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            Nouvelle conversation
+            {{ $t('chat.new_conversation') }}
           </button>
         </div>
         <div class="flex-1 overflow-y-auto p-2 space-y-1">
@@ -198,7 +198,7 @@
             :class="chatStore.currentConversationId === conv.id ? 'bg-primary-100 text-primary-700' : 'hover:bg-gray-100 text-gray-700'"
           >
             <p class="font-medium text-sm truncate">{{ conv.title }}</p>
-            <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMessage || 'Nouvelle conversation' }}</p>
+            <p class="text-xs text-gray-400 truncate mt-0.5">{{ conv.lastMessage || $t('chat.new_conversation') }}</p>
           </button>
         </div>
       </div>
@@ -207,26 +207,26 @@
     <!-- New Conversation Modal -->
     <div v-if="showNewConversationModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" @click="showNewConversationModal = false">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Nouvelle conversation</h3>
+        <h3 class="text-lg font-bold text-gray-900 mb-4">{{ $t('chat.new_conversation') }}</h3>
         
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom de la conversation</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('chat.conversation_name') }}</label>
             <input 
               v-model="newConversationTitle" 
               type="text" 
               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300 text-base"
-              placeholder="Ex: Questions sur mon chien"
+              :placeholder="$t('chat.conversation_placeholder')"
             />
           </div>
           
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Animal concerné (optionnel)</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('chat.related_pet') }}</label>
             <select 
               v-model="newConversationPetId" 
               class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300 text-base"
             >
-              <option :value="null">Général (aucun animal)</option>
+              <option :value="null">{{ $t('chat.general_option') }}</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">
                 {{ pet.name }}
               </option>
@@ -239,13 +239,13 @@
             @click="showNewConversationModal = false" 
             class="flex-1 py-2.5 px-4 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Annuler
+            {{ $t('common.cancel') }}
           </button>
           <button 
             @click="createNewConversation" 
             class="flex-1 py-2.5 px-4 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
           >
-            Créer
+            {{ $t('chat.create') }}
           </button>
         </div>
       </div>

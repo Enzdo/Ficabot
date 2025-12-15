@@ -6,8 +6,8 @@
       <div class="absolute bottom-0 left-0 w-48 h-48 bg-black/5 rounded-full blur-2xl -ml-10 -mb-10 pointer-events-none"></div>
       
       <div class="relative z-10">
-        <h1 class="text-3xl font-bold mb-1 tracking-tight">Bonjour 👋</h1>
-        <p class="text-primary-50 font-medium text-lg">Bienvenue sur Ficabot</p>
+        <h1 class="text-3xl font-bold mb-1 tracking-tight">{{ $t('dashboard.hello') }}</h1>
+        <p class="text-primary-50 font-medium text-lg">{{ $t('dashboard.welcome') }}</p>
       </div>
     </div>
 
@@ -20,7 +20,7 @@
           </div>
           <div>
             <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ petsStore.pets.length }}</p>
-            <p class="text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">Animaux</p>
+            <p class="text-sm font-medium text-gray-500 group-hover:text-blue-600 transition-colors">{{ $t('dashboard.stats.pets') }}</p>
           </div>
         </div>
       </NuxtLink>
@@ -32,7 +32,7 @@
           </div>
           <div>
             <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ upcomingReminders }}</p>
-            <p class="text-sm font-medium text-gray-500 group-hover:text-amber-600 transition-colors">Rappels</p>
+            <p class="text-sm font-medium text-gray-500 group-hover:text-amber-600 transition-colors">{{ $t('dashboard.stats.reminders') }}</p>
           </div>
         </div>
       </NuxtLink>
@@ -44,7 +44,7 @@
           </div>
           <div>
             <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ upcomingAppointments }}</p>
-            <p class="text-sm font-medium text-gray-500 group-hover:text-green-600 transition-colors">RDV à venir</p>
+            <p class="text-sm font-medium text-gray-500 group-hover:text-green-600 transition-colors">{{ $t('dashboard.stats.appointments') }}</p>
           </div>
         </div>
       </NuxtLink>
@@ -56,7 +56,7 @@
           </div>
           <div>
             <p class="text-3xl font-bold text-gray-900 tracking-tight truncate">{{ conversations }}</p>
-            <p class="text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors">Conversations</p>
+            <p class="text-sm font-medium text-gray-500 group-hover:text-purple-600 transition-colors">{{ $t('dashboard.stats.conversations') }}</p>
           </div>
         </div>
       </NuxtLink>
@@ -64,62 +64,62 @@
 
     <!-- Quick Actions - horizontal scroll on mobile -->
     <div>
-      <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">Accès rapide</h2>
+      <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">{{ $t('dashboard.quick_access') }}</h2>
       <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-4 hide-scrollbar">
         <NuxtLink to="/pets" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:scale-105 transition-all duration-200">
             🐕
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-primary-600">Animaux</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-primary-600">{{ $t('nav.pets') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/chat" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-purple-200 group-hover:bg-purple-50 group-hover:scale-105 transition-all duration-200">
             💬
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-purple-600">Assistant</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-purple-600">{{ $t('nav.chat') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/reminders" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-amber-200 group-hover:bg-amber-50 group-hover:scale-105 transition-all duration-200">
             🔔
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-amber-600">Rappels</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-amber-600">{{ $t('nav.reminders') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/appointments" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-green-200 group-hover:bg-green-50 group-hover:scale-105 transition-all duration-200">
             📅
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-green-600">RDV</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-green-600">{{ $t('nav.appointments') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/vets" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-red-200 group-hover:bg-red-50 group-hover:scale-105 transition-all duration-200">
             🗺️
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-red-600">Vétos</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-red-600">{{ $t('nav.vets') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/shopping" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-cyan-200 group-hover:bg-cyan-50 group-hover:scale-105 transition-all duration-200">
             🛒
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-cyan-600">Courses</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-cyan-600">{{ $t('nav.shopping') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/expenses" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:scale-105 transition-all duration-200">
             💰
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-emerald-600">Dépenses</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-emerald-600">{{ $t('nav.expenses') }}</span>
         </NuxtLink>
         
         <NuxtLink to="/badges" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:scale-105 transition-all duration-200">
             🏆
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-orange-600">Badges</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-orange-600">{{ $t('nav.badges') }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -127,8 +127,8 @@
     <!-- My Pets -->
     <div>
       <div class="flex items-center justify-between mb-4 px-1">
-        <h2 class="text-lg font-bold text-gray-900">Mes animaux</h2>
-        <NuxtLink to="/pets" class="text-primary-600 text-sm font-semibold hover:text-primary-700 transition-colors">Voir tout</NuxtLink>
+        <h2 class="text-lg font-bold text-gray-900">{{ $t('dashboard.my_pets') }}</h2>
+        <NuxtLink to="/pets" class="text-primary-600 text-sm font-semibold hover:text-primary-700 transition-colors">{{ $t('dashboard.see_all') }}</NuxtLink>
       </div>
       
       <div v-if="petsStore.loading" class="flex justify-center py-12">
@@ -139,10 +139,10 @@
         <div class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
           🐾
         </div>
-        <h3 class="font-bold text-gray-900 mb-2">Aucun animal</h3>
-        <p class="text-gray-500 text-sm mb-6">Commencez par ajouter votre premier compagnon !</p>
+        <h3 class="font-bold text-gray-900 mb-2">{{ $t('dashboard.no_pets') }}</h3>
+        <p class="text-gray-500 text-sm mb-6">{{ $t('dashboard.start_adding_pet') }}</p>
         <NuxtLink to="/pets" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 w-full sm:w-auto">
-          Ajouter un animal
+          {{ $t('dashboard.add_pet') }}
         </NuxtLink>
       </div>
 

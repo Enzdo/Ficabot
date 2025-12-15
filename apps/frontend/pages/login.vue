@@ -91,6 +91,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const router = useRouter()
 const api = useApi()
+const { setLocale } = useI18n()
 
 const form = reactive({
   email: '',
@@ -108,6 +109,9 @@ const handleLogin = async () => {
 
   if (response.success && response.data) {
     authStore.setAuth(response.data)
+    if (response.data.user.language) {
+      setLocale(response.data.user.language as any)
+    }
     router.push('/dashboard')
   } else {
     error.value = response.message || 'Identifiants incorrects'

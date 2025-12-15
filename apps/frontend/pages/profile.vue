@@ -1,6 +1,6 @@
 <template>
   <div class="pb-24 max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">Mon profil</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{{ $t('profile.title') }}</h1>
 
     <!-- Profile Header -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
@@ -24,7 +24,7 @@
             {{ profile.firstName || profile.lastName ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() : 'Utilisateur' }}
           </h2>
           <p class="text-gray-500 truncate">{{ profile.email }}</p>
-          <p class="text-xs text-gray-400 mt-1 truncate">Membre depuis {{ formatDate(profile.createdAt) }}</p>
+          <p class="text-xs text-gray-400 mt-1 truncate">{{ $t('profile.member_since', { date: formatDate(profile.createdAt) }) }}</p>
         </div>
       </div>
     </div>
@@ -32,20 +32,20 @@
     <!-- Profile Info -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-bold text-gray-900">Informations personnelles</h3>
-        <button @click="showEditProfileModal = true" class="text-primary-600 text-sm font-medium">Modifier</button>
+        <h3 class="font-bold text-gray-900">{{ $t('profile.personal_info') }}</h3>
+        <button @click="showEditProfileModal = true" class="text-primary-600 text-sm font-medium">{{ $t('common.edit') }}</button>
       </div>
       <div class="divide-y divide-gray-100">
         <div class="px-6 py-4 flex justify-between">
-          <span class="text-gray-500">Prénom</span>
+          <span class="text-gray-500">{{ $t('profile.firstname') }}</span>
           <span class="font-medium text-gray-900">{{ profile.firstName || '-' }}</span>
         </div>
         <div class="px-6 py-4 flex justify-between">
-          <span class="text-gray-500">Nom</span>
+          <span class="text-gray-500">{{ $t('profile.lastname') }}</span>
           <span class="font-medium text-gray-900">{{ profile.lastName || '-' }}</span>
         </div>
         <div class="px-6 py-4 flex justify-between">
-          <span class="text-gray-500">Téléphone</span>
+          <span class="text-gray-500">{{ $t('profile.phone') }}</span>
           <span class="font-medium text-gray-900">{{ profile.phone || '-' }}</span>
         </div>
       </div>
@@ -54,11 +54,11 @@
     <!-- Preferences -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-bold text-gray-900">Préférences</h3>
-        <button @click="showLanguageModal = true" class="text-primary-600 text-sm font-medium">Modifier</button>
+        <h3 class="font-bold text-gray-900">{{ $t('profile.preferences') }}</h3>
+        <button @click="showLanguageModal = true" class="text-primary-600 text-sm font-medium">{{ $t('common.edit') }}</button>
       </div>
       <div class="px-6 py-4 flex justify-between">
-        <span class="text-gray-500">Langue</span>
+        <span class="text-gray-500">{{ $t('profile.language') }}</span>
         <span class="font-medium text-gray-900">
           {{ profile.language === 'en' ? 'English' : profile.language === 'de' ? 'Deutsch' : 'Français' }}
         </span>
@@ -68,8 +68,8 @@
     <!-- Email -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-bold text-gray-900">Email</h3>
-        <button @click="showEmailModal = true" class="text-primary-600 text-sm font-medium">Modifier</button>
+        <h3 class="font-bold text-gray-900">{{ $t('profile.email') }}</h3>
+        <button @click="showEmailModal = true" class="text-primary-600 text-sm font-medium">{{ $t('common.edit') }}</button>
       </div>
       <div class="px-6 py-4">
         <p class="font-medium text-gray-900">{{ profile.email }}</p>
@@ -79,8 +79,8 @@
     <!-- Password -->
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 class="font-bold text-gray-900">Mot de passe</h3>
-        <button @click="showPasswordModal = true" class="text-primary-600 text-sm font-medium">Modifier</button>
+        <h3 class="font-bold text-gray-900">{{ $t('profile.password') }}</h3>
+        <button @click="showPasswordModal = true" class="text-primary-600 text-sm font-medium">{{ $t('common.edit') }}</button>
       </div>
       <div class="px-6 py-4">
         <p class="text-gray-500">••••••••</p>
@@ -89,34 +89,34 @@
 
     <!-- Danger Zone -->
     <div class="bg-red-50 rounded-2xl p-6 border border-red-100">
-      <h3 class="font-bold text-red-900 mb-2">Zone de danger</h3>
-      <p class="text-sm text-red-700 mb-4">La suppression de votre compte est irréversible.</p>
-      <button class="text-red-600 text-sm font-medium">Supprimer mon compte</button>
+      <h3 class="font-bold text-red-900 mb-2">{{ $t('profile.danger_zone') }}</h3>
+      <p class="text-sm text-red-700 mb-4">{{ $t('profile.delete_account_warning') }}</p>
+      <button class="text-red-600 text-sm font-medium">{{ $t('profile.delete_account') }}</button>
     </div>
 
     <!-- Edit Profile Modal -->
     <div v-if="showEditProfileModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showEditProfileModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Modifier le profil</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('profile.edit_profile') }}</h2>
           <button @click="showEditProfileModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="updateProfile" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-            <input type="text" v-model="editForm.firstName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Votre prénom">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.firstname') }}</label>
+            <input type="text" v-model="editForm.firstName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-            <input type="text" v-model="editForm.lastName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Votre nom">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.lastname') }}</label>
+            <input type="text" v-model="editForm.lastName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-            <input type="tel" v-model="editForm.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="06 12 34 56 78">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.phone') }}</label>
+            <input type="tel" v-model="editForm.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </button>
         </form>
       </div>
@@ -126,21 +126,20 @@
     <div v-if="showAvatarModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAvatarModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Photo de profil</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('profile.change_photo') }}</h2>
           <button @click="showAvatarModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="updateAvatar" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">URL de l'image</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
             <input type="url" v-model="avatarUrl" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="https://...">
-            <p class="text-xs text-gray-500 mt-2">Entrez l'URL d'une image en ligne</p>
           </div>
           <div v-if="avatarUrl" class="flex justify-center">
             <img :src="avatarUrl" class="w-24 h-24 rounded-full object-cover" alt="Aperçu">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </button>
         </form>
       </div>
@@ -150,24 +149,47 @@
     <div v-if="showEmailModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showEmailModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Modifier l'email</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('profile.change_email') }}</h2>
           <button @click="showEmailModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="updateEmail" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nouvel email</label>
-            <input type="email" v-model="emailForm.email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="nouveau@email.com">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.email') }}</label>
+            <input type="email" v-model="emailForm.email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input type="password" v-model="emailForm.password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.current_password') }}</label>
+            <input type="password" v-model="emailForm.password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <p v-if="emailError" class="text-red-500 text-sm">{{ emailError }}</p>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Modification...' : 'Modifier l\'email' }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </button>
         </form>
+      </div>
+    </div>
+
+    <!-- Language Modal -->
+    <div v-if="showLanguageModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showLanguageModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('profile.select_language') }}</h2>
+          <button @click="showLanguageModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
+        </div>
+
+        <div class="space-y-4">
+          <button 
+            v-for="lang in availableLanguages" 
+            :key="lang.code"
+            @click="updateLanguage(lang.code)"
+            class="w-full px-4 py-3 rounded-xl border flex items-center justify-between transition-colors"
+            :class="profile.language === lang.code ? 'border-primary-600 bg-primary-50 text-primary-900' : 'border-gray-200 hover:border-primary-200'"
+          >
+            <span class="font-medium">{{ lang.name }}</span>
+            <span v-if="profile.language === lang.code" class="text-primary-600">✓</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -175,26 +197,26 @@
     <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showPasswordModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Modifier le mot de passe</h2>
+          <h2 class="text-xl font-bold text-gray-900">{{ $t('profile.change_password') }}</h2>
           <button @click="showPasswordModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
         <form @submit.prevent="updatePassword" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input type="password" v-model="passwordForm.currentPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.current_password') }}</label>
+            <input type="password" v-model="passwordForm.currentPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-            <input type="password" v-model="passwordForm.newPassword" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.new_password') }}</label>
+            <input type="password" v-model="passwordForm.newPassword" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-            <input type="password" v-model="passwordForm.confirmPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('profile.confirm_password') }}</label>
+            <input type="password" v-model="passwordForm.confirmPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <p v-if="passwordError" class="text-red-500 text-sm">{{ passwordError }}</p>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? 'Modification...' : 'Modifier le mot de passe' }}
+            {{ saving ? $t('common.saving') : $t('common.save') }}
           </button>
         </form>
       </div>
@@ -207,6 +229,7 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const { t, locale, setLocale } = useI18n()
 const authStore = useAuthStore()
 
 const profile = ref({
@@ -288,6 +311,7 @@ const updateLanguage = async (lang: string) => {
   const response = await api.put('/auth/profile', { language: lang })
   if (response.success) {
     await fetchProfile()
+    setLocale(lang as any)
     showLanguageModal.value = false
   }
   saving.value = false
