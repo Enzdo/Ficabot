@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-24">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">💰 Dépenses</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium">
@@ -63,8 +63,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Ajouter une dépense</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -73,21 +73,21 @@
         <form @submit.prevent="addExpense" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
-            <input type="text" v-model="newExpense.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Consultation véto...">
+            <input type="text" v-model="newExpense.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Consultation véto...">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Montant (€)</label>
-              <input type="number" v-model.number="newExpense.amount" step="0.01" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="number" v-model.number="newExpense.amount" step="0.01" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <input type="date" v-model="newExpense.expenseDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="date" v-model="newExpense.expenseDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-            <select v-model="newExpense.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="newExpense.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
                 {{ cat.icon }} {{ cat.label }}
               </option>
@@ -95,7 +95,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Animal (optionnel)</label>
-            <select v-model="newExpense.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="newExpense.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option :value="null">Aucun</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">
                 {{ pet.name }}
@@ -104,7 +104,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description (optionnel)</label>
-            <textarea v-model="newExpense.description" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"></textarea>
+            <textarea v-model="newExpense.description" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
             {{ saving ? 'Ajout...' : 'Ajouter' }}

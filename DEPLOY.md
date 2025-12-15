@@ -40,6 +40,7 @@ This guide details the steps to deploy the full Ficabot stack:
 3.  **Environment Variables:**
     Add the following variables in Railway:
     *   `APP_KEY`: Generate one using `node ace generate:key` locally.
+    *   `ENCRYPTION_KEY`: Generate one using `node ace generate:key` locally (can be same as APP_KEY or different).
     *   `HOST`: `0.0.0.0`
     *   `LOG_LEVEL`: `info`
     *   `NODE_ENV`: `production`

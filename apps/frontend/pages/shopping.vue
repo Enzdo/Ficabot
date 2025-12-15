@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-24">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900">🛒 Liste de courses</h1>
       <button @click="showAddModal = true" class="bg-primary-600 text-white px-4 py-2 rounded-xl font-medium">
@@ -66,8 +66,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Ajouter un article</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -76,21 +76,21 @@
         <form @submit.prevent="addItem" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nom de l'article</label>
-            <input type="text" v-model="newItem.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Croquettes, jouet...">
+            <input type="text" v-model="newItem.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Croquettes, jouet...">
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
-              <input type="number" v-model.number="newItem.quantity" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="number" v-model.number="newItem.quantity" min="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Unité</label>
-              <input type="text" v-model="newItem.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="kg, pcs...">
+              <input type="text" v-model="newItem.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="kg, pcs...">
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-            <select v-model="newItem.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="newItem.category" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option v-for="cat in categories.slice(1)" :key="cat.value" :value="cat.value">
                 {{ cat.icon }} {{ cat.label }}
               </option>

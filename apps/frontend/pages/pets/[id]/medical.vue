@@ -105,8 +105,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-gray-50">
           <h2 class="text-xl font-bold text-gray-900">Ajouter un événement</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors">
@@ -146,27 +146,27 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Titre</label>
-            <input type="text" v-model="newRecord.title" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors" placeholder="Ex: Rappel annuel">
+            <input type="text" v-model="newRecord.title" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Ex: Rappel annuel">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Date</label>
-            <input type="date" v-model="newRecord.date" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+            <input type="date" v-model="newRecord.date" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Description (optionnel)</label>
-            <textarea v-model="newRecord.description" rows="3" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors resize-none" placeholder="Notes, observations..."></textarea>
+            <textarea v-model="newRecord.description" rows="3" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors resize-none text-base" placeholder="Notes, observations..."></textarea>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Prochain RDV</label>
-              <input type="date" v-model="newRecord.nextDueDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+              <input type="date" v-model="newRecord.nextDueDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Vétérinaire</label>
-              <input type="text" v-model="newRecord.vetName" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors" placeholder="Dr. Martin">
+              <input type="text" v-model="newRecord.vetName" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Dr. Martin">
             </div>
           </div>
 

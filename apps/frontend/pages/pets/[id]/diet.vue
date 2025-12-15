@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-24">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100">
@@ -140,8 +140,8 @@
     </div>
 
     <!-- Create Modal -->
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showCreateModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showCreateModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Nouveau programme</h2>
           <button @click="showCreateModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -151,37 +151,37 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Poids actuel (kg)</label>
-              <input type="number" v-model.number="newGoal.startWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="number" v-model.number="newGoal.startWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Poids cible (kg)</label>
-              <input type="number" v-model.number="newGoal.targetWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="number" v-model.number="newGoal.targetWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date cible (optionnel)</label>
-            <input type="date" v-model="newGoal.targetDate" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="newGoal.targetDate" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Plan alimentaire</label>
-            <textarea v-model="newGoal.dietPlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: Réduire les portions de 20%, pas de friandises..."></textarea>
+            <textarea v-model="newGoal.dietPlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Réduire les portions de 20%, pas de friandises..."></textarea>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Plan d'exercice</label>
-            <textarea v-model="newGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: 30 min de promenade 2x/jour..."></textarea>
+            <textarea v-model="newGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: 30 min de promenade 2x/jour..."></textarea>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes du vétérinaire</label>
-            <textarea v-model="newGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Conseils du véto..."></textarea>
+            <textarea v-model="newGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Conseils du véto..."></textarea>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Nourriture</label>
-              <input type="text" v-model="newGoal.foodType" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Type de croquettes">
+              <input type="text" v-model="newGoal.foodType" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Type de croquettes">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Quantité (g/jour)</label>
-              <input type="number" v-model.number="newGoal.foodQuantity" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="number" v-model.number="newGoal.foodQuantity" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
@@ -192,8 +192,8 @@
     </div>
 
     <!-- Edit Modal -->
-    <div v-if="showEditModal && goal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showEditModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div v-if="showEditModal && goal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showEditModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Modifier le programme</h2>
           <button @click="showEditModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -202,19 +202,19 @@
         <form @submit.prevent="updateGoal" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Poids cible (kg)</label>
-            <input type="number" v-model.number="editGoal.targetWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="number" v-model.number="editGoal.targetWeight" step="0.1" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Plan alimentaire</label>
-            <textarea v-model="editGoal.dietPlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"></textarea>
+            <textarea v-model="editGoal.dietPlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Plan d'exercice</label>
-            <textarea v-model="editGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"></textarea>
+            <textarea v-model="editGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes du vétérinaire</label>
-            <textarea v-model="editGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"></textarea>
+            <textarea v-model="editGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
             {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
@@ -322,7 +322,7 @@ const addWeight = async () => {
   if (!newWeight.value) return
   saving.value = true
   const api = useApi()
-  const response = await api.post(`/pets/${petId}/diet/weight`, { weight: newWeight.value })
+  const response = await api.post<any>(`/pets/${petId}/diet/weight`, { weight: newWeight.value })
   if (response.success) {
     newWeight.value = null
     await fetchData()

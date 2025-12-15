@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-24">
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-gray-900">🏆 Mes badges</h1>
       <p class="text-gray-500 mt-1">{{ totalPoints }} points gagnés</p>
@@ -87,7 +87,7 @@ const fetchBadges = async () => {
   }
   if (userRes.success) {
     earnedBadges.value = userRes.data || []
-    totalPoints.value = userRes.totalPoints || 0
+    totalPoints.value = (userRes as any).totalPoints || 0
   }
   
   // Check for new badges

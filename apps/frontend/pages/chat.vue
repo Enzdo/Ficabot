@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] bg-white sm:rounded-3xl sm:shadow-sm sm:border sm:border-gray-100 overflow-hidden">
+  <div class="flex h-[calc(100dvh-5rem)] sm:h-[calc(100vh-10rem)] bg-white sm:rounded-3xl sm:shadow-sm sm:border sm:border-gray-100 overflow-hidden pb-[env(safe-area-inset-bottom)]">
     <!-- Sidebar - Conversations List -->
     <div class="w-72 border-r border-gray-100 flex flex-col bg-gray-50/50 hidden sm:flex">
       <div class="p-3 border-b border-gray-100">
@@ -131,7 +131,7 @@
           <select 
             v-model="selectedPetId" 
             @change="handlePetChange" 
-            class="text-sm border border-gray-200 bg-gray-50 rounded-xl py-2.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-100 font-medium text-gray-700 min-w-[120px]"
+            class="text-base border border-gray-200 bg-gray-50 rounded-xl py-2.5 pl-3 pr-8 focus:ring-2 focus:ring-primary-100 font-medium text-gray-700 min-w-[120px]"
           >
             <option :value="null">Général</option>
             <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">
@@ -142,7 +142,7 @@
             <input
               v-model="newMessage"
               type="text"
-              class="flex-1 bg-transparent border-none focus:ring-0 px-4 py-2 text-gray-900 placeholder-gray-400"
+              class="flex-1 bg-transparent border-none focus:ring-0 px-4 py-2 text-gray-900 placeholder-gray-400 text-base"
               placeholder="Écrivez votre message..."
               :disabled="chatStore.loading || !chatStore.currentConversationId"
             />
@@ -198,7 +198,7 @@
     </div>
 
     <!-- New Conversation Modal -->
-    <div v-if="showNewConversationModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click="showNewConversationModal = false">
+    <div v-if="showNewConversationModal" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" @click="showNewConversationModal = false">
       <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" @click.stop>
         <h3 class="text-lg font-bold text-gray-900 mb-4">Nouvelle conversation</h3>
         
@@ -208,7 +208,7 @@
             <input 
               v-model="newConversationTitle" 
               type="text" 
-              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300"
+              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300 text-base"
               placeholder="Ex: Questions sur mon chien"
             />
           </div>
@@ -217,7 +217,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Animal concerné (optionnel)</label>
             <select 
               v-model="newConversationPetId" 
-              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300"
+              class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-100 focus:border-primary-300 text-base"
             >
               <option :value="null">Général (aucun animal)</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">

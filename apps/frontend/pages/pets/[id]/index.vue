@@ -296,7 +296,7 @@
         </div>
 
         <!-- Shared pet notice -->
-        <div v-else-if="petsStore.currentPet?.isShared" class="pt-4">
+        <div v-else-if="(petsStore.currentPet as any)?.isShared" class="pt-4">
           <div class="bg-blue-50 rounded-2xl p-4 border border-blue-100">
             <p class="text-blue-700 text-sm">
               <span class="font-bold">Animal partagé</span> — Vous avez été invité à suivre cet animal.
@@ -315,8 +315,8 @@
     </div>
 
     <!-- Edit Modal -->
-    <div v-if="showEditModal && petsStore.currentPet" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showEditModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+    <div v-if="showEditModal && petsStore.currentPet" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showEditModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-gray-50">
           <h2 class="text-xl font-bold text-gray-900">Modifier {{ petsStore.currentPet.name }}</h2>
           <button @click="showEditModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors">
@@ -349,22 +349,22 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom</label>
-            <input type="text" v-model="editForm.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+            <input type="text" v-model="editForm.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Race</label>
-            <input type="text" v-model="editForm.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+            <input type="text" v-model="editForm.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Naissance</label>
-              <input type="date" v-model="editForm.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+              <input type="date" v-model="editForm.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Poids (kg)</label>
-              <input type="number" v-model.number="editForm.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+              <input type="number" v-model.number="editForm.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
           </div>
 
@@ -378,8 +378,8 @@
     </div>
 
     <!-- Invite Modal -->
-    <div v-if="showInviteModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showInviteModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showInviteModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showInviteModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Inviter un propriétaire</h2>
           <button @click="showInviteModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -392,7 +392,7 @@
               type="email" 
               v-model="inviteEmail" 
               required 
-              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"
               placeholder="exemple@email.com"
             >
             <p class="text-xs text-gray-500 mt-2">Cette personne doit avoir un compte Ficabot</p>

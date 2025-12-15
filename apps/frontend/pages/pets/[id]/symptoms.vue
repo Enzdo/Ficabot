@@ -59,8 +59,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Nouveau symptôme</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -69,7 +69,7 @@
         <form @submit.prevent="createSymptom" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Symptôme *</label>
-            <input type="text" v-model="form.symptom" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: Vomissements, grattage excessif...">
+            <input type="text" v-model="form.symptom" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Vomissements, grattage excessif...">
           </div>
 
           <div>
@@ -89,12 +89,12 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date d'observation</label>
-            <input type="date" v-model="form.observedAt" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="form.observedAt" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea v-model="form.description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Décrivez le symptôme en détail..."></textarea>
+            <textarea v-model="form.description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Décrivez le symptôme en détail..."></textarea>
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">

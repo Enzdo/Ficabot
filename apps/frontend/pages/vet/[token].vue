@@ -18,7 +18,7 @@
     </div>
 
     <!-- Content -->
-    <div v-else-if="data" class="pb-20">
+    <div v-else-if="data" class="pb-24">
       <!-- Header -->
       <div class="bg-gradient-to-br from-teal-600 to-teal-700 text-white p-6 pb-24">
         <div class="flex items-center gap-2 mb-4">

@@ -70,8 +70,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl max-h-[85vh] overflow-y-auto">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Nouveau RDV</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -80,12 +80,12 @@
         <form @submit.prevent="createAppointment" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Motif *</label>
-            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: Vaccination annuelle">
+            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Vaccination annuelle">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Animal *</label>
-            <select v-model="form.petId" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="form.petId" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option :value="null" disabled>Sélectionner</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
             </select>
@@ -94,32 +94,32 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-              <input type="date" v-model="form.appointmentDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="date" v-model="form.appointmentDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Heure</label>
-              <input type="time" v-model="form.appointmentTime" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <input type="time" v-model="form.appointmentTime" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
             </div>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Vétérinaire</label>
-            <input type="text" v-model="form.vetName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Nom du cabinet">
+            <input type="text" v-model="form.vetName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Nom du cabinet">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-            <input type="text" v-model="form.vetAddress" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Adresse du cabinet">
+            <input type="text" v-model="form.vetAddress" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Adresse du cabinet">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-            <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="01 23 45 67 89">
+            <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="01 23 45 67 89">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea v-model="form.notes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Informations complémentaires..."></textarea>
+            <textarea v-model="form.notes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Informations complémentaires..."></textarea>
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="loading">

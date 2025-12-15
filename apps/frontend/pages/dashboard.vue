@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-6 space-y-6">
+  <div class="pb-24 space-y-6">
     <!-- Welcome Header -->
     <div class="relative overflow-hidden bg-gradient-to-br from-primary-600 to-primary-500 text-white px-6 py-8 rounded-[2rem] shadow-xl shadow-primary-600/20 ring-1 ring-black/5">
       <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>

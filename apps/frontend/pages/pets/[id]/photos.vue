@@ -57,7 +57,7 @@
     </div>
 
     <!-- Photo Viewer Modal -->
-    <div v-if="selectedPhoto" class="fixed inset-0 bg-black z-50 flex items-center justify-center" @click="selectedPhoto = null">
+    <div v-if="selectedPhoto" class="fixed inset-0 bg-black z-[100] flex items-center justify-center" @click="selectedPhoto = null">
       <button @click="selectedPhoto = null" class="absolute top-4 right-4 text-white p-2 bg-black/50 rounded-full">
         ✕
       </button>

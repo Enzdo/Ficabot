@@ -16,7 +16,7 @@
     </div>
 
     <!-- Public Profile -->
-    <div v-else class="max-w-lg mx-auto pb-8">
+    <div v-else class="max-w-lg mx-auto pb-12">
       <!-- Header -->
       <div class="bg-gradient-to-br from-primary-500 to-primary-600 text-white px-6 py-8 text-center">
         <div class="w-24 h-24 mx-auto bg-white rounded-full flex items-center justify-center text-5xl mb-4 shadow-lg">

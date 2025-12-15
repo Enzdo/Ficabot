@@ -68,8 +68,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Nouveau rappel</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -78,7 +78,7 @@
         <form @submit.prevent="createReminder" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select v-model="form.type" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="form.type" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option value="vaccine">💉 Vaccin</option>
               <option value="antiparasitic">🐛 Antiparasitaire</option>
               <option value="weighing">⚖️ Pesée</option>
@@ -89,12 +89,12 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
-            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: Rappel vaccin rage">
+            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Rappel vaccin rage">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Animal</label>
-            <select v-model="form.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="form.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option :value="null">Général</option>
               <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
             </select>
@@ -102,7 +102,7 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-            <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
 
           <div class="flex items-center gap-3">
@@ -112,7 +112,7 @@
 
           <div v-if="form.isRecurring">
             <label class="block text-sm font-medium text-gray-700 mb-1">Fréquence</label>
-            <select v-model="form.recurrenceInterval" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="form.recurrenceInterval" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option value="weekly">Chaque semaine</option>
               <option value="monthly">Chaque mois</option>
               <option value="yearly">Chaque année</option>

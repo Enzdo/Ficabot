@@ -51,8 +51,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Ajouter un repas</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -78,17 +78,17 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Marque</label>
-            <input type="text" v-model="form.brand" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Ex: Royal Canin">
+            <input type="text" v-model="form.brand" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: Royal Canin">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Quantité</label>
-              <input type="number" v-model.number="form.quantity" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="100">
+              <input type="number" v-model.number="form.quantity" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="100">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">Unité</label>
-              <select v-model="form.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+              <select v-model="form.unit" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
                 <option value="g">grammes</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>
@@ -99,7 +99,7 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input type="date" v-model="form.fedAt" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="form.fedAt" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">

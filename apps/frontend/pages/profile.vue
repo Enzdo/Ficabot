@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4 max-w-2xl mx-auto">
+  <div class="pb-24 max-w-2xl mx-auto">
     <h1 class="text-2xl font-bold text-gray-900 mb-6">Mon profil</h1>
 
     <!-- Profile Header -->
@@ -81,8 +81,8 @@
     </div>
 
     <!-- Edit Profile Modal -->
-    <div v-if="showEditProfileModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showEditProfileModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showEditProfileModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showEditProfileModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Modifier le profil</h2>
           <button @click="showEditProfileModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -91,15 +91,15 @@
         <form @submit.prevent="updateProfile" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-            <input type="text" v-model="editForm.firstName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Votre prénom">
+            <input type="text" v-model="editForm.firstName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Votre prénom">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-            <input type="text" v-model="editForm.lastName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Votre nom">
+            <input type="text" v-model="editForm.lastName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Votre nom">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-            <input type="tel" v-model="editForm.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="06 12 34 56 78">
+            <input type="tel" v-model="editForm.phone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="06 12 34 56 78">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
             {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
@@ -109,8 +109,8 @@
     </div>
 
     <!-- Avatar Modal -->
-    <div v-if="showAvatarModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showAvatarModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showAvatarModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAvatarModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Photo de profil</h2>
           <button @click="showAvatarModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -119,7 +119,7 @@
         <form @submit.prevent="updateAvatar" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">URL de l'image</label>
-            <input type="url" v-model="avatarUrl" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="https://...">
+            <input type="url" v-model="avatarUrl" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="https://...">
             <p class="text-xs text-gray-500 mt-2">Entrez l'URL d'une image en ligne</p>
           </div>
           <div v-if="avatarUrl" class="flex justify-center">
@@ -133,8 +133,8 @@
     </div>
 
     <!-- Email Modal -->
-    <div v-if="showEmailModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showEmailModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showEmailModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showEmailModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Modifier l'email</h2>
           <button @click="showEmailModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -143,11 +143,11 @@
         <form @submit.prevent="updateEmail" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nouvel email</label>
-            <input type="email" v-model="emailForm.email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="nouveau@email.com">
+            <input type="email" v-model="emailForm.email" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="nouveau@email.com">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input type="password" v-model="emailForm.password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="••••••••">
+            <input type="password" v-model="emailForm.password" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
           </div>
           <p v-if="emailError" class="text-red-500 text-sm">{{ emailError }}</p>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
@@ -158,8 +158,8 @@
     </div>
 
     <!-- Password Modal -->
-    <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center" @click.self="showPasswordModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl">
+    <div v-if="showPasswordModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showPasswordModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Modifier le mot de passe</h2>
           <button @click="showPasswordModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -168,15 +168,15 @@
         <form @submit.prevent="updatePassword" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input type="password" v-model="passwordForm.currentPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="••••••••">
+            <input type="password" v-model="passwordForm.currentPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-            <input type="password" v-model="passwordForm.newPassword" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="••••••••">
+            <input type="password" v-model="passwordForm.newPassword" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-            <input type="password" v-model="passwordForm.confirmPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="••••••••">
+            <input type="password" v-model="passwordForm.confirmPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="••••••••">
           </div>
           <p v-if="passwordError" class="text-red-500 text-sm">{{ passwordError }}</p>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">

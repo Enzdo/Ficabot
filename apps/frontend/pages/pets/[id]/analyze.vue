@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-4">
+  <div class="pb-24">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <NuxtLink :to="`/pets/${petId}`" class="p-2 -ml-2 rounded-full hover:bg-gray-100">
@@ -51,7 +51,7 @@
           type="url" 
           v-model="imageUrl" 
           placeholder="Coller une URL d'image..."
-          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"
         >
       </div>
 
@@ -61,7 +61,7 @@
         <textarea 
           v-model="userQuestion" 
           rows="2"
-          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 resize-none"
+          class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 resize-none text-base"
           placeholder="Ex: Est-ce que mon chien a une bonne dentition ? Son pelage est-il en bonne santé ?"
         ></textarea>
         <p class="text-xs text-gray-400 mt-1">Si vous posez une question, l'IA y répondra en analysant la photo</p>

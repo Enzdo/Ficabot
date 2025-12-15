@@ -71,8 +71,8 @@
     </div>
 
     <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showAddModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm" @click.self="showAddModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl animate-slide-up max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6 sticky top-0 bg-white z-10 pb-2 border-b border-gray-50">
           <h2 class="text-xl font-bold text-gray-900">Ajouter un animal</h2>
           <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-200 transition-colors">
@@ -105,22 +105,22 @@
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Nom</label>
-            <input type="text" v-model="form.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors" placeholder="Rex">
+            <input type="text" v-model="form.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Rex">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">Race (optionnel)</label>
-            <input type="text" v-model="form.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors" placeholder="Labrador">
+            <input type="text" v-model="form.breed" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Labrador">
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Date de naissance</label>
-              <input type="date" v-model="form.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors">
+              <input type="date" v-model="form.birthDate" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1.5">Poids (kg)</label>
-              <input type="number" v-model="form.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors" placeholder="25.5">
+              <input type="number" v-model="form.weight" step="0.1" class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="25.5">
             </div>
           </div>
 

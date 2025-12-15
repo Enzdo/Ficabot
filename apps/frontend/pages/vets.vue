@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex flex-col">
+  <div class="h-[100dvh] flex flex-col">
     <!-- Header -->
     <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-20">
       <div class="flex items-center gap-3">
@@ -52,14 +52,26 @@
     </div>
 
     <!-- Map Container -->
-    <div class="flex-1 relative">
-      <div ref="mapContainer" class="absolute inset-0"></div>
+    <div class="flex-1 relative z-0">
+      <div ref="mapContainer" class="absolute inset-0 z-0"></div>
       
       <!-- Loading overlay -->
       <div v-if="loading" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
         <div class="text-center">
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto mb-3"></div>
           <p class="text-gray-600 text-sm">Recherche des vétérinaires...</p>
+        </div>
+      </div>
+
+      <!-- Permission/Location Error State -->
+      <div v-if="!loading && vets.length === 0 && !userLocation" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto">
+          <div class="text-4xl mb-3">📍</div>
+          <h3 class="font-bold text-gray-900 mb-2">Géolocalisation requise</h3>
+          <p class="text-gray-500 text-sm mb-4">Pour trouver les vétérinaires autour de vous, nous avons besoin de votre position.</p>
+          <button @click="locateMe" class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg shadow-primary-600/20 active:scale-95 transition-all">
+            Activer ma position
+          </button>
         </div>
       </div>
     </div>

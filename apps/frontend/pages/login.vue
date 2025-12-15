@@ -24,7 +24,7 @@
             id="email"
             v-model="form.email"
             type="email"
-            class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200"
+            class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
             placeholder="votre@email.com"
             required
           />
@@ -46,7 +46,7 @@
             id="password"
             v-model="form.password"
             type="password"
-            class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200"
+            class="input pl-11 bg-white/50 backdrop-blur-sm focus:bg-white transition-all duration-200 text-base"
             placeholder="••••••••"
             required
           />

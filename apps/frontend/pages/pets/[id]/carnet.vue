@@ -151,7 +151,7 @@
       <p>Chargement du carnet de santé...</p>
     </div>
 
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showAddModal = false">
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[1000] flex items-end justify-center pb-12" @click.self="showAddModal = false">
       <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">{{ getAddModalTitle() }}</h2>
@@ -161,11 +161,11 @@
         <form v-if="addModalType === 'vaccine'" @submit.prevent="submitAddForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nom du vaccin *</label>
-            <input type="text" v-model="addForm.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="text" v-model="addForm.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-            <input type="date" v-model="addForm.date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="addForm.date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">Ajouter</button>
         </form>
@@ -173,7 +173,7 @@
         <form v-if="addModalType === 'allergy'" @submit.prevent="submitAddForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Allergène *</label>
-            <input type="text" v-model="addForm.allergen" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="text" v-model="addForm.allergen" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">Ajouter</button>
         </form>
@@ -181,19 +181,19 @@
         <form v-if="addModalType === 'weight'" @submit.prevent="submitAddForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Poids (kg) *</label>
-            <input type="number" step="0.1" v-model.number="addForm.weight" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="number" step="0.1" v-model.number="addForm.weight" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-            <input type="date" v-model="addForm.date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="date" v-model="addForm.date" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">Ajouter</button>
         </form>
       </div>
     </div>
 
-    <div v-if="showEditModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showEditModal = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl">
+    <div v-if="showEditModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showEditModal = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Modifier l'identification</h2>
           <button @click="showEditModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -201,11 +201,11 @@
         <form @submit.prevent="submitEditForm" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">N° Identification</label>
-            <input type="text" v-model="editForm.identificationNumber" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <input type="text" v-model="editForm.identificationNumber" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select v-model="editForm.identificationType" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
+            <select v-model="editForm.identificationType" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
               <option value="">Non spécifié</option>
               <option value="microchip">Puce électronique</option>
               <option value="tattoo">Tatouage</option>
@@ -217,8 +217,8 @@
     </div>
 
     <!-- Scan Preview Modal -->
-    <div v-if="showScanPreview && scannedData" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center" @click.self="showScanPreview = false">
-      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-xl max-h-[80vh] overflow-y-auto">
+    <div v-if="showScanPreview && scannedData" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showScanPreview = false">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl max-h-[80vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900">Données détectées</h2>
           <button @click="showScanPreview = false" class="bg-gray-100 p-2 rounded-full">✕</button>
@@ -262,8 +262,8 @@
     </div>
 
     <!-- Weight Chart Modal -->
-    <div v-if="showWeightChart" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showWeightChart = false">
-      <div class="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-xl">
+    <div v-if="showWeightChart" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" @click.self="showWeightChart = false">
+      <div class="bg-white w-full max-w-2xl rounded-2xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
             <span>📊</span> Évolution du poids
@@ -282,8 +282,8 @@
     </div>
 
     <!-- QR Code Modal -->
-    <div v-if="showQRCode" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showQRCode = false">
-      <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl text-center">
+    <div v-if="showQRCode" class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" @click.self="showQRCode = false">
+      <div class="bg-white w-full max-w-sm rounded-2xl p-6 pb-12 shadow-xl text-center">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-900">🆘 QR Code d'urgence</h2>
           <button @click="showQRCode = false" class="bg-gray-100 p-2 rounded-full">✕</button>
