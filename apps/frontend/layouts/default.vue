@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-surface-50 pb-20 md:pb-0">
+  <div class="min-h-screen bg-surface-50 pb-20 md:pb-0 overflow-x-hidden w-full">
     <!-- Top Navigation (Desktop Only) -->
     <nav class="bg-white/80 backdrop-blur-md shadow-sm border-b border-surface-200 hidden md:block sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -92,7 +92,7 @@
         </NuxtLink>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-16 md:pt-4 pb-4">
+    <main class="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-16 md:pt-4 pb-4 overflow-x-hidden w-full">
       <slot />
     </main>
 
