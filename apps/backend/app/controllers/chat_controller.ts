@@ -145,7 +145,13 @@ export default class ChatController {
     previousMessages.reverse()
 
     const openai = new OpenAIService()
-    const aiResponse = await openai.chat(data.message, pet, previousMessages, healthBook, user.language)
+    const aiResponse = await openai.chat({
+      userMessage: data.message,
+      pet,
+      previousMessages,
+      healthBook,
+      language: user.language,
+    })
 
     const assistantMessage = await ChatMessage.create({
       userId: user.id,

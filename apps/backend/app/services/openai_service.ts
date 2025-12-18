@@ -13,13 +13,14 @@ export default class OpenAIService {
     })
   }
 
-  async chat(
-    userMessage: string,
-    pet: Pet | null,
-    previousMessages: ChatMessage[],
-    healthBook: HealthBook | null = null,
-    language: string = 'fr' // Langue de l'utilisateur
-  ): Promise<string> {
+  async chat(params: {
+    userMessage: string
+    pet: Pet | null
+    previousMessages: ChatMessage[]
+    healthBook?: HealthBook | null
+    language?: string
+  }): Promise<string> {
+    const { userMessage, pet, previousMessages, healthBook = null, language = 'fr' } = params
     const systemPrompt = this.buildSystemPrompt(pet, healthBook, language)
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
