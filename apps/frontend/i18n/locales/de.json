@@ -131,7 +131,7 @@
   },
   "auth": {
     "email": "E-Mail",
-    "email_placeholder": "ihre@email.com",
+    "email_placeholder": "ihre{'@'}email.com",
     "password": "Passwort",
     "password_placeholder": "••••••••",
     "password_min_length": "Mindestens 8 Zeichen",
