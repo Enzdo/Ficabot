@@ -51,6 +51,17 @@
     "password_mismatch": "Les mots de passe ne correspondent pas",
     "password_success": "Mot de passe modifié avec succès"
   },
+  "avatars": {
+    "nea_desc": "Golden Retriever | Douce et bienveillante",
+    "mia_desc": "Maine Coon | Gracieuse et raffinée",
+    "ria_desc": "Lapin NAC | Tendre et délicate",
+    "neo_desc": "Chien | Compagnon fidèle",
+    "mio_desc": "Maine Coon | Élégant et mystérieux",
+    "rio_desc": "Lapin NAC | Doux et affectueux",
+    "select_title": "Choisir un avatar",
+    "female": "Féminin",
+    "male": "Masculin"
+  },
   "dashboard": {
     "hello": "Bonjour 👋",
     "welcome": "Bienvenue sur Ficabot",

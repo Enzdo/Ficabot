@@ -130,18 +130,67 @@
           <button @click="showAvatarModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
-        <form @submit.prevent="updateAvatar" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">URL</label>
-            <input type="url" v-model="avatarUrl" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="https://...">
+        <div class="mb-6">
+          <div class="flex p-1 bg-gray-100 rounded-xl mb-4">
+            <button 
+              @click="selectedGender = 'female'"
+              class="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
+              :class="selectedGender === 'female' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'"
+            >
+              {{ $t('avatars.female') }}
+            </button>
+            <button 
+              @click="selectedGender = 'male'"
+              class="flex-1 py-2 rounded-lg text-sm font-medium transition-all"
+              :class="selectedGender === 'male' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500'"
+            >
+              {{ $t('avatars.male') }}
+            </button>
           </div>
-          <div v-if="avatarUrl" class="flex justify-center">
-            <img :src="avatarUrl" class="w-24 h-24 rounded-full object-cover" alt="Aperçu">
+
+          <div class="grid grid-cols-3 gap-3">
+            <button
+              v-for="avatar in avatars.filter((a: any) => a.gender === selectedGender)"
+              :key="avatar.id"
+              @click="avatarUrl = avatar.image"
+              class="relative group text-left"
+            >
+              <div 
+                class="aspect-square rounded-2xl overflow-hidden border-2 transition-all bg-gray-50"
+                :class="avatarUrl === avatar.image ? 'border-primary-600 ring-2 ring-primary-100' : 'border-transparent hover:border-gray-200'"
+              >
+                <img :src="avatar.image" :alt="avatar.name" class="w-full h-full object-cover">
+              </div>
+              <div class="mt-1 text-center">
+                <p class="text-xs font-bold text-gray-900">{{ avatar.name }}</p>
+                <p class="text-[10px] text-gray-500 leading-tight truncate">{{ avatar.tags[0] }}</p>
+              </div>
+            </button>
           </div>
-          <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? $t('common.saving') : $t('common.save') }}
+        </div>
+
+        <div class="border-t border-gray-100 pt-4 mb-6">
+          <button 
+            @click="showCustomUrl = !showCustomUrl"
+            class="text-xs text-gray-500 flex items-center gap-2 hover:text-gray-700"
+          >
+            <span>🔗</span>
+            {{ showCustomUrl ? 'Masquer URL personnalisée' : 'Utiliser une URL personnalisée' }}
           </button>
-        </form>
+          
+          <div v-if="showCustomUrl" class="mt-3">
+            <input 
+              type="url" 
+              v-model="avatarUrl" 
+              class="w-full px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm" 
+              placeholder="https://..."
+            >
+          </div>
+        </div>
+
+        <button @click="updateAvatar" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
+          {{ saving ? $t('common.saving') : $t('common.save') }}
+        </button>
       </div>
     </div>
 
@@ -249,6 +298,10 @@ const showLanguageModal = ref(false)
 const showEmailModal = ref(false)
 const showPasswordModal = ref(false)
 const saving = ref(false)
+
+const { avatars } = useAvatars()
+const selectedGender = ref('female')
+const showCustomUrl = ref(false)
 
 const availableLanguages = [
   { code: 'fr', name: 'Français' },

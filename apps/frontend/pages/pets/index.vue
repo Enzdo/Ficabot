@@ -43,8 +43,9 @@
         :to="`/pets/${pet.id}`"
         class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center active:scale-[0.98] transition-transform"
       >
-        <div class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center text-3xl mr-4 border border-gray-100 flex-shrink-0">
-          {{ pet.species === 'dog' ? '🐕' : '🐱' }}
+        <div class="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center text-3xl mr-4 border border-gray-100 flex-shrink-0 overflow-hidden">
+          <img v-if="pet.avatarUrl" :src="pet.avatarUrl" class="w-full h-full object-cover" :alt="pet.name">
+          <span v-else>{{ pet.species === 'dog' ? '🐕' : '🐱' }}</span>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex justify-between items-start">
@@ -104,6 +105,30 @@
           </div>
 
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $t('avatars.select_title') }}</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                v-for="avatar in avatars.filter((a: any) => a.type === form.species)"
+                :key="avatar.id"
+                @click="form.avatarUrl = avatar.image"
+                class="relative group text-left"
+              >
+                <div 
+                  class="aspect-square rounded-2xl overflow-hidden border-2 transition-all bg-gray-50"
+                  :class="form.avatarUrl === avatar.image ? 'border-primary-600 ring-2 ring-primary-100' : 'border-transparent hover:border-gray-200'"
+                >
+                  <img :src="avatar.image" :alt="avatar.name" class="w-full h-full object-cover">
+                </div>
+                <div class="mt-1 text-center">
+                  <p class="text-xs font-bold text-gray-900">{{ avatar.name }}</p>
+                  <p class="text-[10px] text-gray-500 leading-tight truncate">{{ avatar.tags[0] }}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.name') }}</label>
             <input type="text" v-model="form.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base" placeholder="Rex">
           </div>
@@ -144,6 +169,7 @@ definePageMeta({
 
 const { t } = useI18n()
 const petsStore = usePetsStore()
+const { avatars } = useAvatars()
 const showAddModal = ref(false)
 const loading = ref(false)
 
@@ -153,6 +179,7 @@ const form = ref({
   breed: '',
   birthDate: '',
   weight: '',
+  avatarUrl: '',
 })
 
 onMounted(() => {
@@ -168,6 +195,7 @@ const handleSubmit = async () => {
       breed: form.value.breed || undefined,
       birthDate: form.value.birthDate || undefined,
       weight: form.value.weight ? parseFloat(form.value.weight) : undefined,
+      avatarUrl: form.value.avatarUrl || undefined,
     })
     showAddModal.value = false
     form.value = {
@@ -176,6 +204,7 @@ const handleSubmit = async () => {
       breed: '',
       birthDate: '',
       weight: '',
+      avatarUrl: '',
     }
   } catch (error) {
     console.error('Failed to create pet:', error)
@@ -190,8 +219,8 @@ const calculateAge = (date: string | Date) => {
   const years = Math.floor(now.diff(birth, 'years').years)
   const months = Math.floor(now.diff(birth, 'months').months % 12)
   
-  if (years > 0) return t('pets.age.year', years, { count: years })
-  return t('pets.age.month', months, { count: months })
+  if (years > 0) return t('pets.age.year', { count: years })
+  return t('pets.age.month', { count: months })
 }
 </script>
 

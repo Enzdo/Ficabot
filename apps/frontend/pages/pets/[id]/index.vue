@@ -34,8 +34,9 @@
           <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-primary-50 to-transparent opacity-50"></div>
           
           <div class="relative">
-            <div class="w-24 h-24 bg-white rounded-2xl mx-auto flex items-center justify-center text-5xl border-4 border-white shadow-sm mb-4">
-              {{ petsStore.currentPet.species === 'dog' ? '🐕' : '🐱' }}
+            <div class="w-24 h-24 bg-white rounded-2xl mx-auto flex items-center justify-center text-5xl border-4 border-white shadow-sm mb-4 overflow-hidden">
+              <img v-if="petsStore.currentPet.avatarUrl" :src="petsStore.currentPet.avatarUrl" class="w-full h-full object-cover" :alt="petsStore.currentPet.name">
+              <span v-else>{{ petsStore.currentPet.species === 'dog' ? '🐕' : '🐱' }}</span>
             </div>
             
             <h1 class="text-2xl font-bold text-gray-900 mb-1 truncate px-4">{{ petsStore.currentPet.name }}</h1>
@@ -350,6 +351,30 @@
           </div>
 
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $t('avatars.select_title') }}</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                v-for="avatar in avatars.filter((a: any) => a.type === editForm.species)"
+                :key="avatar.id"
+                @click="editForm.avatarUrl = avatar.image"
+                class="relative group text-left"
+              >
+                <div 
+                  class="aspect-square rounded-2xl overflow-hidden border-2 transition-all bg-gray-50"
+                  :class="editForm.avatarUrl === avatar.image ? 'border-primary-600 ring-2 ring-primary-100' : 'border-transparent hover:border-gray-200'"
+                >
+                  <img :src="avatar.image" :alt="avatar.name" class="w-full h-full object-cover">
+                </div>
+                <div class="mt-1 text-center">
+                  <p class="text-xs font-bold text-gray-900">{{ avatar.name }}</p>
+                  <p class="text-[10px] text-gray-500 leading-tight truncate">{{ avatar.tags[0] }}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.name') }}</label>
             <input type="text" v-model="editForm.name" required class="w-full px-4 py-3 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:border-primary-500 focus:ring-primary-500 transition-colors text-base">
           </div>
@@ -427,6 +452,7 @@ const route = useRoute()
 const router = useRouter()
 const petsStore = usePetsStore()
 const authStore = useAuthStore()
+const { avatars } = useAvatars()
 
 const showEditModal = ref(false)
 const showInviteModal = ref(false)
@@ -651,6 +677,7 @@ const editForm = reactive({
   breed: '',
   birthDate: '',
   weight: undefined as number | undefined,
+  avatarUrl: '',
 })
 
 const getRecordIcon = (type: MedicalRecordType) => {
@@ -690,8 +717,8 @@ const calculateAge = (date: string | Date) => {
   const years = Math.floor(now.diff(birth, 'years').years)
   const months = Math.floor(now.diff(birth, 'months').months % 12)
   
-  if (years > 0) return t('pets.age.year', years, { count: years })
-  return t('pets.age.month', months, { count: months })
+  if (years > 0) return t('pets.age.year', { count: years })
+  return t('pets.age.month', { count: months })
 }
 
 const handleUpdate = async () => {
@@ -703,6 +730,7 @@ const handleUpdate = async () => {
     breed: editForm.breed || undefined,
     birthDate: editForm.birthDate ? new Date(editForm.birthDate).toISOString() : undefined,
     weight: editForm.weight,
+    avatarUrl: editForm.avatarUrl || undefined,
   })
 
   showEditModal.value = false
@@ -765,6 +793,7 @@ watch(showEditModal, (show) => {
       ? new Date(petsStore.currentPet.birthDate).toISOString().split('T')[0]
       : ''
     editForm.weight = petsStore.currentPet.weight || undefined
+    editForm.avatarUrl = petsStore.currentPet.avatarUrl || ''
   }
 })
 
