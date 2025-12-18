@@ -51,6 +51,17 @@
     "password_mismatch": "Passwörter stimmen nicht überein",
     "password_success": "Passwort erfolgreich geändert"
   },
+  "avatars": {
+    "nea_desc": "Golden Retriever | Sanft und freundlich",
+    "mia_desc": "Maine Coon | Anmutig und raffiniert",
+    "ria_desc": "Kaninchen | Zart und empfindlich",
+    "neo_desc": "Hund | Treuer Begleiter",
+    "mio_desc": "Maine Coon | Elegant und geheimnisvoll",
+    "rio_desc": "Kaninchen | Sanft und liebevoll",
+    "select_title": "Avatar auswählen",
+    "female": "Weiblich",
+    "male": "Männlich"
+  },
   "dashboard": {
     "hello": "Hallo 👋",
     "welcome": "Willkommen bei Ficabot",
