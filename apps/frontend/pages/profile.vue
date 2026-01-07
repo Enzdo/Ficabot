@@ -88,10 +88,15 @@
     </div>
 
     <!-- Danger Zone -->
-    <div class="bg-red-50 rounded-2xl p-6 border border-red-100">
+    <div class="bg-red-50 rounded-2xl p-6 border border-red-100 mb-6">
       <h3 class="font-bold text-red-900 mb-2">{{ $t('profile.danger_zone') }}</h3>
       <p class="text-sm text-red-700 mb-4">{{ $t('profile.delete_account_warning') }}</p>
-      <button class="text-red-600 text-sm font-medium">{{ $t('profile.delete_account') }}</button>
+      <div class="space-y-3">
+        <button @click="logout" class="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition-colors">
+          🚪 Se déconnecter
+        </button>
+        <button class="w-full text-red-600 text-sm font-medium">{{ $t('profile.delete_account') }}</button>
+      </div>
     </div>
 
     <!-- Edit Profile Modal -->
@@ -438,6 +443,22 @@ const updatePassword = async () => {
     passwordError.value = response.message || 'Erreur lors de la modification'
   }
   saving.value = false
+}
+
+const logout = async () => {
+  try {
+    const api = useApi()
+    await api.post('/auth/logout')
+  } catch (error) {
+    // Continue with logout even if API call fails
+    console.error('Logout API call failed:', error)
+  }
+  
+  // Clear local auth state
+  authStore.logout()
+  
+  // Redirect to login page
+  await navigateTo('/auth/login')
 }
 
 onMounted(() => {
