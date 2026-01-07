@@ -48,34 +48,15 @@ export default class AuthController {
       }
 
       // Verify password manually - support both bcrypt and scrypt
-      let isValid = false
       
       logger.info('Stored password hash: ' + user.password.substring(0, 20) + '...')
-      logger.info('Password hash type: ' + (user.password.startsWith('$bcrypt') ? 'bcrypt' : user.password.startsWith('$scrypt') ? 'scrypt' : 'unknown'))
-      
       // Generate hash for provided password for debugging
       const providedPasswordHash = await hash.use('scrypt').make(password)
       logger.info('Hash of provided password (scrypt): ' + providedPasswordHash.substring(0, 20) + '...')
 
-      // Try scrypt first (for new users)
-      try {
-        isValid = await hash.use('scrypt').verify(user.password, password)
-        logger.info('Scrypt verification result: ' + isValid)
-      } catch (scryptError) {
-        logger.info('Scrypt verification failed: ' + scryptError.message)
-      }
-      
-      // If scrypt fails, try bcrypt (for existing users)
-      if (!isValid) {
-        try {
-          isValid = await hash.use('bcrypt').verify(user.password, password)
-          logger.info('Bcrypt verification result: ' + isValid)
-        } catch (bcryptError) {
-          logger.info('Bcrypt verification failed: ' + bcryptError.message)
-        }
-      }
-      
-      logger.info('Final password verification result: ' + isValid)
+      // Compare directly the stored hash and the hash of the provided password
+      const isValid = user.password === providedPasswordHash
+      logger.info('Direct hash comparison result: ' + isValid)
       
       if (!isValid) {
         logger.error('Invalid password for user: ' + user.id)
