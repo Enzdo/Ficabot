@@ -1,51 +1,51 @@
 <template>
   <div class="min-h-screen font-sans selection:bg-primary-100 selection:text-primary-900">
     <!-- Hero Section -->
-    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+    <section class="relative pt-20 pb-16 sm:pt-24 sm:pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       <!-- Animated Background Blobs -->
       <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-b from-primary-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
-        <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-t from-secondary-100/40 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+        <div class="absolute top-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] lg:w-[800px] lg:h-[800px] bg-gradient-to-b from-primary-100/40 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse-slow"></div>
+        <div class="absolute bottom-0 left-0 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] lg:w-[600px] lg:h-[600px] bg-gradient-to-t from-secondary-100/40 to-transparent rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
       </div>
       
       <div class="container-custom relative z-10">
-        <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-20">
           <div class="lg:w-1/2 text-center lg:text-left">
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-primary-100 rounded-full shadow-sm mb-8 animate-fade-in-up">
-              <span class="relative flex h-3 w-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-white border border-primary-100 rounded-full shadow-sm mb-6 sm:mb-8 animate-fade-in-up">
+              <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-500"></span>
+                <span class="relative inline-flex rounded-full h-full w-full bg-primary-500"></span>
               </span>
-              <span class="text-sm font-medium text-gray-600">L'app n°1 pour la santé animale</span>
+              <span class="text-xs sm:text-sm font-medium text-gray-600">L'app n°1 pour la santé animale</span>
             </div>
             
-            <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] mb-6 tracking-tight">
+            <h1 class="text-3xl sm:text-4xl lg:text-7xl font-extrabold text-gray-900 leading-[1.1] mb-4 sm:mb-6 tracking-tight">
               Prenez soin de ceux <br>
               <span class="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">qui comptent vraiment.</span>
             </h1>
             
-            <p class="text-lg lg:text-xl text-gray-600 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            <p class="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 sm:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
               Ficabot centralise le carnet de santé de vos animaux, gère les rappels de vaccins et vous connecte directement à votre vétérinaire.
             </p>
             
-            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto group">
+            <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
+              <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto group text-sm sm:text-base">
                 Nous contacter
-                <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </NuxtLink>
-              <NuxtLink to="/particuliers" class="btn-white btn-lg w-full sm:w-auto flex items-center gap-2">
+              <NuxtLink to="/particuliers" class="btn-white btn-lg w-full sm:w-auto flex items-center gap-2 text-sm sm:text-base">
                 En savoir plus
               </NuxtLink>
             </div>
 
-            <div class="mt-12 flex items-center justify-center lg:justify-start gap-8 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
+            <div class="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-8 opacity-70 grayscale hover:grayscale-0 transition-all duration-500">
               <!-- Fake trusted logos -->
-              <span class="text-sm font-semibold text-gray-400">Recommandé par</span>
-              <div class="h-8 w-24 bg-gray-300 rounded opacity-50"></div>
-              <div class="h-8 w-24 bg-gray-300 rounded opacity-50"></div>
-              <div class="h-8 w-24 bg-gray-300 rounded opacity-50"></div>
+              <span class="text-xs sm:text-sm font-semibold text-gray-400">Recommandé par</span>
+              <div class="h-6 w-16 sm:h-8 sm:w-24 bg-gray-300 rounded opacity-50"></div>
+              <div class="h-6 w-16 sm:h-8 sm:w-24 bg-gray-300 rounded opacity-50"></div>
+              <div class="h-6 w-16 sm:h-8 sm:w-24 bg-gray-300 rounded opacity-50"></div>
             </div>
           </div>
           
@@ -53,33 +53,33 @@
           <div class="lg:w-1/2 relative perspective-1000">
             <div class="relative z-10 transform lg:rotate-y-[-5deg] lg:rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out">
               <!-- Mobile App Mockup -->
-              <div class="relative mx-auto border-gray-800 bg-gray-800 border-[10px] sm:border-[14px] rounded-[2rem] sm:rounded-[2.5rem] h-[500px] w-[260px] sm:h-[600px] sm:w-[300px] shadow-2xl flex flex-col overflow-hidden">
-                <div class="h-[24px] sm:h-[32px] bg-gray-800 rounded-t-[2rem] sm:rounded-t-[2.5rem] flex items-center justify-center z-20">
-                  <div class="h-[4px] sm:h-[5px] w-[40px] sm:w-[50px] bg-gray-700 rounded-full"></div>
+              <div class="relative mx-auto border-gray-800 bg-gray-800 border-[8px] sm:border-[10px] lg:border-[14px] rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] h-[400px] sm:h-[500px] lg:h-[600px] w-[220px] sm:w-[260px] lg:w-[300px] shadow-2xl flex flex-col overflow-hidden">
+                <div class="h-[20px] sm:h-[24px] lg:h-[32px] bg-gray-800 rounded-t-[1.5rem] sm:rounded-t-[2rem] lg:rounded-t-[2.5rem] flex items-center justify-center z-20">
+                  <div class="h-[3px] sm:h-[4px] lg:h-[5px] w-[30px] sm:w-[40px] lg:w-[50px] bg-gray-700 rounded-full"></div>
                 </div>
                 <div class="flex-1 bg-white relative overflow-hidden">
                   <!-- App Screen Content -->
-                  <div class="bg-primary-600 h-40 p-6 pt-10 text-white rounded-b-3xl relative z-10">
-                    <div class="flex justify-between items-center mb-6">
+                  <div class="bg-primary-600 h-32 sm:h-40 p-4 sm:p-6 pt-6 sm:pt-10 text-white rounded-b-2xl sm:rounded-b-3xl relative z-10">
+                    <div class="flex justify-between items-center mb-4 sm:mb-6">
                       <div>
-                        <p class="text-primary-100 text-sm">Bonjour,</p>
-                        <h3 class="font-bold text-xl">Sophie 👋</h3>
+                        <p class="text-primary-100 text-xs sm:text-sm">Bonjour,</p>
+                        <h3 class="font-bold text-lg sm:text-xl">Sophie 👋</h3>
                       </div>
-                      <div class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
-                        <span class="text-lg">🔔</span>
+                      <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+                        <span class="text-sm sm:text-lg">🔔</span>
                       </div>
                     </div>
                     <!-- Pet Cards Scroll -->
-                    <div class="flex gap-4 overflow-x-visible pb-4">
-                      <div class="flex-shrink-0 w-16 flex flex-col items-center gap-2">
-                        <div class="w-14 h-14 bg-white rounded-2xl border-4 border-primary-300 shadow-lg flex items-center justify-center text-2xl relative">
+                    <div class="flex gap-2 sm:gap-4 overflow-x-visible pb-2 sm:pb-4">
+                      <div class="flex-shrink-0 w-12 sm:w-16 flex flex-col items-center gap-1 sm:gap-2">
+                        <div class="w-10 h-10 sm:w-14 sm:h-14 bg-white rounded-xl sm:rounded-2xl border-2 sm:border-4 border-primary-300 shadow-lg flex items-center justify-center text-lg sm:text-2xl relative">
                           🐕
-                          <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
+                          <span class="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-2.5 h-2.5 sm:w-4 sm:h-4 bg-green-500 border border-white rounded-full"></span>
                         </div>
                         <span class="text-xs font-medium">Max</span>
                       </div>
-                      <div class="flex-shrink-0 w-16 flex flex-col items-center gap-2 opacity-70">
-                        <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl text-white">
+                      <div class="flex-shrink-0 w-12 sm:w-16 flex flex-col items-center gap-1 sm:gap-2 opacity-70">
+                        <div class="w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-2xl text-white">
                           🐱
                         </div>
                         <span class="text-xs font-medium">Luna</span>
@@ -88,57 +88,57 @@
                   </div>
                   
                   <!-- Body Content -->
-                  <div class="p-5 space-y-4">
-                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                      <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div class="p-3 sm:p-5 space-y-3 sm:space-y-4">
+                    <div class="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 flex items-center gap-3 sm:gap-4">
+                      <div class="w-8 h-8 sm:w-12 sm:h-12 bg-red-100 rounded-lg sm:rounded-xl flex items-center justify-center text-red-600">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       </div>
-                      <div>
-                        <h4 class="font-bold text-gray-900">Rappel Vaccin</h4>
-                        <p class="text-xs text-gray-500">Demain à 14:00 • Dr. Martin</p>
+                      <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-gray-900 text-sm sm:text-base">Rappel Vaccin</h4>
+                        <p class="text-xs text-gray-500 truncate">Demain • Dr. Martin</p>
                       </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
-                      <div class="bg-blue-50 p-4 rounded-2xl">
-                        <div class="text-2xl mb-2">⚖️</div>
-                        <p class="font-bold text-gray-900">32.5 kg</p>
-                        <p class="text-xs text-gray-500">Poids stable</p>
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                      <div class="bg-blue-50 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">⚖️</div>
+                        <p class="font-bold text-gray-900 text-xs sm:text-sm">32.5 kg</p>
+                        <p class="text-xs text-gray-500 hidden sm:block">Poids stable</p>
                       </div>
-                      <div class="bg-purple-50 p-4 rounded-2xl">
-                        <div class="text-2xl mb-2">🩺</div>
-                        <p class="font-bold text-gray-900">Santé</p>
-                        <p class="text-xs text-gray-500">Excellent</p>
+                      <div class="bg-purple-50 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+                        <div class="text-lg sm:text-2xl mb-1 sm:mb-2">🩺</div>
+                        <p class="font-bold text-gray-900 text-xs sm:text-sm">Santé</p>
+                        <p class="text-xs text-gray-500 hidden sm:block">Excellent</p>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Bottom Nav -->
-                  <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex justify-around text-gray-400">
-                    <div class="text-primary-600"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg></div>
-                    <div><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg></div>
-                    <div><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>
+                  <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-3 sm:p-4 flex justify-around text-gray-400">
+                    <div class="text-primary-600"><svg class="w-4 h-4 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg></div>
+                    <div><svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg></div>
+                    <div><svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg></div>
                   </div>
                 </div>
               </div>
               
               <!-- Floating notifications -->
-              <div class="absolute top-20 -right-12 bg-white p-4 rounded-xl shadow-xl shadow-gray-200/50 animate-float-delayed z-20 max-w-[200px]">
-                <div class="flex gap-3">
-                  <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0">✓</div>
+              <div class="absolute top-12 sm:top-16 lg:top-20 -right-8 sm:-right-10 lg:-right-12 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-xl shadow-gray-200/50 animate-float-delayed z-20 max-w-[150px] sm:max-w-[200px]">
+                <div class="flex gap-2 sm:gap-3">
+                  <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 flex-shrink-0 text-xs sm:text-sm">✓</div>
                   <div>
-                    <p class="text-sm font-bold text-gray-900">Vaccin validé</p>
-                    <p class="text-xs text-gray-500">Par Dr. Martin</p>
+                    <p class="text-xs sm:text-sm font-bold text-gray-900">Vaccin validé</p>
+                    <p class="text-xs text-gray-500 hidden sm:block">Par Dr. Martin</p>
                   </div>
                 </div>
               </div>
               
-              <div class="absolute bottom-32 -left-12 bg-white p-4 rounded-xl shadow-xl shadow-gray-200/50 animate-float z-20 max-w-[200px]">
-                <div class="flex gap-3">
-                  <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">💬</div>
+              <div class="absolute bottom-20 sm:bottom-24 lg:bottom-32 -left-8 sm:-left-10 lg:-left-12 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-xl shadow-gray-200/50 animate-float z-20 max-w-[150px] sm:max-w-[200px]">
+                <div class="flex gap-2 sm:gap-3">
+                  <div class="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0 text-xs sm:text-sm">💬</div>
                   <div>
-                    <p class="text-sm font-bold text-gray-900">Nouveau message</p>
-                    <p class="text-xs text-gray-500">"Tout va bien pour Max ?"</p>
+                    <p class="text-xs sm:text-sm font-bold text-gray-900">Nouveau message</p>
+                    <p class="text-xs text-gray-500 hidden sm:block">"Max va bien ?"</p>
                   </div>
                 </div>
               </div>
@@ -151,56 +151,56 @@
     <!-- Features Grid -->
     <section id="features" class="section bg-white">
       <div class="container-custom">
-        <div class="text-center max-w-3xl mx-auto mb-20">
+        <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16 lg:mb-20">
           <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wider mb-2">Fonctionnalités</h2>
-          <h3 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">Tout ce dont vous avez besoin</h3>
-          <p class="text-lg text-gray-600">Une suite d'outils complète pour assurer le bien-être de vos compagnons au quotidien.</p>
+          <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Tout ce dont vous avez besoin</h3>
+          <p class="text-base sm:text-lg text-gray-600">Une suite d'outils complète pour assurer le bien-être de vos compagnons au quotidien.</p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div class="group p-8 rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
-            <div class="w-14 h-14 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div class="group p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-primary-100 text-primary-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             </div>
-            <h4 class="text-xl font-bold text-gray-900 mb-3">Carnet de Santé Digital</h4>
-            <p class="text-gray-600 leading-relaxed">Fini les carnets papier perdus. Retrouvez tout l'historique médical, les poids et les tailles en un clic.</p>
+            <h4 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Carnet de Santé Digital</h4>
+            <p class="text-sm sm:text-base text-gray-600 leading-relaxed">Fini les carnets papier perdus. Retrouvez tout l'historique médical, les poids et les tailles en un clic.</p>
           </div>
 
-          <div class="group p-8 rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
-            <div class="w-14 h-14 bg-secondary-100 text-secondary-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div class="group p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-secondary-100 text-secondary-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h4 class="text-xl font-bold text-gray-900 mb-3">Rappels Automatiques</h4>
-            <p class="text-gray-600 leading-relaxed">Vaccins, vermifuges, RDV... Ficabot vous notifie au bon moment pour ne rien oublier.</p>
+            <h4 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Rappels Automatiques</h4>
+            <p class="text-sm sm:text-base text-gray-600 leading-relaxed">Vaccins, vermifuges, RDV... Ficabot vous notifie au bon moment pour ne rien oublier.</p>
           </div>
 
-          <div class="group p-8 rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
-            <div class="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+          <div class="group p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 text-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+              <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
             </div>
-            <h4 class="text-xl font-bold text-gray-900 mb-3">Chat Vétérinaire</h4>
-            <p class="text-gray-600 leading-relaxed">Une question ? Échangez directement avec votre clinique vétérinaire via la messagerie sécurisée.</p>
+            <h4 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Chat Vétérinaire</h4>
+            <p class="text-sm sm:text-base text-gray-600 leading-relaxed">Une question ? Échangez directement avec votre clinique vétérinaire via la messagerie sécurisée.</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Split Section: Particuliers -->
-    <section id="particuliers" class="py-24 bg-primary-50 overflow-hidden">
+    <section id="particuliers" class="py-16 sm:py-20 lg:py-24 bg-primary-50 overflow-hidden">
       <div class="container-custom">
-        <div class="flex flex-col lg:flex-row items-center gap-16">
+        <div class="flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-16">
           <div class="lg:w-1/2 relative order-2 lg:order-1">
-            <div class="absolute inset-0 bg-gradient-to-r from-primary-200 to-primary-100 rounded-[3rem] rotate-3 transform scale-95 opacity-50"></div>
-            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1469&q=80" alt="Chien heureux" class="relative rounded-[2.5rem] shadow-2xl w-full h-[500px] object-cover object-center" />
+            <div class="absolute inset-0 bg-gradient-to-r from-primary-200 to-primary-100 rounded-[2rem] sm:rounded-[2.5rem] lg:rounded-[3rem] rotate-3 transform scale-95 opacity-50"></div>
+            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1469&q=80" alt="Chien heureux" class="relative rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[2.5rem] shadow-2xl w-full h-[300px] sm:h-[400px] lg:h-[500px] object-cover object-center" />
             
-            <div class="absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur rounded-2xl p-6 shadow-lg">
-              <div class="flex items-center gap-4">
-                <div class="flex -space-x-3">
-                  <img class="w-10 h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=1" alt="User" />
-                  <img class="w-10 h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=2" alt="User" />
-                  <img class="w-10 h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=3" alt="User" />
+            <div class="absolute bottom-4 sm:bottom-6 lg:bottom-8 left-4 sm:left-6 lg:left-8 right-4 sm:right-6 lg:right-8 bg-white/90 backdrop-blur rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg">
+              <div class="flex items-center gap-3 sm:gap-4">
+                <div class="flex -space-x-2 sm:-space-x-3">
+                  <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=1" alt="User" />
+                  <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=2" alt="User" />
+                  <img class="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-white" src="https://i.pravatar.cc/150?u=3" alt="User" />
                 </div>
-                <div class="text-sm">
+                <div class="text-xs sm:text-sm">
                   <p class="font-bold text-gray-900">Rejoignez la communauté</p>
                   <p class="text-gray-600">Plus de 5000 propriétaires satisfaits</p>
                 </div>
@@ -210,43 +210,43 @@
           
           <div class="lg:w-1/2 order-1 lg:order-2">
             <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wider mb-2">Pour les propriétaires</h2>
-            <h3 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">Tranquillité d'esprit absolue</h3>
-            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+            <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Tranquillité d'esprit absolue</h3>
+            <p class="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed">
               Que vous ayez un chat, un chien ou un NAC, Ficabot s'adapte à vos besoins.
             </p>
             
-            <ul class="space-y-6">
-              <li class="flex gap-4">
-                <div class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            <ul class="space-y-4 sm:space-y-6">
+              <li class="flex gap-3 sm:gap-4">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900">Suivi multi-animaux</h4>
-                  <p class="text-gray-600 text-sm">Gérez toute votre tribu sur une seule interface simple et intuitive.</p>
+                  <h4 class="font-bold text-gray-900 text-sm sm:text-base">Suivi multi-animaux</h4>
+                  <p class="text-gray-600 text-xs sm:text-sm">Gérez toute votre tribu sur une seule interface simple et intuitive.</p>
                 </div>
               </li>
-              <li class="flex gap-4">
-                <div class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              <li class="flex gap-3 sm:gap-4">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900">Documents exportables</h4>
-                  <p class="text-gray-600 text-sm">Exportez le dossier médical en PDF pour vos voyages ou gardes.</p>
+                  <h4 class="font-bold text-gray-900 text-sm sm:text-base">Documents exportables</h4>
+                  <p class="text-gray-600 text-xs sm:text-sm">Exportez le dossier médical en PDF pour vos voyages ou gardes.</p>
                 </div>
               </li>
-              <li class="flex gap-4">
-                <div class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-1">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              <li class="flex gap-3 sm:gap-4">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-1">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                 </div>
                 <div>
-                  <h4 class="font-bold text-gray-900">Conseils personnalisés IA</h4>
-                  <p class="text-gray-600 text-sm">Recevez des conseils adaptés à la race et l'âge de votre animal.</p>
+                  <h4 class="font-bold text-gray-900 text-sm sm:text-base">Conseils personnalisés IA</h4>
+                  <p class="text-gray-600 text-xs sm:text-sm">Recevez des conseils adaptés à la race et l'âge de votre animal.</p>
                 </div>
               </li>
             </ul>
             
-            <div class="mt-10">
-              <a href="http://localhost:3000/register" class="btn-primary">Créer mon espace</a>
+            <div class="mt-8 sm:mt-10">
+              <a href="http://localhost:3000/register" class="btn-primary w-full sm:w-auto">Créer mon espace</a>
             </div>
           </div>
         </div>
@@ -353,21 +353,21 @@
     <!-- Pricing -->
     <section id="pricing" class="section bg-white">
       <div class="container-custom">
-        <div class="text-center max-w-3xl mx-auto mb-12">
-          <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Tarifs simples et transparents</h2>
-          <p class="text-lg text-gray-600 mb-8">Choisissez l'offre qui correspond à vos besoins.</p>
+        <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Tarifs simples et transparents</h2>
+          <p class="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">Choisissez l'offre qui correspond à vos besoins.</p>
           
           <!-- Pricing Toggle -->
-          <div class="inline-flex bg-gray-100 p-1 rounded-xl gap-2">
+          <div class="inline-flex bg-gray-100 p-0.5 sm:p-1 rounded-xl gap-1 sm:gap-2">
             <button 
               @click="pricingMode = 'owners'"
-              :class="['px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200', pricingMode === 'owners' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
+              :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200', pricingMode === 'owners' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
             >
               Particuliers
             </button>
             <button 
               @click="pricingMode = 'vets'"
-              :class="['px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200', pricingMode === 'vets' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
+              :class="['px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200', pricingMode === 'vets' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
             >
               Vétérinaires
             </button>
@@ -375,13 +375,13 @@
         </div>
 
         <!-- Owners Pricing -->
-        <div v-if="pricingMode === 'owners'" class="grid md:grid-cols-3 gap-8 items-start animate-fade-in">
+        <div v-if="pricingMode === 'owners'" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start animate-fade-in">
           <!-- Free -->
-          <div class="card p-8 border border-gray-100 hover:border-primary-200 transition-colors">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Découverte</h3>
-            <div class="text-4xl font-extrabold text-gray-900 mb-6">0€ <span class="text-base font-normal text-gray-500">/mois</span></div>
-            <p class="text-gray-600 text-sm mb-8">Pour démarrer en douceur.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 border border-gray-100 hover:border-primary-200 transition-colors">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Découverte</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">0€ <span class="text-sm sm:text-base font-normal text-gray-500">/mois</span></div>
+            <p class="text-gray-600 text-sm mb-6 sm:mb-8">Pour démarrer en douceur.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Jusqu'à 2 animaux</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Carnet de santé basique</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Rappels vaccins</li>
@@ -390,12 +390,12 @@
           </div>
 
           <!-- Premium -->
-          <div class="card p-8 bg-gray-900 text-white transform scale-105 shadow-2xl relative">
-            <div class="absolute top-0 right-0 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAIRE</div>
-            <h3 class="text-xl font-bold mb-2">Premium</h3>
-            <div class="text-4xl font-extrabold mb-6">4.99€ <span class="text-base font-normal text-gray-400">/mois</span></div>
-            <p class="text-gray-300 text-sm mb-8">Pour les passionnés.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 bg-gray-900 text-white transform scale-105 shadow-2xl relative">
+            <div class="absolute top-0 right-0 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold px-2 sm:px-3 py-1 rounded-bl-xl rounded-tr-xl">POPULAIRE</div>
+            <h3 class="text-lg sm:text-xl font-bold mb-2">Premium</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold mb-4 sm:mb-6">4.99€ <span class="text-sm sm:text-base font-normal text-gray-400">/mois</span></div>
+            <p class="text-gray-300 text-sm mb-6 sm:mb-8">Pour les passionnés.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Jusqu'à 5 animaux</li>
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Carnet santé complet</li>
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Chat illimité avec vétérinaire</li>
@@ -405,11 +405,11 @@
           </div>
 
           <!-- Family -->
-          <div class="card p-8 border border-gray-100 hover:border-primary-200 transition-colors">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Famille</h3>
-            <div class="text-4xl font-extrabold text-gray-900 mb-6">9.99€ <span class="text-base font-normal text-gray-500">/mois</span></div>
-            <p class="text-gray-600 text-sm mb-8">Pour les grandes tribus.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 border border-gray-100 hover:border-primary-200 transition-colors">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Famille</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">9.99€ <span class="text-sm sm:text-base font-normal text-gray-500">/mois</span></div>
+            <p class="text-gray-600 text-sm mb-6 sm:mb-8">Pour les grandes tribus.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Animaux illimités</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Multi-utilisateurs (famille)</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Export PDF complet</li>
@@ -420,13 +420,13 @@
         </div>
 
         <!-- Vets Pricing -->
-        <div v-if="pricingMode === 'vets'" class="grid md:grid-cols-3 gap-8 items-start animate-fade-in">
+        <div v-if="pricingMode === 'vets'" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 items-start animate-fade-in">
           <!-- Solo -->
-          <div class="card p-8 border border-gray-100 hover:border-primary-200 transition-colors">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Libéral</h3>
-            <div class="text-4xl font-extrabold text-gray-900 mb-6">29€ <span class="text-base font-normal text-gray-500">/mois</span></div>
-            <p class="text-gray-600 text-sm mb-8">Pour les vétérinaires indépendants.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 border border-gray-100 hover:border-primary-200 transition-colors">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Libéral</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">29€ <span class="text-sm sm:text-base font-normal text-gray-500">/mois</span></div>
+            <p class="text-gray-600 text-sm mb-6 sm:mb-8">Pour les vétérinaires indépendants.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> 1 Vétérinaire</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Agenda & Rappels SMS</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Dossiers patients illimités</li>
@@ -436,12 +436,12 @@
           </div>
 
           <!-- Clinic -->
-          <div class="card p-8 bg-gray-900 text-white transform scale-105 shadow-2xl relative">
-            <div class="absolute top-0 right-0 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl">RECOMMANDÉ</div>
-            <h3 class="text-xl font-bold mb-2">Clinique</h3>
-            <div class="text-4xl font-extrabold mb-6">89€ <span class="text-base font-normal text-gray-400">/mois</span></div>
-            <p class="text-gray-300 text-sm mb-8">Pour les cabinets de groupe.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 bg-gray-900 text-white transform scale-105 shadow-2xl relative">
+            <div class="absolute top-0 right-0 bg-gradient-to-r from-primary-500 to-secondary-500 text-white text-xs font-bold px-2 sm:px-3 py-1 rounded-bl-xl rounded-tr-xl">RECOMMANDÉ</div>
+            <h3 class="text-lg sm:text-xl font-bold mb-2">Clinique</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold mb-4 sm:mb-6">89€ <span class="text-sm sm:text-base font-normal text-gray-400">/mois</span></div>
+            <p class="text-gray-300 text-sm mb-6 sm:mb-8">Pour les cabinets de groupe.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Jusqu'à 5 praticiens</li>
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Planning partagé</li>
               <li class="flex items-center gap-3 text-sm text-gray-300"><span class="text-primary-400">✓</span> Gestion des stocks</li>
@@ -451,11 +451,11 @@
           </div>
 
           <!-- Network -->
-          <div class="card p-8 border border-gray-100 hover:border-primary-200 transition-colors">
-            <h3 class="text-xl font-bold text-gray-900 mb-2">Réseau</h3>
-            <div class="text-4xl font-extrabold text-gray-900 mb-6">Sur devis</div>
-            <p class="text-gray-600 text-sm mb-8">Pour les grands réseaux de cliniques.</p>
-            <ul class="space-y-4 mb-8">
+          <div class="card p-6 sm:p-8 border border-gray-100 hover:border-primary-200 transition-colors">
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Réseau</h3>
+            <div class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 sm:mb-6">Sur devis</div>
+            <p class="text-gray-600 text-sm mb-6 sm:mb-8">Pour les grands réseaux de cliniques.</p>
+            <ul class="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Praticiens illimités</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> Multi-sites centralisé</li>
               <li class="flex items-center gap-3 text-sm text-gray-600"><span class="text-green-500">✓</span> API dédiée</li>
