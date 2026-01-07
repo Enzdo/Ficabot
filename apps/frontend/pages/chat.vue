@@ -54,7 +54,7 @@
             <span class="text-xl">🤖</span>
           </div>
           <div class="min-w-0 flex-1">
-            <h1 class="font-bold text-gray-900 leading-tight truncate">Ficabot</h1>
+            <h1 class="font-bold text-gray-900 leading-tight truncate">Votre Assistant</h1>
             <div class="flex items-center text-xs text-primary-600 font-medium truncate">
               <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5 animate-pulse shrink-0"></span>
               {{ $t('chat.online') }}

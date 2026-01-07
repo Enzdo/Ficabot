@@ -8,7 +8,7 @@
     <!-- Not found -->
     <div v-else-if="!pet" class="flex flex-col items-center justify-center min-h-screen p-4">
       <div class="text-6xl mb-4">🐾</div>
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Profil non trouvé</h1>
+      <h1 class="text-3xl font-bold text-gray-900 tracking-tight bg-gradient-to-r from-primary-700 to-primary-500 bg-clip-text text-transparent">Votre Assistant Virtuel</h1>
       <p class="text-gray-500 mb-6">Ce profil n'existe pas ou est privé</p>
       <NuxtLink to="/" class="bg-primary-600 text-white px-6 py-3 rounded-xl font-bold">
         Retour à l'accueil
@@ -50,8 +50,7 @@
 
         <!-- Health Info -->
         <div v-if="pet.healthBook" class="bg-white rounded-2xl p-4 shadow-sm mb-4">
-          <h3 class="font-bold text-gray-900 mb-3">🏥 Santé</h3>
-          
+          <h3 class="font-bold text-gray-900 mb-3">🩺 Informations de santé</h3>
           <!-- Vaccines -->
           <div v-if="pet.healthBook.vaccines?.length" class="mb-4">
             <h4 class="text-sm font-medium text-gray-700 mb-2">💉 Vaccins</h4>
@@ -105,7 +104,7 @@
 
         <!-- Footer -->
         <div class="text-center mt-8">
-          <p class="text-gray-400 text-sm mb-4">Profil créé avec Ficabot 🐾</p>
+          <p class="text-gray-400 text-sm mb-4">Profil créé avec Votre Assistant Virtuel 🤖</p>
           <NuxtLink to="/" class="text-primary-600 font-medium">
             Créer le profil de mon animal →
           </NuxtLink>

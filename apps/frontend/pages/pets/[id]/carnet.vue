@@ -573,7 +573,7 @@ const generateQRCode = async () => {
     allergies: healthBook.value?.allergies?.map((a: any) => a.allergen) || [],
   }
   
-  const qrText = `FICABOT URGENCE\n${emergencyData.name} (${emergencyData.species === 'dog' ? 'Chien' : 'Chat'})\nRace: ${emergencyData.breed || 'Non spécifiée'}\nID: ${emergencyData.id || 'Non renseigné'}\nAllergies: ${emergencyData.allergies.length ? emergencyData.allergies.join(', ') : 'Aucune connue'}`
+  const qrText = `VOTRE ASSISTANT VIRTUEL URGENCE\n${emergencyData.name} (${emergencyData.species === 'dog' ? 'Chien' : 'Chat'})\nRace: ${emergencyData.breed || 'Non spécifiée'}\nID: ${emergencyData.id || 'Non renseigné'}\nAllergies: ${emergencyData.allergies.length ? emergencyData.allergies.join(', ') : 'Aucune connue'}`
   
   await QRCode.toCanvas(qrCanvas.value, qrText, {
     width: 200,
@@ -594,7 +594,7 @@ const exportPDF = async () => {
   // Title
   doc.setFontSize(20)
   doc.setTextColor(79, 70, 229)
-  doc.text('Carnet de Santé - Ficabot', 105, 20, { align: 'center' })
+  doc.text('Carnet de Santé - Votre Assistant Virtuel', 105, 20, { align: 'center' })
   
   // Pet info
   doc.setFontSize(16)
@@ -665,7 +665,7 @@ const exportPDF = async () => {
   // Footer
   doc.setFontSize(8)
   doc.setTextColor(150, 150, 150)
-  doc.text(`Généré par Ficabot le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: 'center' })
+  doc.text(`Généré par Votre Assistant Virtuel le ${new Date().toLocaleDateString('fr-FR')}`, 105, 285, { align: 'center' })
   
   doc.save(`carnet-sante-${pet.name.toLowerCase()}.pdf`)
 }

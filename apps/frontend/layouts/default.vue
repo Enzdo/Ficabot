@@ -7,7 +7,7 @@
           <div class="flex items-center">
             <NuxtLink to="/dashboard" class="flex items-center space-x-3 group">
               <AppLogo class="w-10 h-10 shadow-sm rounded-xl group-hover:scale-105 transition-transform duration-200" />
-              <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">Ficabot</span>
+              <span class="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">Votre Assistant Virtuel</span>
             </NuxtLink>
             
             <div class="hidden sm:ml-10 sm:flex sm:space-x-2">
@@ -85,7 +85,7 @@
     <header class="bg-white/90 backdrop-blur-md shadow-sm md:hidden px-4 h-16 flex items-center justify-between fixed top-0 left-0 right-0 z-30 transition-all duration-200">
        <div class="flex items-center space-x-3">
           <AppLogo class="w-9 h-9" />
-          <span class="text-lg font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">Ficabot</span>
+          <span class="text-lg font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">Votre Assistant</span>
         </div>
         <NuxtLink to="/profile" class="w-9 h-9 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center text-primary-700 font-bold text-sm shadow-inner">
           {{ authStore.user?.email?.charAt(0).toUpperCase() || '?' }}

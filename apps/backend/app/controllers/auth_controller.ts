@@ -27,22 +27,46 @@ export default class AuthController {
   }
 
   async login({ request, response }: HttpContext) {
-    const { email, password } = await request.validateUsing(loginValidator)
+    try {
+      console.log('Login attempt - Raw request body:', request.body())
+      
+      const { email, password } = await request.validateUsing(loginValidator)
+      console.log('Login validation passed for email:', email)
 
-    const user = await User.verifyCredentials(email, password)
-    const token = await User.accessTokens.create(user)
+      const user = await User.verifyCredentials(email, password)
+      console.log('User verified:', user.id)
+      
+      const token = await User.accessTokens.create(user)
+      console.log('Token created successfully')
 
-    return response.ok({
-      success: true,
-      data: {
-        user: { id: user.id, email: user.email },
-        token: { token: token.value!.release(), type: 'bearer' },
-      },
-    })
+      return response.ok({
+        success: true,
+        data: {
+          user: { id: user.id, email: user.email },
+          token: { token: token.value!.release(), type: 'bearer' },
+        },
+      })
+    } catch (error) {
+      console.error('Login error:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
+      
+      if (error.messages) {
+        return response.badRequest({
+          success: false,
+          message: 'Validation failed',
+          errors: error.messages,
+        })
+      }
+      
+      return response.badRequest({
+        success: false,
+        message: 'Email ou mot de passe incorrect',
+      })
+    }
   }
 
   async me({ auth, response }: HttpContext) {
-    const user = auth.user!
+    const user = auth.user as User
     return response.ok({
       success: true,
       data: {
@@ -59,7 +83,7 @@ export default class AuthController {
   }
 
   async updateProfile({ auth, request, response }: HttpContext) {
-    const user = auth.user!
+    const user = auth.user as User
     const data = request.only(['firstName', 'lastName', 'phone', 'avatarUrl', 'language'])
 
     if (data.firstName !== undefined) user.firstName = data.firstName
@@ -86,7 +110,7 @@ export default class AuthController {
   }
 
   async updateEmail({ auth, request, response }: HttpContext) {
-    const user = auth.user!
+    const user = auth.user as User
     const { email, password } = request.only(['email', 'password'])
 
     // Verify current password
@@ -119,7 +143,7 @@ export default class AuthController {
   }
 
   async updatePassword({ auth, request, response }: HttpContext) {
-    const user = auth.user!
+    const user = auth.user as User
     const { currentPassword, newPassword } = request.only(['currentPassword', 'newPassword'])
 
     // Verify current password
@@ -142,8 +166,8 @@ export default class AuthController {
   }
 
   async logout({ auth, response }: HttpContext) {
-    const user = auth.user!
-    await User.accessTokens.delete(user, user.currentAccessToken.identifier)
+    const user = auth.user as User
+    await User.accessTokens.delete(user, auth.user!.currentAccessToken.identifier)
 
     return response.ok({
       success: true,

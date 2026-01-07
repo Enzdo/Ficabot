@@ -1,5 +1,5 @@
 {
-  "name": "ficabot",
+  "name": "votre-assistant-virtuel-by-ficana",
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@8.15.0",
@@ -7,9 +7,13 @@
     "dev": "pnpm -r --parallel dev",
     "dev:frontend": "pnpm --filter @ficabot/frontend dev",
     "dev:backend": "pnpm --filter @ficabot/backend dev",
+    "dev:vet": "pnpm --filter @ficabot/vet-frontend dev",
+    "dev:landing": "pnpm --filter @ficabot/landing dev",
+    "dev:all": "pnpm --filter @ficabot/backend --filter @ficabot/frontend --filter @ficabot/vet-frontend --filter @ficabot/landing --parallel dev",
     "build": "pnpm -r build",
     "build:frontend": "pnpm --filter @ficabot/frontend build",
     "build:backend": "pnpm --filter @ficabot/backend build",
+    "build:vet": "pnpm --filter @ficabot/vet-frontend build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck"
   },

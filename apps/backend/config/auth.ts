@@ -11,6 +11,12 @@ const authConfig = defineConfig({
         model: () => import('#models/user'),
       }),
     }),
+    vet: tokensGuard({
+      provider: tokensUserProvider({
+        tokens: 'accessTokens',
+        model: () => import('#models/veterinarian'),
+      }),
+    }),
   },
 })
 

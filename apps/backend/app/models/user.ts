@@ -1,12 +1,13 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column, hasMany, beforeSave } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany, manyToMany, beforeSave } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Pet from '#models/pet'
 import ChatMessage from '#models/chat_message'
+import Veterinarian from '#models/veterinarian'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -49,6 +50,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => ChatMessage)
   declare chatMessages: HasMany<typeof ChatMessage>
+
+  @manyToMany(() => Veterinarian, {
+    pivotTable: 'user_veterinarians',
+    pivotColumns: ['status', 'initiated_by', 'note', 'is_primary', 'created_at'],
+  })
+  declare veterinarians: ManyToMany<typeof Veterinarian>
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     type: 'accessTokens',

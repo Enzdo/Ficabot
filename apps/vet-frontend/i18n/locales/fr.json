@@ -1,0 +1,27 @@
+{
+  "app": {
+    "name": "Ficabot Vétérinaire",
+    "tagline": "Espace Professionnel"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "patients": "Patients",
+    "appointments": "Rendez-vous",
+    "records": "Dossiers",
+    "settings": "Paramètres"
+  },
+  "patients": {
+    "title": "Patients",
+    "search": "Rechercher un patient",
+    "noPatients": "Aucun patient",
+    "dog": "Chien",
+    "cat": "Chat"
+  }
+}

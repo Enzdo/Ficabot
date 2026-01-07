@@ -1,0 +1,27 @@
+{
+  "app": {
+    "name": "Ficabot Veterinary",
+    "tagline": "Professional Space"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "appointments": "Appointments",
+    "records": "Records",
+    "settings": "Settings"
+  },
+  "patients": {
+    "title": "Patients",
+    "search": "Search patient",
+    "noPatients": "No patients",
+    "dog": "Dog",
+    "cat": "Cat"
+  }
+}

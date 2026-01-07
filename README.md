@@ -1,11 +1,11 @@
-# 🐾 Ficabot - Carnet de santé pour animaux
+# 🤖 Votre Assistant Virtuel by Ficana
 
-Monorepo complet pour la gestion de la santé des animaux de compagnie avec assistant IA intégré.
+Monorepo complet pour votre assistant virtuel IA avec gestion intégrée.
 
 ## 📁 Structure du projet
 
 ```
-ficabot/
+votre-assistant-virtuel-by-ficana/
 ├── apps/
 │   ├── frontend/          # Nuxt 3 (SSR)
 │   └── backend/           # AdonisJS (API REST)
@@ -36,7 +36,7 @@ ficabot/
 ### 1. Cloner et installer les dépendances
 
 ```bash
-cd Ficabot
+cd votre-assistant-virtuel-by-ficana
 pnpm install
 ```
 
@@ -60,7 +60,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=votre-mot-de-passe
-DB_DATABASE=ficabot
+DB_DATABASE=votre-assistant-virtuel-by-ficana
 DB_SSL=false
 
 # Pour Supabase, utilisez :
@@ -75,7 +75,7 @@ OPENAI_API_KEY=sk-votre-cle-openai
 
 ```bash
 # Créer la base de données PostgreSQL
-createdb ficabot
+createdb votre-assistant-virtuel-by-ficana
 
 # Exécuter les migrations
 cd apps/backend

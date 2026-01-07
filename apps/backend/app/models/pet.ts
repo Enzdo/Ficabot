@@ -1,9 +1,10 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, belongsTo, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, column, belongsTo, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import MedicalRecord from '#models/medical_record'
 import ChatMessage from '#models/chat_message'
+import HealthBook from '#models/health_book'
 
 export default class Pet extends BaseModel {
   @column({ isPrimary: true })
@@ -53,4 +54,7 @@ export default class Pet extends BaseModel {
 
   @hasMany(() => ChatMessage)
   declare chatMessages: HasMany<typeof ChatMessage>
+
+  @hasOne(() => HealthBook)
+  declare healthBook: HasOne<typeof HealthBook>
 }

@@ -81,7 +81,7 @@ export default class ChatController {
       conversationId,
       conversationTitle: title,
       role: 'assistant',
-      message: `Bonjour ! Je suis Ficabot, votre assistant vétérinaire. Comment puis-je vous aider ?`,
+      message: `Bonjour ! Je suis Votre Assistant Virtuel, votre assistant vétérinaire. Comment puis-je vous aider ?`,
     })
 
     return response.ok({

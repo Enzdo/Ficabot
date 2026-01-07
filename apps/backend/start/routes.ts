@@ -24,7 +24,7 @@ const PetOwnersController = () => import('#controllers/pet_owners_controller')
 
 router.get('/', async () => {
   return {
-    name: 'Ficabot API',
+    name: 'Votre Assistant Virtuel API',
     version: '1.0.0',
     status: 'running',
   }
@@ -247,3 +247,108 @@ router.group(() => {
   router.post('/:petId/diet/:id/complete', [WeightGoalsController, 'complete'])
   router.delete('/:petId/diet/:id', [WeightGoalsController, 'destroy'])
 }).prefix('/pets').use(middleware.auth())
+
+// ============================================
+// VETERINARIAN ROUTES (Separate authentication)
+// ============================================
+
+const VetAuthController = () => import('#controllers/vet_auth_controller')
+const VetPatientsController = () => import('#controllers/vet_patients_controller')
+
+// Vet Authentication (public)
+router.group(() => {
+  router.post('/register', [VetAuthController, 'register'])
+  router.post('/login', [VetAuthController, 'login'])
+}).prefix('/vet/auth')
+
+// Vet Protected Routes
+router.group(() => {
+  router.get('/me', [VetAuthController, 'me'])
+  router.put('/profile', [VetAuthController, 'updateProfile'])
+  router.post('/logout', [VetAuthController, 'logout'])
+}).prefix('/vet/auth').use(middleware.vetAuth())
+
+// Vet Patients Management
+router.group(() => {
+  router.get('/', [VetPatientsController, 'index'])
+  router.get('/search', [VetPatientsController, 'search'])
+  router.get('/:token', [VetPatientsController, 'show'])
+  router.get('/:token/health-book', [VetPatientsController, 'healthBook'])
+  router.post('/:token/notes', [VetPatientsController, 'addNote'])
+}).prefix('/vet/patients').use(middleware.vetAuth())
+
+// Vet Clients Management (User-Veterinarian links)
+const VetClientsController = () => import('#controllers/vet_clients_controller')
+router.group(() => {
+  router.get('/', [VetClientsController, 'index'])
+  router.get('/pending', [VetClientsController, 'pending'])
+  router.get('/search-users', [VetClientsController, 'searchUsers'])
+  router.get('/:id', [VetClientsController, 'show'])
+  router.post('/invite', [VetClientsController, 'invite'])
+  router.post('/:id/accept', [VetClientsController, 'accept'])
+  router.post('/:id/reject', [VetClientsController, 'reject'])
+  router.delete('/:id', [VetClientsController, 'remove'])
+}).prefix('/vet/clients').use(middleware.vetAuth())
+
+// User Veterinarians Management (from user side)
+const UserVeterinariansController = () => import('#controllers/user_veterinarians_controller')
+router.group(() => {
+  router.get('/', [UserVeterinariansController, 'index'])
+  router.get('/pending', [UserVeterinariansController, 'pending'])
+  router.get('/search', [UserVeterinariansController, 'searchVets'])
+  router.post('/request', [UserVeterinariansController, 'request'])
+  router.post('/:id/accept', [UserVeterinariansController, 'accept'])
+  router.post('/:id/reject', [UserVeterinariansController, 'reject'])
+  router.post('/:id/primary', [UserVeterinariansController, 'setPrimary'])
+  router.delete('/:id', [UserVeterinariansController, 'remove'])
+}).prefix('/user/veterinarians').use(middleware.auth())
+
+// Vet Clinics (public for search, some protected)
+const VetClinicsController = () => import('#controllers/vet_clinics_controller')
+router.group(() => {
+  router.get('/search', [VetClinicsController, 'search'])
+  router.get('/verified', [VetClinicsController, 'listVerified'])
+  router.post('/get-or-create', [VetClinicsController, 'getOrCreate'])
+  router.get('/:id', [VetClinicsController, 'show'])
+}).prefix('/clinics')
+
+// Vet Chat (for veterinarians)
+const VetChatController = () => import('#controllers/vet_chat_controller')
+router.group(() => {
+  router.get('/conversations', [VetChatController, 'conversations'])
+  router.get('/conversations/:conversationId/messages', [VetChatController, 'messages'])
+  router.post('/conversations/:conversationId/messages', [VetChatController, 'send'])
+  router.post('/conversations/:conversationId/read', [VetChatController, 'markRead'])
+}).prefix('/vet/chat').use(middleware.vetAuth())
+
+// User Vet Chat (for users to chat with their vets)
+const UserVetChatController = () => import('#controllers/user_vet_chat_controller')
+router.group(() => {
+  router.get('/conversations', [UserVetChatController, 'conversations'])
+  router.get('/conversations/:conversationId/messages', [UserVetChatController, 'messages'])
+  router.post('/conversations/:conversationId/messages', [UserVetChatController, 'send'])
+  router.post('/conversations/:conversationId/read', [UserVetChatController, 'markRead'])
+}).prefix('/user/vet-chat').use(middleware.auth())
+
+// Vet Employees Management
+const VetEmployeesController = () => import('#controllers/vet_employees_controller')
+router.group(() => {
+  router.get('/', [VetEmployeesController, 'index'])
+  router.post('/', [VetEmployeesController, 'store'])
+  router.get('/:id', [VetEmployeesController, 'show'])
+  router.put('/:id', [VetEmployeesController, 'update'])
+  router.delete('/:id', [VetEmployeesController, 'destroy'])
+}).prefix('/vet/employees').use(middleware.vetAuth())
+
+// Clinic Appointments Management
+const ClinicAppointmentsController = () => import('#controllers/clinic_appointments_controller')
+router.group(() => {
+  router.get('/', [ClinicAppointmentsController, 'index'])
+  router.get('/today', [ClinicAppointmentsController, 'today'])
+  router.get('/week', [ClinicAppointmentsController, 'week'])
+  router.post('/', [ClinicAppointmentsController, 'store'])
+  router.get('/:id', [ClinicAppointmentsController, 'show'])
+  router.put('/:id', [ClinicAppointmentsController, 'update'])
+  router.patch('/:id/status', [ClinicAppointmentsController, 'updateStatus'])
+  router.delete('/:id', [ClinicAppointmentsController, 'destroy'])
+}).prefix('/vet/appointments').use(middleware.vetAuth())

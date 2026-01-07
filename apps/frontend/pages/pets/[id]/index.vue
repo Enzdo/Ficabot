@@ -640,7 +640,7 @@ const exportPDF = async () => {
       <body>
         <div class="page">
           <h1>Carnet de santé de ${pet?.name}</h1>
-          <p class="meta">Généré par Ficabot le ${today}</p>
+          <p class="meta">Généré par Votre Assistant Virtuel le ${today}</p>
 
           <div class="section">
             <h2>Informations générales</h2>

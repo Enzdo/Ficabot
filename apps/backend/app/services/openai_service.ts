@@ -103,7 +103,7 @@ IMPORTANT: Retourne UNIQUEMENT le JSON, sans texte avant ou après.`
   private buildSystemPrompt(pet: Pet | null, healthBook: HealthBook | null = null, language: string = 'fr'): string {
     const langName = language === 'en' ? 'English' : language === 'de' ? 'German' : 'French'
     
-    let prompt = `Tu es un assistant vétérinaire virtuel bienveillant et compétent appelé Ficabot.
+    let prompt = `Tu es un assistant vétérinaire virtuel bienveillant et compétent appelé Votre Assistant Virtuel.
 Tu aides les propriétaires d'animaux de compagnie avec des conseils sur la santé, le bien-être et les soins de leurs animaux.
 
 Règles importantes:

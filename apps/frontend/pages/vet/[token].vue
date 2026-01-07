@@ -123,7 +123,7 @@
         <div class="bg-teal-50 rounded-xl p-4 text-center">
           <p class="text-xs text-teal-700">
             🔒 Cet accès est en lecture seule et expire automatiquement.
-            <br>Données fournies par Ficabot.
+            <br>Données fournies par Votre Assistant Virtuel.
           </p>
         </div>
       </div>

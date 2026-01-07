@@ -13,7 +13,7 @@
 
       <!-- Hero Text -->
       <h1 class="text-5xl font-extrabold text-white mb-6 tracking-tight drop-shadow-sm">
-        Ficabot
+        Votre Assistant Virtuel
       </h1>
       <p class="text-primary-50 text-xl mb-12 font-medium leading-relaxed max-w-xs mx-auto">
         {{ $t('landing.subtitle') }}
