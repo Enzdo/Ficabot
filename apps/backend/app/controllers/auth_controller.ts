@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import { registerValidator, loginValidator } from '#validators/auth'
 import logger from '@adonisjs/core/services/logger'
+import hash from '@adonisjs/core/services/hash'
 
 export default class AuthController {
   async register({ request, response }: HttpContext) {
@@ -34,8 +35,31 @@ export default class AuthController {
       const { email, password } = await request.validateUsing(loginValidator)
       logger.info('Login validation passed for email: ' + email)
 
-      const user = await User.verifyCredentials(email, password)
-      logger.info('User verified: ' + user.id)
+      // Manual verification to bypass verifyCredentials issue
+      const user = await User.findBy('email', email)
+      logger.info('User found: ' + (user ? user.id : 'null'))
+      
+      if (!user) {
+        logger.error('User not found for email: ' + email)
+        return response.badRequest({
+          success: false,
+          message: 'Email ou mot de passe incorrect',
+        })
+      }
+
+      // Verify password manually
+      const isValid = await hash.use('scrypt').verify(user.password, password)
+      logger.info('Password verification result: ' + isValid)
+      
+      if (!isValid) {
+        logger.error('Invalid password for user: ' + user.id)
+        return response.badRequest({
+          success: false,
+          message: 'Email ou mot de passe incorrect',
+        })
+      }
+
+      logger.info('User verified successfully: ' + user.id)
       
       const token = await User.accessTokens.create(user)
       logger.info('Token created successfully')
