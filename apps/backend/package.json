@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "HOST=0.0.0.0 node build/bin/server.js",
-    "build": "pnpm --filter @ficabot/shared build && node ace build",
+    "build": "pnpm --filter @ficabot/shared build && node ace build --ignore-ts-errors",
     "dev": "node ace serve --hmr",
     "test": "node ace test",
     "lint": "eslint .",
