@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import { registerValidator, loginValidator } from '#validators/auth'
+import logger from '@adonisjs/core/services/logger'
 
 export default class AuthController {
   async register({ request, response }: HttpContext) {
@@ -28,16 +29,16 @@ export default class AuthController {
 
   async login({ request, response }: HttpContext) {
     try {
-      console.log('Login attempt - Raw request body:', request.body())
+      logger.info('Login attempt - Raw request body: ' + JSON.stringify(request.body()))
       
       const { email, password } = await request.validateUsing(loginValidator)
-      console.log('Login validation passed for email:', email)
+      logger.info('Login validation passed for email: ' + email)
 
       const user = await User.verifyCredentials(email, password)
-      console.log('User verified:', user.id)
+      logger.info('User verified: ' + user.id)
       
       const token = await User.accessTokens.create(user)
-      console.log('Token created successfully')
+      logger.info('Token created successfully')
 
       return response.ok({
         success: true,
@@ -47,8 +48,7 @@ export default class AuthController {
         },
       })
     } catch (error) {
-      console.error('Login error:', error)
-      console.error('Error details:', JSON.stringify(error, null, 2))
+      logger.error('Login error: ' + JSON.stringify(error, null, 2))
       
       if (error.messages) {
         return response.badRequest({
