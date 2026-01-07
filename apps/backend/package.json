@@ -60,6 +60,7 @@
     "@adonisjs/lucid": "^21.6.1",
     "@ficabot/shared": "workspace:*",
     "@vinejs/vine": "^3.0.1",
+    "bcrypt": "^6.0.0",
     "luxon": "^3.4.4",
     "openai": "^4.28.0",
     "pg": "^8.11.3",
