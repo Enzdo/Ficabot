@@ -457,8 +457,8 @@ const logout = async () => {
   // Clear local auth state
   authStore.logout()
   
-  // Redirect to login page
-  await navigateTo('/auth/login')
+  // Redirect to login page (correct path)
+  await navigateTo('/login')
 }
 
 onMounted(() => {
