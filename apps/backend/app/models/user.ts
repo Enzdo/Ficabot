@@ -9,7 +9,7 @@ import Pet from '#models/pet'
 import ChatMessage from '#models/chat_message'
 import Veterinarian from '#models/veterinarian'
 
-const AuthFinder = withAuthFinder(() => hash.use('bcrypt'), {
+const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
   passwordColumnName: 'password',
 })
@@ -64,7 +64,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @beforeSave()
   static async hashPassword(user: User | any) {
     if (user.$dirty.password) {
-      user.password = await hash.use('bcrypt').make(user.password)
+      user.password = await hash.use('scrypt').make(user.password)
     }
   }
 }
