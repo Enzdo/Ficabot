@@ -50,6 +50,9 @@ export default class AuthController {
       // Verify password - try bcrypt first since most existing passwords use it
       let isValid = false
       
+      logger.info('Stored password hash: ' + user.password.substring(0, 30) + '...')
+      logger.info('Hash starts with: ' + user.password.substring(0, 10))
+      
       try {
         isValid = await hash.use('bcrypt').verify(user.password, password)
         logger.info('Bcrypt verification result: ' + isValid)
