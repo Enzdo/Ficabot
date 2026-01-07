@@ -53,6 +53,10 @@ export default class AuthController {
       logger.info('Stored password hash: ' + user.password.substring(0, 20) + '...')
       logger.info('Password hash type: ' + (user.password.startsWith('$bcrypt') ? 'bcrypt' : user.password.startsWith('$scrypt') ? 'scrypt' : 'unknown'))
       
+      // Generate hash for provided password for debugging
+      const providedPasswordHash = await hash.use('scrypt').make(password)
+      logger.info('Hash of provided password (scrypt): ' + providedPasswordHash.substring(0, 20) + '...')
+
       // Try scrypt first (for new users)
       try {
         isValid = await hash.use('scrypt').verify(user.password, password)
