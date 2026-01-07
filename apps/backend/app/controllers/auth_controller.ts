@@ -178,12 +178,25 @@ export default class AuthController {
   }
 
   async logout({ auth, response }: HttpContext) {
-    const user = auth.user as User
-    await User.accessTokens.delete(user, auth.user!.currentAccessToken.identifier)
-
-    return response.ok({
-      success: true,
-      message: 'Déconnexion réussie',
-    })
+    try {
+      const user = auth.user as User
+      
+      // Try to delete the current access token if it exists
+      if (auth.user && 'currentAccessToken' in auth.user && auth.user.currentAccessToken) {
+        await User.accessTokens.delete(user, auth.user.currentAccessToken.identifier)
+      }
+      
+      return response.ok({
+        success: true,
+        message: 'Déconnexion réussie',
+      })
+    } catch (error) {
+      // Even if token deletion fails, return success
+      // The frontend will clear local storage anyway
+      return response.ok({
+        success: true,
+        message: 'Déconnexion réussie',
+      })
+    }
   }
 }
