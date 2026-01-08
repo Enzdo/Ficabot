@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { ChatMessage, ChatRequestDTO, ChatResponseDTO } from '@ficabot/shared'
+import type { ChatMessage, ChatRequestDTO, ChatResponseDTO } from '@votre-assistant-virtuel/shared'
 
 interface Conversation {
   id: string

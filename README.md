@@ -178,11 +178,11 @@ pnpm build            # Build de production
 pnpm lint             # Linter
 
 # Backend
-pnpm --filter @ficabot/backend migration:run      # Migrations
-pnpm --filter @ficabot/backend migration:rollback # Rollback
+pnpm --filter @votre-assistant-virtuel/backend migration:run      # Migrations
+pnpm --filter @votre-assistant-virtuel/backend migration:rollback # Rollback
 
 # Frontend
-pnpm --filter @ficabot/frontend generate  # Générer site statique
+pnpm --filter @votre-assistant-virtuel/frontend generate  # Générer site statique
 ```
 
 ## 📝 Configuration Supabase

@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import type { LoginResponse } from '@ficabot/shared'
+import type { LoginResponse } from '@votre-assistant-virtuel/shared'
 
 definePageMeta({
   layout: 'auth',

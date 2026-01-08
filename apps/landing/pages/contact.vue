@@ -6,7 +6,7 @@
         <div class="text-center max-w-4xl mx-auto mb-16">
           <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Contactez
-            <span class="gradient-text">Ficabot</span>
+            <span class="gradient-text">Votre Assistant Virtuel</span>
           </h1>
           <p class="text-xl text-gray-600 mb-8">
             Une question ? Une démo ? Notre équipe est là pour vous accompagner dans votre transition digitale.
@@ -164,9 +164,9 @@
               </h3>
               
               <div class="space-y-4">
-                <a href="mailto:contact@ficabot.fr" class="flex items-center gap-3 text-gray-600 hover:text-primary-600 transition-colors">
+                <a href="mailto:contact@votre-assistant-virtuel.fr" class="flex items-center gap-3 text-gray-600 hover:text-primary-600 transition-colors">
                   <Icon name="lucide:mail" class="w-5 h-5" />
-                  <span>contact@ficabot.fr</span>
+                  <span>contact@votre-assistant-virtuel.fr</span>
                 </a>
                 
                 <a href="tel:+33612345678" class="flex items-center gap-3 text-gray-600 hover:text-primary-600 transition-colors">
@@ -238,9 +238,9 @@
 <script setup>
 // SEO
 useHead({
-  title: 'Contact - Ficabot',
+  title: 'Contact - Votre Assistant Virtuel',
   meta: [
-    { name: 'description', content: 'Contactez Ficabot pour une démo personnalisée, du support technique ou toute question sur nos solutions de gestion vétérinaire.' }
+    { name: 'description', content: 'Contactez votre assistant virtuel pour une démo personnalisée, du support technique ou toute question sur nos solutions de gestion vétérinaire.' }
   ]
 })
 

@@ -9,13 +9,13 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Ficabot - Le compagnon santé de vos animaux',
+      title: 'Votre Assistant Virtuel - Le compagnon santé de vos animaux',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Ficabot - Application de suivi santé pour vos animaux de compagnie. Carnet de santé numérique, rappels vaccins, connexion vétérinaire.' },
+        { name: 'description', content: 'Votre Assistant Virtuel - Application de suivi santé pour vos animaux de compagnie. Carnet de santé numérique, rappels vaccins, connexion vétérinaire.' },
         { name: 'keywords', content: 'animaux, santé, vétérinaire, carnet de santé, vaccins, chien, chat, NAC' },
-        { property: 'og:title', content: 'Ficabot - Le compagnon santé de vos animaux' },
+        { property: 'og:title', content: 'Votre Assistant Virtuel - Le compagnon santé de vos animaux' },
         { property: 'og:description', content: 'Application de suivi santé pour vos animaux de compagnie' },
         { property: 'og:type', content: 'website' },
       ],

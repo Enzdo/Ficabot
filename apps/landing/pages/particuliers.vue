@@ -11,7 +11,7 @@
             Offrez le meilleur à <span class="gradient-text">vos compagnons</span>
           </h1>
           <p class="text-lg lg:text-xl text-gray-600 mb-8 leading-relaxed">
-            Ficabot est l'application tout-en-un qui simplifie la gestion de la santé de vos animaux. Carnet de santé, rappels, conseils et lien direct avec votre vétérinaire.
+            Votre assistant virtuel est l'application tout-en-un qui simplifie la gestion de la santé de vos animaux. Carnet de santé, rappels, conseils et lien direct avec votre vétérinaire.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto text-center">
@@ -30,7 +30,7 @@
     <section class="bg-gray-50 py-16 lg:py-24">
       <div class="container-custom">
         <div class="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 mb-4">Pourquoi choisir Ficabot ?</h2>
+          <h2 class="text-3xl font-bold text-gray-900 mb-4">Pourquoi choisir votre assistant virtuel ?</h2>
           <p class="text-lg text-gray-600">Des fonctionnalités pensées pour vous simplifier la vie.</p>
         </div>
 
@@ -64,7 +64,7 @@
             <div class="lg:w-1/2 order-1 lg:order-2">
               <h3 class="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">Plus aucun oubli</h3>
               <p class="text-lg text-gray-600 mb-6">
-                Vaccins, vermifuges, traitements antipuces... Ficabot calcule automatiquement les prochaines échéances et vous envoie une notification au bon moment.
+                Vaccins, vermifuges, traitements antipuces... Votre assistant virtuel calcule automatiquement les prochaines échéances et vous envoie une notification au bon moment.
               </p>
               <ul class="space-y-3">
                 <li class="flex items-center gap-3 text-gray-700">
@@ -142,7 +142,7 @@
     <section class="py-16 lg:py-20 bg-primary-600 text-white">
       <div class="container-custom text-center">
         <h2 class="text-2xl lg:text-4xl font-bold mb-6">Prêt à simplifier la vie de vos animaux ?</h2>
-        <p class="text-lg lg:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">Rejoignez plus de 10 000 propriétaires qui font confiance à Ficabot.</p>
+        <p class="text-lg lg:text-xl text-primary-100 mb-8 max-w-2xl mx-auto">Rejoignez plus de 10 000 propriétaires qui font confiance à votre assistant virtuel.</p>
         <a href="http://localhost:3000/register" class="btn bg-white text-primary-600 hover:bg-gray-100 btn-lg shadow-xl w-full sm:w-auto">
           Créer mon compte gratuit
         </a>

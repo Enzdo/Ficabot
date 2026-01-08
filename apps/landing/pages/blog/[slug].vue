@@ -42,7 +42,7 @@
             <h3 class="text-xl lg:text-2xl font-bold mb-3 lg:mb-4">Cet article vous a plu ?</h3>
             
             <template v-if="post.target === 'pro'">
-              <p class="text-gray-300 mb-6 text-sm lg:text-base">Inscrivez-vous à Ficabot Pro pour moderniser votre cabinet.</p>
+              <p class="text-gray-300 mb-6 text-sm lg:text-base">Inscrivez-vous à votre assistant virtuel Pro pour moderniser votre cabinet.</p>
               <a href="http://localhost:3001/register" class="btn bg-primary-600 text-white hover:bg-primary-500 w-full sm:w-auto">
                 Essayer gratuitement
               </a>
@@ -74,9 +74,9 @@ const { getPostBySlug } = useBlog()
 const post = computed(() => getPostBySlug(route.params.slug as string))
 
 useHead({
-  title: post.value ? `${post.value.title} - Blog Ficabot` : 'Article non trouvé',
+  title: post.value ? `${post.value.title} - Blog Votre Assistant Virtuel` : 'Article non trouvé',
   meta: [
-    { name: 'description', content: post.value?.excerpt || 'Article de blog Ficabot Pro' }
+    { name: 'description', content: post.value?.excerpt || 'Article de blog Votre Assistant Virtuel Pro' }
   ]
 })
 </script>

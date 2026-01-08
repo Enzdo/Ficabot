@@ -17,7 +17,7 @@ import type {
   AddMedicationDTO,
   AddVetVisitDTO,
   AddWeightHistoryDTO,
-} from '@ficabot/shared'
+} from '@votre-assistant-virtuel/shared'
 
 interface PetsState {
   pets: Pet[]

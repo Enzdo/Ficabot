@@ -64,7 +64,7 @@
   },
   "dashboard": {
     "hello": "Bonjour 👋",
-    "welcome": "Bienvenue sur Ficabot",
+    "welcome": "Bienvenue sur votre assistant virtuel",
     "quick_access": "Accès rapide",
     "my_pets": "Mes animaux",
     "see_all": "Voir tout",
@@ -82,7 +82,7 @@
     "new_conversation": "Nouvelle conversation",
     "no_conversation": "Aucune conversation",
     "online": "En ligne",
-    "welcome_title": "Bonjour ! Je suis Ficabot.",
+    "welcome_title": "Bonjour ! Je suis votre assistant virtuel.",
     "welcome_text": "Créez une nouvelle conversation pour commencer à discuter.",
     "start_message": "Envoyez un message pour commencer",
     "placeholder": "Écrivez...",
@@ -105,7 +105,7 @@
     "allergies": "Allergies",
     "conditions": "Conditions",
     "owner": "Propriétaire",
-    "footer": "Profil créé avec Ficabot 🐾",
+    "footer": "Profil créé avec votre assistant virtuel 🐾",
     "cta": "Créer le profil de mon animal →"
   },
   "vet_view": {
@@ -125,7 +125,7 @@
     "treatments": "Traitements",
     "visits": "Visites",
     "disclaimer": "Cet accès est en lecture seule et expire automatiquement.",
-    "provider": "Données fournies par Ficabot.",
+    "provider": "Données fournies par votre assistant virtuel.",
     "invalid_link": "Lien invalide ou expiré",
     "connection_error": "Erreur de connexion"
   },
@@ -148,7 +148,7 @@
     },
     "register": {
       "title": "Créer un compte",
-      "welcome": "Rejoignez l'aventure Ficabot ! 🚀",
+      "welcome": "Rejoignez l'aventure de votre assistant virtuel ! 🚀",
       "loading": "Création...",
       "submit": "Créer mon compte",
       "has_account": "Déjà un compte ?",
@@ -255,7 +255,7 @@
       "invite_modal": {
         "title": "Inviter un propriétaire",
         "email_label": "Email de la personne",
-        "hint": "Cette personne doit avoir un compte Ficabot",
+        "hint": "Cette personne doit avoir un compte votre assistant virtuel",
         "submit": "Envoyer l'invitation",
         "sending": "Envoi..."
       }

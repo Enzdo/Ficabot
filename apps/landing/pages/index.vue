@@ -25,7 +25,7 @@
             </h1>
             
             <p class="text-sm sm:text-base lg:text-xl text-gray-600 mb-6 sm:mb-10 max-w-sm sm:max-w-xl mx-auto lg:mx-0 leading-relaxed px-4 sm:px-0">
-              Ficabot centralise le carnet de santé de vos animaux, gère les rappels de vaccins et vous connecte directement à votre vétérinaire.
+              Votre assistant virtuel centralise le carnet de santé de vos animaux, gère les rappels de vaccins et vous connecte directement à votre vétérinaire.
             </p>
             
             <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 px-4 sm:px-0">
@@ -173,7 +173,7 @@
               <svg class="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <h4 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Rappels Automatiques</h4>
-            <p class="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed">Vaccins, vermifuges, RDV... Ficabot vous notifie au bon moment pour ne rien oublier.</p>
+            <p class="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed">Vaccins, vermifuges, RDV... Votre assistant virtuel vous notifie au bon moment pour ne rien oublier.</p>
           </div>
 
           <div class="group p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gray-50 hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 border border-transparent hover:border-gray-100">
@@ -214,7 +214,7 @@
             <h2 class="text-sm font-bold text-primary-600 uppercase tracking-wider mb-2">Pour les propriétaires</h2>
             <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Tranquillité d'esprit absolue</h3>
             <p class="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed">
-              Que vous ayez un chat, un chien ou un NAC, Ficabot s'adapte à vos besoins.
+              Que vous ayez un chat, un chien ou un NAC, votre assistant virtuel s'adapte à vos besoins.
             </p>
             
             <ul class="space-y-4 sm:space-y-6">
@@ -263,7 +263,7 @@
             <h2 class="text-sm font-bold text-primary-400 uppercase tracking-wider mb-2">Pour les vétérinaires</h2>
             <h3 class="text-3xl lg:text-4xl font-bold text-white mb-6">Modernisez votre cabinet</h3>
             <p class="text-lg text-gray-400 mb-8 leading-relaxed">
-              Ficabot Pro n'est pas juste un outil de gestion, c'est un lien direct avec votre patientèle pour un meilleur suivi et une fidélisation accrue.
+              Votre assistant virtuel Pro n'est pas juste un outil de gestion, c'est un lien direct avec votre patientèle pour un meilleur suivi et une fidélisation accrue.
             </p>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
@@ -280,7 +280,7 @@
               <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
                 <div class="text-3xl mb-3">🗺️</div>
                 <h4 class="font-bold mb-2">Visibilité Accrue</h4>
-                <p class="text-sm text-gray-400">Présence sur la carte interactive Ficabot.</p>
+                <p class="text-sm text-gray-400">Présence sur la carte interactive de votre assistant virtuel.</p>
               </div>
               <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
                 <div class="text-3xl mb-3">⚡</div>
@@ -301,7 +301,7 @@
                 <div class="w-3 h-3 rounded-full bg-red-500"></div>
                 <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                <div class="ml-4 text-xs text-gray-400 font-mono">ficabot-pro.app/dashboard</div>
+                <div class="ml-4 text-xs text-gray-400 font-mono">votre-assistant-virtuel-pro.app/dashboard</div>
               </div>
               <div class="grid grid-cols-4 gap-4">
                 <div class="col-span-1 bg-gray-900 rounded-xl h-64 p-3 space-y-3">

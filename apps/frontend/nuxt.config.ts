@@ -30,11 +30,11 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Ficabot - Carnet de santé pour animaux',
+      title: 'Votre Assistant Virtuel - Carnet de santé pour animaux',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Gérez la santé de vos animaux de compagnie avec Ficabot' },
+        { name: 'description', content: 'Gérez la santé de vos animaux de compagnie avec votre assistant virtuel' },
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },

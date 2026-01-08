@@ -440,8 +440,8 @@
 
 <script setup lang="ts">
 import { DateTime } from 'luxon'
-import { MEDICAL_RECORD_TYPE_LABELS } from '@ficabot/shared'
-import type { Species, MedicalRecordType } from '@ficabot/shared'
+import { MEDICAL_RECORD_TYPE_LABELS } from '@votre-assistant-virtuel/shared'
+import type { Species, MedicalRecordType } from '@votre-assistant-virtuel/shared'
 
 definePageMeta({
   middleware: 'auth',

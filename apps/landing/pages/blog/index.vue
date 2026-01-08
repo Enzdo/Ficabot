@@ -18,7 +18,7 @@
       </div>
 
       <h1 class="text-3xl sm:text-4xl lg:text-6xl font-extrabold text-gray-900 mb-4 lg:mb-6 leading-tight">
-        Le Blog <span class="gradient-text">Ficabot {{ targetFilter === 'pro' ? 'Pro' : 'Family' }}</span>
+        Le Blog <span class="gradient-text">Votre Assistant Virtuel {{ targetFilter === 'pro' ? 'Pro' : 'Family' }}</span>
       </h1>
       <p class="text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto px-4">
         {{ targetFilter === 'pro' 

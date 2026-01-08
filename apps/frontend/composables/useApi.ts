@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@ficabot/shared'
+import type { ApiResponse } from '@votre-assistant-virtuel/shared'
 
 export const useApi = () => {
   const config = useRuntimeConfig()

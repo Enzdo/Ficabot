@@ -1,6 +1,6 @@
-# 🐾 Ficabot - Deployment Guide
+# 🐾 Votre Assistant Virtuel - Deployment Guide
 
-This guide details the steps to deploy the full Ficabot stack:
+This guide details the steps to deploy the full Votre Assistant Virtuel stack:
 1. **Database:** Supabase
 2. **Backend:** Railway (AdonisJS)
 3. **Frontend:** Vercel (Nuxt 3)
@@ -26,7 +26,7 @@ This guide details the steps to deploy the full Ficabot stack:
 1.  **Connect GitHub:**
     *   Go to [Railway](https://railway.app/).
     *   Create a new project -> Deploy from GitHub repo.
-    *   Select the `Ficabot` repository.
+    *   Select the `Votre Assistant Virtuel` repository.
 
 2.  **Configure Monorepo:**
     *   Railway needs to know it's a monorepo.
@@ -53,13 +53,13 @@ This guide details the steps to deploy the full Ficabot stack:
     *   `PORT`: `8080` (Railway provides this, but good to have a default)
 
 4.  **Generate Domain:**
-    *   In Railway settings, generate a domain (e.g., `ficabot-backend.up.railway.app`). You'll need this for the frontend.
+    *   In Railway settings, generate a domain (e.g., `votre-assistant-virtuel-backend.up.railway.app`). You'll need this for the frontend.
 
 ## 3. Frontend Deployment (Vercel)
 
 1.  **Connect GitHub:**
     *   Go to [Vercel](https://vercel.com/).
-    *   Add New -> Project -> Import `Ficabot` repo.
+    *   Add New -> Project -> Import `Votre Assistant Virtuel` repo.
 
 2.  **Configure Monorepo:**
     *   **Root Directory:** Edit this to `apps/frontend`.
@@ -67,7 +67,7 @@ This guide details the steps to deploy the full Ficabot stack:
     *   **Build Command:** `pnpm build` (Vercel usually handles this well).
 
 3.  **Environment Variables:**
-    *   `NUXT_PUBLIC_API_BASE`: The URL of your backend on Railway (e.g., `https://ficabot-backend.up.railway.app`).
+    *   `NUXT_PUBLIC_API_BASE`: The URL of your backend on Railway (e.g., `https://votre-assistant-virtuel-backend.up.railway.app`).
     *   `NUXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL.
     *   `NUXT_PUBLIC_SUPABASE_KEY`: Your Supabase Anon Key.
 
@@ -89,8 +89,8 @@ To run the full stack locally:
 pnpm install
 
 # Start backend
-pnpm --filter @ficabot/backend dev
+pnpm --filter @votre-assistant-virtuel/backend dev
 
 # Start frontend
-pnpm --filter @ficabot/frontend dev
+pnpm --filter @votre-assistant-virtuel/frontend dev
 ```

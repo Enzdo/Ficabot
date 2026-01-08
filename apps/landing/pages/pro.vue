@@ -12,7 +12,7 @@
             <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-secondary-400">cabinet vétérinaire</span>
           </h1>
           <p class="text-lg lg:text-xl text-gray-400 mb-8 leading-relaxed">
-            Gagnez du temps, réduisez les rendez-vous manqués et offrez une expérience moderne à vos clients. Ficabot Pro est la solution de gestion tout-en-un.
+            Gagnez du temps, réduisez les rendez-vous manqués et offrez une expérience moderne à vos clients. Votre assistant virtuel Pro est la solution de gestion tout-en-un.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <NuxtLink to="/contact" class="btn bg-primary-600 text-white hover:bg-primary-500 btn-lg border-none w-full sm:w-auto text-center">
@@ -32,7 +32,7 @@
                 <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
                 <div class="w-3 h-3 rounded-full bg-green-500"></div>
               </div>
-              <div class="text-gray-500 font-mono text-xs sm:text-sm">dashboard.ficabot.pro</div>
+              <div class="text-gray-500 font-mono text-xs sm:text-sm">dashboard.votre-assistant-virtuel.pro</div>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -84,7 +84,7 @@
       <div class="container-custom">
         <div class="text-center max-w-3xl mx-auto mb-12 lg:mb-16">
           <h2 class="text-2xl lg:text-3xl font-bold mb-4">Pourquoi passer au numérique ?</h2>
-          <p class="text-gray-400">Ficabot Pro répond aux défis quotidiens des cliniques vétérinaires.</p>
+          <p class="text-gray-400">Votre assistant virtuel Pro répond aux défis quotidiens des cliniques vétérinaires.</p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8">
@@ -146,7 +146,7 @@
         <div class="space-y-6">
           <div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">
             <h3 class="font-bold text-lg mb-2">Est-ce compatible avec mon logiciel actuel ?</h3>
-            <p class="text-gray-400">Ficabot Pro peut fonctionner en complément ou en remplacement. Nous proposons des outils d'importation pour récupérer vos données clients.</p>
+            <p class="text-gray-400">Votre assistant virtuel Pro peut fonctionner en complément ou en remplacement. Nous proposons des outils d'importation pour récupérer vos données clients.</p>
           </div>
           <div class="bg-gray-900 p-6 rounded-2xl border border-gray-700">
             <h3 class="font-bold text-lg mb-2">Comment se passe la validation de mon compte ?</h3>
@@ -164,7 +164,7 @@
     <section class="py-16 lg:py-20 bg-gradient-to-r from-primary-900 to-gray-900 border-t border-gray-800">
       <div class="container-custom text-center">
         <h2 class="text-2xl lg:text-3xl font-bold mb-6">Prêt à moderniser votre pratique ?</h2>
-        <p class="text-lg lg:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">Rejoignez le réseau Ficabot et offrez une expérience 2.0 à vos clients.</p>
+        <p class="text-lg lg:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">Rejoignez le réseau de votre assistant virtuel et offrez une expérience 2.0 à vos clients.</p>
         <a href="http://localhost:3001/register" class="btn bg-primary-600 text-white hover:bg-primary-500 btn-lg shadow-xl shadow-primary-900/50 border-none w-full sm:w-auto">
           Créer mon compte professionnel
         </a>

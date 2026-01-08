@@ -1,6 +1,6 @@
 {
-  "name": "Ficabot",
-  "short_name": "Ficabot",
+  "name": "Votre Assistant Virtuel",
+  "short_name": "Votre Assistant Virtuel",
   "description": "Carnet de santé pour animaux de compagnie",
   "start_url": "/",
   "display": "standalone",

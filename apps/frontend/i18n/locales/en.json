@@ -64,7 +64,7 @@
   },
   "dashboard": {
     "hello": "Hello 👋",
-    "welcome": "Welcome to Ficabot",
+    "welcome": "Welcome to your virtual assistant",
     "quick_access": "Quick Access",
     "my_pets": "My Pets",
     "see_all": "See all",
@@ -82,7 +82,7 @@
     "new_conversation": "New conversation",
     "no_conversation": "No conversation",
     "online": "Online",
-    "welcome_title": "Hello! I am Ficabot.",
+    "welcome_title": "Hello! I am your virtual assistant.",
     "welcome_text": "Create a new conversation to start chatting.",
     "start_message": "Send a message to start",
     "placeholder": "Write...",
@@ -105,7 +105,7 @@
     "allergies": "Allergies",
     "conditions": "Conditions",
     "owner": "Owner",
-    "footer": "Profile created with Ficabot 🐾",
+    "footer": "Profile created with your virtual assistant 🐾",
     "cta": "Create my pet's profile →"
   },
   "vet_view": {
@@ -125,7 +125,7 @@
     "treatments": "Treatments",
     "visits": "Visits",
     "disclaimer": "This access is read-only and expires automatically.",
-    "provider": "Data provided by Ficabot.",
+    "provider": "Data provided by your virtual assistant.",
     "invalid_link": "Invalid or expired link",
     "connection_error": "Connection error"
   },
@@ -148,7 +148,7 @@
     },
     "register": {
       "title": "Create an account",
-      "welcome": "Join the Ficabot adventure! 🚀",
+      "welcome": "Join the your virtual assistant adventure! 🚀",
       "loading": "Creating...",
       "submit": "Create my account",
       "has_account": "Already have an account?",
@@ -255,7 +255,7 @@
       "invite_modal": {
         "title": "Invite an Owner",
         "email_label": "Person's Email",
-        "hint": "This person must have a Ficabot account",
+        "hint": "This person must have a your virtual assistant account",
         "submit": "Send Invitation",
         "sending": "Sending..."
       }

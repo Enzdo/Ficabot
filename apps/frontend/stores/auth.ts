@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { User, LoginResponse } from '@ficabot/shared'
+import type { User, LoginResponse } from '@votre-assistant-virtuel/shared'
 
 interface AuthState {
   user: User | null

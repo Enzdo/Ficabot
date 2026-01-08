@@ -64,7 +64,7 @@
   },
   "dashboard": {
     "hello": "Hallo 👋",
-    "welcome": "Willkommen bei Ficabot",
+    "welcome": "Willkommen bei Ihrem virtuellen Assistenten",
     "quick_access": "Schnellzugriff",
     "my_pets": "Meine Haustiere",
     "see_all": "Alle anzeigen",
@@ -82,7 +82,7 @@
     "new_conversation": "Neue Konversation",
     "no_conversation": "Keine Konversation",
     "online": "Online",
-    "welcome_title": "Hallo! Ich bin Ficabot.",
+    "welcome_title": "Hallo! Ich bin Ihr virtueller Assistent.",
     "welcome_text": "Erstellen Sie eine neue Konversation, um zu chatten.",
     "start_message": "Senden Sie eine Nachricht, um zu beginnen",
     "placeholder": "Schreiben...",
@@ -105,7 +105,7 @@
     "allergies": "Allergien",
     "conditions": "Erkrankungen",
     "owner": "Besitzer",
-    "footer": "Profil erstellt mit Ficabot 🐾",
+    "footer": "Profil erstellt mit Ihrem virtuellen Assistenten 🐾",
     "cta": "Profil meines Tieres erstellen →"
   },
   "vet_view": {
@@ -125,7 +125,7 @@
     "treatments": "Behandlungen",
     "visits": "Besuche",
     "disclaimer": "Dieser Zugriff ist schreibgeschützt und läuft automatisch ab.",
-    "provider": "Daten bereitgestellt von Ficabot.",
+    "provider": "Daten bereitgestellt von Ihrem virtuellen Assistenten.",
     "invalid_link": "Ungültiger oder abgelaufener Link",
     "connection_error": "Verbindungsfehler"
   },
@@ -148,7 +148,7 @@
     },
     "register": {
       "title": "Konto erstellen",
-      "welcome": "Treten Sie dem Ficabot-Abenteuer bei! 🚀",
+      "welcome": "Treten Sie dem Abenteuer Ihres virtuellen Assistenten bei! 🚀",
       "loading": "Erstellen...",
       "submit": "Mein Konto erstellen",
       "has_account": "Bereits ein Konto?",
@@ -255,7 +255,7 @@
       "invite_modal": {
         "title": "Besitzer einladen",
         "email_label": "E-Mail der Person",
-        "hint": "Diese Person muss ein Ficabot-Konto haben",
+        "hint": "Diese Person muss ein Konto Ihres virtuellen Assistenten haben",
         "submit": "Einladung senden",
         "sending": "Senden..."
       }
