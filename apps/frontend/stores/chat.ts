@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { ChatMessage, ChatRequestDTO, ChatResponseDTO } from '@votre-assistant-virtuel/shared'
+import type { ChatMessage, ChatRequestDTO, ChatResponseDTO } from '@ficabot/shared'
 
 interface Conversation {
   id: string
@@ -32,7 +32,7 @@ export const useChatStore = defineStore('chat', {
     async fetchConversations() {
       const api = useApi()
       const response = await api.get<Conversation[]>('/chat/conversations')
-      
+
       if (response.success && response.data) {
         this.conversations = response.data
       }
@@ -45,7 +45,7 @@ export const useChatStore = defineStore('chat', {
         petId,
         title: title || 'Nouvelle conversation',
       })
-      
+
       if (response.success && response.data) {
         this.currentConversationId = response.data.id
         this.selectedPetId = response.data.petId
@@ -54,7 +54,7 @@ export const useChatStore = defineStore('chat', {
         this.loading = false
         return response.data.id
       }
-      
+
       this.loading = false
       return null
     },
@@ -62,12 +62,12 @@ export const useChatStore = defineStore('chat', {
     async selectConversation(conversationId: string) {
       this.currentConversationId = conversationId
       this.messages = []
-      
+
       const conv = this.conversations.find(c => c.id === conversationId)
       if (conv) {
         this.selectedPetId = conv.petId
       }
-      
+
       await this.fetchMessages()
     },
 
@@ -76,19 +76,19 @@ export const useChatStore = defineStore('chat', {
         this.messages = []
         return
       }
-      
+
       this.loading = true
       this.error = null
-      
+
       const api = useApi()
       const response = await api.get<ChatMessage[]>(`/chat?conversationId=${this.currentConversationId}`)
-      
+
       if (response.success && response.data) {
         this.messages = response.data
       } else {
         this.error = response.message || 'Erreur lors du chargement'
       }
-      
+
       this.loading = false
     },
 
@@ -97,19 +97,19 @@ export const useChatStore = defineStore('chat', {
         this.error = 'Aucune conversation sélectionnée'
         return false
       }
-      
+
       this.loading = true
       this.error = null
-      
+
       const api = useApi()
       const payload: ChatRequestDTO & { conversationId: string } = {
         message,
         petId: this.selectedPetId || undefined,
         conversationId: this.currentConversationId,
       }
-      
+
       const response = await api.post<ChatResponseDTO>('/chat', payload)
-      
+
       if (response.success && response.data) {
         await this.fetchMessages()
         await this.fetchConversations()
@@ -125,7 +125,7 @@ export const useChatStore = defineStore('chat', {
     async deleteConversation(conversationId: string) {
       const api = useApi()
       const response = await api.del(`/chat/conversations?conversationId=${conversationId}`)
-      
+
       if (response.success) {
         if (this.currentConversationId === conversationId) {
           this.currentConversationId = null
@@ -140,10 +140,10 @@ export const useChatStore = defineStore('chat', {
     async clearAllHistory() {
       this.loading = true
       this.error = null
-      
+
       const api = useApi()
       const response = await api.del('/chat')
-      
+
       if (response.success) {
         this.messages = []
         this.conversations = []
@@ -151,7 +151,7 @@ export const useChatStore = defineStore('chat', {
       } else {
         this.error = response.message || 'Erreur lors de la suppression'
       }
-      
+
       this.loading = false
     },
 

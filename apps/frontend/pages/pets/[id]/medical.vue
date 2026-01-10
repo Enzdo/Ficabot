@@ -183,8 +183,8 @@
 
 <script setup lang="ts">
 import { DateTime } from 'luxon'
-import { formatDate, MEDICAL_RECORD_TYPE_LABELS } from '@votre-assistant-virtuel/shared'
-import type { MedicalRecordType } from '@votre-assistant-virtuel/shared'
+import { formatDate, MEDICAL_RECORD_TYPE_LABELS } from '@ficabot/shared'
+import type { MedicalRecordType } from '@ficabot/shared'
 
 definePageMeta({
   middleware: 'auth',

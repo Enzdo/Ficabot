@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@votre-assistant-virtuel/shared'
+import type { ApiResponse } from '@ficabot/shared'
 
 export const useApi = () => {
   const config = useRuntimeConfig()
@@ -10,7 +10,7 @@ export const useApi = () => {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> => {
     const url = `${config.public.apiBase}${endpoint}`
-    
+
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -18,7 +18,7 @@ export const useApi = () => {
 
     if (authStore.token) {
       console.log('Adding Authorization header:', `Bearer ${authStore.token.substring(0, 10)}...`)
-      ;(headers as Record<string, string>)['Authorization'] = `Bearer ${authStore.token}`
+        ; (headers as Record<string, string>)['Authorization'] = `Bearer ${authStore.token}`
     } else {
       console.log('No token in authStore')
     }
@@ -81,7 +81,7 @@ export const useApi = () => {
 
   const upload = async <T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> => {
     const url = `${config.public.apiBase}${endpoint}`
-    
+
     const headers: HeadersInit = {}
     if (authStore.token) {
       headers['Authorization'] = `Bearer ${authStore.token}`

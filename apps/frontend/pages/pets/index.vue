@@ -104,29 +104,7 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-3">{{ $t('avatars.select_title') }}</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button
-                type="button"
-                v-for="avatar in avatars.filter((a: any) => a.type === form.species)"
-                :key="avatar.id"
-                @click="form.avatarUrl = avatar.image"
-                class="relative group text-left"
-              >
-                <div 
-                  class="aspect-square rounded-2xl overflow-hidden border-2 transition-all bg-gray-50"
-                  :class="form.avatarUrl === avatar.image ? 'border-primary-600 ring-2 ring-primary-100' : 'border-transparent hover:border-gray-200'"
-                >
-                  <img :src="avatar.image" :alt="avatar.name" class="w-full h-full object-cover">
-                </div>
-                <div class="mt-1 text-center">
-                  <p class="text-xs font-bold text-gray-900">{{ avatar.name }}</p>
-                  <p class="text-[10px] text-gray-500 leading-tight truncate">{{ avatar.tags[0] }}</p>
-                </div>
-              </button>
-            </div>
-          </div>
+
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('pets.name') }}</label>

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { User, LoginResponse } from '@votre-assistant-virtuel/shared'
+import type { User, LoginResponse } from '@ficabot/shared'
 
 interface AuthState {
   user: User | null
@@ -20,7 +20,7 @@ export const useAuthStore = defineStore('auth', {
     setAuth(data: LoginResponse) {
       this.user = data.user
       this.token = data.token.token
-      
+
       if (import.meta.client) {
         localStorage.setItem('auth_token', data.token.token)
         localStorage.setItem('auth_user', JSON.stringify(data.user))
@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', {
       if (import.meta.client) {
         const token = localStorage.getItem('auth_token')
         const userStr = localStorage.getItem('auth_user')
-        
+
         if (token && userStr) {
           this.token = token
           try {
@@ -46,7 +46,7 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.user = null
       this.token = null
-      
+
       if (import.meta.client) {
         localStorage.removeItem('auth_token')
         localStorage.removeItem('auth_user')

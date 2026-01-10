@@ -113,6 +113,15 @@
             <p class="text-xs text-green-700/70 mt-0.5">{{ $t('pets.actions.medical_events') }}</p>
           </NuxtLink>
 
+          <NuxtLink :to="`/pets/${route.params.id}/pre-diagnosis`" class="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-2xl border-2 border-indigo-200 active:scale-[0.98] transition-transform relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-indigo-200/30 to-purple-200/30 rounded-full -mr-8 -mt-8"></div>
+            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-indigo-600 mb-3 shadow-sm text-xl relative z-10">
+              🤖
+            </div>
+            <p class="font-bold text-indigo-900 relative z-10">Pré-Diagnostic IA</p>
+            <p class="text-xs text-indigo-700/70 mt-0.5 relative z-10">Analyse multi-IA</p>
+          </NuxtLink>
+
           <NuxtLink :to="`/pets/${route.params.id}/diet`" class="bg-pink-50 p-4 rounded-2xl border border-pink-100 active:scale-[0.98] transition-transform">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pink-600 mb-3 shadow-sm text-xl">
               ⚖️
@@ -440,8 +449,8 @@
 
 <script setup lang="ts">
 import { DateTime } from 'luxon'
-import { MEDICAL_RECORD_TYPE_LABELS } from '@votre-assistant-virtuel/shared'
-import type { Species, MedicalRecordType } from '@votre-assistant-virtuel/shared'
+import { MEDICAL_RECORD_TYPE_LABELS } from '@ficabot/shared'
+import type { Species, MedicalRecordType } from '@ficabot/shared'
 
 definePageMeta({
   middleware: 'auth',

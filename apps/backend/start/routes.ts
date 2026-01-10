@@ -212,7 +212,19 @@ router.group(() => {
 const PhotoAnalysisController = () => import('#controllers/photo_analysis_controller')
 router.group(() => {
   router.post('/:petId/analyze-photo', [PhotoAnalysisController, 'analyze'])
+
+  // Pre-Diagnosis (AI Multi-Model Analysis)
+  const PreDiagnosesController = () => import('#controllers/pre_diagnoses_controller')
+  router.post('/:id/pre-diagnosis', [PreDiagnosesController, 'create'])
 }).prefix('/pets').use(middleware.auth())
+
+// Pre-Diagnosis routes
+const PreDiagnosesController = () => import('#controllers/pre_diagnoses_controller')
+router.group(() => {
+  router.get('/disclaimer', [PreDiagnosesController, 'disclaimer'])
+  router.get('/', [PreDiagnosesController, 'index'])
+  router.get('/:id', [PreDiagnosesController, 'show'])
+}).prefix('/pre-diagnosis').use(middleware.auth())
 
 // Public Profiles
 const PublicProfilesController = () => import('#controllers/public_profiles_controller')
@@ -266,6 +278,18 @@ router.group(() => {
   router.get('/me', [VetAuthController, 'me'])
   router.put('/profile', [VetAuthController, 'updateProfile'])
   router.post('/logout', [VetAuthController, 'logout'])
+}).prefix('/vet/auth').use(middleware.vetAuth())
+
+// Vet Pre-Diagnoses & AI Chat
+const VetPreDiagnosesController = () => import('#controllers/vet_pre_diagnoses_controller')
+router.group(() => {
+  router.get('/dashboard/stats', [VetPreDiagnosesController, 'stats'])
+  router.get('/pre-diagnoses', [VetPreDiagnosesController, 'index'])
+  router.get('/pre-diagnoses/:id', [VetPreDiagnosesController, 'show'])
+  router.post('/pre-diagnoses/:id/response', [VetPreDiagnosesController, 'respond'])
+  router.post('/pre-diagnoses/:id/ai-chat', [VetPreDiagnosesController, 'aiChat'])
+  router.get('/notifications', [VetPreDiagnosesController, 'notifications'])
+  router.patch('/notifications/:id/read', [VetPreDiagnosesController, 'markNotificationRead'])
 }).prefix('/vet/auth').use(middleware.vetAuth())
 
 // Vet Patients Management

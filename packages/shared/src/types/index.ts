@@ -212,3 +212,7 @@ export interface HealthBook {
   createdAt: Date
   updatedAt: Date
 }
+
+// Pre-Diagnosis exports
+export * from './pre-diagnosis.js'
+
