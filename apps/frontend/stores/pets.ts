@@ -242,26 +242,74 @@ export const usePetsStore = defineStore('pets', {
       }
     },
 
-    // Vaccine actions
+    // Vaccine actions (with Optimistic UI)
     async addVaccine(petId: string, data: AddVaccineDTO) {
       const api = useApi()
-      const response = await api.post<HealthBook>(`/pets/${petId}/health-book/vaccines`, data)
+      const toast = useToast()
 
-      if (response.success && response.data) {
-        this.healthBook = response.data
-        return true
+      // Optimistic update: add immediately to UI
+      const tempId = `temp-${Date.now()}`
+      const tempVaccine = { id: tempId, ...data }
+
+      if (this.healthBook) {
+        const previousVaccines = [...(this.healthBook.vaccines || [])]
+        this.healthBook.vaccines = [...previousVaccines, tempVaccine]
+
+        try {
+          const response = await api.post<HealthBook>(`/pets/${petId}/health-book/vaccines`, data)
+
+          if (response.success && response.data) {
+            // Replace temp data with real data from server
+            this.healthBook = response.data
+            toast.success('Vaccin ajouté ✓')
+            return true
+          } else {
+            // Rollback on error
+            this.healthBook.vaccines = previousVaccines
+            toast.error('Erreur lors de l\'ajout du vaccin')
+            return false
+          }
+        } catch (error) {
+          // Rollback on exception
+          this.healthBook.vaccines = previousVaccines
+          toast.error('Erreur lors de l\'ajout du vaccin')
+          return false
+        }
       }
+
       return false
     },
 
     async removeVaccine(petId: string, entryId: string) {
       const api = useApi()
-      const response = await api.del<HealthBook>(`/pets/${petId}/health-book/vaccines`, { entryId })
+      const toast = useToast()
 
-      if (response.success && response.data) {
-        this.healthBook = response.data
-        return true
+      // Optimistic update: remove immediately from UI
+      if (this.healthBook) {
+        const previousVaccines = [...(this.healthBook.vaccines || [])]
+        this.healthBook.vaccines = previousVaccines.filter((v: any) => v.id !== entryId)
+
+        try {
+          const response = await api.del<HealthBook>(`/pets/${petId}/health-book/vaccines`, { entryId })
+
+          if (response.success && response.data) {
+            this.healthBook = response.data
+            toast.success('Vaccin supprimé')
+            return true
+          } else {
+            // Rollback on error
+            this.healthBook.vaccines = previousVaccines
+            toast.error('Erreur lors de la suppression')
+            return false
+          }
+        } catch (error) {
+          // Rollback on exception
+          this.healthBook.vaccines = previousVaccines
+          toast.error('Erreur lors de la suppression')
+          return false
+        }
       }
+
       return false
     },
 
@@ -337,23 +385,66 @@ export const usePetsStore = defineStore('pets', {
     // Allergy actions
     async addAllergy(petId: string, data: AddAllergyDTO) {
       const api = useApi()
-      const response = await api.post<HealthBook>(`/pets/${petId}/health-book/allergies`, data)
+      const toast = useToast()
 
-      if (response.success && response.data) {
-        this.healthBook = response.data
-        return true
+      // Optimistic update
+      const tempId = `temp-${Date.now()}`
+      const tempAllergy = { id: tempId, ...data }
+
+      if (this.healthBook) {
+        const previousAllergies = [...(this.healthBook.allergies || [])]
+        this.healthBook.allergies = [...previousAllergies, tempAllergy]
+
+        try {
+          const response = await api.post<HealthBook>(`/pets/${petId}/health-book/allergies`, data)
+
+          if (response.success && response.data) {
+            this.healthBook = response.data
+            toast.success('Allergie ajoutée ✓')
+            return true
+          } else {
+            this.healthBook.allergies = previousAllergies
+            toast.error('Erreur lors de l\'ajout')
+            return false
+          }
+        } catch (error) {
+          this.healthBook.allergies = previousAllergies
+          toast.error('Erreur lors de l\'ajout')
+          return false
+        }
       }
+
       return false
     },
 
     async removeAllergy(petId: string, entryId: string) {
       const api = useApi()
-      const response = await api.del<HealthBook>(`/pets/${petId}/health-book/allergies`, { entryId })
+      const toast = useToast()
 
-      if (response.success && response.data) {
-        this.healthBook = response.data
-        return true
+      // Optimistic update
+      if (this.healthBook) {
+        const previousAllergies = [...(this.healthBook.allergies || [])]
+        this.healthBook.allergies = previousAllergies.filter((a: any) => a.id !== entryId)
+
+        try {
+          const response = await api.del<HealthBook>(`/pets/${petId}/health-book/allergies`, { entryId })
+
+          if (response.success && response.data) {
+            this.healthBook = response.data
+            toast.success('Allergie supprimée')
+            return true
+          } else {
+            this.healthBook.allergies = previousAllergies
+            toast.error('Erreur lors de la suppression')
+            return false
+          }
+        } catch (error) {
+          this.healthBook.allergies = previousAllergies
+          toast.error('Erreur lors de la suppression')
+          return false
+        }
       }
+
       return false
     },
 
@@ -429,12 +520,35 @@ export const usePetsStore = defineStore('pets', {
     // Weight history actions
     async addWeightHistory(petId: string, data: AddWeightHistoryDTO) {
       const api = useApi()
-      const response = await api.post<HealthBook>(`/pets/${petId}/health-book/weight-history`, data)
+      const toast = useToast()
 
-      if (response.success && response.data) {
-        this.healthBook = response.data
-        return true
+      // Optimistic update
+      const tempId = `temp-${Date.now()}`
+      const tempWeight = { id: tempId, ...data }
+
+      if (this.healthBook) {
+        const previousWeightHistory = [...(this.healthBook.weightHistory || [])]
+        this.healthBook.weightHistory = [...previousWeightHistory, tempWeight]
+
+        try {
+          const response = await api.post<HealthBook>(`/pets/${petId}/health-book/weight-history`, data)
+
+          if (response.success && response.data) {
+            this.healthBook = response.data
+            toast.success('Poids ajouté ✓')
+            return true
+          } else {
+            this.healthBook.weightHistory = previousWeightHistory
+            toast.error('Erreur lors de l\'ajout')
+            return false
+          }
+        } catch (error) {
+          this.healthBook.weightHistory = previousWeightHistory
+          toast.error('Erreur lors de l\'ajout')
+          return false
+        }
       }
+
       return false
     },
 

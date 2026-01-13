@@ -12,8 +12,8 @@
     </div>
 
     <!-- Quick Stats - 2x2 grid -->
-    <div class="grid grid-cols-2 gap-4">
-      <NuxtLink to="/pets" class="group bg-white rounded-3xl p-5 shadow-sm border border-surface-100 hover:shadow-md hover:border-primary-100 transition-all duration-200 active:scale-[0.98]">
+    <div class="grid grid-cols-2 gap-4" data-onboarding="stats">
+      <NuxtLink to="/pets" class="group bg-white rounded-3xl p-5 shadow-sm border border-surface-100 hover:shadow-md hover:border-primary-100 transition-all duration-200 active:scale-[0.98]" data-onboarding="pets-stat">
         <div class="flex flex-col gap-3">
           <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">
             🐾
@@ -49,7 +49,7 @@
         </div>
       </NuxtLink>
       
-      <NuxtLink to="/chat" class="group bg-white rounded-3xl p-5 shadow-sm border border-surface-100 hover:shadow-md hover:border-purple-100 transition-all duration-200 active:scale-[0.98]">
+      <NuxtLink to="/chat" class="group bg-white rounded-3xl p-5 shadow-sm border border-surface-100 hover:shadow-md hover:border-purple-100 transition-all duration-200 active:scale-[0.98]" data-onboarding="chat-stat">
         <div class="flex flex-col gap-3">
           <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-200">
             💬
@@ -131,20 +131,20 @@
         <NuxtLink to="/pets" class="text-primary-600 text-sm font-semibold hover:text-primary-700 transition-colors">{{ $t('dashboard.see_all') }}</NuxtLink>
       </div>
       
-      <div v-if="petsStore.loading" class="flex justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <!-- Skeleton loading -->
+      <div v-if="petsStore.loading" class="space-y-4">
+        <SkeletonCard v-for="i in 3" :key="i" type="pet" />
       </div>
 
-      <div v-else-if="petsStore.pets.length === 0" class="bg-white rounded-[2rem] p-8 text-center shadow-sm border border-surface-100">
-        <div class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-          🐾
-        </div>
-        <h3 class="font-bold text-gray-900 mb-2">{{ $t('dashboard.no_pets') }}</h3>
-        <p class="text-gray-500 text-sm mb-6">{{ $t('dashboard.start_adding_pet') }}</p>
-        <NuxtLink to="/pets" class="inline-flex items-center justify-center px-6 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/20 w-full sm:w-auto">
-          {{ $t('dashboard.add_pet') }}
-        </NuxtLink>
-      </div>
+      <!-- Empty state -->
+      <EmptyState
+        v-else-if="petsStore.pets.length === 0"
+        icon="🐾"
+        :title="$t('dashboard.no_pets')"
+        :description="$t('dashboard.start_adding_pet')"
+        :action-label="$t('dashboard.add_pet')"
+        action-to="/pets"
+      />
 
       <div v-else class="space-y-4">
         <NuxtLink 
@@ -178,6 +178,8 @@ definePageMeta({
 })
 
 const petsStore = usePetsStore()
+const router = useRouter()
+const { startTour, hasCompletedOnboarding } = useOnboarding()
 
 const upcomingReminders = ref(0)
 const upcomingAppointments = ref(0)
@@ -208,5 +210,56 @@ const fetchStats = async () => {
 onMounted(async () => {
   await petsStore.fetchPets()
   await fetchStats()
+
+  // Start onboarding tour for new users
+  if (!hasCompletedOnboarding()) {
+    setTimeout(() => {
+      startTour({
+        id: 'dashboard-tour',
+        steps: [
+          {
+            id: 'welcome',
+            title: 'Bienvenue ! 👋',
+            description: 'Découvrez votre assistant virtuel pour la santé de vos animaux. Ce guide rapide vous aidera à démarrer.',
+            target: '[data-onboarding="stats"]',
+            position: 'bottom'
+          },
+          {
+            id: 'pets',
+            title: 'Vos animaux 🐾',
+            description: 'Ici vous pouvez voir combien d\'animaux vous avez ajoutés. Cliquez pour gérer leurs profils et carnets de santé.',
+            target: '[data-onboarding="pets-stat"]',
+            position: 'bottom',
+            action: {
+              label: 'Ajouter mon premier animal →',
+              onClick: () => {
+                router.push('/pets')
+              }
+            }
+          },
+          {
+            id: 'chat',
+            title: 'Assistant IA 💬',
+            description: 'Posez vos questions sur la santé de vos animaux. Notre IA vous aide 24/7 avec des conseils personnalisés.',
+            target: '[data-onboarding="chat-stat"]',
+            position: 'bottom',
+            action: {
+              label: 'Essayer l\'assistant →',
+              onClick: () => {
+                router.push('/chat')
+              }
+            }
+          },
+          {
+            id: 'navigation',
+            title: 'Navigation 🧭',
+            description: 'Utilisez le menu du bas (mobile) ou du haut (desktop) pour accéder rapidement à toutes les fonctionnalités.',
+            target: 'nav',
+            position: 'top'
+          }
+        ]
+      })
+    }, 800) // Wait for page to fully render
+  }
 })
 </script>

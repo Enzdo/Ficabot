@@ -92,6 +92,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const api = useApi()
 const { setLocale } = useI18n()
+const toast = useToast()
 
 const form = reactive({
   email: '',
@@ -112,6 +113,7 @@ const handleLogin = async () => {
     if (response.data.user.language) {
       setLocale(response.data.user.language as any)
     }
+    toast.success('Connexion réussie ! Bienvenue 👋')
     router.push('/dashboard')
   } else {
     error.value = response.message || 'Identifiants incorrects'

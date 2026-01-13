@@ -286,6 +286,7 @@ definePageMeta({
 
 const { t, locale, setLocale } = useI18n()
 const authStore = useAuthStore()
+const toast = useToast()
 
 const profile = ref({
   email: '',
@@ -389,6 +390,9 @@ const updateProfile = async () => {
   if (response.success) {
     await fetchProfile()
     showEditProfileModal.value = false
+    toast.success('Profil mis à jour avec succès')
+  } else {
+    toast.error('Erreur lors de la mise à jour du profil')
   }
   saving.value = false
 }
@@ -421,12 +425,12 @@ const updateEmail = async () => {
 
 const updatePassword = async () => {
   passwordError.value = ''
-  
+
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
     passwordError.value = 'Les mots de passe ne correspondent pas'
     return
   }
-  
+
   saving.value = true
   const api = useApi()
   const response = await api.put('/auth/password', {
@@ -438,7 +442,7 @@ const updatePassword = async () => {
     passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmPassword = ''
-    alert('Mot de passe modifié avec succès')
+    toast.success('Mot de passe modifié avec succès 🔒')
   } else {
     passwordError.value = response.message || 'Erreur lors de la modification'
   }
