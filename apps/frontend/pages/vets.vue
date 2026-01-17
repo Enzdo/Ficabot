@@ -1,53 +1,60 @@
 <template>
   <div class="h-[100dvh] flex flex-col">
     <!-- Header -->
-    <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-20">
-      <div class="flex items-center gap-3 min-w-0">
-        <NuxtLink to="/dashboard" class="p-2 -ml-2 rounded-full hover:bg-gray-100 shrink-0">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-600">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    <div class="bg-white border-b border-gray-200 px-4 py-3 pb-2 transition-all duration-300 z-20">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3 min-w-0">
+          <NuxtLink to="/dashboard" class="p-2 -ml-2 rounded-full hover:bg-gray-100 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-600">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+          </NuxtLink>
+          <h1 class="font-bold text-gray-900 text-lg truncate">{{ $t('vets.title') }}</h1>
+        </div>
+        <button @click="locateMe" class="p-2 bg-primary-100 text-primary-600 rounded-full shrink-0" :disabled="locating">
+          <svg v-if="!locating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
           </svg>
-        </NuxtLink>
-        <h1 class="font-bold text-gray-900 text-lg truncate">{{ $t('vets.title') }}</h1>
+          <div v-else class="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        </button>
       </div>
-      <button @click="locateMe" class="p-2 bg-primary-100 text-primary-600 rounded-full shrink-0" :disabled="locating">
-        <svg v-if="!locating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-        </svg>
-        <div v-else class="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-      </button>
+
+      <!-- Search Bar -->
+      <div class="relative mb-2">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-gray-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+        </div>
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          :placeholder="$t('common.city_placeholder')"
+          class="w-full bg-gray-100 border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary-500 focus:bg-white transition-all"
+          @keyup.enter="searchCity"
+        >
+        <button 
+          v-if="searchQuery"
+          @click="searchCity" 
+          class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary-600 text-white px-3 py-1 rounded-lg text-xs font-medium"
+        >
+          {{ $t('common.search') }}
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
-    <div class="bg-white px-4 py-2 border-b border-gray-100 flex gap-2 overflow-x-auto">
+    <div class="bg-white px-4 py-2 border-b border-gray-100 flex gap-2 overflow-x-auto no-scrollbar shadow-sm">
       <button 
-        @click="filter = 'all'" 
-        :class="filter === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700'"
-        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
+        v-for="f in filterOptions" 
+        :key="f.id"
+        @click="activeFilter = f.id" 
+        :class="activeFilter === f.id ? f.activeClass : 'bg-gray-100 text-gray-700'"
+        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-1.5"
       >
-        🐾 {{ $t('vets.filters.all') }}
-      </button>
-      <button 
-        @click="filter = 'dog'" 
-        :class="filter === 'dog' ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-700'"
-        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-      >
-        🐕 {{ $t('vets.filters.dog') }}
-      </button>
-      <button 
-        @click="filter = 'cat'" 
-        :class="filter === 'cat' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700'"
-        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-      >
-        🐱 {{ $t('vets.filters.cat') }}
-      </button>
-      <button 
-        @click="filter = 'emergency'" 
-        :class="filter === 'emergency' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'"
-        class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors"
-      >
-        🆘 {{ $t('vets.filters.emergency') }}
+        <span>{{ f.emoji }}</span>
+        <span>{{ $t(`vets.filters.${f.id}`) }}</span>
       </button>
     </div>
 
@@ -56,16 +63,24 @@
       <div ref="mapContainer" class="absolute inset-0 z-0"></div>
       
       <!-- Loading overlay -->
-      <div v-if="loading" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+      <div v-if="loading" class="absolute inset-0 bg-white/80 flex items-center justify-center z-10 transition-opacity">
         <div class="text-center">
           <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto mb-3"></div>
           <p class="text-gray-600 text-sm">{{ $t('vets.searching') }}</p>
         </div>
       </div>
 
+      <!-- No area results -->
+      <div v-if="!loading && filteredServices.length === 0 && userLocation" class="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+        <div class="bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2">
+          <span class="text-gray-500 text-sm whitespace-nowrap">{{ $t('vets.no_results') }}</span>
+          <button @click="searchServices(true)" class="text-primary-600 text-sm font-bold">Relancer</button>
+        </div>
+      </div>
+
       <!-- Permission/Location Error State -->
-      <div v-if="!loading && vets.length === 0 && !userLocation" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto">
+      <div v-if="!loading && services.length === 0 && !userLocation && !searchQuery" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto border border-gray-100">
           <div class="text-4xl mb-3">📍</div>
           <h3 class="font-bold text-gray-900 mb-2">{{ $t('vets.location_required.title') }}</h3>
           <p class="text-gray-500 text-sm mb-4">{{ $t('vets.location_required.message') }}</p>
@@ -76,85 +91,81 @@
       </div>
     </div>
 
-    <!-- Bottom Sheet - Vet List -->
+    <!-- Bottom Sheet - Service List -->
     <div 
-      class="bg-white rounded-t-3xl shadow-2xl transition-all duration-300 z-30"
+      class="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-all duration-300 z-30 flex flex-col"
       :class="sheetExpanded ? 'h-[70vh]' : 'h-48'"
     >
       <!-- Handle -->
-      <div class="flex justify-center py-2" @click="sheetExpanded = !sheetExpanded">
-        <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+      <div class="flex justify-center py-2 shrink-0 cursor-pointer" @click="sheetExpanded = !sheetExpanded">
+        <div class="w-12 h-1.5 bg-gray-200 rounded-full"></div>
       </div>
       
-      <div class="px-4 pb-2 flex items-center justify-between">
-        <h2 class="font-bold text-gray-900">{{ $t('vets.found', { count: filteredVets.length }) }}</h2>
-        <button @click="sheetExpanded = !sheetExpanded" class="text-primary-600 text-sm font-medium">
+      <div class="px-4 pb-2 flex items-center justify-between shrink-0">
+        <h2 class="font-bold text-gray-900">{{ $t('vets.found', { count: filteredServices.length }) }}</h2>
+        <button @click="sheetExpanded = !sheetExpanded" class="text-primary-600 text-sm font-medium p-2">
           {{ sheetExpanded ? $t('vets.reduce') : $t('vets.view_all') }}
         </button>
       </div>
 
-      <!-- Vet Cards -->
-      <div class="overflow-y-auto px-4 pb-24" :class="sheetExpanded ? 'h-[calc(70vh-80px)]' : 'h-28'">
-        <div class="space-y-3">
+      <!-- Service Cards -->
+      <div class="overflow-y-auto px-4 pb-20 flex-1 no-scrollbar">
+        <div class="space-y-3 pb-4">
           <div 
-            v-for="vet in filteredVets" 
-            :key="vet.id"
-            @click="selectVet(vet)"
-            class="bg-gray-50 rounded-2xl p-4 active:scale-[0.98] transition-transform cursor-pointer"
-            :class="selectedVet?.id === vet.id ? 'ring-2 ring-primary-500 bg-primary-50' : ''"
+            v-for="service in filteredServices" 
+            :key="service.id"
+            @click="selectService(service)"
+            class="bg-gray-50 rounded-2xl p-4 active:scale-[0.98] transition-all cursor-pointer border border-transparent shadow-sm hover:border-primary-100"
+            :class="selectedService?.id === service.id ? 'ring-2 ring-primary-500 bg-primary-50 border-primary-200' : ''"
           >
-            <div class="flex items-start gap-3">
-              <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm shrink-0">
-                {{ vet.emergency ? '🆘' : '🏥' }}
+            <div class="flex items-start gap-4">
+              <div 
+                class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl shadow-sm shrink-0 border border-gray-100"
+                :class="service.emergency ? 'text-red-500' : ''"
+              >
+                {{ getServiceEmoji(service) }}
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-2">
-                  <h3 class="font-bold text-gray-900 truncate">{{ vet.name }}</h3>
-                  <div v-if="vet.rating" class="flex items-center gap-1 shrink-0">
-                    <span class="text-yellow-500">⭐</span>
-                    <span class="text-sm font-medium text-gray-700">{{ vet.rating }}</span>
+                  <h3 class="font-bold text-gray-900 truncate">{{ service.name }}</h3>
+                  <div v-if="service.rating" class="flex items-center gap-1 shrink-0">
+                    <span class="text-yellow-500 text-xs">⭐</span>
+                    <span class="text-sm font-medium text-gray-700">{{ service.rating }}</span>
                   </div>
                 </div>
-                <p class="text-sm text-gray-500 truncate">{{ vet.address }}</p>
+                <p class="text-sm text-gray-500 truncate mt-0.5">{{ service.address }}</p>
                 <div class="flex items-center gap-3 mt-2">
-                  <span v-if="vet.distance" class="text-xs text-gray-400">📍 {{ vet.distance }}</span>
-                  <span v-if="vet.openNow" class="text-xs text-green-600 font-medium">● Ouvert</span>
-                  <span v-else class="text-xs text-red-500">● Fermé</span>
+                  <span v-if="service.distance" class="text-xs text-gray-400 bg-white px-2 py-0.5 rounded-full border border-gray-100">📍 {{ service.distance }}</span>
+                  <span v-if="service.category" class="text-xs font-medium text-gray-500">
+                    {{ $t(`vets.filters.${service.category}`) }}
+                  </span>
                 </div>
               </div>
             </div>
             
             <!-- Action buttons -->
-            <div class="flex gap-2 mt-3">
+            <div class="flex gap-2 mt-4" v-if="selectedService?.id === service.id || sheetExpanded">
               <a 
-                v-if="vet.phone" 
-                :href="`tel:${vet.phone}`" 
+                v-if="service.phone" 
+                :href="`tel:${service.phone}`" 
                 @click.stop
-                class="flex-1 py-2 bg-green-100 text-green-700 rounded-xl text-sm font-medium text-center"
+                class="flex-1 py-2.5 bg-green-50 text-green-700 rounded-xl text-xs font-bold text-center border border-green-100 flex items-center justify-center gap-1"
               >
                 📞 Appeler
               </a>
-              <a 
-                v-if="vet.website" 
-                :href="vet.website" 
-                target="_blank"
-                @click.stop
-                class="flex-1 py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-medium text-center"
-              >
-                🌐 Site web
-              </a>
               <button 
-                @click.stop="openDirections(vet)"
-                class="flex-1 py-2 bg-primary-100 text-primary-700 rounded-xl text-sm font-medium"
+                @click.stop="openDirections(service)"
+                class="flex-1 py-2.5 bg-primary-600 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shadow-md shadow-primary-600/10"
               >
                 🧭 {{ $t('vets.open_gps') }}
               </button>
             </div>
           </div>
 
-          <div v-if="filteredVets.length === 0 && !loading" class="text-center py-8">
-            <p class="text-gray-500">Aucun vétérinaire trouvé</p>
-            <button @click="locateMe" class="mt-2 text-primary-600 font-medium">Actualiser la recherche</button>
+          <div v-if="filteredServices.length === 0 && !loading" class="text-center py-12">
+            <div class="text-4xl mb-3 opacity-50">🔍</div>
+            <p class="text-gray-500">{{ $t('vets.no_results') }}</p>
+            <button @click="locateMe" class="mt-4 text-primary-600 font-bold bg-primary-50 px-6 py-2 rounded-full">{{ $t('vets.location_required.enable') }}</button>
           </div>
         </div>
       </div>
@@ -172,7 +183,9 @@ definePageMeta({
 
 const { t } = useI18n()
 
-interface Vet {
+type ServiceCategory = 'vet' | 'emergency' | 'parks' | 'groomers' | 'stores'
+
+interface Service {
   id: string
   name: string
   address: string
@@ -184,47 +197,94 @@ interface Vet {
   openNow?: boolean
   emergency?: boolean
   distance?: string
+  category: ServiceCategory
   types: ('dog' | 'cat' | 'all')[]
 }
 
 const mapContainer = ref<HTMLElement | null>(null)
-const filter = ref<'all' | 'dog' | 'cat' | 'emergency'>('all')
+const activeFilter = ref<'all' | ServiceCategory | 'dog' | 'cat'>('all')
 const loading = ref(false)
 const locating = ref(false)
 const sheetExpanded = ref(false)
-const selectedVet = ref<Vet | null>(null)
+const selectedService = ref<Service | null>(null)
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
-const vets = ref<Vet[]>([])
+const services = ref<Service[]>([])
+const searchQuery = ref('')
+
+const filterOptions = [
+  { id: 'all', emoji: '🐾', activeClass: 'bg-primary-600 text-white' },
+  { id: 'dog', emoji: '🐕', activeClass: 'bg-amber-500 text-white' },
+  { id: 'cat', emoji: '🐱', activeClass: 'bg-purple-500 text-white' },
+  { id: 'emergency', emoji: '🆘', activeClass: 'bg-red-500 text-white' },
+  { id: 'parks', emoji: '🌳', activeClass: 'bg-green-600 text-white' },
+  { id: 'groomers', emoji: '✂️', activeClass: 'bg-pink-500 text-white' },
+  { id: 'stores', emoji: '🛒', activeClass: 'bg-blue-600 text-white' }
+]
 
 let map: LeafletMap | null = null
 let markers: Marker[] = []
 let userMarker: Marker | null = null
 
-const filteredVets = computed(() => {
-  if (filter.value === 'all') return vets.value
-  if (filter.value === 'emergency') return vets.value.filter(v => v.emergency)
-  return vets.value.filter(v => v.types.includes(filter.value as 'dog' | 'cat') || v.types.includes('all'))
+const filteredServices = computed(() => {
+  let filtered = services.value
+  
+  if (activeFilter.value === 'all') return filtered
+  
+  if (activeFilter.value === 'emergency') {
+    return filtered.filter(s => s.emergency)
+  }
+  
+  if (activeFilter.value === 'dog' || activeFilter.value === 'cat') {
+    return filtered.filter(s => s.types.includes(activeFilter.value as 'dog' | 'cat') || s.types.includes('all'))
+  }
+  
+  // Category specific filters
+  return filtered.filter(s => s.category === activeFilter.value)
 })
+
+const getServiceEmoji = (service: Service) => {
+  if (service.emergency) return '🆘'
+  switch (service.category) {
+    case 'vet': return '🏥'
+    case 'parks': return '🌳'
+    case 'groomers': return '✂️'
+    case 'stores': return '🛒'
+    default: return '📍'
+  }
+}
+
+const getMarkerColor = (service: Service) => {
+  if (service.emergency) return '#ef4444' // red-500
+  switch (service.category) {
+    case 'vet': return '#0ea5e9' // sky-500 (primary)
+    case 'parks': return '#16a34a' // green-600
+    case 'groomers': return '#ec4899' // pink-500
+    case 'stores': return '#2563eb' // blue-600
+    default: return '#6b7280' // gray-500
+  }
+}
 
 const initMap = async () => {
   if (!mapContainer.value || map) return
   
   const L = (await import('leaflet')).default
-  
-  // Import CSS
   await import('leaflet/dist/leaflet.css')
   
   // Default to Paris
   const defaultLat = 48.8566
   const defaultLng = 2.3522
   
-  map = L.map(mapContainer.value).setView([defaultLat, defaultLng], 13)
+  map = L.map(mapContainer.value, {
+    zoomControl: false // Hide default zoom buttons for cleaner look on mobile
+  }).setView([defaultLat, defaultLng], 13)
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+    attribution: '© OpenStreetMap contributors'
   }).addTo(map)
   
-  // Try to get user location
+  // Custom zoom control in a better place for mobile
+  L.control.zoom({ position: 'topright' }).addTo(map)
+  
   locateMe()
 }
 
@@ -243,55 +303,95 @@ const locateMe = async () => {
         lng: position.coords.longitude
       }
       
-      if (map) {
-        const L = (await import('leaflet')).default
-        map.setView([userLocation.value.lat, userLocation.value.lng], 14)
-        
-        // Add user marker
-        if (userMarker) {
-          userMarker.remove()
-        }
-        
-        const userIcon = L.divIcon({
-          html: '<div class="w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center"><div class="w-2 h-2 bg-white rounded-full"></div></div>',
-          className: 'user-marker',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        })
-        
-        userMarker = L.marker([userLocation.value.lat, userLocation.value.lng], { icon: userIcon })
-          .addTo(map)
-          .bindPopup('Vous êtes ici')
-      }
-      
-      await searchVets()
+      updateMapToLocation(userLocation.value.lat, userLocation.value.lng, true)
+      await searchServices()
       locating.value = false
     },
     (error) => {
       console.error('Geolocation error:', error)
       locating.value = false
-      // Search with default location anyway
-      searchVets()
+      searchServices()
     },
     { enableHighAccuracy: true, timeout: 10000 }
   )
 }
 
-const searchVets = async () => {
+const searchCity = async () => {
+  if (!searchQuery.value.trim()) return
+  
+  loading.value = true
+  try {
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.value + ', France')}`)
+    const data = await response.json()
+    
+    if (data && data.length > 0) {
+      const city = data[0]
+      const lat = parseFloat(city.lat)
+      const lng = parseFloat(city.lon)
+      
+      userLocation.value = { lat, lng }
+      updateMapToLocation(lat, lng, false) // false means it's a search center, not necessarily "user" location
+      await searchServices()
+    } else {
+      alert('Ville non trouvée')
+    }
+  } catch (error) {
+    console.error('Geocoding error:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const updateMapToLocation = async (lat: number, lng: number, isUser: boolean) => {
+  if (!map) return
+  const L = (await import('leaflet')).default
+  
+  map.setView([lat, lng], 14)
+  
+  if (isUser) {
+    if (userMarker) userMarker.remove()
+    
+    const userIcon = L.divIcon({
+      html: '<div class="w-6 h-6 bg-blue-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center"><div class="w-2 h-2 bg-white rounded-full animate-ping"></div></div>',
+      className: 'user-marker',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    })
+    
+    userMarker = L.marker([lat, lng], { icon: userIcon })
+      .addTo(map)
+      .bindPopup('Vous êtes ici')
+  }
+}
+
+const searchServices = async (forceRadius = false) => {
   loading.value = true
   
   const lat = userLocation.value?.lat || 48.8566
   const lng = userLocation.value?.lng || 2.3522
   
-  // Use Overpass API (OpenStreetMap) to find real veterinarians nearby
-  const radius = 5000 // 5km radius
+  // Radius: 5km initially, or what's visible on map
+  const radius = forceRadius ? 15000 : 5000 
+  
   const overpassQuery = `
     [out:json][timeout:25];
     (
+      // Vets
       node["amenity"="veterinary"](around:${radius},${lat},${lng});
       way["amenity"="veterinary"](around:${radius},${lat},${lng});
-      node["healthcare"="veterinary"](around:${radius},${lat},${lng});
-      way["healthcare"="veterinary"](around:${radius},${lat},${lng});
+      
+      // Parks & Dog Parks
+      node["leisure"="dog_park"](around:${radius},${lat},${lng});
+      way["leisure"="dog_park"](around:${radius},${lat},${lng});
+      node["dog"="yes"](around:${radius},${lat},${lng});
+      
+      // Pet Stores
+      node["shop"="pet"](around:${radius},${lat},${lng});
+      way["shop"="pet"](around:${radius},${lat},${lng});
+      
+      // Groomers
+      node["shop"="pet_grooming"](around:${radius},${lat},${lng});
+      way["shop"="pet_grooming"](around:${radius},${lat},${lng});
     );
     out body center;
   `
@@ -304,60 +404,62 @@ const searchVets = async () => {
     
     const data = await response.json()
     
-    const realVets: Vet[] = data.elements.map((element: any, index: number) => {
-      const vetLat = element.lat || element.center?.lat
-      const vetLng = element.lon || element.center?.lon
+    const foundServices: Service[] = data.elements.map((element: any) => {
+      const sLat = element.lat || element.center?.lat
+      const sLng = element.lon || element.center?.lon
       const tags = element.tags || {}
       
-      // Calculate distance
-      const distance = calculateDistance(lat, lng, vetLat, vetLng)
+      const distance = calculateDistance(lat, lng, sLat, sLng)
+      const name = tags.name || (tags.shop === 'pet' ? 'Animalerie' : tags.shop === 'pet_grooming' ? 'Toiletteur' : tags.amenity === 'veterinary' ? 'Vétérinaire' : 'Espace canin')
       
-      // Check if it's an emergency vet (24h or urgence in name)
-      const name = tags.name || 'Vétérinaire'
-      const isEmergency = name.toLowerCase().includes('urgence') || 
-                          name.toLowerCase().includes('24h') ||
-                          tags.emergency === 'yes' ||
-                          tags.opening_hours === '24/7'
+      let category: ServiceCategory = 'vet'
+      if (tags.amenity === 'veterinary') category = 'vet'
+      else if (tags.leisure === 'dog_park' || tags.dog === 'yes') category = 'parks'
+      else if (tags.shop === 'pet_grooming') category = 'groomers'
+      else if (tags.shop === 'pet') category = 'stores'
+
+      const isEmergency = category === 'vet' && (
+        name.toLowerCase().includes('urgence') || 
+        name.toLowerCase().includes('24h') ||
+        tags.emergency === 'yes' ||
+        tags.opening_hours === '24/7'
+      )
       
       return {
         id: element.id.toString(),
-        name: name,
+        name,
         address: formatAddress(tags),
-        lat: vetLat,
-        lng: vetLng,
+        lat: sLat,
+        lng: sLng,
         phone: tags.phone || tags['contact:phone'] || undefined,
         website: tags.website || tags['contact:website'] || undefined,
-        openNow: undefined, // OSM doesn't provide real-time open status
         emergency: isEmergency,
+        category,
         types: ['all'] as ('dog' | 'cat' | 'all')[],
         distance: formatDistance(distance),
       }
     })
     
     // Sort by distance
-    realVets.sort((a, b) => {
+    foundServices.sort((a, b) => {
       const distA = parseFloat(a.distance?.replace(/[^\d.]/g, '') || '999')
       const distB = parseFloat(b.distance?.replace(/[^\d.]/g, '') || '999')
       return distA - distB
     })
     
-    vets.value = realVets
+    services.value = foundServices
     
-    if (realVets.length === 0) {
-      // If no results, show a message
-      console.log('Aucun vétérinaire trouvé dans un rayon de 5km')
-    }
   } catch (error) {
-    console.error('Erreur lors de la recherche:', error)
-    vets.value = []
+    console.error('Search error:', error)
+    services.value = []
+  } finally {
+    await updateMarkers()
+    loading.value = false
   }
-  
-  await updateMarkers()
-  loading.value = false
 }
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371 // Earth's radius in km
+  const R = 6371 
   const dLat = (lat2 - lat1) * Math.PI / 180
   const dLon = (lon2 - lon1) * Math.PI / 180
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -368,9 +470,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 const formatDistance = (km: number): string => {
-  if (km < 1) {
-    return `${Math.round(km * 1000)}m`
-  }
+  if (km < 1) return `${Math.round(km * 1000)}m`
   return `${km.toFixed(1)}km`
 }
 
@@ -381,57 +481,52 @@ const formatAddress = (tags: any): string => {
   if (tags['addr:postcode']) parts.push(tags['addr:postcode'])
   if (tags['addr:city']) parts.push(tags['addr:city'])
   
-  if (parts.length > 0) {
-    return parts.join(' ')
-  }
+  if (parts.length > 0) return parts.join(' ')
   return tags.address || 'Adresse non disponible'
 }
 
 const updateMarkers = async () => {
   if (!map) return
-  
   const L = (await import('leaflet')).default
   
-  // Clear existing markers
   markers.forEach(m => m.remove())
   markers = []
   
-  // Add vet markers
-  filteredVets.value.forEach(vet => {
-    const iconHtml = vet.emergency 
-      ? '<div class="w-10 h-10 bg-red-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center text-lg">🆘</div>'
-      : '<div class="w-10 h-10 bg-primary-500 rounded-full border-3 border-white shadow-lg flex items-center justify-center text-lg">🏥</div>'
+  filteredServices.value.forEach(service => {
+    const color = getMarkerColor(service)
+    const emoji = getServiceEmoji(service)
+    
+    const iconHtml = `<div class="w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center text-lg transition-transform hover:scale-110" style="background-color: ${color}">${emoji}</div>`
     
     const icon = L.divIcon({
       html: iconHtml,
-      className: 'vet-marker',
+      className: 'service-marker',
       iconSize: [40, 40],
       iconAnchor: [20, 20]
     })
     
-    const marker = L.marker([vet.lat, vet.lng], { icon })
+    const marker = L.marker([service.lat, service.lng], { icon })
       .addTo(map!)
-      .bindPopup(`<strong>${vet.name}</strong><br>${vet.address}`)
-      .on('click', () => selectVet(vet))
+      .on('click', () => selectService(service))
     
     markers.push(marker)
   })
 }
 
-const selectVet = (vet: Vet) => {
-  selectedVet.value = vet
+const selectService = (service: Service) => {
+  selectedService.value = service
   if (map) {
-    map.setView([vet.lat, vet.lng], 16)
+    map.setView([service.lat, service.lng], 16)
   }
   sheetExpanded.value = true
 }
 
-const openDirections = (vet: Vet) => {
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${vet.lat},${vet.lng}`
+const openDirections = (service: Service) => {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${service.lat},${service.lng}`
   window.open(url, '_blank')
 }
 
-watch(filter, () => {
+watch(activeFilter, () => {
   updateMarkers()
 })
 
@@ -442,9 +537,17 @@ onMounted(() => {
 
 <style>
 .user-marker,
-.vet-marker {
+.service-marker {
   background: transparent !important;
   border: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .leaflet-popup-content-wrapper {

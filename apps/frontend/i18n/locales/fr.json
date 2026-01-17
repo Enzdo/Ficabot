@@ -10,7 +10,9 @@
     "confirm": "Confirmer",
     "back": "Retour",
     "today": "Aujourd'hui",
-    "tomorrow": "Demain"
+    "tomorrow": "Demain",
+    "search": "Rechercher",
+    "city_placeholder": "Ville ou code postal..."
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -345,18 +347,23 @@
       "all": "Tous",
       "dog": "Chiens",
       "cat": "Chats",
-      "emergency": "Urgences 24h"
+      "emergency": "Urgences 24h",
+      "parks": "Parcs",
+      "groomers": "Toiletteurs",
+      "stores": "Animaleries"
     },
-    "searching": "Recherche des vétérinaires...",
+    "searching": "Recherche en cours...",
+    "search_city": "Rechercher une ville",
     "location_required": {
       "title": "Géolocalisation requise",
-      "message": "Pour trouver les vétérinaires autour de vous, nous avons besoin de votre position.",
+      "message": "Pour trouver les services autour de vous, nous avons besoin de votre position.",
       "enable": "Activer ma position"
     },
-    "found": "{count} vétérinaires trouvés",
+    "found": "{count} services trouvés",
     "view_all": "Voir tout",
     "reduce": "Réduire",
-    "open_gps": "Itinéraire"
+    "open_gps": "Itinéraire",
+    "no_results": "Aucun service trouvé dans cette zone"
   },
   "expenses": {
     "title": "Dépenses",

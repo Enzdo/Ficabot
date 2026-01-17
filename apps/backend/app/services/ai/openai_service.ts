@@ -71,10 +71,11 @@ export default class OpenAIService {
     }
 
     private prepareImages(imageUrls: string[]): OpenAI.Chat.ChatCompletionContentPartImage[] {
-        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((url) => ({
+        // OpenAI supports data URLs directly
+        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((dataUrl) => ({
             type: 'image_url' as const,
             image_url: {
-                url,
+                url: dataUrl, // data:image/jpeg;base64,... format
                 detail: 'high' as const,
             },
         }))

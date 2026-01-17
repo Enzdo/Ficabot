@@ -74,14 +74,25 @@ export default class ClaudeService {
     }
 
     private async prepareImages(imageUrls: string[]): Promise<Anthropic.ImageBlockParam[]> {
-        // For now, we'll use URLs directly
-        // In production, you might want to download and convert to base64
-        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((url) => ({
-            type: 'image' as const,
-            source: {
-                type: 'url' as const,
-                url,
-            },
-        }))
+        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((dataUrl) => {
+            // Extract base64 and media type from data URL
+            // Format: data:image/jpeg;base64,/9j/4AAQSkZJRg...
+            const matches = dataUrl.match(/^data:(.+);base64,(.+)$/)
+            if (!matches) {
+                throw new Error('Invalid data URL format')
+            }
+
+            const mediaType = matches[1]
+            const base64Data = matches[2]
+
+            return {
+                type: 'image' as const,
+                source: {
+                    type: 'base64' as const,
+                    media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+                    data: base64Data,
+                },
+            }
+        })
     }
 }

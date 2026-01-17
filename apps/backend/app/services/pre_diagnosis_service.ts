@@ -37,11 +37,13 @@ export default class PreDiagnosisService {
             // Build enriched context
             const context = await this.buildContext(preDiagnosis)
 
-            // Call all 3 AI models in parallel with timeout handling
+            // Call AI models in parallel with timeout handling
+            // TODO: Réactiver Gemini une fois la clé API obtenue
             const aiResults = await Promise.allSettled([
                 this.callWithTimeout(() => this.claudeService.analyze(context), 'claude'),
                 this.callWithTimeout(() => this.openaiService.analyze(context), 'gpt'),
-                this.callWithTimeout(() => this.geminiService.analyze(context), 'gemini'),
+                // Temporairement désactivé - pas de clé API Gemini pour le moment
+                // this.callWithTimeout(() => this.geminiService.analyze(context), 'gemini'),
             ])
 
             // Save AI responses

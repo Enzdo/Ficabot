@@ -32,14 +32,16 @@ export default class PreDiagnosesController {
             })
         }
 
-        // Check cooldown
-        const cooldownOk = await this.preDiagnosisService.checkCooldown(user.id)
-        if (!cooldownOk) {
-            return response.badRequest({
-                success: false,
-                message: 'Veuillez attendre 30 minutes entre deux analyses',
-            })
-        }
+
+        // Check cooldown (disabled for testing)
+        // const cooldownOk = await this.preDiagnosisService.checkCooldown(user.id)
+        // if (!cooldownOk) {
+        //     return response.badRequest({
+        //         success: false,
+        //         message: 'Veuillez attendre 30 minutes entre deux analyses',
+        //     })
+        // }
+
 
         // Verify pet ownership
         const pet = await Pet.query()
@@ -51,19 +53,19 @@ export default class PreDiagnosesController {
         // Validate request
         const payload = await request.validateUsing(createPreDiagnosisValidator)
 
-        // Upload images
+        // Convert images to base64 for AI API compatibility
         const imageUrls: string[] = []
+        const fs = await import('node:fs/promises')
+
         for (const image of payload.images) {
-            const fileName = `${cuid()}.${image.extname}`
-            const path = `pre-diagnosis/${user.id}/${fileName}`
+            // Read file content
+            const fileBuffer = await fs.readFile(image.tmpPath!)
+            const base64 = fileBuffer.toString('base64')
+            const mimeType = image.type || 'image/jpeg'
 
-            await image.move(app.makePath('uploads'), {
-                name: fileName,
-            })
-
-            // In production, upload to S3 and get URL
-            // For now, use local path
-            imageUrls.push(`/uploads/${fileName}`)
+            // Create data URL
+            const dataUrl = `data:${mimeType};base64,${base64}`
+            imageUrls.push(dataUrl)
         }
 
         // Create pre-diagnosis record

@@ -102,7 +102,12 @@ export const useApi = () => {
 
       const data = await response.json()
       if (!response.ok) {
-        return { success: false, message: data.message || 'Une erreur est survenue' }
+        console.error('Upload failed:', response.status, JSON.stringify(data, null, 2))
+        return {
+          success: false,
+          message: data.message || 'Une erreur est survenue',
+          errors: data.errors
+        }
       }
       return data
     } catch (error) {

@@ -20,17 +20,25 @@
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else-if="petsStore.pets.length === 0" class="flex flex-col items-center justify-center py-12 text-center bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
-      <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-4xl">
-        🐾
+    <!-- Empty State with Mascots -->
+    <div v-else-if="petsStore.pets.length === 0" class="flex flex-col items-center justify-center py-8 text-center bg-gradient-to-b from-primary-50/50 to-white rounded-3xl p-8 border border-primary-100 shadow-sm">
+      <!-- Animated Mascots -->
+      <div class="mb-6">
+        <MascotDuo size="xl" animation="wave" />
       </div>
-      <h3 class="text-lg font-bold text-gray-900 mb-2">{{ $t('pets.no_pets') }}</h3>
-      <p class="text-gray-500 mb-6 text-sm max-w-[200px]">{{ $t('pets.no_pets_desc') }}</p>
-      <button 
+
+      <!-- Speech bubble -->
+      <div class="relative bg-white rounded-2xl px-6 py-4 shadow-md border border-gray-100 mb-6 max-w-[280px]">
+        <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45"></div>
+        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $t('pets.no_pets') }}</h3>
+        <p class="text-gray-500 text-sm">{{ $t('pets.no_pets_desc') }}</p>
+      </div>
+
+      <button
         @click="showAddModal = true"
-        class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium shadow-md shadow-primary-600/20 active:scale-95 transition-all"
+        class="bg-primary-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary-600/30 active:scale-95 transition-all flex items-center gap-2 text-base"
       >
+        <span>+</span>
         {{ $t('pets.add_pet') }}
       </button>
     </div>

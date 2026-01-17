@@ -100,7 +100,7 @@
       </button>
 
       <p class="text-center text-xs text-gray-500">
-        L'analyse utilisera Claude, GPT-4 et Gemini pour une synthèse complète
+        L'analyse utilisera Claude et GPT-4 pour une synthèse complète
       </p>
     </div>
   </div>
@@ -163,8 +163,8 @@ const submitPreDiagnosis = async () => {
     const formData = new FormData()
     formData.append('description', description.value)
     
-    selectedImages.value.forEach((img, index) => {
-      formData.append(`images`, img.file)
+    selectedImages.value.forEach((img) => {
+      formData.append('images[]', img.file)
     })
     
     const response = await api.upload(`/pets/${route.params.id}/pre-diagnosis`, formData)
@@ -173,7 +173,11 @@ const submitPreDiagnosis = async () => {
       // Redirect to result page
       router.push(`/pre-diagnosis/${response.data.id}`)
     } else {
-      alert(response.message || 'Erreur lors de la soumission')
+      console.error('Pre-diagnosis submission failed:', response)
+      const errorMsg = response.errors 
+        ? Object.values(response.errors).flat().join('\n') 
+        : response.message || 'Erreur lors de la soumission'
+      alert(errorMsg)
     }
   } catch (error) {
     console.error('Submit error:', error)

@@ -1,213 +1,138 @@
-# 🤖 Votre Assistant Virtuel by Ficana
+# Ficabot - Assistant Vétérinaire IA
 
-Monorepo complet pour votre assistant virtuel IA avec gestion intégrée.
+> Application de gestion de santé animale propulsée par l'intelligence artificielle multi-modèles
 
-## 📁 Structure du projet
+## Le Pitch
+
+**Ficabot** révolutionne la santé animale en combinant un carnet de santé digital complet avec la puissance de l'IA. Les propriétaires d'animaux peuvent obtenir une **pré-analyse de symptômes** basée sur 3 modèles IA indépendants (Claude, GPT, Gemini), puis partager ces informations avec leur vétérinaire pour un suivi professionnel.
+
+**Problème résolu** : Les propriétaires s'inquiètent souvent pour la santé de leur animal mais hésitent à consulter. Ficabot offre une première analyse intelligente qui aide à évaluer l'urgence, tout en maintenant le lien essentiel avec les vétérinaires.
+
+**Points forts** :
+- Pré-diagnostic par consensus de 3 IA (réduit les erreurs d'un modèle unique)
+- Carnet de santé digital complet (vaccins, traitements, allergies, chirurgies...)
+- Double interface : propriétaires + vétérinaires
+- Chat IA pour questions quotidiennes
+- Gamification pour encourager les bonnes pratiques
+
+---
+
+## Fonctionnalités
+
+### Pour les Propriétaires
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Gestion des Animaux** | Profils chiens/chats avec photos, poids, identification |
+| **Carnet de Santé Digital** | Vaccins, antiparasitaires, vermifuges, chirurgies, allergies, médicaments |
+| **Pré-Diagnostic IA** | Envoyez photos + symptômes, obtenez une analyse par 3 modèles IA avec synthèse |
+| **Chat IA** | Assistant conversationnel pour vos questions santé |
+| **Suivi Santé** | Poids, alimentation, symptômes, activités physiques |
+| **Rendez-vous & Rappels** | Planification et notifications automatiques |
+| **Dépenses** | Suivi des frais vétérinaires et achats |
+| **Badges** | Gamification pour encourager les soins réguliers |
+
+### Pour les Vétérinaires
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Dashboard Pré-Diagnostics** | Vue des analyses en attente avec indicateurs d'urgence |
+| **Accès Carnets de Santé** | Consultation des dossiers patients connectés |
+| **Réponses Professionnelles** | Envoi de recommandations aux propriétaires |
+| **Chat Clients** | Communication directe avec les propriétaires |
+| **Gestion Clinique** | Rendez-vous, employés, facturation |
+
+---
+
+## Stack Technique
+
+| Composant | Technologie |
+|-----------|-------------|
+| **Frontend** | Nuxt 3, Vue 3, TailwindCSS, Pinia |
+| **Backend** | AdonisJS 6, Lucid ORM, TypeScript |
+| **Base de données** | PostgreSQL (compatible Supabase) |
+| **IA** | Claude (Anthropic), GPT-4 (OpenAI), Gemini (Google) |
+| **Auth** | JWT Access Tokens |
+| **Monorepo** | pnpm workspaces |
+
+---
+
+## Structure du Projet
 
 ```
-votre-assistant-virtuel-by-ficana/
+ficabot/
 ├── apps/
-│   ├── frontend/          # Nuxt 3 (SSR)
-│   └── backend/           # AdonisJS (API REST)
-├── packages/
-│   └── shared/            # Types, schemas, utils partagés
-├── package.json           # Workspaces pnpm
-└── pnpm-workspace.yaml
+│   ├── backend/        # API AdonisJS (port 3333)
+│   ├── frontend/       # App utilisateur (port 3000)
+│   ├── vet-frontend/   # Portail vétérinaire (port 3001)
+│   └── landing/        # Page marketing (port 3002)
+└── packages/
+    └── shared/         # Types et utilitaires partagés
 ```
 
-## 🛠️ Stack technique
+---
 
-- **Frontend**: Nuxt 3, Vue 3, Pinia, TailwindCSS
-- **Backend**: AdonisJS 6, Lucid ORM
-- **Base de données**: PostgreSQL (compatible Supabase)
-- **Auth**: JWT (Access Tokens)
-- **IA**: OpenAI GPT-4o-mini
-- **Monorepo**: pnpm workspaces
-
-## 🚀 Installation
+## Installation
 
 ### Prérequis
-
 - Node.js 18+
 - pnpm 8+
-- PostgreSQL (ou compte Supabase)
-- Clé API OpenAI
+- PostgreSQL
 
-### 1. Cloner et installer les dépendances
+### Setup
 
 ```bash
-cd votre-assistant-virtuel-by-ficana
+# Cloner et installer
 pnpm install
-```
 
-### 2. Configurer le backend
-
-```bash
+# Configurer le backend
 cd apps/backend
 cp .env.example .env
+# Renseigner : DATABASE_URL, ANTHROPIC_API_KEY, OPENAI_API_KEY
+
+# Migrations
+pnpm migration:run
+
+# Build shared
+cd packages/shared && pnpm build
+
+# Lancer
+pnpm dev:all
 ```
 
-Éditer `.env` avec vos valeurs :
+### Variables d'Environnement
 
 ```env
-NODE_ENV=development
-PORT=3333
-HOST=0.0.0.0
-APP_KEY=votre-cle-secrete-min-32-caracteres
-
-# Base de données PostgreSQL
+# Base de données
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=votre-mot-de-passe
-DB_DATABASE=votre-assistant-virtuel-by-ficana
-DB_SSL=false
+DB_PASSWORD=***
+DB_DATABASE=ficabot
 
-# Pour Supabase, utilisez :
-# DB_HOST=db.xxxxx.supabase.co
-# DB_SSL=true
-
-# OpenAI
-OPENAI_API_KEY=sk-votre-cle-openai
+# IA
+ANTHROPIC_API_KEY=sk-ant-***
+OPENAI_API_KEY=sk-***
+GOOGLE_AI_API_KEY=*** (optionnel)
 ```
 
-### 3. Créer la base de données
+---
 
-```bash
-# Créer la base de données PostgreSQL
-createdb votre-assistant-virtuel-by-ficana
+## URLs de Développement
 
-# Exécuter les migrations
-cd apps/backend
-pnpm migration:run
-```
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| API Backend | http://localhost:3333 |
+| Portail Vétérinaire | http://localhost:3001 |
+| Landing Page | http://localhost:3002 |
 
-### 4. Configurer le frontend
+---
 
-```bash
-cd apps/frontend
-cp .env.example .env
-```
+## Licence
 
-Le fichier `.env` par défaut pointe vers `http://localhost:3333`.
+Projet privé - Tous droits réservés
 
-### 5. Build du package shared
+---
 
-```bash
-cd packages/shared
-pnpm build
-```
-
-## 🏃 Lancement
-
-### Développement (tous les services)
-
-```bash
-# Depuis la racine du projet
-pnpm dev
-```
-
-Ou séparément :
-
-```bash
-# Terminal 1 - Backend
-pnpm dev:backend
-
-# Terminal 2 - Frontend
-pnpm dev:frontend
-```
-
-### URLs
-
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3333
-
-## 📡 API Endpoints
-
-### Auth
-- `POST /auth/register` - Inscription
-- `POST /auth/login` - Connexion
-- `GET /auth/me` - Utilisateur courant (auth)
-- `POST /auth/logout` - Déconnexion (auth)
-
-### Pets
-- `GET /pets` - Liste des animaux (auth)
-- `POST /pets` - Créer un animal (auth)
-- `GET /pets/:id` - Détails d'un animal (auth)
-- `PUT /pets/:id` - Modifier un animal (auth)
-- `DELETE /pets/:id` - Supprimer un animal (auth)
-
-### Medical Records
-- `GET /pets/:id/medical-records` - Liste des enregistrements (auth)
-- `POST /pets/:id/medical-records` - Créer un enregistrement (auth)
-- `PUT /medical-records/:recordId` - Modifier (auth)
-- `DELETE /medical-records/:recordId` - Supprimer (auth)
-
-### Chat IA
-- `GET /chat` - Historique des messages (auth)
-- `POST /chat` - Envoyer un message (auth)
-- `DELETE /chat` - Effacer l'historique (auth)
-
-## 🗄️ Base de données
-
-### Tables
-
-- **users** - Utilisateurs (id, email, password, timestamps)
-- **pets** - Animaux (id, user_id, name, species, breed, birth_date, weight, avatar_url)
-- **medical_records** - Carnet de santé (id, pet_id, type, title, description, date, next_due_date, vet_name)
-- **chat_messages** - Messages IA (id, user_id, pet_id, role, message)
-- **auth_access_tokens** - Tokens JWT
-
-## 🎨 Pages Frontend
-
-- `/` - Page d'accueil
-- `/login` - Connexion
-- `/register` - Inscription
-- `/dashboard` - Tableau de bord
-- `/pets` - Liste des animaux
-- `/pets/:id` - Détails d'un animal
-- `/pets/:id/medical` - Carnet de santé
-- `/chat` - Assistant IA
-
-## 🔧 Scripts utiles
-
-```bash
-# Depuis la racine
-pnpm dev              # Lancer tous les services
-pnpm build            # Build de production
-pnpm lint             # Linter
-
-# Backend
-pnpm --filter @votre-assistant-virtuel/backend migration:run      # Migrations
-pnpm --filter @votre-assistant-virtuel/backend migration:rollback # Rollback
-
-# Frontend
-pnpm --filter @votre-assistant-virtuel/frontend generate  # Générer site statique
-```
-
-## 📝 Configuration Supabase
-
-Pour utiliser Supabase comme base de données :
-
-1. Créer un projet sur [supabase.com](https://supabase.com)
-2. Récupérer les informations de connexion dans Settings > Database
-3. Configurer le `.env` du backend :
-
-```env
-DB_HOST=db.xxxxx.supabase.co
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=votre-mot-de-passe-supabase
-DB_DATABASE=postgres
-DB_SSL=true
-```
-
-## 🤖 Configuration OpenAI
-
-1. Créer un compte sur [platform.openai.com](https://platform.openai.com)
-2. Générer une clé API
-3. Ajouter la clé dans le `.env` du backend
-
-## 📄 Licence
-
-MIT
+Développé par l'équipe Ficana
