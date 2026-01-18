@@ -37,7 +37,44 @@ export const useOptimistic = () => {
     }
   }
 
+  /**
+   * Create with optimistic UI
+   * Adds item immediately with temporary ID, replaces with real data after API call
+   */
+  const createOptimistic = async <T extends { id?: any }>(
+    list: Ref<T[]>,
+    optimisticItem: T,
+    apiCall: () => Promise<T>
+  ) => {
+    // Generate temporary ID if not provided
+    const tempId = optimisticItem.id || `temp_${Date.now()}`
+    const itemWithTempId = { ...optimisticItem, id: tempId, _optimistic: true } as T & { _optimistic?: boolean }
+
+    // 1. Add optimistic item immediately
+    list.value = [...list.value, itemWithTempId]
+
+    try {
+      // 2. Execute API call
+      const realItem = await apiCall()
+
+      // 3. Replace optimistic with real data
+      list.value = list.value.map(item =>
+        item.id === tempId ? realItem : item
+      )
+
+      return { success: true, data: realItem }
+    } catch (error: any) {
+      // 4. Remove optimistic item on error
+      list.value = list.value.filter(item => item.id !== tempId)
+
+      toast.error(error.message || 'Erreur lors de la création')
+
+      return { success: false, error }
+    }
+  }
+
   return {
-    executeOptimistic
+    executeOptimistic,
+    createOptimistic
   }
 }

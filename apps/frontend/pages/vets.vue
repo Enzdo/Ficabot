@@ -229,6 +229,7 @@ const selectedService = ref<Service | null>(null)
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
 const services = ref<Service[]>([])
 const searchQuery = ref('')
+const { get: getCached, set: setCache, fromCache } = useMapCache()
 
 const filterOptions: Array<{ 
   id: 'all' | ServiceCategory | 'dog' | 'cat'
@@ -444,7 +445,16 @@ const searchServices = async (forceRadius = false) => {
   const lng = userLocation.value?.lng || 2.3522
   
   // Radius: 5km initially, or what's visible on map
-  const radius = forceRadius ? 15000 : 5000 
+  const radius = forceRadius ? 15000 : 5000
+  
+  // Try cache first
+  const cached = getCached(lat, lng, radius)
+  if (cached) {
+    services.value = cached
+    loading.value = false
+    await updateMarkers()
+    return
+  } 
   
   const overpassQuery = `
     [out:json][timeout:25];
@@ -529,6 +539,9 @@ const searchServices = async (forceRadius = false) => {
     })
     
     services.value = foundServices
+    
+    // Cache the results
+    setCache(lat, lng, radius, foundServices)
     
   } catch (error) {
     console.error('Search error:', error)
