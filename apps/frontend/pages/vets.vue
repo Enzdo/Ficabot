@@ -79,13 +79,31 @@
       </div>
 
       <!-- Permission/Location Error State -->
-      <div v-if="!loading && services.length === 0 && !userLocation && !searchQuery" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+      <div v-if="locationPermissionDenied || (!loading && services.length === 0 && !userLocation && !searchQuery)" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto border border-gray-100">
-          <div class="text-4xl mb-3">📍</div>
-          <h3 class="font-bold text-gray-900 mb-2">{{ $t('vets.location_required.title') }}</h3>
-          <p class="text-gray-500 text-sm mb-4">{{ $t('vets.location_required.message') }}</p>
-          <button @click="locateMe" class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg shadow-primary-600/20 active:scale-95 transition-all">
+          <div class="text-4xl mb-3">{{ locationPermissionDenied ? '🔒' : '📍' }}</div>
+          <h3 class="font-bold text-gray-900 mb-2">
+            {{ locationPermissionDenied ? 'Localisation désactivée' : $t('vets.location_required.title') }}
+          </h3>
+          <p class="text-gray-500 text-sm mb-4">
+            {{ locationPermissionDenied 
+              ? 'Activez la localisation dans les paramètres de votre navigateur pour voir les services autour de vous' 
+              : $t('vets.location_required.message') 
+            }}
+          </p>
+          <button 
+            v-if="!locationPermissionDenied"
+            @click="locateMe" 
+            class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg shadow-primary-600/20 active:scale-95 transition-all"
+          >
             {{ $t('vets.location_required.enable') }}
+          </button>
+          <button 
+            v-else
+            @click="() => { searchQuery = 'Paris'; searchCity() }" 
+            class="bg-gray-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg active:scale-95 transition-all"
+          >
+            🗼 Chercher à Paris
           </button>
         </div>
       </div>
@@ -205,13 +223,18 @@ const mapContainer = ref<HTMLElement | null>(null)
 const activeFilter = ref<'all' | ServiceCategory | 'dog' | 'cat'>('all')
 const loading = ref(false)
 const locating = ref(false)
+const locationPermissionDenied = ref(false)
 const sheetExpanded = ref(false)
 const selectedService = ref<Service | null>(null)
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
 const services = ref<Service[]>([])
 const searchQuery = ref('')
 
-const filterOptions = [
+const filterOptions: Array<{ 
+  id: 'all' | ServiceCategory | 'dog' | 'cat'
+  emoji: string
+  activeClass: string 
+}> = [
   { id: 'all', emoji: '🐾', activeClass: 'bg-primary-600 text-white' },
   { id: 'dog', emoji: '🐕', activeClass: 'bg-amber-500 text-white' },
   { id: 'cat', emoji: '🐱', activeClass: 'bg-purple-500 text-white' },
@@ -285,7 +308,8 @@ const initMap = async () => {
   // Custom zoom control in a better place for mobile
   L.control.zoom({ position: 'topright' }).addTo(map)
   
-  locateMe()
+  // DON'T auto-call locateMe() - iOS Safari blocks geolocation without user action
+  // User must click the locate button to trigger permission request
 }
 
 const locateMe = async () => {
@@ -303,6 +327,7 @@ const locateMe = async () => {
         lng: position.coords.longitude
       }
       
+      locationPermissionDenied.value = false
       updateMapToLocation(userLocation.value.lat, userLocation.value.lng, true)
       await searchServices()
       locating.value = false
@@ -310,6 +335,13 @@ const locateMe = async () => {
     (error) => {
       console.error('Geolocation error:', error)
       locating.value = false
+      
+      // Check if permission was denied
+      if (error.code === error.PERMISSION_DENIED) {
+        locationPermissionDenied.value = true
+      }
+      
+      // Still try to search with default location (Paris)
       searchServices()
     },
     { enableHighAccuracy: true, timeout: 10000 }

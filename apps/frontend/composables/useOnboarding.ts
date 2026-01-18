@@ -1,3 +1,5 @@
+import { useAuthStore } from '~/stores/auth'
+
 export interface OnboardingStep {
   id: string
   title: string
@@ -19,19 +21,26 @@ const currentTour = ref<OnboardingTour | null>(null)
 const currentStepIndex = ref(0)
 const isActive = ref(false)
 
-const ONBOARDING_KEY = 'ficabot_onboarding_completed'
+// Helper function to get user-specific onboarding key
+const getOnboardingKey = () => {
+  const authStore = useAuthStore()
+  const userId = authStore.user?.id || 'guest'
+  return `ficabot_onboarding_completed_${userId}`
+}
 
 export const useOnboarding = () => {
   const hasCompletedOnboarding = () => {
     if (process.client) {
-      return localStorage.getItem(ONBOARDING_KEY) === 'true'
+      const key = getOnboardingKey()
+      return localStorage.getItem(key) === 'true'
     }
     return false
   }
 
   const markOnboardingComplete = () => {
     if (process.client) {
-      localStorage.setItem(ONBOARDING_KEY, 'true')
+      const key = getOnboardingKey()
+      localStorage.setItem(key, 'true')
     }
   }
 
@@ -88,7 +97,8 @@ export const useOnboarding = () => {
 
   const resetOnboarding = () => {
     if (process.client) {
-      localStorage.removeItem(ONBOARDING_KEY)
+      const key = getOnboardingKey()
+      localStorage.removeItem(key)
     }
   }
 
