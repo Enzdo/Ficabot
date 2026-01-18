@@ -154,7 +154,13 @@
           class="flex items-center gap-4 bg-white p-4 rounded-[1.5rem] shadow-sm border border-surface-100 hover:shadow-md hover:border-primary-100 transition-all duration-200 active:scale-[0.99] group"
         >
           <div class="w-16 h-16 bg-surface-50 rounded-2xl flex items-center justify-center text-3xl shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
-            <img v-if="pet.avatarUrl" :src="pet.avatarUrl" class="w-full h-full object-cover" :alt="pet.name">
+            <img 
+              v-if="pet.avatarUrl" 
+              :src="pet.avatarUrl" 
+              class="w-full h-full object-cover" 
+              :alt="pet.name"
+              loading="lazy"
+            >
             <span v-else>{{ pet.species === 'dog' ? '🐕' : '🐱' }}</span>
           </div>
           <div class="flex-1 min-w-0">

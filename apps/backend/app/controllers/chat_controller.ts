@@ -25,7 +25,7 @@ export default class ChatController {
           .where('conversationId', conv.conversationId!)
           .orderBy('createdAt', 'desc')
           .first()
-        
+
         return {
           id: conv.conversationId,
           title: conv.conversationTitle || 'Nouvelle conversation',
@@ -108,14 +108,14 @@ export default class ChatController {
 
     let pet: Pet | null = null
     let healthBook: HealthBook | null = null
-    
+
     if (data.petId) {
       pet = await Pet.query()
         .where('id', data.petId)
         .where('userId', user.id)
         .preload('medicalRecords')
         .first()
-      
+
       if (pet) {
         healthBook = await HealthBook.query().where('petId', pet.id).first()
       }
@@ -150,23 +150,24 @@ export default class ChatController {
       pet,
       previousMessages,
       healthBook,
-      language: user.language,
+      language: (user as any).language || 'fr',
     })
 
-    const assistantMessage = await ChatMessage.create({
+    await ChatMessage.create({
       userId: user.id,
       petId: pet?.id || null,
       conversationId,
       conversationTitle,
       role: 'assistant',
-      message: aiResponse,
+      message: typeof aiResponse === 'string' ? aiResponse : aiResponse.message,
     })
 
     return response.ok({
       success: true,
       data: {
         userMessage: data.message,
-        assistantMessage: assistantMessage.message,
+        assistantMessage: typeof aiResponse === 'string' ? aiResponse : aiResponse.message,
+        pendingAction: typeof aiResponse === 'object' ? aiResponse.pendingAction : undefined,
       },
     })
   }

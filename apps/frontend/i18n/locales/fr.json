@@ -12,7 +12,10 @@
     "today": "Aujourd'hui",
     "tomorrow": "Demain",
     "search": "Rechercher",
-    "city_placeholder": "Ville ou code postal..."
+    "city_placeholder": "Ville ou code postal...",
+    "retry": "Réessayer",
+    "copy": "Copier",
+    "copied": "Copié !"
   },
   "nav": {
     "dashboard": "Tableau de bord",
@@ -363,7 +366,16 @@
     "view_all": "Voir tout",
     "reduce": "Réduire",
     "open_gps": "Itinéraire",
-    "no_results": "Aucun service trouvé dans cette zone"
+    "no_results": "Aucun service trouvé dans cette zone",
+    "search_paris": "🗼 Chercher à Paris",
+    "location_denied": "Localisation désactivée",
+    "location_denied_hint": "Activez la localisation dans les paramètres de votre navigateur pour voir les services autour de vous",
+    "service_types": {
+      "vet": "Vétérinaire",
+      "groomer": "Toiletteur",
+      "pet_store": "Animalerie",
+      "dog_park": "Parc canin"
+    }
   },
   "expenses": {
     "title": "Dépenses",

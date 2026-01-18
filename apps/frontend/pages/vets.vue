@@ -74,7 +74,7 @@
       <div v-if="!loading && filteredServices.length === 0 && userLocation" class="absolute top-4 left-1/2 -translate-x-1/2 z-10">
         <div class="bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg border border-gray-100 flex items-center gap-2">
           <span class="text-gray-500 text-sm whitespace-nowrap">{{ $t('vets.no_results') }}</span>
-          <button @click="searchServices(true)" class="text-primary-600 text-sm font-bold">Relancer</button>
+          <button @click="searchServices(true)" class="text-primary-600 text-sm font-bold">{{ $t('common.retry') }}</button>
         </div>
       </div>
 
@@ -83,11 +83,11 @@
         <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto border border-gray-100">
           <div class="text-4xl mb-3">{{ locationPermissionDenied ? '🔒' : '📍' }}</div>
           <h3 class="font-bold text-gray-900 mb-2">
-            {{ locationPermissionDenied ? 'Localisation désactivée' : $t('vets.location_required.title') }}
+            {{ locationPermissionDenied ? $t('vets.location_denied') : $t('vets.location_required.title') }}
           </h3>
           <p class="text-gray-500 text-sm mb-4">
             {{ locationPermissionDenied 
-              ? 'Activez la localisation dans les paramètres de votre navigateur pour voir les services autour de vous' 
+              ? $t('vets.location_denied_hint') 
               : $t('vets.location_required.message') 
             }}
           </p>
@@ -103,7 +103,7 @@
             @click="() => { searchQuery = 'Paris'; searchCity() }" 
             class="bg-gray-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg active:scale-95 transition-all"
           >
-            🗼 Chercher à Paris
+            {{ $t('vets.search_paris') }}
           </button>
         </div>
       </div>
@@ -247,6 +247,7 @@ const filterOptions: Array<{
 let map: LeafletMap | null = null
 let markers: Marker[] = []
 let userMarker: Marker | null = null
+let clusterGroup: any = null // MarkerClusterGroup
 
 const filteredServices = computed(() => {
   let filtered = services.value
@@ -292,6 +293,9 @@ const initMap = async () => {
   
   const L = (await import('leaflet')).default
   await import('leaflet/dist/leaflet.css')
+  await import('leaflet.markercluster')
+  await import('leaflet.markercluster/dist/MarkerCluster.css')
+  await import('leaflet.markercluster/dist/MarkerCluster.Default.css')
   
   // Default to Paris
   const defaultLat = 48.8566
@@ -307,6 +311,43 @@ const initMap = async () => {
   
   // Custom zoom control in a better place for mobile
   L.control.zoom({ position: 'topright' }).addTo(map)
+  
+  // Initialize marker cluster group
+  // @ts-ignore
+  clusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 60,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    iconCreateFunction: (cluster: any) => {
+      const markers = cluster.getAllChildMarkers()
+      const count = markers.length
+      
+      // Determine cluster color based on majority service type
+      const categories = markers.map((m: any) => m.options.category || 'vet')
+      const categoryCount: Record<string, number> = {}
+      categories.forEach((cat: string) => {
+        categoryCount[cat] = (categoryCount[cat] || 0) + 1
+      })
+      const dominantCategory = Object.keys(categoryCount).reduce((a, b) => 
+        categoryCount[a] > categoryCount[b] ? a : b
+      )
+      
+      let bgColor = '#0ea5e9' // Default blue
+      if (dominantCategory === 'emergency') bgColor = '#ef4444'
+      else if (dominantCategory === 'parks') bgColor = '#16a34a'
+      else if (dominantCategory === 'groomers') bgColor = '#ec4899'
+      else if (dominantCategory === 'stores') bgColor = '#2563eb'
+      
+      return L.divIcon({
+        html: `<div class="custom-cluster" style="background-color: ${bgColor}"><span>${count}</span></div>`,
+        className: 'custom-cluster-icon',
+        iconSize: L.point(40, 40)
+      })
+    }
+  })
+  
+  map.addLayer(clusterGroup)
   
   // DON'T auto-call locateMe() - iOS Safari blocks geolocation without user action
   // User must click the locate button to trigger permission request
@@ -442,7 +483,15 @@ const searchServices = async (forceRadius = false) => {
       const tags = element.tags || {}
       
       const distance = calculateDistance(lat, lng, sLat, sLng)
-      const name = tags.name || (tags.shop === 'pet' ? 'Animalerie' : tags.shop === 'pet_grooming' ? 'Toiletteur' : tags.amenity === 'veterinary' ? 'Vétérinaire' : 'Espace canin')
+      
+      // Get localized service name
+      let defaultName = ''
+      if (tags.shop === 'pet') defaultName = t('vets.service_types.pet_store')
+      else if (tags.shop === 'pet_grooming') defaultName = t('vets.service_types.groomer')
+      else if (tags.amenity === 'veterinary') defaultName = t('vets.service_types.vet')
+      else defaultName = t('vets.service_types.dog_park')
+      
+      const name = tags.name || defaultName
       
       let category: ServiceCategory = 'vet'
       if (tags.amenity === 'veterinary') category = 'vet'
@@ -521,8 +570,14 @@ const updateMarkers = async () => {
   if (!map) return
   const L = (await import('leaflet')).default
   
+  // Clear existing markers
   markers.forEach(m => m.remove())
   markers = []
+  
+  // Clear cluster group
+  if (clusterGroup) {
+    clusterGroup.clearLayers()
+  }
   
   filteredServices.value.forEach(service => {
     const color = getMarkerColor(service)
@@ -537,11 +592,20 @@ const updateMarkers = async () => {
       iconAnchor: [20, 20]
     })
     
-    const marker = L.marker([service.lat, service.lng], { icon })
-      .addTo(map!)
+    const marker = L.marker([service.lat, service.lng], { 
+      icon,
+      // Store category for cluster coloring
+      // @ts-ignore
+      category: service.category
+    })
       .on('click', () => selectService(service))
     
     markers.push(marker)
+    
+    // Add marker to cluster group instead of directly to map
+    if (clusterGroup) {
+      clusterGroup.addLayer(marker)
+    }
   })
 }
 
@@ -572,6 +636,32 @@ onMounted(() => {
 .service-marker {
   background: transparent !important;
   border: none !important;
+}
+
+/* Custom cluster styling */
+.custom-cluster-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-cluster {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  border: 3px solid white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s;
+}
+
+.custom-cluster:hover {
+  transform: scale(1.1);
 }
 
 .no-scrollbar::-webkit-scrollbar {

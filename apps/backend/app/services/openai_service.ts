@@ -19,8 +19,16 @@ export default class OpenAIService {
     previousMessages: ChatMessage[]
     healthBook?: HealthBook | null
     language?: string
-  }): Promise<string> {
-    const { userMessage, pet, previousMessages, healthBook = null, language = 'fr' } = params
+    enableActions?: boolean
+  }): Promise<{
+    message: string
+    pendingAction?: {
+      name: string
+      arguments: any
+      confirmationMessage: string
+    }
+  }> {
+    const { userMessage, pet, previousMessages, healthBook = null, language = 'fr', enableActions = true } = params
     const systemPrompt = this.buildSystemPrompt(pet, healthBook, language)
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -37,17 +45,64 @@ export default class OpenAIService {
     messages.push({ role: 'user', content: userMessage })
 
     try {
+      // Import AI Actions Service for function definitions
+      const AiActionsService = (await import('#services/ai_actions_service')).default
+      const aiActions = new AiActionsService()
+
+      const tools: OpenAI.Chat.ChatCompletionTool[] | undefined = enableActions && pet
+        ? aiActions.getAvailableActions().map(action => ({
+          type: 'function' as const,
+          function: {
+            name: action.name,
+            description: action.description,
+            parameters: action.parameters
+          }
+        }))
+        : undefined
+
       const response = await this.client.chat.completions.create({
         model: 'gpt-4o-mini',
         messages,
         max_tokens: 1000,
         temperature: 0.7,
+        tools,
+        tool_choice: tools ? 'auto' : undefined
       })
 
-      return response.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer de réponse.'
+      const choice = response.choices[0]
+
+      // Check if AI wants to call a function
+      if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+        const toolCall = choice.message.tool_calls[0]
+        const functionName = toolCall.function.name
+        const functionArgs = JSON.parse(toolCall.function.arguments)
+
+        // Generate confirmation message
+        const confirmationMessage = aiActions.generateConfirmationMessage(functionName, functionArgs, pet)
+
+        // Create a contextual message explaining what the AI wants to do
+        const explanationMessage = choice.message.content ||
+          `D'accord, je peux vous aider avec ça. ${confirmationMessage}`
+
+        return {
+          message: explanationMessage,
+          pendingAction: {
+            name: functionName,
+            arguments: functionArgs,
+            confirmationMessage
+          }
+        }
+      }
+
+      // Normal response without function call
+      return {
+        message: choice.message?.content || 'Désolé, je n\'ai pas pu générer de réponse.'
+      }
     } catch (error) {
       console.error('OpenAI API error:', error)
-      return "Désolé, je rencontre des difficultés techniques pour répondre pour le moment. Veuillez vérifier que la clé API OpenAI est bien configurée."
+      return {
+        message: "Désolé, je rencontre des difficultés techniques pour répondre pour le moment. Veuillez vérifier que la clé API OpenAI est bien configurée."
+      }
     }
   }
 
@@ -102,7 +157,7 @@ IMPORTANT: Retourne UNIQUEMENT le JSON, sans texte avant ou après.`
 
   private buildSystemPrompt(pet: Pet | null, healthBook: HealthBook | null = null, language: string = 'fr'): string {
     const langName = language === 'en' ? 'English' : language === 'de' ? 'German' : 'French'
-    
+
     let prompt = `Tu es un assistant vétérinaire virtuel bienveillant et compétent appelé Votre Assistant Virtuel.
 Tu aides les propriétaires d'animaux de compagnie avec des conseils sur la santé, le bien-être et les soins de leurs animaux.
 
@@ -126,26 +181,26 @@ ${pet.weight ? `- Poids actuel: ${pet.weight} kg` : ''}`
 
     if (healthBook) {
       const hb = healthBook.toJSON()
-      
+
       prompt += `\n\n=== CARNET DE SANTÉ ===`
-      
+
       // Identification
       if (hb.identification?.number) {
         prompt += `\n\nIdentification:
 - N° ${hb.identification.type === 'microchip' ? 'Puce' : 'Tatouage'}: ${hb.identification.number}
 ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
       }
-      
+
       // Stérilisation
       if (hb.sterilization) {
         prompt += `\n\nStérilisation: ${hb.sterilization.isSterilized ? 'Oui' : 'Non'}${hb.sterilization.date ? ` (${hb.sterilization.date})` : ''}`
       }
-      
+
       // Groupe sanguin
       if (hb.bloodType) {
         prompt += `\nGroupe sanguin: ${hb.bloodType}`
       }
-      
+
       // Vaccins
       if (hb.vaccines?.length) {
         prompt += `\n\nVaccins (${hb.vaccines.length}):`
@@ -153,7 +208,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${v.name}: ${v.date}${v.nextDueDate ? ` (prochain rappel: ${v.nextDueDate})` : ''}`
         }
       }
-      
+
       // Antiparasitaires
       if (hb.antiparasitics?.length) {
         prompt += `\n\nAntiparasitaires (${hb.antiparasitics.length}):`
@@ -161,7 +216,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${a.productName}: ${a.date}${a.nextDueDate ? ` (prochain: ${a.nextDueDate})` : ''}`
         }
       }
-      
+
       // Vermifuges
       if (hb.dewormings?.length) {
         prompt += `\n\nVermifuges (${hb.dewormings.length}):`
@@ -169,7 +224,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${d.productName}: ${d.date}${d.nextDueDate ? ` (prochain: ${d.nextDueDate})` : ''}`
         }
       }
-      
+
       // Allergies
       if (hb.allergies?.length) {
         prompt += `\n\nAllergies connues:`
@@ -177,7 +232,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${a.allergen}${a.severity ? ` (${a.severity})` : ''}`
         }
       }
-      
+
       // Maladies chroniques
       if (hb.chronicConditions?.length) {
         prompt += `\n\nMaladies chroniques:`
@@ -185,7 +240,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${c.name}${c.diagnosisDate ? ` (depuis ${c.diagnosisDate})` : ''}`
         }
       }
-      
+
       // Médicaments en cours
       if (hb.medications?.length) {
         prompt += `\n\nMédicaments en cours:`
@@ -193,7 +248,7 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${m.name}: ${m.dosage}${m.frequency ? `, ${m.frequency}` : ''}`
         }
       }
-      
+
       // Historique poids (dernières entrées)
       if (hb.weightHistory?.length) {
         const recentWeights = hb.weightHistory.slice(-5)
@@ -202,17 +257,17 @@ ${hb.identification.date ? `- Date: ${hb.identification.date}` : ''}`
           prompt += `\n- ${w.date}: ${w.weight} kg`
         }
       }
-      
+
       // Assurance
       if (hb.insurance?.company) {
         prompt += `\n\nAssurance: ${hb.insurance.company}${hb.insurance.expiryDate ? ` (expire: ${hb.insurance.expiryDate})` : ''}`
       }
-      
+
       // Vétérinaire d'urgence
       if (hb.emergencyVet?.name) {
         prompt += `\n\nVétérinaire d'urgence: ${hb.emergencyVet.name}${hb.emergencyVet.phone ? ` - ${hb.emergencyVet.phone}` : ''}`
       }
-      
+
       prompt += `\n\n=== FIN CARNET DE SANTÉ ===`
     }
 

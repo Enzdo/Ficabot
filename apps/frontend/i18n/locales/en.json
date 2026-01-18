@@ -10,7 +10,12 @@
     "confirm": "Confirm",
     "back": "Back",
     "today": "Today",
-    "tomorrow": "Tomorrow"
+    "tomorrow": "Tomorrow",
+    "search": "Search",
+    "city_placeholder": "City or postal code...",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied!"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -345,18 +350,32 @@
       "all": "All",
       "dog": "Dogs",
       "cat": "Cats",
-      "emergency": "24h Emergency"
+      "emergency": "24h Emergency",
+      "parks": "Parks",
+      "groomers": "Groomers",
+      "stores": "Pet Stores"
     },
-    "searching": "Searching for veterinarians...",
+    "searching": "Searching...",
+    "search_city": "Search city",
     "location_required": {
       "title": "Location required",
-      "message": "To find veterinarians around you, we need your location.",
+      "message": "To find services around you, we need your location.",
       "enable": "Enable my location"
     },
-    "found": "{count} veterinarians found",
+    "found": "{count} services found",
     "view_all": "View all",
     "reduce": "Collapse",
-    "open_gps": "Directions"
+    "open_gps": "Directions",
+    "no_results": "No services found in this area",
+    "search_paris": "🗼 Search in Paris",
+    "location_denied": "Location disabled",
+    "location_denied_hint": "Enable location in your browser settings to see services around you",
+    "service_types": {
+      "vet": "Veterinarian",
+      "groomer": "Groomer",
+      "pet_store": "Pet Store",
+      "dog_park": "Dog Park"
+    }
   },
   "expenses": {
     "title": "Expenses",

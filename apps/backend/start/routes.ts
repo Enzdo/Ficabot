@@ -81,6 +81,13 @@ router.group(() => {
   router.delete('/', [ChatController, 'clear'])
 }).prefix('/chat').use(middleware.auth())
 
+// AI Actions (for chat confirmations)
+const ChatActionsController = () => import('#controllers/chat_actions_controller')
+router.group(() => {
+  router.post('/actions/confirm', [ChatActionsController, 'confirmAction'])
+  router.post('/actions/cancel', [ChatActionsController, 'cancelAction'])
+}).prefix('/chat').use(middleware.auth())
+
 // Health Book routes
 router.group(() => {
   router.get('/:id/health-book', [HealthBooksController, 'show'])

@@ -40,6 +40,15 @@
       </div>
     </div>
 
+    <!-- Action Confirmation Modal -->
+    <ActionConfirmation
+      :show="showActionModal"
+      :action="pendingAction!"
+      :loading="actionLoading"
+      @confirm="confirmAction"
+      @cancel="cancelAction"
+    />
+
     <!-- Main Chat Area -->
     <div class="flex-1 flex flex-col min-w-0 bg-white">
       <!-- Chat Header -->
@@ -103,7 +112,11 @@
                   : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'
               ]"
             >
-              <p class="whitespace-pre-wrap text-sm leading-relaxed break-all">{{ message.message }}</p>
+              <!-- User message: plain text -->
+              <p v-if="message.role === 'user'" class="whitespace-pre-wrap text-sm leading-relaxed break-all">{{ message.message }}</p>
+              
+              <!-- AI message: markdown formatted -->
+              <div v-else class="markdown-content text-sm leading-relaxed" v-html="formatMessage(message.message)"></div>
               <p 
                 class="text-[10px] mt-1 text-right opacity-0 group-hover:opacity-70 transition-opacity absolute -bottom-5 right-0 text-gray-400 w-20"
                 :class="message.role === 'user' ? 'mr-1' : 'ml-1'"
@@ -254,26 +267,56 @@
 </template>
 
 <script setup lang="ts">
+import { marked } from 'marked'
+import DOMPurify from 'dompurify'
+
 definePageMeta({
   middleware: 'auth',
 })
 
 const { t, locale } = useI18n()
-const route = useRoute()
+const toast = useToast()
 const petsStore = usePetsStore()
 const chatStore = useChatStore()
+const { executeAction } = useAiActions()
 
 const messagesContainer = ref<HTMLElement | null>(null)
 const newMessage = ref('')
-const selectedPetId = ref<string | null>(null)
-const showMobileSidebar = ref(false)
 const showNewConversationModal = ref(false)
-const newConversationTitle = ref('')
+const showMobileSidebar = ref(false)
+const selectedPetId = ref<string | null>(null) // Kept as string | null for consistency with select element
+const newConversationTitle = ref('') // Kept as newConversationTitle
+
+// AI Actions state
+const pendingAction = ref<any | null>(null)
+const showActionModal = ref(false)
+const actionLoading = ref(false)
 const newConversationPetId = ref<string | null>(null)
 
 const formatTime = (date: Date | string) => {
   const d = typeof date === 'string' ? new Date(date) : date
   return d.toLocaleTimeString(locale.value, { hour: '2-digit', minute: '2-digit' })
+}
+
+// Convert markdown to HTML for AI messages
+const formatMessage = (content: string): string => {
+  if (!process.client) return content
+
+  try {
+    // Configure marked for better rendering
+    marked.setOptions({
+      breaks: true, // Convert \n to <br>
+      gfm: true, // GitHub Flavored Markdown
+    })
+
+    const html = marked.parse(content) as string
+
+    // Sanitize HTML to prevent XSS attacks
+    return DOMPurify.sanitize(html)
+  } catch (error) {
+    console.error('Markdown parsing error:', error)
+    return content
+  }
 }
 
 const handlePetChange = () => {
@@ -283,14 +326,14 @@ const handlePetChange = () => {
 const createNewConversation = async () => {
   const title = newConversationTitle.value.trim() || t('chat.new_conversation')
   const petId = newConversationPetId.value || undefined
-  
+
   await chatStore.createConversation(petId, title)
-  
+
   // Update selected pet to match the conversation
   if (petId) {
     selectedPetId.value = petId
   }
-  
+
   // Reset modal
   showNewConversationModal.value = false
   newConversationTitle.value = ''
@@ -309,11 +352,58 @@ const deleteConversation = async (conversationId: string) => {
 
 const sendMessage = async () => {
   if (!newMessage.value.trim() || !chatStore.currentConversationId) return
-  
-  const message = newMessage.value
+
+  const message = newMessage.value.trim()
   newMessage.value = ''
-  
-  await chatStore.sendMessage(message)
+
+  await chatStore.sendMessage(message, selectedPetId.value)
+
+  // Check if response has pending action
+  const lastMessage = chatStore.messages[chatStore.messages.length - 1]
+  if (lastMessage && (lastMessage as any).pendingAction) {
+    pendingAction.value = {
+      ...(lastMessage as any).pendingAction,
+      petId: selectedPetId.value,
+      conversationId: chatStore.currentConversationId
+    }
+    showActionModal.value = true
+  }
+
+  scrollToBottom()
+}
+
+const confirmAction = async () => {
+  if (!pendingAction.value) return
+
+  actionLoading.value = true
+
+  try {
+    const result = await executeAction(pendingAction.value)
+
+    if (result.success) {
+      toast.success('✅ ' + result.message)
+
+      // Refresh messages to show the action confirmation message
+      if (chatStore.currentConversationId) {
+        await chatStore.fetchMessages(chatStore.currentConversationId)
+      }
+    } else {
+      toast.error(result.message || 'Erreur lors de l\'exécution')
+    }
+  } catch (error) {
+    toast.error('Erreur lors de l\'exécution de l\'action')
+  } finally {
+    actionLoading.value = false
+    showActionModal.value = false
+    pendingAction.value = null
+    scrollToBottom()
+  }
+}
+
+const cancelAction = () => {
+  showActionModal.value = false
+  pendingAction.value = null
+  toast.info('Action annulée')
 }
 
 // Scroll to bottom on new messages
@@ -352,5 +442,138 @@ onMounted(async () => {
 <style scoped>
 .animate-bounce-slow {
   animation: bounce 2s infinite;
+}
+
+/* Markdown content styling */
+.markdown-content {
+  line-height: 1.7;
+}
+
+.markdown-content :deep(strong) {
+  font-weight: 700;
+  color: #111827; /* gray-900 for better contrast */
+}
+
+.markdown-content :deep(em) {
+  font-style: italic;
+}
+
+.markdown-content :deep(h1),
+.markdown-content :deep(h2),
+.markdown-content :deep(h3) {
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: #111827; /* gray-900 */
+  line-height: 1.3;
+}
+
+.markdown-content :deep(h1) {
+  font-size: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.5rem;
+}
+
+.markdown-content :deep(h2) {
+  font-size: 1.25rem;
+}
+
+.markdown-content :deep(h3) {
+  font-size: 1.125rem;
+}
+
+.markdown-content :deep(ul),
+.markdown-content :deep(ol) {
+  margin: 1rem 0;
+  padding-left: 2rem;
+  line-height: 1.8;
+}
+
+.markdown-content :deep(li) {
+  margin: 0.5rem 0;
+}
+
+.markdown-content :deep(p) {
+  margin: 0.75rem 0;
+  line-height: 1.7;
+}
+
+.markdown-content :deep(p:first-child) {
+  margin-top: 0;
+}
+
+.markdown-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.markdown-content :deep(code) {
+  background-color: #f3f4f6; /* gray-100 */
+  color: #dc2626; /* red-600 for visibility */
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.375rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.markdown-content :deep(pre) {
+  background-color: #1f2937; /* gray-800 */
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.markdown-content :deep(pre code) {
+  background-color: transparent;
+  color: #f9fafb; /* gray-50 */
+  padding: 0;
+  font-weight: 400;
+}
+
+.markdown-content :deep(a) {
+  color: #2563eb; /* blue-600 for better contrast */
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.markdown-content :deep(a:hover) {
+  color: #1d4ed8; /* blue-700 */
+}
+
+.markdown-content :deep(blockquote) {
+  border-left: 4px solid #3b82f6; /* blue-500 */
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280; /* gray-500 */
+  background-color: #f9fafb;
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+}
+
+.markdown-content :deep(hr) {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 1.5rem 0;
+}
+
+.markdown-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.markdown-content :deep(th) {
+  background-color: #f3f4f6;
+  font-weight: 600;
 }
 </style>
