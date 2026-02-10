@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "buildCommand": "pnpm install && pnpm --filter @ficabot/shared build && pnpm --filter @votre-assistant-virtuel/frontend build",
-  "outputDirectory": "apps/frontend/.output/public",
   "installCommand": "pnpm install",
   "framework": "nuxtjs"
 }
