@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @ficabot/shared build && pnpm --filter @votre-assistant-virtuel/frontend build",
+  "installCommand": "pnpm install",
+  "framework": "nuxtjs",
+  "outputDirectory": ".output/public"
+}
