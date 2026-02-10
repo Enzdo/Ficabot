@@ -79,28 +79,38 @@
       </div>
 
       <!-- Permission/Location Error State -->
-      <div v-if="locationPermissionDenied || (!loading && services.length === 0 && !userLocation && !searchQuery)" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto border border-gray-100">
+      <div v-if="!locationModalDismissed && (locationPermissionDenied || (!loading && services.length === 0 && !userLocation && !searchQuery))" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+        <div class="bg-white p-6 rounded-2xl shadow-xl max-w-xs text-center mx-4 pointer-events-auto border border-gray-100 relative">
+          <!-- Close Button -->
+          <button
+            @click="locationModalDismissed = true"
+            class="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-gray-400">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
           <div class="text-4xl mb-3">{{ locationPermissionDenied ? '🔒' : '📍' }}</div>
           <h3 class="font-bold text-gray-900 mb-2">
             {{ locationPermissionDenied ? $t('vets.location_denied') : $t('vets.location_required.title') }}
           </h3>
           <p class="text-gray-500 text-sm mb-4">
-            {{ locationPermissionDenied 
-              ? $t('vets.location_denied_hint') 
-              : $t('vets.location_required.message') 
+            {{ locationPermissionDenied
+              ? $t('vets.location_denied_hint')
+              : $t('vets.location_required.message')
             }}
           </p>
-          <button 
+          <button
             v-if="!locationPermissionDenied"
-            @click="locateMe" 
+            @click="locateMe"
             class="bg-primary-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg shadow-primary-600/20 active:scale-95 transition-all"
           >
             {{ $t('vets.location_required.enable') }}
           </button>
-          <button 
+          <button
             v-else
-            @click="() => { searchQuery = 'Paris'; searchCity() }" 
+            @click="() => { searchQuery = 'Paris'; searchCity() }"
             class="bg-gray-600 text-white px-6 py-2.5 rounded-xl font-medium w-full shadow-lg active:scale-95 transition-all"
           >
             {{ $t('vets.search_paris') }}
@@ -224,6 +234,7 @@ const activeFilter = ref<'all' | ServiceCategory | 'dog' | 'cat'>('all')
 const loading = ref(false)
 const locating = ref(false)
 const locationPermissionDenied = ref(false)
+const locationModalDismissed = ref(false)
 const sheetExpanded = ref(false)
 const selectedService = ref<Service | null>(null)
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
@@ -231,12 +242,13 @@ const services = ref<Service[]>([])
 const searchQuery = ref('')
 const { get: getCached, set: setCache, fromCache } = useMapCache()
 
-const filterOptions: Array<{ 
+const filterOptions: Array<{
   id: 'all' | ServiceCategory | 'dog' | 'cat'
   emoji: string
-  activeClass: string 
+  activeClass: string
 }> = [
   { id: 'all', emoji: '🐾', activeClass: 'bg-primary-600 text-white' },
+  { id: 'vet', emoji: '🩺', activeClass: 'bg-teal-600 text-white' },
   { id: 'dog', emoji: '🐕', activeClass: 'bg-amber-500 text-white' },
   { id: 'cat', emoji: '🐱', activeClass: 'bg-purple-500 text-white' },
   { id: 'emergency', emoji: '🆘', activeClass: 'bg-red-500 text-white' },

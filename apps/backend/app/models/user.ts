@@ -39,6 +39,18 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ serializeAs: null })
   declare password: string
 
+  @column()
+  declare emailVerified: boolean
+
+  @column({ serializeAs: null })
+  declare verificationToken: string | null
+
+  @column.dateTime({ serializeAs: null })
+  declare verificationTokenExpiresAt: DateTime | null
+
+  @column.dateTime()
+  declare emailVerifiedAt: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

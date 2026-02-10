@@ -14,10 +14,11 @@
           <span>⏰</span> {{ $t('reminders.upcoming') }}
         </h2>
         <div class="space-y-2">
-          <div 
-            v-for="reminder in upcomingReminders" 
+          <div
+            v-for="reminder in upcomingReminders"
             :key="reminder.id"
-            class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between"
+            class="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow"
+            @click="viewReminderDetails(reminder)"
           >
             <div class="flex items-center gap-3 flex-1 min-w-0 mr-3">
               <div :class="getReminderIcon(reminder.type).bg" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0">
@@ -28,7 +29,7 @@
                 <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || $t('chat.general') }}</p>
               </div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex items-center gap-2 shrink-0" @click.stop>
               <button @click="completeReminder(reminder.id)" class="p-2 text-green-600 hover:bg-green-50 rounded-lg">
                 ✓
               </button>
@@ -125,6 +126,111 @@
         </form>
       </div>
     </div>
+
+    <!-- Details/Edit Modal -->
+    <div v-if="showDetailsModal && selectedReminder" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="closeDetailsModal">
+      <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ isEditing ? $t('common.edit') : selectedReminder.title }}
+          </h2>
+          <button @click="closeDetailsModal" class="bg-gray-100 p-2 rounded-full">✕</button>
+        </div>
+
+        <form v-if="isEditing" @submit.prevent="updateReminder" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.type') }}</label>
+            <select v-model="form.type" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
+              <option value="vaccine">{{ $t('reminders.types.vaccine') }}</option>
+              <option value="antiparasitic">{{ $t('reminders.types.antiparasitic') }}</option>
+              <option value="weighing">{{ $t('reminders.types.weighing') }}</option>
+              <option value="appointment">{{ $t('reminders.types.appointment') }}</option>
+              <option value="custom">{{ $t('reminders.types.custom') }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.title_label') }} *</label>
+            <input type="text" v-model="form.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('reminders.form.title_placeholder')">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.pet') }}</label>
+            <select v-model="form.petId" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
+              <option :value="null">{{ $t('chat.general') }}</option>
+              <option v-for="pet in petsStore.pets" :key="pet.id" :value="pet.id">{{ pet.name }}</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.date') }} *</label>
+            <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input type="checkbox" v-model="form.isRecurring" id="edit-recurring" class="w-5 h-5 rounded">
+            <label for="edit-recurring" class="text-sm text-gray-700">{{ $t('reminders.form.recurring') }}</label>
+          </div>
+
+          <div v-if="form.isRecurring">
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.frequency') }}</label>
+            <select v-model="form.recurrenceInterval" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
+              <option value="weekly">{{ $t('reminders.form.intervals.weekly') }}</option>
+              <option value="monthly">{{ $t('reminders.form.intervals.monthly') }}</option>
+              <option value="yearly">{{ $t('reminders.form.intervals.yearly') }}</option>
+            </select>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="button" @click="isEditing = false" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">
+              {{ $t('common.cancel') }}
+            </button>
+            <button type="submit" class="flex-1 bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="loading">
+              {{ loading ? $t('common.saving') : $t('common.save') }}
+            </button>
+          </div>
+        </form>
+
+        <div v-else class="space-y-4">
+          <!-- Details View -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div :class="getReminderIcon(selectedReminder.type).bg" class="w-12 h-12 rounded-full flex items-center justify-center text-2xl">
+                {{ getReminderIcon(selectedReminder.type).icon }}
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">{{ $t(`reminders.types.${selectedReminder.type}`) }}</p>
+                <p class="font-bold text-gray-900 text-lg">{{ selectedReminder.title }}</p>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 rounded-xl p-4 space-y-2">
+              <div class="flex justify-between">
+                <span class="text-gray-600">{{ $t('reminders.form.date') }}</span>
+                <span class="font-medium">{{ formatDate(selectedReminder.dueDate) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">{{ $t('reminders.form.pet') }}</span>
+                <span class="font-medium">{{ selectedReminder.pet?.name || $t('chat.general') }}</span>
+              </div>
+              <div v-if="selectedReminder.isRecurring" class="flex justify-between">
+                <span class="text-gray-600">{{ $t('reminders.form.recurring') }}</span>
+                <span class="font-medium">{{ $t(`reminders.form.intervals.${selectedReminder.recurrenceInterval}`) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button @click="startEditing" class="flex-1 bg-primary-600 text-white py-3 rounded-xl font-bold">
+              {{ $t('common.edit') }}
+            </button>
+            <button @click="completeReminder(selectedReminder.id); closeDetailsModal()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold">
+              ✓ {{ $t('common.confirm') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -137,6 +243,9 @@ const { t, locale } = useI18n()
 const petsStore = usePetsStore()
 
 const showAddModal = ref(false)
+const showDetailsModal = ref(false)
+const selectedReminder = ref<any>(null)
+const isEditing = ref(false)
 const loading = ref(false)
 const reminders = ref<any[]>([])
 
@@ -195,6 +304,42 @@ const createReminder = async () => {
     showAddModal.value = false
     form.title = ''
     form.petId = null
+    await fetchReminders()
+  }
+  loading.value = false
+}
+
+const viewReminderDetails = (reminder: any) => {
+  selectedReminder.value = reminder
+  showDetailsModal.value = true
+  isEditing.value = false
+}
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false
+  selectedReminder.value = null
+  isEditing.value = false
+}
+
+const startEditing = () => {
+  if (selectedReminder.value) {
+    form.type = selectedReminder.value.type
+    form.title = selectedReminder.value.title
+    form.petId = selectedReminder.value.petId
+    form.dueDate = new Date(selectedReminder.value.dueDate).toISOString().split('T')[0]
+    form.isRecurring = selectedReminder.value.isRecurring || false
+    form.recurrenceInterval = selectedReminder.value.recurrenceInterval || 'monthly'
+    isEditing.value = true
+  }
+}
+
+const updateReminder = async () => {
+  if (!selectedReminder.value) return
+  loading.value = true
+  const api = useApi()
+  const response = await api.put(`/reminders/${selectedReminder.value.id}`, form)
+  if (response.success) {
+    closeDetailsModal()
     await fetchReminders()
   }
   loading.value = false

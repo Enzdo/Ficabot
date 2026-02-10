@@ -3,6 +3,10 @@ import Pet from '#models/pet'
 import Veterinarian from '#models/veterinarian'
 import VetNotification from '#models/vet_notification'
 import { DateTime } from 'luxon'
+import mail from '@adonisjs/mail/services/main'
+import UrgentPreDiagnosisNotification from '#mails/urgent_pre_diagnosis_notification'
+import env from '#start/env'
+import logger from '@adonisjs/core/services/logger'
 
 export default class VetNotificationService {
     /**
@@ -34,9 +38,21 @@ export default class VetNotificationService {
         preDiagnosis.veterinarianNotifiedAt = DateTime.now()
         await preDiagnosis.save()
 
-        // TODO: Send email if urgent
+        // Email notification for urgent cases
         if (isUrgent) {
-            console.log(`[VetNotification] Urgent email should be sent to ${vet.email}`)
+            try {
+                // Check if email is configured
+                const smtpHost = env.get('SMTP_HOST')
+                if (smtpHost && smtpHost.length > 0) {
+                    await mail.send(new UrgentPreDiagnosisNotification(vet, preDiagnosis, pet))
+                    logger.info(`[VetNotification] Urgent case email sent to ${vet.email}`)
+                } else {
+                    logger.warn(`[VetNotification] Email not configured - skipping email notification for ${vet.email}`)
+                }
+            } catch (error) {
+                logger.error(`[VetNotification] Failed to send email to ${vet.email}:`, error)
+                // Don't throw - notification was created, email is just a bonus
+            }
         }
     }
 

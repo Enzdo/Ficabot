@@ -348,6 +348,7 @@
     "title": "Vétérinaires proches",
     "filters": {
       "all": "Tous",
+      "vet": "Vétérinaires",
       "dog": "Chiens",
       "cat": "Chats",
       "emergency": "Urgences 24h",

@@ -20,6 +20,7 @@ export interface OnboardingTour {
 const currentTour = ref<OnboardingTour | null>(null)
 const currentStepIndex = ref(0)
 const isActive = ref(false)
+const isOnboardingRunning = ref(false) // Prevent multiple simultaneous onboarding
 
 // Helper function to get user-specific onboarding key
 const getOnboardingKey = () => {
@@ -45,8 +46,10 @@ export const useOnboarding = () => {
   }
 
   const startTour = (tour: OnboardingTour) => {
-    if (hasCompletedOnboarding()) return
+    // Prevent starting if already completed or already running
+    if (hasCompletedOnboarding() || isOnboardingRunning.value) return
 
+    isOnboardingRunning.value = true
     currentTour.value = tour
     currentStepIndex.value = 0
     isActive.value = true
@@ -76,6 +79,7 @@ export const useOnboarding = () => {
     isActive.value = false
     currentTour.value = null
     currentStepIndex.value = 0
+    isOnboardingRunning.value = false
     markOnboardingComplete()
   }
 

@@ -2,13 +2,17 @@ import PreDiagnosis from '#models/pre_diagnosis'
 import AIResponse from '#models/ai_response'
 import SynthesisResult from '#models/synthesis_result'
 import PreDiagnosisAuditLog from '#models/pre_diagnosis_audit_log'
+import UserNotification from '#models/user_notification'
 import Pet from '#models/pet'
 import ClaudeService from './ai/claude_service.js'
 import OpenAIService from './ai/openai_service.js'
 import GeminiService from './ai/gemini_service.js'
 import SynthesisService from './ai/synthesis_service.js'
+import VetNotificationService from './vet_notification_service.js'
 import { DateTime } from 'luxon'
 import type { AIAnalysisContext } from '@ficabot/shared'
+import logger from '@adonisjs/core/services/logger'
+import env from '#start/env'
 
 export default class PreDiagnosisService {
     private claudeService: ClaudeService
@@ -37,20 +41,34 @@ export default class PreDiagnosisService {
             // Build enriched context
             const context = await this.buildContext(preDiagnosis)
 
+            // Check if Gemini API key is available and valid
+            const geminiApiKey = env.get('GOOGLE_AI_API_KEY')
+            const isGeminiAvailable = geminiApiKey && geminiApiKey !== 'PLACEHOLDER' && geminiApiKey.length > 10
+
             // Call AI models in parallel with timeout handling
-            // TODO: Réactiver Gemini une fois la clé API obtenue
-            const aiResults = await Promise.allSettled([
+            // Gemini is included only if API key is available
+            const aiCalls: Promise<AIAnalysisResponse>[] = [
                 this.callWithTimeout(() => this.claudeService.analyze(context), 'claude'),
                 this.callWithTimeout(() => this.openaiService.analyze(context), 'gpt'),
-                // Temporairement désactivé - pas de clé API Gemini pour le moment
-                // this.callWithTimeout(() => this.geminiService.analyze(context), 'gemini'),
-            ])
+            ]
+
+            const modelNames: ('claude' | 'gpt' | 'gemini')[] = ['claude', 'gpt']
+
+            if (isGeminiAvailable) {
+                aiCalls.push(this.callWithTimeout(() => this.geminiService.analyze(context), 'gemini'))
+                modelNames.push('gemini')
+                logger.info('Gemini API is available - using 3 AI models for consensus')
+            } else {
+                logger.warn('Gemini API key not configured - using 2 AI models only')
+            }
+
+            const aiResults = await Promise.allSettled(aiCalls)
 
             // Save AI responses
             const savedResponses: AIResponse[] = []
             for (let i = 0; i < aiResults.length; i++) {
                 const result = aiResults[i]
-                const model = ['claude', 'gpt', 'gemini'][i] as 'claude' | 'gpt' | 'gemini'
+                const model = modelNames[i]
 
                 if (result.status === 'fulfilled') {
                     const aiResponse = await this.saveAIResponse(
@@ -111,6 +129,9 @@ export default class PreDiagnosisService {
                 hypothesesCount: synthesis.prioritizedHypotheses.length,
             })
 
+            // Notify pet owner that analysis is ready
+            await this.notifyPetOwner(preDiagnosis)
+
             // Auto-assign veterinarian and notify
             await this.assignAndNotifyVeterinarian(preDiagnosis)
         } catch (error) {
@@ -118,6 +139,34 @@ export default class PreDiagnosisService {
             preDiagnosis.status = 'failed'
             await preDiagnosis.save()
             throw error
+        }
+    }
+
+    /**
+     * Notify pet owner that pre-diagnosis analysis is completed
+     */
+    private async notifyPetOwner(preDiagnosis: PreDiagnosis): Promise<void> {
+        try {
+            // Load pet to get name
+            const pet = await Pet.findOrFail(preDiagnosis.petId)
+
+            // Create notification for pet owner
+            await UserNotification.create({
+                userId: preDiagnosis.userId,
+                type: 'pre_diagnosis_completed',
+                title: '✅ Analyse IA terminée',
+                message: `L'analyse de ${pet.name} par nos 3 IA est prête. Consultez les résultats maintenant.`,
+                relatedEntityType: 'pre_diagnosis',
+                relatedEntityId: preDiagnosis.id,
+                isRead: false,
+            })
+
+            logger.info(
+                `[PreDiagnosis] Pet owner ${preDiagnosis.userId} notified - Pre-diagnosis ${preDiagnosis.id} completed`
+            )
+        } catch (error) {
+            logger.error(`[PreDiagnosis] Failed to notify pet owner for pre-diagnosis ${preDiagnosis.id}:`, error)
+            // Don't throw - notification failure shouldn't block the process
         }
     }
 

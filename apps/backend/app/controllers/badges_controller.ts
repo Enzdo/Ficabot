@@ -77,7 +77,40 @@ export default class BadgesController {
 
       case 'week_streak':
         // Check if user logged activity 7 days in a row
-        return false // TODO: implement
+        const ActivityModel = (await import('#models/activity')).default
+        const DateTime = (await import('luxon')).DateTime
+        const sevenDaysAgo = DateTime.now().minus({ days: 7 }).toJSDate()
+
+        const recentActivities = await ActivityModel.query()
+          .whereHas('pet', (q) => q.where('user_id', userId))
+          .where('date', '>=', sevenDaysAgo)
+          .select('date')
+          .orderBy('date', 'desc')
+
+        if (recentActivities.length === 0) return false
+
+        // Get unique days
+        const uniqueDays = new Set(recentActivities.map((a) => a.date.toISODate()))
+
+        // Check if there are 7 consecutive days
+        const sortedDays = Array.from(uniqueDays).sort()
+        let consecutiveDays = 1
+        let maxConsecutive = 1
+
+        for (let i = 1; i < sortedDays.length; i++) {
+          const prevDay = DateTime.fromISO(sortedDays[i - 1])
+          const currDay = DateTime.fromISO(sortedDays[i])
+          const diffDays = currDay.diff(prevDay, 'days').days
+
+          if (diffDays === 1) {
+            consecutiveDays++
+            maxConsecutive = Math.max(maxConsecutive, consecutiveDays)
+          } else {
+            consecutiveDays = 1
+          }
+        }
+
+        return maxConsecutive >= 7
 
       default:
         return false

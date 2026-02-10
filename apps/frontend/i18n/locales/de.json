@@ -343,9 +343,13 @@
     "title": "Tierärzte in der Nähe",
     "filters": {
       "all": "Alle",
+      "vet": "Tierärzte",
       "dog": "Hunde",
       "cat": "Katzen",
-      "emergency": "24h Notfall"
+      "emergency": "24h Notfall",
+      "parks": "Parks",
+      "groomers": "Hundefriseure",
+      "stores": "Zoohandlungen"
     },
     "searching": "Suche nach Tierärzten...",
     "location_required": {

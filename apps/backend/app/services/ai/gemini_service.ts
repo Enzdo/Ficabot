@@ -58,13 +58,21 @@ export default class GeminiService {
     }
 
     private async prepareImages(imageUrls: string[]): Promise<any[]> {
-        // For Gemini, we need to convert images to base64 or use inline data
-        // For now, using URLs directly (Gemini supports this)
-        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((url) => ({
-            inlineData: {
-                mimeType: 'image/jpeg',
-                data: url, // In production, fetch and convert to base64
-            },
-        }))
+        // For Gemini, we need to convert base64 data URIs to just the base64 string
+        // imageUrls are already in format: data:image/jpeg;base64,xxxxx
+        return imageUrls.slice(0, ANALYSIS_LIMITS.maxImagesPerRequest).map((url) => {
+            // Extract base64 data from data URI
+            const base64Match = url.match(/^data:image\/[^;]+;base64,(.+)$/)
+            if (!base64Match) {
+                throw new Error('Invalid image format - expected base64 data URI')
+            }
+
+            return {
+                inlineData: {
+                    mimeType: 'image/jpeg',
+                    data: base64Match[1], // Just the base64 string without the data URI prefix
+                },
+            }
+        })
     }
 }

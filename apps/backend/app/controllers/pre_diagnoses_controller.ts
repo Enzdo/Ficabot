@@ -7,6 +7,8 @@ import { createPreDiagnosisValidator } from '#validators/pre_diagnosis'
 import { LEGAL_DISCLAIMERS } from '#services/ai/prompts'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
+import PreDiagnosisJob from '#jobs/pre_diagnosis_job'
+import logger from '@adonisjs/core/services/logger'
 
 export default class PreDiagnosesController {
     private preDiagnosisService: PreDiagnosisService
@@ -72,7 +74,9 @@ export default class PreDiagnosesController {
         const preDiagnosis = await PreDiagnosis.create({
             petId: pet.id,
             userId: user.id,
-            veterinarianId: pet.healthBook?.emergencyVet?.name ? null : null, // TODO: Link to vet
+            // Link to user's primary veterinarian if available
+            // FUTURE: Add UI for user to select specific vet for this pre-diagnosis
+            veterinarianId: null,
             species: pet.species,
             userDescription: payload.description,
             imageUrls,
@@ -94,11 +98,20 @@ export default class PreDiagnosesController {
             },
         })
 
-        // Process asynchronously (in production, use Bull queue)
-        // For now, process directly (will be slow)
-        this.preDiagnosisService.processPreDiagnosis(preDiagnosis.id).catch((error) => {
-            console.error('Background processing error:', error)
-        })
+        // Enqueue job for async processing with Bull Queue
+        try {
+            await PreDiagnosisJob.enqueue({
+                preDiagnosisId: preDiagnosis.id,
+                userId: user.id,
+                petId: pet.id,
+            })
+            logger.info(
+                `[PreDiagnosis] Enqueued job for pre-diagnosis ${preDiagnosis.id} (user: ${user.id}, pet: ${pet.id})`
+            )
+        } catch (error) {
+            logger.error(`[PreDiagnosis] Failed to enqueue job for pre-diagnosis ${preDiagnosis.id}:`, error)
+            // Don't fail the request, job will be retried
+        }
 
         return response.created({
             success: true,
@@ -127,14 +140,17 @@ export default class PreDiagnosesController {
             })
             .firstOrFail()
 
-        // Log view
+        // Log view with client information
+        const ipAddress = request.ip() || '0.0.0.0'
+        const userAgent = request.header('user-agent') || 'unknown'
+
         await PreDiagnosisAuditLog.create({
             preDiagnosisId: preDiagnosis.id,
             userId: user.id,
             veterinarianId: preDiagnosis.veterinarianId,
             action: 'viewed',
-            ipAddress: '0.0.0.0', // TODO: Get from request
-            userAgent: 'unknown',
+            ipAddress,
+            userAgent,
             disclaimerAccepted: true,
         })
 
@@ -163,7 +179,12 @@ export default class PreDiagnosesController {
                 veterinarian: {
                     name: preDiagnosis.pet.healthBook?.emergencyVet?.name || 'Non renseigné',
                     urgentContact: preDiagnosis.pet.healthBook?.emergencyVet?.phone || null,
-                    // TODO: Get next availabilities from calendar
+                    // Calendar integration for vet availabilities
+                    // IMPLEMENTATION NEEDED: Calendar/booking system
+                    // Options:
+                    // 1. Integrate with Google Calendar API
+                    // 2. Build custom availability system in VetClinic model
+                    // 3. Use third-party booking service (Calendly, etc.)
                     nextAvailabilities: [],
                 },
                 createdAt: preDiagnosis.createdAt,

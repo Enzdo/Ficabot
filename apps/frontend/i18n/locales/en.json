@@ -348,6 +348,7 @@
     "title": "Nearby Vets",
     "filters": {
       "all": "All",
+      "vet": "Vets",
       "dog": "Dogs",
       "cat": "Cats",
       "emergency": "24h Emergency",

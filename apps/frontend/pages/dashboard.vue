@@ -62,64 +62,36 @@
       </NuxtLink>
     </div>
 
-    <!-- Quick Actions - horizontal scroll on mobile -->
+    <!-- Quick Actions - Additional services only -->
     <div>
       <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">{{ $t('dashboard.quick_access') }}</h2>
-      <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-4 hide-scrollbar">
-        <NuxtLink to="/pets" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
-          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-primary-200 group-hover:bg-primary-50 group-hover:scale-105 transition-all duration-200">
-            🐕
-          </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-primary-600">{{ $t('nav.pets') }}</span>
-        </NuxtLink>
-        
-        <NuxtLink to="/chat" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
-          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-purple-200 group-hover:bg-purple-50 group-hover:scale-105 transition-all duration-200">
-            💬
-          </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-purple-600">{{ $t('nav.chat') }}</span>
-        </NuxtLink>
-        
-        <NuxtLink to="/reminders" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
-          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-amber-200 group-hover:bg-amber-50 group-hover:scale-105 transition-all duration-200">
-            🔔
-          </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-amber-600">{{ $t('nav.reminders') }}</span>
-        </NuxtLink>
-        
-        <NuxtLink to="/appointments" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
-          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-green-200 group-hover:bg-green-50 group-hover:scale-105 transition-all duration-200">
-            📅
-          </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-green-600">{{ $t('nav.appointments') }}</span>
-        </NuxtLink>
-        
-        <NuxtLink to="/vets" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
+      <div class="grid grid-cols-4 gap-4">
+        <NuxtLink to="/vets" class="flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-red-200 group-hover:bg-red-50 group-hover:scale-105 transition-all duration-200">
             🗺️
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-red-600">{{ $t('nav.vets') }}</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-red-600 text-center">{{ $t('nav.vets') }}</span>
         </NuxtLink>
-        
-        <NuxtLink to="/shopping" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
+
+        <NuxtLink to="/shopping" class="flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-cyan-200 group-hover:bg-cyan-50 group-hover:scale-105 transition-all duration-200">
             🛒
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-cyan-600">{{ $t('nav.shopping') }}</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-cyan-600 text-center">{{ $t('nav.shopping') }}</span>
         </NuxtLink>
-        
-        <NuxtLink to="/expenses" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
+
+        <NuxtLink to="/expenses" class="flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-emerald-200 group-hover:bg-emerald-50 group-hover:scale-105 transition-all duration-200">
             💰
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-emerald-600">{{ $t('nav.expenses') }}</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-emerald-600 text-center">{{ $t('nav.expenses') }}</span>
         </NuxtLink>
-        
-        <NuxtLink to="/badges" class="flex-shrink-0 w-24 flex flex-col items-center gap-2 group">
+
+        <NuxtLink to="/badges" class="flex flex-col items-center gap-2 group">
           <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:scale-105 transition-all duration-200">
             🏆
           </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-orange-600">{{ $t('nav.badges') }}</span>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-orange-600 text-center">{{ $t('nav.badges') }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -185,27 +157,28 @@ definePageMeta({
 
 const petsStore = usePetsStore()
 const router = useRouter()
-const { startTour, hasCompletedOnboarding } = useOnboarding()
+const { startTour, hasCompletedOnboarding, endTour } = useOnboarding()
 
 const upcomingReminders = ref(0)
 const upcomingAppointments = ref(0)
 const conversations = ref(0)
+let onboardingTimeout: ReturnType<typeof setTimeout> | null = null
 
 const fetchStats = async () => {
   const api = useApi()
-  
+
   // Fetch reminders count
   const remindersRes = await api.get<any[]>('/reminders?upcoming=true')
   if (remindersRes.success && remindersRes.data) {
     upcomingReminders.value = remindersRes.data.length
   }
-  
+
   // Fetch appointments count
   const appointmentsRes = await api.get<any[]>('/appointments?status=scheduled')
   if (appointmentsRes.success && appointmentsRes.data) {
     upcomingAppointments.value = appointmentsRes.data.length
   }
-  
+
   // Fetch conversations count
   const conversationsRes = await api.get<any[]>('/chat/conversations')
   if (conversationsRes.success && conversationsRes.data) {
@@ -217,9 +190,9 @@ onMounted(async () => {
   await petsStore.fetchPets()
   await fetchStats()
 
-  // Start onboarding tour for new users
+  // Start onboarding tour for new users (only once)
   if (!hasCompletedOnboarding()) {
-    setTimeout(() => {
+    onboardingTimeout = setTimeout(() => {
       startTour({
         id: 'dashboard-tour',
         steps: [
@@ -239,6 +212,7 @@ onMounted(async () => {
             action: {
               label: 'Ajouter mon premier animal →',
               onClick: () => {
+                endTour() // Complete onboarding before navigation
                 router.push('/pets')
               }
             }
@@ -252,6 +226,7 @@ onMounted(async () => {
             action: {
               label: 'Essayer l\'assistant →',
               onClick: () => {
+                endTour() // Complete onboarding before navigation
                 router.push('/chat')
               }
             }
@@ -266,6 +241,14 @@ onMounted(async () => {
         ]
       })
     }, 800) // Wait for page to fully render
+  }
+})
+
+onUnmounted(() => {
+  // Clear onboarding timeout if component unmounts before it fires
+  if (onboardingTimeout) {
+    clearTimeout(onboardingTimeout)
+    onboardingTimeout = null
   }
 })
 </script>

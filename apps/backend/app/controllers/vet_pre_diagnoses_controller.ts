@@ -2,9 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import PreDiagnosis from '#models/pre_diagnosis'
 import Veterinarian from '#models/veterinarian'
 import VetNotification from '#models/vet_notification'
+import UserNotification from '#models/user_notification'
 import { DateTime } from 'luxon'
 import OpenAI from 'openai'
 import env from '#start/env'
+import logger from '@adonisjs/core/services/logger'
 
 export default class VetPreDiagnosesController {
     private openai: OpenAI
@@ -97,7 +99,23 @@ export default class VetPreDiagnosesController {
         preDiagnosis.veterinarianResponseAt = DateTime.now()
         await preDiagnosis.save()
 
-        // TODO: Notify pet owner
+        // Load pet info for notification
+        await preDiagnosis.load('pet')
+
+        // Create real-time notification for pet owner
+        await UserNotification.create({
+            userId: preDiagnosis.userId,
+            type: 'vet_response',
+            title: `Réponse du Dr. ${vet.name}`,
+            message: `Votre vétérinaire a répondu concernant ${preDiagnosis.pet.name}`,
+            relatedEntityType: 'pre_diagnosis',
+            relatedEntityId: preDiagnosis.id,
+            isRead: false,
+        })
+
+        logger.info(
+            `[VetResponse] Veterinarian ${vet.id} responded to pre-diagnosis ${preDiagnosis.id} - Real-time notification sent to user ${preDiagnosis.userId}`
+        )
 
         return response.ok({
             success: true,

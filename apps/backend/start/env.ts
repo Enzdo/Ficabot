@@ -54,4 +54,28 @@ export default await Env.create(appRoot, {
   |--------------------------------------------------------------------------
   */
   ENCRYPTION_KEY: Env.schema.string(),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Mail (SMTP)
+  |--------------------------------------------------------------------------
+  */
+  SMTP_HOST: Env.schema.string.optional(),
+  SMTP_PORT: Env.schema.number.optional(),
+  SMTP_USERNAME: Env.schema.string.optional(),
+  SMTP_PASSWORD: Env.schema.string.optional(),
+  SMTP_SECURE: Env.schema.boolean.optional(),
+  SMTP_REJECT_UNAUTHORIZED: Env.schema.boolean.optional(),
+  MAIL_FROM_ADDRESS: Env.schema.string.optional(),
+  MAIL_FROM_NAME: Env.schema.string.optional(),
+  VET_FRONTEND_URL: Env.schema.string.optional(),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Redis (for Bull Queue)
+  |--------------------------------------------------------------------------
+  */
+  REDIS_HOST: Env.schema.string.optional(),
+  REDIS_PORT: Env.schema.number.optional(),
+  REDIS_PASSWORD: Env.schema.string.optional(),
 })

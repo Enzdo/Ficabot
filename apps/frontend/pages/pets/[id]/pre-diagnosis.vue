@@ -8,14 +8,39 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </NuxtLink>
-        <div class="min-w-0">
-          <h1 class="font-bold text-gray-900 text-lg leading-tight truncate">Pré-Diagnostic IA</h1>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 mb-1">
+            <h1 class="font-bold text-gray-900 text-lg leading-tight truncate">Pré-Diagnostic IA</h1>
+            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full shrink-0">3 IA</span>
+          </div>
           <p class="text-xs text-gray-500 font-medium truncate" v-if="pet">{{ pet.name }}</p>
         </div>
       </div>
     </div>
 
     <div class="p-4 space-y-6 max-w-2xl mx-auto">
+      <!-- Feature Explanation -->
+      <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl p-5">
+        <div class="flex items-start gap-3">
+          <div class="text-2xl shrink-0">🔬</div>
+          <div>
+            <h3 class="font-bold text-indigo-900 mb-2">Pré-Diagnostic Complet par 3 IA</h3>
+            <div class="text-sm text-indigo-800 space-y-2">
+              <p>Cette analyse utilise <strong>3 intelligences artificielles</strong> (Claude, GPT-4, Gemini) qui analysent vos photos et symptômes en parallèle pour créer un <strong>consensus médical</strong>.</p>
+              <ul class="list-disc list-inside space-y-1 ml-2 mt-2">
+                <li>Consensus de 3 modèles IA pour plus de fiabilité</li>
+                <li>Analyse de 1 à 5 photos + description détaillée</li>
+                <li>Évaluation du niveau d'urgence</li>
+                <li>Hypothèses de diagnostics possibles</li>
+              </ul>
+              <p class="mt-2 text-xs bg-indigo-100 rounded px-2 py-1 inline-block">
+                💡 Pour une analyse rapide d'une seule photo, utilisez "Analyse Photo Rapide"
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Disclaimer -->
       <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-5">
         <div class="flex items-start gap-3">

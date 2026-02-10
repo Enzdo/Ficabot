@@ -21,6 +21,8 @@ const FeedingLogsController = () => import('#controllers/feeding_logs_controller
 const SymptomLogsController = () => import('#controllers/symptom_logs_controller')
 const PetPhotosController = () => import('#controllers/pet_photos_controller')
 const PetOwnersController = () => import('#controllers/pet_owners_controller')
+const HealthController = () => import('#controllers/health_controller')
+const UserNotificationsController = () => import('#controllers/user_notifications_controller')
 
 router.get('/', async () => {
   return {
@@ -30,9 +32,16 @@ router.get('/', async () => {
   }
 })
 
+// Health check endpoints (for monitoring/k8s)
+router.get('/health', [HealthController, 'index'])
+router.get('/health/detailed', [HealthController, 'detailed'])
+router.get('/health/ready', [HealthController, 'ready'])
+router.get('/health/live', [HealthController, 'live'])
+
 router.group(() => {
   router.post('/register', [AuthController, 'register'])
   router.post('/login', [AuthController, 'login'])
+  router.get('/verify-email/:token', [AuthController, 'verifyEmail'])
 
   router.group(() => {
     router.get('/me', [AuthController, 'me'])
@@ -40,8 +49,19 @@ router.group(() => {
     router.put('/email', [AuthController, 'updateEmail'])
     router.put('/password', [AuthController, 'updatePassword'])
     router.post('/logout', [AuthController, 'logout'])
+    router.post('/resend-verification', [AuthController, 'resendVerification'])
   }).use(middleware.auth())
 }).prefix('/auth')
+
+// User Notifications (Real-time)
+router.group(() => {
+  router.get('/stream', [UserNotificationsController, 'stream']) // SSE endpoint
+  router.get('/unread-count', [UserNotificationsController, 'unreadCount'])
+  router.get('/', [UserNotificationsController, 'index'])
+  router.put('/:id/read', [UserNotificationsController, 'markAsRead'])
+  router.put('/mark-all-read', [UserNotificationsController, 'markAllAsRead'])
+  router.delete('/:id', [UserNotificationsController, 'destroy'])
+}).prefix('/user/notifications').use(middleware.auth())
 
 router.group(() => {
   router.get('/', [PetsController, 'index'])
@@ -297,7 +317,18 @@ router.group(() => {
   router.post('/pre-diagnoses/:id/ai-chat', [VetPreDiagnosesController, 'aiChat'])
   router.get('/notifications', [VetPreDiagnosesController, 'notifications'])
   router.patch('/notifications/:id/read', [VetPreDiagnosesController, 'markNotificationRead'])
-}).prefix('/vet/auth').use(middleware.vetAuth())
+}).prefix('/vet').use(middleware.vetAuth())
+
+// Vet Notifications (Real-time)
+const NotificationsController = () => import('#controllers/notifications_controller')
+router.group(() => {
+  router.get('/stream', [NotificationsController, 'stream']) // SSE endpoint
+  router.get('/unread-count', [NotificationsController, 'unreadCount'])
+  router.get('/', [NotificationsController, 'index'])
+  router.put('/:id/read', [NotificationsController, 'markAsRead'])
+  router.put('/mark-all-read', [NotificationsController, 'markAllAsRead'])
+  router.delete('/:id', [NotificationsController, 'destroy'])
+}).prefix('/notifications').use(middleware.vetAuth())
 
 // Vet Patients Management
 router.group(() => {
