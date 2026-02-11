@@ -69,3 +69,4 @@ services:
     region: frankfurt
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList: [] # Allow access only from Render services (internal)
