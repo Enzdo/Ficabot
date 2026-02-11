@@ -1,0 +1,71 @@
+services:
+  # Backend API (AdonisJS)
+  - type: web
+    name: ficabot-backend
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd apps/backend && pnpm install && pnpm build
+    startCommand: cd apps/backend && pnpm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3333
+      - key: HOST
+        value: 0.0.0.0
+      - key: TZ
+        value: UTC
+      - key: LOG_LEVEL
+        value: info
+      - key: APP_KEY
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_SSL
+        value: true
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: ficabot-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: ficabot-redis
+          property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: ficabot-redis
+          property: connectionString
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_AI_API_KEY
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: VET_FRONTEND_URL
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        value: noreply@ficabot.com
+      - key: MAIL_FROM_NAME
+        value: Ficabot
+    healthCheckPath: /
+
+  # Redis for Bull Queue
+  - type: redis
+    name: ficabot-redis
+    region: frankfurt
+    plan: free
+    maxmemoryPolicy: noeviction
