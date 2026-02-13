@@ -5,7 +5,7 @@
   "type": "module",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "HOST=0.0.0.0 node build/bin/server.js",
+    "start": "node build/bin/console.js migration:run --force && HOST=0.0.0.0 node build/bin/server.js",
     "build": "pnpm --filter @ficabot/shared build && node ace build --ignore-ts-errors",
     "dev": "node ace serve --hmr",
     "worker": "node --loader ts-node/esm bin/worker.ts",
