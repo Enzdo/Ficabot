@@ -4,7 +4,7 @@ import vine from '@vinejs/vine'
 
 const createReminderValidator = vine.compile(
   vine.object({
-    petId: vine.number(),
+    petId: vine.number().nullable().optional(),
     type: vine.enum(['vaccine', 'antiparasitic', 'weighing', 'appointment', 'custom']),
     title: vine.string().trim().minLength(1),
     description: vine.string().trim().optional(),
