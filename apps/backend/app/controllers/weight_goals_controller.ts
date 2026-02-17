@@ -67,7 +67,7 @@ export default class WeightGoalsController {
 
     const data = request.only([
       'startWeight', 'targetWeight', 'targetDate', 'goalType',
-      'vetNotes', 'dietPlan', 'exercisePlan', 'dailyCalories',
+      'ownerNotes', 'dietPlan', 'exercisePlan', 'dailyCalories',
       'foodType', 'foodQuantity'
     ])
 
@@ -79,7 +79,7 @@ export default class WeightGoalsController {
       startDate: DateTime.now(),
       targetDate: data.targetDate ? DateTime.fromISO(data.targetDate) : null,
       goalType: data.goalType || 'lose',
-      vetNotes: data.vetNotes,
+      ownerNotes: data.ownerNotes,
       dietPlan: data.dietPlan,
       exercisePlan: data.exercisePlan,
       dailyCalories: data.dailyCalories,
@@ -104,11 +104,37 @@ export default class WeightGoalsController {
     }
 
     const data = request.only([
-      'targetWeight', 'targetDate', 'vetNotes', 'dietPlan',
+      'targetWeight', 'targetDate', 'ownerNotes', 'dietPlan',
       'exercisePlan', 'dailyCalories', 'foodType', 'foodQuantity'
     ])
 
+    // Owner cannot modify vetNotes - only vet routes can
     goal.merge(data)
+    await goal.save()
+
+    return response.ok({ success: true, data: goal })
+  }
+
+  /**
+   * Update vet notes on a diet program (vet-only route via vetToken)
+   */
+  async updateVetNotes({ params, request, response }: HttpContext) {
+    const pet = await Pet.query().where('vetToken', params.token).first()
+    if (!pet) {
+      return response.notFound({ success: false, message: 'Patient non trouvé ou accès révoqué' })
+    }
+
+    const goal = await WeightGoal.query()
+      .where('pet_id', pet.id)
+      .where('is_active', true)
+      .first()
+
+    if (!goal) {
+      return response.notFound({ success: false, message: 'Aucun programme actif' })
+    }
+
+    const { vetNotes } = request.only(['vetNotes'])
+    goal.vetNotes = vetNotes
     await goal.save()
 
     return response.ok({ success: true, data: goal })

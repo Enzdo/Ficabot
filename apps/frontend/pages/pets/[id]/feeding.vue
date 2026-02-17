@@ -44,21 +44,24 @@
             </p>
           </div>
         </div>
+        <button @click="startEdit(log)" class="p-2 text-gray-400 hover:bg-gray-50 rounded-lg shrink-0">
+          ✏️
+        </button>
         <button @click="deleteLog(log.id)" class="p-2 text-red-400 hover:bg-red-50 rounded-lg shrink-0">
           ✕
         </button>
       </div>
     </div>
 
-    <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="showAddModal = false">
+    <!-- Add/Edit Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end justify-center" @click.self="closeModal">
       <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-12 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">Ajouter un repas</h2>
-          <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
+          <h2 class="text-xl font-bold text-gray-900">{{ editingId ? 'Modifier le repas' : 'Ajouter un repas' }}</h2>
+          <button @click="closeModal" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
-        <form @submit.prevent="createLog" class="space-y-4">
+        <form @submit.prevent="editingId ? updateLog() : createLog()" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Type de nourriture</label>
             <div class="grid grid-cols-3 gap-2">
@@ -103,7 +106,7 @@
           </div>
 
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold">
-            Enregistrer
+            {{ editingId ? 'Sauvegarder' : 'Enregistrer' }}
           </button>
         </form>
       </div>
@@ -121,6 +124,7 @@ const petsStore = usePetsStore()
 
 const feedingLogs = ref<any[]>([])
 const showAddModal = ref(false)
+const editingId = ref<number | null>(null)
 
 const petId = computed(() => route.params.id as string)
 
@@ -174,13 +178,40 @@ const fetchLogs = async () => {
   }
 }
 
+const startEdit = (log: any) => {
+  editingId.value = log.id
+  form.foodType = log.foodType
+  form.brand = log.brand || ''
+  form.quantity = log.quantity || null
+  form.unit = log.unit || 'g'
+  form.fedAt = new Date(log.fedAt).toISOString().split('T')[0]
+  showAddModal.value = true
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  editingId.value = null
+  form.brand = ''
+  form.quantity = null
+  form.foodType = 'dry'
+  form.unit = 'g'
+}
+
 const createLog = async () => {
   const api = useApi()
   const response = await api.post(`/pets/${petId.value}/feeding`, form)
   if (response.success) {
-    showAddModal.value = false
-    form.brand = ''
-    form.quantity = null
+    closeModal()
+    await fetchLogs()
+  }
+}
+
+const updateLog = async () => {
+  if (!editingId.value) return
+  const api = useApi()
+  const response = await api.put(`/pets/${petId.value}/feeding/${editingId.value}`, form)
+  if (response.success) {
+    closeModal()
     await fetchLogs()
   }
 }

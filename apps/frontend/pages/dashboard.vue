@@ -62,6 +62,41 @@
       </NuxtLink>
     </div>
 
+    <!-- Health Summary per Pet -->
+    <div v-if="petsStore.pets.length > 0 && petHealthData.length > 0">
+      <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">Santé de vos animaux</h2>
+      <div class="space-y-3">
+        <NuxtLink
+          v-for="health in petHealthData"
+          :key="health.petId"
+          :to="`/pets/${health.petId}`"
+          class="block bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all"
+        >
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-xl shrink-0 overflow-hidden">
+              <img v-if="health.avatarUrl" :src="health.avatarUrl" class="w-full h-full object-cover" :alt="health.name">
+              <span v-else>{{ health.species === 'dog' ? '🐕' : '🐱' }}</span>
+            </div>
+            <h3 class="font-bold text-gray-900">{{ health.name }}</h3>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-amber-50 rounded-xl p-2">
+              <p class="text-lg font-bold text-amber-700">{{ health.upcomingReminders }}</p>
+              <p class="text-[10px] text-amber-600 font-medium">Rappels</p>
+            </div>
+            <div class="bg-red-50 rounded-xl p-2">
+              <p class="text-lg font-bold text-red-700">{{ health.activeSymptoms }}</p>
+              <p class="text-[10px] text-red-600 font-medium">Symptômes actifs</p>
+            </div>
+            <div class="bg-green-50 rounded-xl p-2">
+              <p class="text-lg font-bold text-green-700">{{ health.nextAppointment || '-' }}</p>
+              <p class="text-[10px] text-green-600 font-medium">Prochain RDV</p>
+            </div>
+          </div>
+        </NuxtLink>
+      </div>
+    </div>
+
     <!-- Quick Actions - Additional services only -->
     <div>
       <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">{{ $t('dashboard.quick_access') }}</h2>
@@ -162,7 +197,55 @@ const { startTour, hasCompletedOnboarding, endTour } = useOnboarding()
 const upcomingReminders = ref(0)
 const upcomingAppointments = ref(0)
 const conversations = ref(0)
+const petHealthData = ref<any[]>([])
 let onboardingTimeout: ReturnType<typeof setTimeout> | null = null
+
+const fetchPetHealthData = async () => {
+  const api = useApi()
+  const pets = petsStore.pets
+  if (pets.length === 0) return
+
+  const today = new Date().toISOString().split('T')[0]
+
+  // Fetch all reminders and appointments once
+  const [remindersRes, appointmentsRes] = await Promise.all([
+    api.get<any[]>('/reminders?upcoming=true'),
+    api.get<any[]>('/appointments?status=scheduled'),
+  ])
+
+  const allReminders = remindersRes.success && remindersRes.data ? remindersRes.data : []
+  const allAppointments = appointmentsRes.success && appointmentsRes.data ? appointmentsRes.data : []
+
+  // Fetch symptoms per pet in parallel
+  const symptomResults = await Promise.all(
+    pets.map(pet => api.get<any[]>(`/pets/${pet.id}/symptoms`))
+  )
+
+  petHealthData.value = pets.map((pet, index) => {
+    const petReminders = allReminders.filter((r: any) => r.petId === pet.id)
+    const petSymptoms = symptomResults[index]?.success && symptomResults[index]?.data
+      ? symptomResults[index].data!.filter((s: any) => !s.isResolved)
+      : []
+    const petAppointments = allAppointments
+      .filter((a: any) => a.petId === pet.id && a.appointmentDate >= today)
+      .sort((a: any, b: any) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
+
+    const nextApt = petAppointments[0]
+    const nextAppointment = nextApt
+      ? new Date(nextApt.appointmentDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+      : null
+
+    return {
+      petId: pet.id,
+      name: pet.name,
+      species: pet.species,
+      avatarUrl: pet.avatarUrl,
+      upcomingReminders: petReminders.length,
+      activeSymptoms: petSymptoms.length,
+      nextAppointment,
+    }
+  })
+}
 
 const fetchStats = async () => {
   const api = useApi()
@@ -188,7 +271,7 @@ const fetchStats = async () => {
 
 onMounted(async () => {
   await petsStore.fetchPets()
-  await fetchStats()
+  await Promise.all([fetchStats(), fetchPetHealthData()])
 
   // Start onboarding tour for new users (only once)
   if (!hasCompletedOnboarding()) {

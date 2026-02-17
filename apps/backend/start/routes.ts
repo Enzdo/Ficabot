@@ -156,6 +156,7 @@ router.group(() => {
   // Feeding logs
   router.get('/:petId/feeding', [FeedingLogsController, 'index'])
   router.post('/:petId/feeding', [FeedingLogsController, 'store'])
+  router.put('/:petId/feeding/:id', [FeedingLogsController, 'update'])
   router.delete('/:petId/feeding/:id', [FeedingLogsController, 'destroy'])
 
   // Symptom logs
@@ -337,6 +338,7 @@ router.group(() => {
   router.get('/:token', [VetPatientsController, 'show'])
   router.get('/:token/health-book', [VetPatientsController, 'healthBook'])
   router.post('/:token/notes', [VetPatientsController, 'addNote'])
+  router.put('/:token/diet/vet-notes', [WeightGoalsController, 'updateVetNotes'])
 }).prefix('/vet/patients').use(middleware.vetAuth())
 
 // Vet Clients Management (User-Veterinarian links)

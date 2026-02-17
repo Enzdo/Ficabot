@@ -105,8 +105,8 @@
         </form>
       </div>
 
-      <!-- Diet Plan -->
-      <div v-if="goal.dietPlan || goal.exercisePlan || goal.vetNotes" class="space-y-4 mb-6">
+      <!-- Diet Plan & Notes -->
+      <div v-if="goal.dietPlan || goal.exercisePlan || goal.vetNotes || goal.ownerNotes" class="space-y-4 mb-6">
         <div v-if="goal.dietPlan" class="bg-amber-50 rounded-2xl p-4 border border-amber-100">
           <h3 class="font-bold text-amber-900 mb-2">🍖 Plan alimentaire</h3>
           <p class="text-amber-800 text-sm whitespace-pre-line">{{ goal.dietPlan }}</p>
@@ -123,8 +123,16 @@
         </div>
 
         <div v-if="goal.vetNotes" class="bg-purple-50 rounded-2xl p-4 border border-purple-100">
-          <h3 class="font-bold text-purple-900 mb-2">🏥 Notes du vétérinaire</h3>
+          <div class="flex items-center gap-2 mb-2">
+            <h3 class="font-bold text-purple-900">🏥 Notes du vétérinaire</h3>
+            <span class="text-[10px] bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full font-bold">Lecture seule</span>
+          </div>
           <p class="text-purple-800 text-sm whitespace-pre-line">{{ goal.vetNotes }}</p>
+        </div>
+
+        <div v-if="goal.ownerNotes" class="bg-teal-50 rounded-2xl p-4 border border-teal-100">
+          <h3 class="font-bold text-teal-900 mb-2">📝 Mes notes</h3>
+          <p class="text-teal-800 text-sm whitespace-pre-line">{{ goal.ownerNotes }}</p>
         </div>
       </div>
 
@@ -171,8 +179,8 @@
             <textarea v-model="newGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Ex: 30 min de promenade 2x/jour..."></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes du vétérinaire</label>
-            <textarea v-model="newGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Conseils du véto..."></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mes notes</label>
+            <textarea v-model="newGoal.ownerNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Vos observations, objectifs personnels..."></textarea>
           </div>
           <div class="grid grid-cols-2 gap-3">
             <div>
@@ -213,8 +221,8 @@
             <textarea v-model="editGoal.exercisePlan" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Notes du vétérinaire</label>
-            <textarea v-model="editGoal.vetNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Mes notes</label>
+            <textarea v-model="editGoal.ownerNotes" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" placeholder="Vos observations, objectifs personnels..."></textarea>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
             {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
@@ -245,7 +253,7 @@ const newGoal = reactive({
   targetDate: '',
   dietPlan: '',
   exercisePlan: '',
-  vetNotes: '',
+  ownerNotes: '',
   foodType: '',
   foodQuantity: null as number | null,
 })
@@ -254,7 +262,7 @@ const editGoal = reactive({
   targetWeight: 0,
   dietPlan: '',
   exercisePlan: '',
-  vetNotes: '',
+  ownerNotes: '',
 })
 
 const formatDate = (date: string) => {
@@ -289,7 +297,7 @@ const fetchData = async () => {
     editGoal.targetWeight = goalRes.data.targetWeight
     editGoal.dietPlan = goalRes.data.dietPlan || ''
     editGoal.exercisePlan = goalRes.data.exercisePlan || ''
-    editGoal.vetNotes = goalRes.data.vetNotes || ''
+    editGoal.ownerNotes = goalRes.data.ownerNotes || ''
   }
   
   loading.value = false

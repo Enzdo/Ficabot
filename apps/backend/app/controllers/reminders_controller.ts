@@ -87,6 +87,11 @@ export default class RemindersController {
       return response.notFound({ success: false, message: 'Rappel non trouvé' })
     }
 
+    // Prevent duplicate completion (double-click / race condition)
+    if (reminder.isCompleted) {
+      return response.ok({ success: true, data: reminder })
+    }
+
     reminder.isCompleted = true
     await reminder.save()
 

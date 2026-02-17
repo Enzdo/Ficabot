@@ -108,6 +108,7 @@ definePageMeta({
 const authStore = useAuthStore()
 const router = useRouter()
 const api = useApi()
+const toast = useToast()
 
 const form = reactive({
   email: '',
@@ -134,6 +135,7 @@ const handleRegister = async () => {
 
   if (response.success && response.data) {
     authStore.setAuth(response.data)
+    toast.success('Compte créé avec succès ! Bienvenue 👋')
     router.push('/dashboard')
   } else {
     error.value = response.message || 'Erreur lors de la création du compte'

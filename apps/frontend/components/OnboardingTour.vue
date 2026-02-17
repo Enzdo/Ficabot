@@ -3,8 +3,8 @@
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="isActive" class="fixed inset-0 z-[200]">
-        <!-- Dark overlay - softer on mobile -->
-        <div class="absolute inset-0 bg-black/60 sm:bg-black/70 backdrop-blur-sm" @click="skipTour" />
+        <!-- Click overlay to skip tour (transparent - the spotlight box-shadow handles darkening) -->
+        <div class="absolute inset-0" @click="skipTour" />
 
         <!-- Spotlight effect on target element -->
         <div

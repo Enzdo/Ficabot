@@ -51,6 +51,30 @@ export default class FeedingLogsController {
     return response.created({ success: true, data: log })
   }
 
+  async update({ auth, params, request, response }: HttpContext) {
+    const user = auth.user!
+    const pet = await Pet.query().where('id', params.petId).where('userId', user.id).first()
+
+    if (!pet) {
+      return response.notFound({ success: false, message: 'Animal non trouvé' })
+    }
+
+    const log = await FeedingLog.query()
+      .where('id', params.id)
+      .where('petId', pet.id)
+      .first()
+
+    if (!log) {
+      return response.notFound({ success: false, message: 'Entrée non trouvée' })
+    }
+
+    const data = request.only(['foodType', 'brand', 'productName', 'quantity', 'unit', 'fedAt', 'fedTime', 'notes'])
+    log.merge(data)
+    await log.save()
+
+    return response.ok({ success: true, data: log })
+  }
+
   async destroy({ auth, params, response }: HttpContext) {
     const user = auth.user!
     const pet = await Pet.query().where('id', params.petId).where('userId', user.id).first()

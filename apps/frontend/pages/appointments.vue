@@ -102,17 +102,40 @@
             </div>
           </div>
 
+          <!-- Vet selection: dropdown of user's vets + manual entry -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.vet_name') }}</label>
-            <input type="text" v-model="form.vetName" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.vet_placeholder')">
+            <select
+              v-if="userVets.length > 0"
+              v-model="selectedVetId"
+              @change="onVetSelected"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base mb-2"
+            >
+              <option :value="null">Saisir manuellement...</option>
+              <option v-for="vet in userVets" :key="vet.id" :value="vet.id">
+                {{ vet.veterinarian?.clinicName || `Dr. ${vet.veterinarian?.firstName} ${vet.veterinarian?.lastName}` }}
+              </option>
+            </select>
+            <input
+              v-if="!selectedVetId"
+              type="text"
+              v-model="form.vetName"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"
+              :placeholder="$t('appointments.form.vet_placeholder')"
+            >
+            <p v-else class="text-sm text-primary-600 font-medium px-1">{{ form.vetName }}</p>
           </div>
 
-          <div>
+          <div v-if="!selectedVetId">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.address') }}</label>
             <input type="text" v-model="form.vetAddress" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.address_placeholder')">
           </div>
+          <div v-else class="bg-gray-50 rounded-xl p-3 text-sm text-gray-600">
+            <p v-if="form.vetAddress">📍 {{ form.vetAddress }}</p>
+            <p v-if="form.vetPhone">📞 {{ form.vetPhone }}</p>
+          </div>
 
-          <div>
+          <div v-if="!selectedVetId">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.phone') }}</label>
             <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.phone_placeholder')">
           </div>
@@ -142,6 +165,8 @@ const petsStore = usePetsStore()
 const showAddModal = ref(false)
 const loading = ref(false)
 const appointments = ref<any[]>([])
+const userVets = ref<any[]>([])
+const selectedVetId = ref<number | null>(null)
 
 const form = reactive({
   title: '',
@@ -167,6 +192,30 @@ const pastAppointments = computed(() =>
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString(locale.value, { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+const fetchUserVets = async () => {
+  const api = useApi()
+  const response = await api.get<any[]>('/user/veterinarians')
+  if (response.success && response.data) {
+    userVets.value = response.data
+  }
+}
+
+const onVetSelected = () => {
+  if (selectedVetId.value) {
+    const vet = userVets.value.find(v => v.id === selectedVetId.value)
+    if (vet?.veterinarian) {
+      const v = vet.veterinarian
+      form.vetName = v.clinicName || `Dr. ${v.firstName} ${v.lastName}`
+      form.vetAddress = v.address || ''
+      form.vetPhone = v.phone || ''
+    }
+  } else {
+    form.vetName = ''
+    form.vetAddress = ''
+    form.vetPhone = ''
+  }
 }
 
 const fetchAppointments = async () => {
@@ -203,7 +252,10 @@ const cancelAppointment = async (id: number) => {
 }
 
 onMounted(async () => {
-  await petsStore.fetchPets()
-  await fetchAppointments()
+  await Promise.all([
+    petsStore.fetchPets(),
+    fetchAppointments(),
+    fetchUserVets(),
+  ])
 })
 </script>

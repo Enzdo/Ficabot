@@ -56,21 +56,24 @@
           </div>
           <div class="text-right shrink-0">
             <p class="text-lg font-bold text-gray-900">{{ parseFloat(expense.amount).toFixed(2) }}€</p>
-            <button @click="deleteExpense(expense.id)" class="text-red-400 text-sm mt-1">{{ $t('expenses.delete') }}</button>
+            <div class="flex items-center gap-2 mt-1 justify-end">
+              <button @click="startEdit(expense)" class="text-gray-400 text-sm">{{ $t('common.edit') }}</button>
+              <button @click="deleteExpense(expense.id)" class="text-red-400 text-sm">{{ $t('expenses.delete') }}</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
+    <!-- Add/Edit Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="closeModal">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">{{ $t('expenses.form.title') }}</h2>
-          <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
+          <h2 class="text-xl font-bold text-gray-900">{{ editingId ? $t('common.edit') : $t('expenses.form.title') }}</h2>
+          <button @click="closeModal" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
-        <form @submit.prevent="addExpense" class="space-y-4">
+        <form @submit.prevent="editingId ? updateExpense() : addExpense()" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('expenses.form.label') }}</label>
             <input type="text" v-model="newExpense.title" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('expenses.form.label_placeholder')">
@@ -107,7 +110,7 @@
             <textarea v-model="newExpense.description" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base"></textarea>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? $t('expenses.form.submitting') : $t('expenses.form.submit') }}
+            {{ saving ? $t('expenses.form.submitting') : (editingId ? $t('common.save') : $t('expenses.form.submit')) }}
           </button>
         </form>
       </div>
@@ -136,6 +139,8 @@ const categories = computed(() => [
   { value: 'insurance', label: t('expenses.categories.insurance'), icon: '📄' },
   { value: 'other', label: t('expenses.categories.other'), icon: '📦' },
 ])
+
+const editingId = ref<number | null>(null)
 
 const newExpense = reactive({
   title: '',
@@ -177,16 +182,44 @@ const fetchExpenses = async () => {
   loading.value = false
 }
 
+const startEdit = (expense: any) => {
+  editingId.value = expense.id
+  newExpense.title = expense.title
+  newExpense.amount = parseFloat(expense.amount)
+  newExpense.expenseDate = new Date(expense.expenseDate).toISOString().split('T')[0]
+  newExpense.category = expense.category
+  newExpense.petId = expense.petId || null
+  newExpense.description = expense.description || ''
+  showAddModal.value = true
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  editingId.value = null
+  newExpense.title = ''
+  newExpense.amount = 0
+  newExpense.description = ''
+}
+
 const addExpense = async () => {
   saving.value = true
   const api = useApi()
   const response = await api.post('/expenses', newExpense)
   if (response.success) {
     await fetchExpenses()
-    showAddModal.value = false
-    newExpense.title = ''
-    newExpense.amount = 0
-    newExpense.description = ''
+    closeModal()
+  }
+  saving.value = false
+}
+
+const updateExpense = async () => {
+  if (!editingId.value) return
+  saving.value = true
+  const api = useApi()
+  const response = await api.put(`/expenses/${editingId.value}`, newExpense)
+  if (response.success) {
+    await fetchExpenses()
+    closeModal()
   }
   saving.value = false
 }

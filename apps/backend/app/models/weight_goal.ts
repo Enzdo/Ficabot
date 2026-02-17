@@ -32,6 +32,9 @@ export default class WeightGoal extends BaseModel {
   declare vetNotes: string | null
 
   @column()
+  declare ownerNotes: string | null
+
+  @column()
   declare dietPlan: string | null
 
   @column()

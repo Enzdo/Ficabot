@@ -110,8 +110,8 @@
         </NuxtLink>
         <NuxtLink to="/pets" class="group flex flex-col items-center justify-center flex-1 h-full text-surface-400 hover:text-primary-600 transition-colors relative" active-class="text-primary-600">
           <div class="absolute -top-[1px] left-0 right-0 h-[2px] bg-primary-500 scale-x-0 group-[.router-link-active]:scale-x-50 transition-transform duration-300"></div>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 mb-1 transition-transform group-[.router-link-active]:-translate-y-0.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1 transition-transform group-[.router-link-active]:-translate-y-0.5">
+            <path d="M8.5 3.5c1.1 0 2 1.1 2 2.5S9.6 8.5 8.5 8.5 6.5 7.4 6.5 6s.9-2.5 2-2.5zm7 0c1.1 0 2 1.1 2 2.5s-.9 2.5-2 2.5-2-1.1-2-2.5.9-2.5 2-2.5zM5 8.5c1.1 0 2 1.1 2 2.5s-.9 2.5-2 2.5-2-1.1-2-2.5S3.9 8.5 5 8.5zm14 0c1.1 0 2 1.1 2 2.5s-.9 2.5-2 2.5-2-1.1-2-2.5.9-2.5 2-2.5zm-7 3c2.5 0 4.5 1.8 4.5 4 0 1.5-.7 2.8-1.8 3.7-.7.6-1.2 1.4-1.2 2.3 0 .3-.2.5-.5.5h-2c-.3 0-.5-.2-.5-.5 0-.9-.5-1.7-1.2-2.3C8.2 18.3 7.5 17 7.5 15.5c0-2.2 2-4 4.5-4z"/>
           </svg>
           <span class="text-[10px] font-semibold">{{ $t('nav.pets') }}</span>
         </NuxtLink>

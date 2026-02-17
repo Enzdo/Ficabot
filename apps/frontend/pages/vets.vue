@@ -404,20 +404,31 @@ const locateMe = async () => {
 
 const searchCity = async () => {
   if (!searchQuery.value.trim()) return
-  
+
   loading.value = true
   try {
     const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.value + ', France')}`)
     const data = await response.json()
-    
+
     if (data && data.length > 0) {
       const city = data[0]
       const lat = parseFloat(city.lat)
       const lng = parseFloat(city.lon)
-      
+
+      // Calculate radius from bounding box if available, otherwise use 10km
+      let cityRadius = 10000
+      if (city.boundingbox) {
+        const [south, north, west, east] = city.boundingbox.map(Number)
+        const latDist = calculateDistance(south, lng, north, lng)
+        const lngDist = calculateDistance(lat, west, lat, east)
+        cityRadius = Math.max(latDist, lngDist) * 1000 / 2
+        cityRadius = Math.max(cityRadius, 5000) // minimum 5km
+        cityRadius = Math.min(cityRadius, 25000) // maximum 25km
+      }
+
       userLocation.value = { lat, lng }
-      updateMapToLocation(lat, lng, false) // false means it's a search center, not necessarily "user" location
-      await searchServices()
+      updateMapToLocation(lat, lng, false)
+      await searchServices(false, cityRadius)
     } else {
       alert('Ville non trouvée')
     }
@@ -450,15 +461,15 @@ const updateMapToLocation = async (lat: number, lng: number, isUser: boolean) =>
   }
 }
 
-const searchServices = async (forceRadius = false) => {
+const searchServices = async (forceRadius = false, customRadius?: number) => {
   loading.value = true
-  
+
   const lat = userLocation.value?.lat || 48.8566
   const lng = userLocation.value?.lng || 2.3522
-  
-  // Radius: 5km initially, or what's visible on map
-  const radius = forceRadius ? 15000 : 5000
-  
+
+  // Radius: custom (from city search), 15km (forced retry), or 10km default
+  const radius = customRadius || (forceRadius ? 20000 : 10000)
+
   // Try cache first
   const cached = getCached(lat, lng, radius)
   if (cached) {
@@ -466,29 +477,22 @@ const searchServices = async (forceRadius = false) => {
     loading.value = false
     await updateMarkers()
     return
-  } 
-  
+  }
+
   const overpassQuery = `
-    [out:json][timeout:25];
+    [out:json][timeout:30][maxsize:10000000];
     (
-      // Vets
       node["amenity"="veterinary"](around:${radius},${lat},${lng});
       way["amenity"="veterinary"](around:${radius},${lat},${lng});
-      
-      // Parks & Dog Parks
       node["leisure"="dog_park"](around:${radius},${lat},${lng});
       way["leisure"="dog_park"](around:${radius},${lat},${lng});
       node["dog"="yes"](around:${radius},${lat},${lng});
-      
-      // Pet Stores
       node["shop"="pet"](around:${radius},${lat},${lng});
       way["shop"="pet"](around:${radius},${lat},${lng});
-      
-      // Groomers
       node["shop"="pet_grooming"](around:${radius},${lat},${lng});
       way["shop"="pet_grooming"](around:${radius},${lat},${lng});
     );
-    out body center;
+    out body center qt;
   `
   
   try {

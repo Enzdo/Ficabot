@@ -52,6 +52,9 @@
             {{ item.quantity }}{{ item.unit ? ` ${item.unit}` : '' }} • {{ getCategoryLabel(item.category) }}
           </p>
         </div>
+        <button @click="startEdit(item)" class="p-2 text-gray-400 hover:bg-gray-50 rounded-lg">
+          ✏️
+        </button>
         <button @click="deleteItem(item.id)" class="p-2 text-red-400 hover:bg-red-50 rounded-lg">
           🗑️
         </button>
@@ -65,15 +68,15 @@
       </button>
     </div>
 
-    <!-- Add Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="showAddModal = false">
+    <!-- Add/Edit Modal -->
+    <div v-if="showAddModal" class="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center" @click.self="closeModal">
       <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-xl">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-xl font-bold text-gray-900">{{ $t('shopping.form.title') }}</h2>
-          <button @click="showAddModal = false" class="bg-gray-100 p-2 rounded-full">✕</button>
+          <h2 class="text-xl font-bold text-gray-900">{{ editingId ? $t('common.edit') : $t('shopping.form.title') }}</h2>
+          <button @click="closeModal" class="bg-gray-100 p-2 rounded-full">✕</button>
         </div>
 
-        <form @submit.prevent="addItem" class="space-y-4">
+        <form @submit.prevent="editingId ? updateItem() : addItem()" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('shopping.form.name') }}</label>
             <input type="text" v-model="newItem.name" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('shopping.form.name_placeholder')">
@@ -97,7 +100,7 @@
             </select>
           </div>
           <button type="submit" class="w-full bg-primary-600 text-white py-3 rounded-xl font-bold" :disabled="saving">
-            {{ saving ? $t('shopping.form.submitting') : $t('shopping.form.submit') }}
+            {{ saving ? $t('shopping.form.submitting') : (editingId ? $t('common.save') : $t('shopping.form.submit')) }}
           </button>
         </form>
       </div>
@@ -125,6 +128,8 @@ const categories = computed(() => [
   { value: 'health', label: t('shopping.categories.health'), icon: '💊' },
   { value: 'other', label: t('shopping.categories.other'), icon: '📦' },
 ])
+
+const editingId = ref<number | null>(null)
 
 const newItem = reactive({
   name: '',
@@ -160,11 +165,37 @@ const addItem = async () => {
   const response = await api.post('/shopping', newItem)
   if (response.success) {
     await fetchItems()
-    showAddModal.value = false
-    newItem.name = ''
-    newItem.quantity = 1
-    newItem.unit = ''
-    newItem.category = 'food'
+    closeModal()
+  }
+  saving.value = false
+}
+
+const startEdit = (item: any) => {
+  editingId.value = item.id
+  newItem.name = item.name
+  newItem.quantity = item.quantity || 1
+  newItem.unit = item.unit || ''
+  newItem.category = item.category || 'food'
+  showAddModal.value = true
+}
+
+const closeModal = () => {
+  showAddModal.value = false
+  editingId.value = null
+  newItem.name = ''
+  newItem.quantity = 1
+  newItem.unit = ''
+  newItem.category = 'food'
+}
+
+const updateItem = async () => {
+  if (!editingId.value) return
+  saving.value = true
+  const api = useApi()
+  const response = await api.put(`/shopping/${editingId.value}`, newItem)
+  if (response.success) {
+    closeModal()
+    await fetchItems()
   }
   saving.value = false
 }

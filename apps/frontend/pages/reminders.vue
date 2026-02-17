@@ -26,6 +26,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <p class="font-medium text-gray-900 truncate">{{ reminder.title }}</p>
+                <p v-if="reminder.description" class="text-xs text-gray-600 truncate">{{ reminder.description }}</p>
                 <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || $t('chat.general') }}</p>
               </div>
             </div>
@@ -47,20 +48,36 @@
         <button @click="showAddModal = true" class="mt-4 text-primary-600 font-medium">{{ $t('reminders.create_reminder') }}</button>
       </div>
 
-      <!-- Completed Reminders -->
-      <div v-if="completedReminders.length > 0" class="mt-8">
-        <h2 class="font-bold text-gray-400 mb-3">{{ $t('reminders.completed') }}</h2>
-        <div class="space-y-2 opacity-60">
-          <div 
-            v-for="reminder in completedReminders" 
-            :key="reminder.id"
-            class="bg-gray-50 rounded-xl p-4 flex items-center justify-between line-through"
+      <!-- Completed Reminders (History) -->
+      <div v-if="allCompletedReminders.length > 0" class="mt-8">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-gray-400">{{ $t('reminders.completed') }} ({{ allCompletedReminders.length }})</h2>
+          <button
+            v-if="allCompletedReminders.length > 5"
+            @click="showAllCompleted = !showAllCompleted"
+            class="text-primary-600 text-sm font-medium"
           >
-            <div>
-              <p class="font-medium text-gray-500">{{ reminder.title }}</p>
-              <p class="text-xs text-gray-400">{{ formatDate(reminder.dueDate) }}</p>
+            {{ showAllCompleted ? 'Voir moins' : 'Voir tout' }}
+          </button>
+        </div>
+        <div class="space-y-2">
+          <div
+            v-for="reminder in completedReminders"
+            :key="reminder.id"
+            class="bg-gray-50 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors"
+            @click="viewReminderDetails(reminder)"
+          >
+            <div class="flex items-center gap-3 flex-1 min-w-0 mr-3">
+              <div :class="getReminderIcon(reminder.type).bg" class="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 opacity-60">
+                {{ getReminderIcon(reminder.type).icon }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-500 truncate line-through">{{ reminder.title }}</p>
+                <p v-if="reminder.description" class="text-xs text-gray-400 truncate">{{ reminder.description }}</p>
+                <p class="text-xs text-gray-400">{{ formatDate(reminder.dueDate) }} • {{ reminder.pet?.name || $t('chat.general') }}</p>
+              </div>
             </div>
-            <button @click="deleteReminder(reminder.id)" class="p-2 text-gray-400 hover:text-red-500">
+            <button @click.stop="deleteReminder(reminder.id)" class="p-2 text-gray-400 hover:text-red-500 shrink-0">
               ✕
             </button>
           </div>
@@ -104,6 +121,11 @@
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.date') }} *</label>
             <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.description') || 'Description' }}</label>
+            <textarea v-model="form.description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('reminders.form.description_placeholder') || 'Notes ou détails supplémentaires...'"></textarea>
           </div>
 
           <div class="flex items-center gap-3">
@@ -167,6 +189,11 @@
             <input type="date" v-model="form.dueDate" required class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base">
           </div>
 
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('reminders.form.description') || 'Description' }}</label>
+            <textarea v-model="form.description" rows="3" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('reminders.form.description_placeholder') || 'Notes ou détails supplémentaires...'"></textarea>
+          </div>
+
           <div class="flex items-center gap-3">
             <input type="checkbox" v-model="form.isRecurring" id="edit-recurring" class="w-5 h-5 rounded">
             <label for="edit-recurring" class="text-sm text-gray-700">{{ $t('reminders.form.recurring') }}</label>
@@ -218,6 +245,11 @@
                 <span class="font-medium">{{ $t(`reminders.form.intervals.${selectedReminder.recurrenceInterval}`) }}</span>
               </div>
             </div>
+
+            <div v-if="selectedReminder.description" class="bg-gray-50 rounded-xl p-4">
+              <p class="text-sm text-gray-600 font-medium mb-1">{{ $t('reminders.form.description') || 'Description' }}</p>
+              <p class="text-gray-900 text-sm whitespace-pre-wrap">{{ selectedReminder.description }}</p>
+            </div>
           </div>
 
           <div class="flex gap-3 pt-4">
@@ -244,6 +276,7 @@ const petsStore = usePetsStore()
 
 const showAddModal = ref(false)
 const showDetailsModal = ref(false)
+const showAllCompleted = ref(false)
 const selectedReminder = ref<any>(null)
 const isEditing = ref(false)
 const loading = ref(false)
@@ -252,6 +285,7 @@ const reminders = ref<any[]>([])
 const form = reactive({
   type: 'vaccine',
   title: '',
+  description: '',
   petId: null as number | null,
   dueDate: new Date().toISOString().split('T')[0],
   isRecurring: false,
@@ -262,8 +296,12 @@ const upcomingReminders = computed(() =>
   reminders.value.filter(r => !r.isCompleted).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
 )
 
-const completedReminders = computed(() => 
-  reminders.value.filter(r => r.isCompleted).slice(0, 5)
+const allCompletedReminders = computed(() =>
+  reminders.value.filter(r => r.isCompleted).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+)
+
+const completedReminders = computed(() =>
+  showAllCompleted.value ? allCompletedReminders.value : allCompletedReminders.value.slice(0, 5)
 )
 
 const getReminderIcon = (type: string) => {
@@ -303,6 +341,7 @@ const createReminder = async () => {
   if (response.success) {
     showAddModal.value = false
     form.title = ''
+    form.description = ''
     form.petId = null
     await fetchReminders()
   }
@@ -325,6 +364,7 @@ const startEditing = () => {
   if (selectedReminder.value) {
     form.type = selectedReminder.value.type
     form.title = selectedReminder.value.title
+    form.description = selectedReminder.value.description || ''
     form.petId = selectedReminder.value.petId
     form.dueDate = new Date(selectedReminder.value.dueDate).toISOString().split('T')[0]
     form.isRecurring = selectedReminder.value.isRecurring || false
@@ -345,10 +385,18 @@ const updateReminder = async () => {
   loading.value = false
 }
 
+const completingIds = ref(new Set<number>())
+
 const completeReminder = async (id: number) => {
-  const api = useApi()
-  await api.put(`/reminders/${id}/complete`, {})
-  await fetchReminders()
+  if (completingIds.value.has(id)) return
+  completingIds.value.add(id)
+  try {
+    const api = useApi()
+    await api.put(`/reminders/${id}/complete`, {})
+    await fetchReminders()
+  } finally {
+    completingIds.value.delete(id)
+  }
 }
 
 const deleteReminder = async (id: number) => {
