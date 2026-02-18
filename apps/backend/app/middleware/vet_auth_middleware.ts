@@ -4,7 +4,7 @@ import type { NextFn } from '@adonisjs/core/types/http'
 export default class VetAuthMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     try {
-      await ctx.auth.use('vet').authenticate()
+      await ctx.auth.authenticateUsing(['vet'])
       return next()
     } catch (error) {
       console.error('Vet Auth Error:', error)

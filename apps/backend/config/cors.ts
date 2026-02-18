@@ -8,7 +8,7 @@ import { defineConfig } from '@adonisjs/cors'
  */
 const corsConfig = defineConfig({
   enabled: true,
-  origin: ['https://ficabot-frontend-dl9y.vercel.app', 'http://localhost:3000'],
+  origin: ['https://ficabot-frontend-dl9y.vercel.app', 'http://localhost:3000', 'http://localhost:3001'],
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
   headers: true,
   exposeHeaders: [],
