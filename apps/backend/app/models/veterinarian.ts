@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column, manyToMany, belongsTo, beforeSave } from '@adonisjs/lucid/orm'
+import { BaseModel, column, manyToMany, belongsTo } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import type { ManyToMany, BelongsTo } from '@adonisjs/lucid/types/relations'
@@ -78,12 +78,7 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
 
   static accessTokens = DbAccessTokensProvider.forModel(Veterinarian, {
     type: 'vetAccessTokens',
+    table: 'vet_access_tokens',
   })
 
-  @beforeSave()
-  static async hashPassword(vet: Veterinarian | any) {
-    if (vet.$dirty.password) {
-      vet.password = await hash.make(vet.password)
-    }
-  }
 }
