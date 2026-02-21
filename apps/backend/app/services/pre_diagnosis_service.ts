@@ -5,30 +5,20 @@ import PreDiagnosisAuditLog from '#models/pre_diagnosis_audit_log'
 import UserNotification from '#models/user_notification'
 import Pet from '#models/pet'
 import ClaudeService from './ai/claude_service.js'
-import OpenAIService from './ai/openai_service.js'
-import GeminiService from './ai/gemini_service.js'
-import SynthesisService from './ai/synthesis_service.js'
 import VetNotificationService from './vet_notification_service.js'
 import { DateTime } from 'luxon'
 import type { AIAnalysisContext } from '@ficabot/shared'
 import logger from '@adonisjs/core/services/logger'
-import env from '#start/env'
 
 export default class PreDiagnosisService {
     private claudeService: ClaudeService
-    private openaiService: OpenAIService
-    private geminiService: GeminiService
-    private synthesisService: SynthesisService
 
     constructor() {
         this.claudeService = new ClaudeService()
-        this.openaiService = new OpenAIService()
-        this.geminiService = new GeminiService()
-        this.synthesisService = new SynthesisService()
     }
 
     /**
-     * Main orchestration method - processes a pre-diagnosis through all AI models
+     * Main orchestration method - processes a pre-diagnosis with Claude
      */
     async processPreDiagnosis(preDiagnosisId: string): Promise<void> {
         const preDiagnosis = await PreDiagnosis.findOrFail(preDiagnosisId)
@@ -41,69 +31,46 @@ export default class PreDiagnosisService {
             // Build enriched context
             const context = await this.buildContext(preDiagnosis)
 
-            // Check if Gemini API key is available and valid
-            const geminiApiKey = env.get('GOOGLE_AI_API_KEY')
-            const isGeminiAvailable = geminiApiKey && geminiApiKey !== 'PLACEHOLDER' && geminiApiKey.length > 10
-
-            // Call AI models in parallel with timeout handling
-            // Gemini is included only if API key is available
-            const aiCalls: Promise<AIAnalysisResponse>[] = [
-                this.callWithTimeout(() => this.claudeService.analyze(context), 'claude'),
-                this.callWithTimeout(() => this.openaiService.analyze(context), 'gpt'),
-            ]
-
-            const modelNames: ('claude' | 'gpt' | 'gemini')[] = ['claude', 'gpt']
-
-            if (isGeminiAvailable) {
-                aiCalls.push(this.callWithTimeout(() => this.geminiService.analyze(context), 'gemini'))
-                modelNames.push('gemini')
-                logger.info('Gemini API is available - using 3 AI models for consensus')
-            } else {
-                logger.warn('Gemini API key not configured - using 2 AI models only')
+            // Call Claude with timeout
+            let claudeResult: any
+            try {
+                claudeResult = await this.callWithTimeout(
+                    () => this.claudeService.analyze(context),
+                    'claude'
+                )
+                await this.saveAIResponse(preDiagnosisId, 'claude', claudeResult, 'success')
+                await this.logAudit(preDiagnosis, 'ai_analyzed', { model: 'claude', success: true })
+            } catch (error: any) {
+                await this.saveAIResponse(preDiagnosisId, 'claude', null, 'failed', error?.message)
+                await this.logAudit(preDiagnosis, 'ai_analyzed', { model: 'claude', success: false, error: error?.message })
+                throw new Error('Claude analysis failed: ' + error?.message)
             }
 
-            const aiResults = await Promise.allSettled(aiCalls)
+            // Map Claude response directly to synthesis format
+            const urgentSigns = (claudeResult.urgentSigns || []).map((sign: string) => ({
+                sign,
+                severity: 'high' as const,
+                action: 'Consultez un vétérinaire dès que possible',
+            }))
 
-            // Save AI responses
-            const savedResponses: AIResponse[] = []
-            for (let i = 0; i < aiResults.length; i++) {
-                const result = aiResults[i]
-                const model = modelNames[i]
+            const prioritizedHypotheses = (claudeResult.hypotheses || []).map((h: any) => ({
+                hypothesis: h.condition,
+                confidence: h.likelihood,
+                mentionedBy: ['claude'],
+                explanation: h.reasoning,
+                visualEvidence: h.visualClues || [],
+            }))
 
-                if (result.status === 'fulfilled') {
-                    const aiResponse = await this.saveAIResponse(
-                        preDiagnosisId,
-                        model,
-                        result.value,
-                        'success'
-                    )
-                    savedResponses.push(aiResponse)
+            const overallUrgency = urgentSigns.length >= 2 ? 'high' : urgentSigns.length === 1 ? 'medium' : 'low'
 
-                    // Log successful analysis
-                    await this.logAudit(preDiagnosis, 'ai_analyzed', {
-                        model,
-                        success: true,
-                    })
-                } else {
-                    // Save failed response
-                    await this.saveAIResponse(preDiagnosisId, model, null, 'failed', result.reason?.message)
-
-                    // Log failed analysis
-                    await this.logAudit(preDiagnosis, 'ai_analyzed', {
-                        model,
-                        success: false,
-                        error: result.reason?.message,
-                    })
-                }
+            const synthesis = {
+                prioritizedHypotheses,
+                urgentSigns,
+                generalRecommendations: claudeResult.recommendations || [],
+                userFriendlySummary: claudeResult.notes || 'Analyse complétée par l\'IA Claude.',
+                disclaimer: 'IMPORTANT: Cette analyse est une aide préliminaire basée sur les informations fournies. Elle ne remplace EN AUCUN CAS l\'examen d\'un vétérinaire qualifié. En cas de doute ou d\'aggravation, consultez immédiatement un professionnel.',
+                overallUrgency,
             }
-
-            // Require at least 1 successful response
-            if (savedResponses.length === 0) {
-                throw new Error('All AI models failed to analyze')
-            }
-
-            // Synthesize results
-            const synthesis = await this.synthesisService.synthesize(savedResponses)
 
             // Save synthesis result
             await SynthesisResult.create({
