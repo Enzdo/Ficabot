@@ -72,7 +72,8 @@
     "luxon": "^3.4.4",
     "openai": "^4.104.0",
     "pg": "^8.11.3",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "resend": "^6.9.2"
   },
   "hotHook": {
     "boundaries": [
