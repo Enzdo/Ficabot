@@ -3,6 +3,13 @@ import Veterinarian from '#models/veterinarian'
 import VetClinic from '#models/vet_clinic'
 import { vetRegisterValidator, vetLoginValidator, vetUpdateProfileValidator } from '#validators/vet_auth'
 import { DateTime } from 'luxon'
+import { randomBytes } from 'node:crypto'
+import mail from '@adonisjs/mail/services/main'
+import logger from '@adonisjs/core/services/logger'
+import env from '#start/env'
+import WelcomeVetNotification from '#mails/welcome_vet_notification'
+import PasswordResetVetNotification from '#mails/password_reset_vet_notification'
+import PasswordChangedVetNotification from '#mails/password_changed_vet_notification'
 
 export default class VetAuthController {
   async register({ request, response }: HttpContext) {
@@ -63,6 +70,11 @@ export default class VetAuthController {
     if (clinicId) {
       await vet.load('clinic')
     }
+
+    // Send welcome email (async, don't block response)
+    mail.send(new WelcomeVetNotification(vet)).catch((error) => {
+      logger.error('Failed to send vet welcome email:', error)
+    })
 
     return response.created({
       success: true,
@@ -187,9 +199,86 @@ export default class VetAuthController {
     vet.password = newPassword
     await vet.save()
 
+    // Send confirmation email (async)
+    mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
+      logger.error('Failed to send vet password changed email:', error)
+    })
+
     return response.ok({
       success: true,
       message: 'Mot de passe modifié avec succès',
+    })
+  }
+
+  async forgotPassword({ request, response }: HttpContext) {
+    const { email } = request.only(['email'])
+
+    const vet = await Veterinarian.findBy('email', email)
+
+    // Always return success to avoid email enumeration
+    if (!vet) {
+      return response.ok({
+        success: true,
+        message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
+      })
+    }
+
+    vet.resetToken = randomBytes(32).toString('hex')
+    vet.resetTokenExpiresAt = DateTime.now().plus({ hours: 1 })
+    await vet.save()
+
+    const frontendUrl = env.get('VET_FRONTEND_URL') || 'http://localhost:3001'
+    const resetUrl = `${frontendUrl}/reset-password/${vet.resetToken}`
+
+    mail.send(new PasswordResetVetNotification(vet, resetUrl)).catch((error) => {
+      logger.error('Failed to send vet password reset email:', error)
+    })
+
+    logger.info(`Vet password reset email requested for ${vet.email}`)
+
+    return response.ok({
+      success: true,
+      message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
+    })
+  }
+
+  async resetPassword({ request, response }: HttpContext) {
+    const { token, password } = request.only(['token', 'password'])
+
+    const vet = await Veterinarian.query()
+      .where('resetToken', token)
+      .whereNotNull('resetToken')
+      .first()
+
+    if (!vet) {
+      return response.badRequest({
+        success: false,
+        message: 'Lien de réinitialisation invalide ou expiré.',
+      })
+    }
+
+    if (vet.resetTokenExpiresAt && vet.resetTokenExpiresAt < DateTime.now()) {
+      return response.badRequest({
+        success: false,
+        message: 'Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.',
+        code: 'TOKEN_EXPIRED',
+      })
+    }
+
+    vet.password = password
+    vet.resetToken = null
+    vet.resetTokenExpiresAt = null
+    await vet.save()
+
+    mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
+      logger.error('Failed to send vet password changed email:', error)
+    })
+
+    logger.info(`Vet password reset successfully for ${vet.email}`)
+
+    return response.ok({
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.',
     })
   }
 

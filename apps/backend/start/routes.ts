@@ -301,6 +301,8 @@ const VetPatientsController = () => import('#controllers/vet_patients_controller
 router.group(() => {
   router.post('/register', [VetAuthController, 'register'])
   router.post('/login', [VetAuthController, 'login'])
+  router.post('/forgot-password', [VetAuthController, 'forgotPassword'])
+  router.post('/reset-password', [VetAuthController, 'resetPassword'])
 }).prefix('/vet/auth')
 
 // Vet Protected Routes

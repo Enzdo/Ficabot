@@ -59,6 +59,12 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column.dateTime()
   declare verificationRequestedAt: DateTime | null
 
+  @column({ serializeAs: null })
+  declare resetToken: string | null
+
+  @column.dateTime({ serializeAs: null })
+  declare resetTokenExpiresAt: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
