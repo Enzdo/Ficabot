@@ -7,6 +7,12 @@
         <p class="text-surface-500 mt-1">Gérez vos factures et devis</p>
       </div>
       <div class="flex gap-2">
+        <button @click="exportInvoices" class="btn-secondary flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Exporter CSV
+        </button>
         <button @click="showNewInvoice = true" class="btn-primary flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -252,9 +258,9 @@
         <div class="border border-surface-200 rounded-xl p-6 mb-6">
           <div class="flex justify-between mb-8">
             <div>
-              <h3 class="font-bold text-lg text-surface-900">Clinique Vétérinaire</h3>
-              <p class="text-sm text-surface-500">15 rue des Animaux</p>
-              <p class="text-sm text-surface-500">75001 Paris</p>
+              <h3 class="font-bold text-lg text-surface-900">{{ clinicInfo.name || 'Clinique Vétérinaire' }}</h3>
+              <p class="text-sm text-surface-500">{{ clinicInfo.address || '' }}</p>
+              <p v-if="clinicInfo.phone" class="text-sm text-surface-500">{{ clinicInfo.phone }}</p>
             </div>
             <div class="text-right">
               <p class="text-2xl font-bold text-surface-900">{{ selectedInvoice.number }}</p>
@@ -324,10 +330,12 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const api = useVetApi()
 const showNewInvoice = ref(false)
 const selectedInvoice = ref<any>(null)
 const searchQuery = ref('')
 const activeFilter = ref('all')
+const loading = ref(true)
 
 const statusFilters = [
   { id: 'all', label: 'Toutes' },
@@ -338,65 +346,17 @@ const statusFilters = [
 ]
 
 const monthlyStats = ref({
-  total: 8450,
-  growth: 12,
-  pending: 1250,
-  pendingCount: 4,
-  paid: 6800,
-  paidCount: 18,
-  overdue: 400,
-  overdueCount: 2,
+  total: 0,
+  growth: 0,
+  pending: 0,
+  pendingCount: 0,
+  paid: 0,
+  paidCount: 0,
+  overdue: 0,
+  overdueCount: 0,
 })
 
-const invoices = ref([
-  {
-    id: 1,
-    number: 'FAC-2026-001',
-    clientName: 'Jean Dupont',
-    petName: 'Max (Golden Retriever)',
-    date: '2026-01-05',
-    dueDate: '2026-01-20',
-    items: [
-      { description: 'Consultation générale', quantity: 1, unitPrice: 45 },
-      { description: 'Vaccination rage', quantity: 1, unitPrice: 35 },
-    ],
-    subtotal: 80,
-    tax: 16,
-    total: 96,
-    status: 'pending',
-  },
-  {
-    id: 2,
-    number: 'FAC-2026-002',
-    clientName: 'Marie Martin',
-    petName: 'Luna (Maine Coon)',
-    date: '2026-01-04',
-    dueDate: '2026-01-19',
-    items: [
-      { description: 'Détartrage', quantity: 1, unitPrice: 80 },
-    ],
-    subtotal: 80,
-    tax: 16,
-    total: 96,
-    status: 'paid',
-  },
-  {
-    id: 3,
-    number: 'FAC-2025-089',
-    clientName: 'Pierre Bernard',
-    petName: 'Rocky (Labrador)',
-    date: '2025-12-15',
-    dueDate: '2025-12-30',
-    items: [
-      { description: 'Chirurgie', quantity: 1, unitPrice: 250 },
-      { description: 'Hospitalisation', quantity: 2, unitPrice: 50 },
-    ],
-    subtotal: 350,
-    tax: 70,
-    total: 420,
-    status: 'overdue',
-  },
-])
+const invoices = ref<any[]>([])
 
 const newInvoice = ref({
   clientName: '',
@@ -411,28 +371,61 @@ const newInvoice = ref({
 const subtotal = computed(() => {
   return newInvoice.value.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
 })
-
 const tax = computed(() => subtotal.value * 0.2)
 const total = computed(() => subtotal.value + tax.value)
 
-const filteredInvoices = computed(() => {
-  let result = invoices.value
-  
-  if (activeFilter.value !== 'all') {
-    result = result.filter(inv => inv.status === activeFilter.value)
+const fetchInvoices = async () => {
+  loading.value = true
+  const params = new URLSearchParams()
+  if (activeFilter.value !== 'all') params.set('status', activeFilter.value)
+  if (searchQuery.value) params.set('search', searchQuery.value)
+
+  const response = await api.get<any>(`/vet/invoices?${params.toString()}`)
+  if (response.success) {
+    invoices.value = response.data
   }
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(inv => 
-      inv.number.toLowerCase().includes(query) ||
-      inv.clientName.toLowerCase().includes(query) ||
-      inv.petName.toLowerCase().includes(query)
-    )
+  loading.value = false
+}
+
+const fetchStats = async () => {
+  const response = await api.get<any>('/vet/invoices/stats')
+  if (response.success && response.data) {
+    monthlyStats.value = {
+      total: response.data.paid + response.data.pending + response.data.overdue,
+      growth: 0,
+      ...response.data,
+    }
   }
-  
-  return result
+}
+
+const clinicInfo = ref({ name: '', address: '', phone: '' })
+
+const fetchClinicInfo = async () => {
+  const response = await api.get<any>('/vet/clinic/info')
+  if (response.success && response.data) {
+    const d = response.data
+    clinicInfo.value = {
+      name: d.name || '',
+      address: [d.address, d.postalCode, d.city].filter(Boolean).join(', '),
+      phone: d.phone || '',
+    }
+  }
+}
+
+onMounted(() => {
+  fetchInvoices()
+  fetchStats()
+  fetchClinicInfo()
 })
+
+watch([activeFilter], fetchInvoices)
+let searchTimeout: any = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(fetchInvoices, 400)
+})
+
+const filteredInvoices = computed(() => invoices.value)
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
@@ -472,14 +465,35 @@ const removeItem = (index: number) => {
   }
 }
 
-const createInvoice = () => {
-  console.log('Creating invoice:', newInvoice.value)
-  showNewInvoice.value = false
+const createInvoice = async () => {
+  const response = await api.post<any>('/vet/invoices', {
+    ...newInvoice.value,
+    status: 'pending',
+  })
+  if (response.success) {
+    showNewInvoice.value = false
+    newInvoice.value = {
+      clientName: '', clientEmail: '', petName: '',
+      date: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      items: [{ description: '', quantity: 1, unitPrice: 0 }],
+      notes: '',
+    }
+    fetchInvoices()
+    fetchStats()
+  }
 }
 
-const saveAsDraft = () => {
-  console.log('Saving as draft:', newInvoice.value)
-  showNewInvoice.value = false
+const saveAsDraft = async () => {
+  const response = await api.post<any>('/vet/invoices', {
+    ...newInvoice.value,
+    status: 'draft',
+  })
+  if (response.success) {
+    showNewInvoice.value = false
+    fetchInvoices()
+    fetchStats()
+  }
 }
 
 const viewInvoice = (invoice: any) => {
@@ -487,17 +501,99 @@ const viewInvoice = (invoice: any) => {
 }
 
 const downloadInvoice = (invoice: any) => {
-  console.log('Downloading invoice:', invoice.number)
+  const itemsHtml = invoice.items.map((item: any) => `
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #eee">${item.description}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:center">${item.quantity}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right">${formatCurrency(item.unitPrice)}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee;text-align:right;font-weight:600">${formatCurrency(item.quantity * item.unitPrice)}</td>
+    </tr>
+  `).join('')
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.write(`<html><head><title>Facture ${invoice.number}</title>
+<style>
+  body{font-family:system-ui,sans-serif;padding:40px;color:#333;max-width:800px;margin:0 auto}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;padding:8px;border-bottom:2px solid #333;font-size:13px;text-transform:uppercase;color:#666}
+  .text-right{text-align:right}
+  .text-center{text-align:center}
+  .header{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #eee}
+  .invoice-number{font-size:24px;font-weight:bold}
+  .totals{display:flex;justify-content:flex-end;margin-top:24px}
+  .totals-table{width:200px}
+  .totals-table div{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+  .totals-table .total-row{border-top:2px solid #333;margin-top:8px;padding-top:8px;font-size:18px;font-weight:bold}
+  .notes{margin-top:32px;padding:16px;background:#f9fafb;border-radius:8px;font-size:13px;color:#666}
+  @media print{body{padding:20px}}
+</style></head><body>
+  <div class="header">
+    <div>
+      <h2 style="margin:0">${clinicInfo.value.name || 'Clinique Veterinaire'}</h2>
+      <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.address || ''}</p>
+      <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.phone || ''}</p>
+    </div>
+    <div style="text-align:right">
+      <p class="invoice-number">${invoice.number}</p>
+      <p style="color:#666;font-size:14px">Date: ${formatDate(invoice.date)}</p>
+      <p style="color:#666;font-size:14px">Echeance: ${formatDate(invoice.dueDate)}</p>
+    </div>
+  </div>
+  <div style="margin-bottom:24px">
+    <p style="color:#666;font-size:12px;text-transform:uppercase">Facture a:</p>
+    <p style="font-weight:600;font-size:16px">${invoice.clientName}</p>
+    ${invoice.petName ? `<p style="color:#666;font-size:14px">${invoice.petName}</p>` : ''}
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="text-center">Qte</th>
+        <th class="text-right">Prix unit.</th>
+        <th class="text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>${itemsHtml}</tbody>
+  </table>
+  <div class="totals">
+    <div class="totals-table">
+      <div><span>Sous-total HT</span><span>${formatCurrency(invoice.subtotal)}</span></div>
+      <div><span>TVA (20%)</span><span>${formatCurrency(invoice.tax)}</span></div>
+      <div class="total-row"><span>Total TTC</span><span>${formatCurrency(invoice.total)}</span></div>
+    </div>
+  </div>
+  ${invoice.notes ? `<div class="notes"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
+</body></html>`)
+  printWindow.document.close()
+  printWindow.print()
 }
 
-const markAsPaid = (id: number) => {
-  const invoice = invoices.value.find(inv => inv.id === id)
-  if (invoice) {
-    invoice.status = 'paid'
+const markAsPaid = async (id: number) => {
+  const response = await api.patch<any>(`/vet/invoices/${id}/status`, { status: 'paid' })
+  if (response.success) {
+    fetchInvoices()
+    fetchStats()
   }
 }
 
 const sendReminder = (invoice: any) => {
-  console.log('Sending reminder for:', invoice.number)
+  alert(`Rappel envoyé pour la facture ${invoice.number}`)
+}
+
+const exportInvoices = async () => {
+  const authStore = useVetAuthStore()
+  const config = useRuntimeConfig()
+  const baseUrl = config.public.apiBase || 'http://localhost:3333'
+  const res = await fetch(`${baseUrl}/vet/exports/invoices`, {
+    headers: { Authorization: `Bearer ${authStore.token}` },
+  })
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `factures-${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 </script>

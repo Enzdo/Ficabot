@@ -97,6 +97,25 @@
       </div>
     </div>
 
+    <!-- Vet Data Summary -->
+    <div v-if="vetSummary.prescriptions > 0 || vetSummary.pendingInvoices > 0 || vetSummary.reminders > 0">
+      <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">🏥 Données vétérinaires</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <NuxtLink to="/vet-prescriptions" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center hover:shadow-md transition-all">
+          <p class="text-2xl font-bold text-blue-600">{{ vetSummary.prescriptions }}</p>
+          <p class="text-xs text-gray-500 font-medium mt-1">Ordonnances</p>
+        </NuxtLink>
+        <NuxtLink to="/vet-invoices" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center hover:shadow-md transition-all">
+          <p class="text-2xl font-bold text-orange-600">{{ vetSummary.pendingInvoices }}</p>
+          <p class="text-xs text-gray-500 font-medium mt-1">Factures en attente</p>
+        </NuxtLink>
+        <NuxtLink to="/reminders" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center hover:shadow-md transition-all">
+          <p class="text-2xl font-bold text-green-600">{{ vetSummary.reminders }}</p>
+          <p class="text-xs text-gray-500 font-medium mt-1">Rappels véto</p>
+        </NuxtLink>
+      </div>
+    </div>
+
     <!-- Quick Actions - Additional services only -->
     <div>
       <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">{{ $t('dashboard.quick_access') }}</h2>
@@ -106,6 +125,13 @@
             🗺️
           </div>
           <span class="text-xs font-semibold text-gray-600 group-hover:text-red-600 text-center">{{ $t('nav.vets') }}</span>
+        </NuxtLink>
+
+        <NuxtLink to="/vet-prescriptions" class="flex flex-col items-center gap-2 group">
+          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-blue-200 group-hover:bg-blue-50 group-hover:scale-105 transition-all duration-200">
+            💊
+          </div>
+          <span class="text-xs font-semibold text-gray-600 group-hover:text-blue-600 text-center">Ordonnances</span>
         </NuxtLink>
 
         <NuxtLink to="/shopping" class="flex flex-col items-center gap-2 group">
@@ -120,13 +146,6 @@
             💰
           </div>
           <span class="text-xs font-semibold text-gray-600 group-hover:text-emerald-600 text-center">{{ $t('nav.expenses') }}</span>
-        </NuxtLink>
-
-        <NuxtLink to="/badges" class="flex flex-col items-center gap-2 group">
-          <div class="w-16 h-16 rounded-2xl bg-white border border-surface-200 shadow-sm flex items-center justify-center text-2xl group-hover:border-orange-200 group-hover:bg-orange-50 group-hover:scale-105 transition-all duration-200">
-            🏆
-          </div>
-          <span class="text-xs font-semibold text-gray-600 group-hover:text-orange-600 text-center">{{ $t('nav.badges') }}</span>
         </NuxtLink>
       </div>
     </div>
@@ -198,7 +217,26 @@ const upcomingReminders = ref(0)
 const upcomingAppointments = ref(0)
 const conversations = ref(0)
 const petHealthData = ref<any[]>([])
+const vetSummary = ref({ prescriptions: 0, pendingInvoices: 0, reminders: 0 })
 let onboardingTimeout: ReturnType<typeof setTimeout> | null = null
+
+const fetchVetSummary = async () => {
+  const api = useApi()
+  try {
+    const [prescRes, invRes, remRes] = await Promise.all([
+      api.get<any[]>('/user/vet-data/prescriptions'),
+      api.get<any[]>('/user/vet-data/invoices'),
+      api.get<any[]>('/user/vet-data/reminders'),
+    ])
+    vetSummary.value = {
+      prescriptions: prescRes.success && prescRes.data ? prescRes.data.length : 0,
+      pendingInvoices: invRes.success && invRes.data ? invRes.data.filter((i: any) => i.status === 'pending' || i.status === 'overdue').length : 0,
+      reminders: remRes.success && remRes.data ? remRes.data.length : 0,
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+}
 
 const fetchPetHealthData = async () => {
   const api = useApi()
@@ -271,7 +309,7 @@ const fetchStats = async () => {
 
 onMounted(async () => {
   await petsStore.fetchPets()
-  await Promise.all([fetchStats(), fetchPetHealthData()])
+  await Promise.all([fetchStats(), fetchPetHealthData(), fetchVetSummary()])
 
   // Start onboarding tour for new users (only once)
   if (!hasCompletedOnboarding()) {

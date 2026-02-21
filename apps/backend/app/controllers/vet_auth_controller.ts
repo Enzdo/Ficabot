@@ -169,4 +169,38 @@ export default class VetAuthController {
       message: 'Déconnexion réussie',
     })
   }
+
+  async changePassword({ request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    const { currentPassword, newPassword } = request.only(['currentPassword', 'newPassword'])
+
+    // Verify current password
+    try {
+      await Veterinarian.verifyCredentials(vet.email, currentPassword)
+    } catch {
+      return response.badRequest({
+        success: false,
+        message: 'Mot de passe actuel incorrect',
+      })
+    }
+
+    vet.password = newPassword
+    await vet.save()
+
+    return response.ok({
+      success: true,
+      message: 'Mot de passe modifié avec succès',
+    })
+  }
+
+  async deleteAccount({ response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    await Veterinarian.accessTokens.delete(vet, vet.currentAccessToken!.identifier)
+    await vet.delete()
+
+    return response.ok({
+      success: true,
+      message: 'Compte supprimé',
+    })
+  }
 }

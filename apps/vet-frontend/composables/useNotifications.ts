@@ -1,73 +1,41 @@
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useAuthStore } from '~/stores/auth'
 
-/**
- * Composable for real-time notifications using SSE (Server-Sent Events)
- *
- * Usage:
- * const { notifications, unreadCount, connect, disconnect, markAsRead } = useNotifications()
- */
 export const useNotifications = () => {
-  const authStore = useAuthStore()
+  const authStore = useVetAuthStore()
+  const api = useVetApi()
   const notifications = ref<any[]>([])
   const unreadCount = ref(0)
   const isConnected = ref(false)
   let eventSource: EventSource | null = null
 
-  /**
-   * Connect to SSE stream
-   */
   const connect = () => {
-    if (isConnected.value || !authStore.token) return
+    if (import.meta.server || isConnected.value || !authStore.token) return
 
     const config = useRuntimeConfig()
-    const baseURL = config.public.apiBaseUrl || 'http://localhost:3333'
-    const url = `${baseURL}/notifications/stream`
+    const baseURL = config.public.apiBase || 'http://localhost:3333'
+    const url = `${baseURL}/notifications/stream?token=${authStore.token}`
 
-    eventSource = new EventSource(url, {
-      withCredentials: true,
-    })
+    eventSource = new EventSource(url)
 
-    // Connection opened
     eventSource.addEventListener('open', () => {
-      console.log('[Notifications] SSE connected')
       isConnected.value = true
     })
 
-    // Message received
     eventSource.addEventListener('message', (event) => {
       try {
         const data = JSON.parse(event.data)
 
-        if (data.type === 'connected') {
-          console.log('[Notifications] Stream connected')
-        } else if (data.type === 'notifications') {
-          // New notifications received
+        if (data.type === 'notifications') {
           notifications.value = data.data
           unreadCount.value = data.count
-
-          // Play notification sound if supported
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Nouvelle notification', {
-              body: `Vous avez ${data.count} nouvelle(s) notification(s)`,
-              icon: '/icon.png',
-            })
-          }
-        } else if (data.type === 'heartbeat') {
-          // Keep-alive heartbeat
-          console.log('[Notifications] Heartbeat')
         }
       } catch (error) {
         console.error('[Notifications] Parse error:', error)
       }
     })
 
-    // Error handling
-    eventSource.addEventListener('error', (error) => {
-      console.error('[Notifications] SSE error:', error)
+    eventSource.addEventListener('error', () => {
       isConnected.value = false
-
-      // Reconnect after 5 seconds
       setTimeout(() => {
         if (authStore.token) {
           connect()
@@ -76,77 +44,52 @@ export const useNotifications = () => {
     })
   }
 
-  /**
-   * Disconnect from SSE stream
-   */
   const disconnect = () => {
     if (eventSource) {
       eventSource.close()
       eventSource = null
       isConnected.value = false
-      console.log('[Notifications] SSE disconnected')
     }
   }
 
-  /**
-   * Mark notification as read
-   */
   const markAsRead = async (notificationId: number) => {
-    const api = useApi()
     const response = await api.put(`/notifications/${notificationId}/read`, {})
-
     if (response.success) {
-      // Remove from unread list
       notifications.value = notifications.value.filter(n => n.id !== notificationId)
       unreadCount.value = Math.max(0, unreadCount.value - 1)
     }
   }
 
-  /**
-   * Mark all notifications as read
-   */
   const markAllAsRead = async () => {
-    const api = useApi()
     const response = await api.put('/notifications/mark-all-read', {})
-
     if (response.success) {
       notifications.value = []
       unreadCount.value = 0
     }
   }
 
-  /**
-   * Fetch unread count (fallback if SSE not connected)
-   */
   const fetchUnreadCount = async () => {
-    const api = useApi()
     const response = await api.get('/notifications/unread-count')
-
-    if (response.success) {
-      unreadCount.value = response.data.count
+    if (response.success && response.data) {
+      unreadCount.value = (response.data as any).count
     }
   }
 
-  /**
-   * Request notification permission
-   */
-  const requestPermission = async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      const permission = await Notification.requestPermission()
-      return permission === 'granted'
+  const fetchNotifications = async () => {
+    const response = await api.get('/vet/notifications')
+    if (response.success && response.data) {
+      notifications.value = response.data as any[]
+      unreadCount.value = (response.data as any[]).length
     }
-    return false
   }
 
-  // Auto-connect on mount if authenticated
   onMounted(() => {
     if (authStore.token) {
-      connect()
-      requestPermission()
+      fetchNotifications()
+      fetchUnreadCount()
     }
   })
 
-  // Auto-disconnect on unmount
   onUnmounted(() => {
     disconnect()
   })
@@ -160,6 +103,6 @@ export const useNotifications = () => {
     markAsRead,
     markAllAsRead,
     fetchUnreadCount,
-    requestPermission,
+    fetchNotifications,
   }
 }

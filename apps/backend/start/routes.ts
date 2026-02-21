@@ -306,6 +306,8 @@ router.group(() => {
   router.get('/me', [VetAuthController, 'me'])
   router.put('/profile', [VetAuthController, 'updateProfile'])
   router.post('/logout', [VetAuthController, 'logout'])
+  router.put('/password', [VetAuthController, 'changePassword'])
+  router.delete('/account', [VetAuthController, 'deleteAccount'])
 }).prefix('/vet/auth').use(middleware.vetAuth())
 
 // Vet Pre-Diagnoses & AI Chat
@@ -416,3 +418,140 @@ router.group(() => {
   router.patch('/:id/status', [ClinicAppointmentsController, 'updateStatus'])
   router.delete('/:id', [ClinicAppointmentsController, 'destroy'])
 }).prefix('/vet/appointments').use(middleware.vetAuth())
+
+// Vet Clinic Settings (info, hours, services)
+const VetClinicSettingsController = () => import('#controllers/vet_clinic_settings_controller')
+router.group(() => {
+  router.get('/info', [VetClinicSettingsController, 'getClinicInfo'])
+  router.put('/info', [VetClinicSettingsController, 'updateClinicInfo'])
+  router.get('/hours', [VetClinicSettingsController, 'getHours'])
+  router.put('/hours', [VetClinicSettingsController, 'updateHours'])
+  router.get('/services', [VetClinicSettingsController, 'listServices'])
+  router.post('/services', [VetClinicSettingsController, 'createService'])
+  router.put('/services/:id', [VetClinicSettingsController, 'updateService'])
+  router.delete('/services/:id', [VetClinicSettingsController, 'deleteService'])
+}).prefix('/vet/clinic').use(middleware.vetAuth())
+
+// Vet Invoices Management
+const VetInvoicesController = () => import('#controllers/vet_invoices_controller')
+router.group(() => {
+  router.get('/', [VetInvoicesController, 'index'])
+  router.get('/stats', [VetInvoicesController, 'stats'])
+  router.post('/', [VetInvoicesController, 'store'])
+  router.get('/:id', [VetInvoicesController, 'show'])
+  router.patch('/:id/status', [VetInvoicesController, 'updateStatus'])
+  router.delete('/:id', [VetInvoicesController, 'destroy'])
+}).prefix('/vet/invoices').use(middleware.vetAuth())
+
+// Vet Analytics
+const VetAnalyticsController = () => import('#controllers/vet_analytics_controller')
+router.group(() => {
+  router.get('/', [VetAnalyticsController, 'index'])
+}).prefix('/vet/analytics').use(middleware.vetAuth())
+
+// Vet Records (completed appointments as medical records)
+const VetRecordsController = () => import('#controllers/vet_records_controller')
+router.group(() => {
+  router.get('/', [VetRecordsController, 'index'])
+}).prefix('/vet/records').use(middleware.vetAuth())
+
+// Vet Prescriptions (Ordonnances)
+const VetPrescriptionsController = () => import('#controllers/vet_prescriptions_controller')
+router.group(() => {
+  router.get('/', [VetPrescriptionsController, 'index'])
+  router.post('/', [VetPrescriptionsController, 'store'])
+  router.get('/:id', [VetPrescriptionsController, 'show'])
+  router.patch('/:id', [VetPrescriptionsController, 'update'])
+  router.delete('/:id', [VetPrescriptionsController, 'destroy'])
+}).prefix('/vet/prescriptions').use(middleware.vetAuth())
+
+// Vet Reminders (Rappels vaccins/traitements)
+const VetRemindersController = () => import('#controllers/vet_reminders_controller')
+router.group(() => {
+  router.get('/', [VetRemindersController, 'index'])
+  router.get('/upcoming', [VetRemindersController, 'upcoming'])
+  router.post('/', [VetRemindersController, 'store'])
+  router.patch('/:id', [VetRemindersController, 'update'])
+  router.patch('/:id/complete', [VetRemindersController, 'markCompleted'])
+  router.delete('/:id', [VetRemindersController, 'destroy'])
+}).prefix('/vet/reminders').use(middleware.vetAuth())
+
+// Vet Consultation Templates
+const VetConsultationTemplatesController = () => import('#controllers/vet_consultation_templates_controller')
+router.group(() => {
+  router.get('/', [VetConsultationTemplatesController, 'index'])
+  router.post('/', [VetConsultationTemplatesController, 'store'])
+  router.put('/:id', [VetConsultationTemplatesController, 'update'])
+  router.delete('/:id', [VetConsultationTemplatesController, 'destroy'])
+}).prefix('/vet/templates').use(middleware.vetAuth())
+
+// Inventory
+const VetInventoryController = () => import('#controllers/vet_inventory_controller')
+router.group(() => {
+  router.get('/', [VetInventoryController, 'index'])
+  router.get('/stats', [VetInventoryController, 'stats'])
+  router.post('/', [VetInventoryController, 'store'])
+  router.put('/:id', [VetInventoryController, 'update'])
+  router.post('/:id/movement', [VetInventoryController, 'addMovement'])
+  router.get('/:id/movements', [VetInventoryController, 'movements'])
+  router.delete('/:id', [VetInventoryController, 'destroy'])
+}).prefix('/vet/inventory').use(middleware.vetAuth())
+
+// Weight tracking
+const VetWeightController = () => import('#controllers/vet_weight_controller')
+router.group(() => {
+  router.get('/', [VetWeightController, 'index'])
+  router.get('/chart', [VetWeightController, 'chart'])
+  router.post('/', [VetWeightController, 'store'])
+  router.delete('/:id', [VetWeightController, 'destroy'])
+}).prefix('/vet/weight').use(middleware.vetAuth())
+
+// Attachments
+const VetAttachmentsController = () => import('#controllers/vet_attachments_controller')
+router.group(() => {
+  router.get('/', [VetAttachmentsController, 'index'])
+  router.post('/', [VetAttachmentsController, 'store'])
+  router.get('/:id/download', [VetAttachmentsController, 'download'])
+  router.delete('/:id', [VetAttachmentsController, 'destroy'])
+}).prefix('/vet/attachments').use(middleware.vetAuth())
+
+// Hospitalization
+const VetHospitalizationController = () => import('#controllers/vet_hospitalization_controller')
+router.group(() => {
+  router.get('/', [VetHospitalizationController, 'index'])
+  router.get('/stats', [VetHospitalizationController, 'stats'])
+  router.post('/', [VetHospitalizationController, 'store'])
+  router.get('/:id', [VetHospitalizationController, 'show'])
+  router.put('/:id', [VetHospitalizationController, 'update'])
+  router.post('/:id/discharge', [VetHospitalizationController, 'discharge'])
+  router.post('/:id/log', [VetHospitalizationController, 'addLog'])
+}).prefix('/vet/hospitalizations').use(middleware.vetAuth())
+
+// Exports
+const VetExportsController = () => import('#controllers/vet_exports_controller')
+router.group(() => {
+  router.get('/clients', [VetExportsController, 'clients'])
+  router.get('/invoices', [VetExportsController, 'invoices'])
+  router.get('/inventory', [VetExportsController, 'inventory'])
+  router.get('/reminders', [VetExportsController, 'reminders'])
+}).prefix('/vet/exports').use(middleware.vetAuth())
+
+// User Vet Data (user sees data from their vets)
+const UserVetDataController = () => import('#controllers/user_vet_data_controller')
+router.group(() => {
+  router.get('/prescriptions', [UserVetDataController, 'prescriptions'])
+  router.get('/prescriptions/:id', [UserVetDataController, 'prescriptionDetail'])
+  router.get('/invoices', [UserVetDataController, 'invoices'])
+  router.get('/reminders', [UserVetDataController, 'reminders'])
+  router.get('/hospitalizations', [UserVetDataController, 'hospitalizations'])
+  router.get('/hospitalizations/:id', [UserVetDataController, 'hospitalizationDetail'])
+  router.get('/attachments', [UserVetDataController, 'attachments'])
+}).prefix('/user/vet-data').use(middleware.auth())
+
+// Public Booking (no auth required - for clients)
+const PublicBookingController = () => import('#controllers/public_booking_controller')
+router.group(() => {
+  router.get('/:vetId/info', [PublicBookingController, 'getClinicInfo'])
+  router.get('/:vetId/availability', [PublicBookingController, 'getAvailability'])
+  router.post('/:vetId/book', [PublicBookingController, 'book'])
+}).prefix('/public/booking')

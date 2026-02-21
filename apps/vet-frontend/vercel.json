@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm install && pnpm --filter @ficabot/shared build && cd apps/vet-frontend && pnpm build",
+  "installCommand": "cd ../.. && pnpm install",
+  "framework": "nuxtjs"
+}

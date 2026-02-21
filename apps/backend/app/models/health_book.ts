@@ -277,7 +277,7 @@ export default class HealthBook extends BaseModel {
     }
   }
 
-  private parseArrayField(value: any): any[] {
+  parseArrayField(value: any): any[] {
     if (Array.isArray(value)) return value
     if (typeof value === 'string' && value) {
       try {

@@ -79,6 +79,15 @@
 
       <!-- Health Book Tab -->
       <div v-if="activeTab === 'healthbook'" class="space-y-6">
+        <div v-if="healthBookData.vaccines?.length" class="flex justify-end">
+          <button @click="generateVaccinationCertificate" class="btn-secondary text-sm py-2 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Carnet de vaccination PDF
+          </button>
+        </div>
+
         <div v-if="!patient.healthBook" class="card text-center py-8">
           <p class="text-surface-500">Aucun carnet de santé disponible</p>
         </div>
@@ -139,6 +148,104 @@
             <p v-else class="text-surface-400 text-sm">Aucune allergie connue</p>
           </div>
         </template>
+      </div>
+
+      <!-- Weight Tab -->
+      <div v-if="activeTab === 'weight'" class="space-y-6">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-surface-900">Courbe de poids</h3>
+            <button @click="showAddWeight = true" class="btn-primary text-sm py-2">+ Ajouter une pesee</button>
+          </div>
+
+          <div v-if="weightRecords.length === 0" class="text-center py-8 text-surface-400">
+            <p>Aucune donnee de poids</p>
+          </div>
+
+          <div v-else>
+            <div class="h-48 flex items-end gap-1 mb-4 border-b border-l border-surface-200 p-2">
+              <div
+                v-for="(w, i) in weightRecords"
+                :key="i"
+                class="flex-1 bg-primary-500 rounded-t-sm relative group cursor-pointer min-w-[8px]"
+                :style="{ height: getWeightBarHeight(w.weight) + '%' }"
+              >
+                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
+                  {{ w.weight }} kg - {{ formatDate(w.date) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <div v-for="w in weightRecords" :key="w.id" class="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
+                <div>
+                  <span class="font-bold text-surface-900">{{ w.weight }} {{ w.unit }}</span>
+                  <span class="text-sm text-surface-500 ml-2">{{ formatDate(w.date) }}</span>
+                </div>
+                <span v-if="w.notes" class="text-xs text-surface-400">{{ w.notes }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="showAddWeight" class="card">
+          <h3 class="font-semibold text-surface-900 mb-4">Nouvelle pesee</h3>
+          <form @submit.prevent="addWeight" class="flex gap-4 items-end">
+            <div class="flex-1">
+              <label class="label">Poids (kg)</label>
+              <input v-model.number="weightForm.weight" type="number" step="0.1" class="input" required />
+            </div>
+            <div class="flex-1">
+              <label class="label">Date</label>
+              <input v-model="weightForm.date" type="date" class="input" required />
+            </div>
+            <div class="flex-1">
+              <label class="label">Notes</label>
+              <input v-model="weightForm.notes" type="text" class="input" placeholder="Optionnel" />
+            </div>
+            <button type="submit" class="btn-primary">Ajouter</button>
+            <button type="button" @click="showAddWeight = false" class="btn-secondary">Annuler</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Attachments Tab -->
+      <div v-if="activeTab === 'attachments'" class="space-y-4">
+        <div class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-surface-900">Pieces jointes</h3>
+            <label class="btn-primary text-sm py-2 cursor-pointer">
+              + Ajouter un fichier
+              <input type="file" class="hidden" accept="image/*,.pdf,.doc,.docx" @change="uploadFile" />
+            </label>
+          </div>
+
+          <div v-if="attachments.length === 0" class="text-center py-8 text-surface-400">
+            <p>Aucun fichier joint</p>
+          </div>
+
+          <div v-else class="space-y-2">
+            <div v-for="a in attachments" :key="a.id" class="flex items-center gap-3 p-3 bg-surface-50 rounded-lg">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" :class="getFileTypeColor(a.fileType)">
+                {{ getFileTypeIcon(a.fileType) }}
+              </div>
+              <div class="flex-1">
+                <p class="font-medium text-surface-900 text-sm">{{ a.fileName }}</p>
+                <p class="text-xs text-surface-400">{{ a.category }} - {{ formatFileSize(a.fileSize) }} - {{ formatDate(a.createdAt) }}</p>
+              </div>
+              <button @click="downloadAttachment(a.id, a.fileName)" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </button>
+              <button @click="deleteAttachment(a.id)" class="p-2 text-surface-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Medical Records Tab -->
@@ -220,6 +327,8 @@ const activeTab = ref('healthbook')
 
 const tabs = [
   { id: 'healthbook', label: '📋 Carnet de santé' },
+  { id: 'weight', label: '⚖️ Poids' },
+  { id: 'attachments', label: '📎 Fichiers' },
   { id: 'records', label: '📄 Dossier médical' },
   { id: 'addnote', label: '✏️ Ajouter une note' },
 ]
@@ -233,6 +342,12 @@ const noteForm = ref({
 const noteLoading = ref(false)
 const noteError = ref('')
 const noteSuccess = ref('')
+
+const weightRecords = ref<any[]>([])
+const showAddWeight = ref(false)
+const weightForm = ref({ weight: 0, date: new Date().toISOString().split('T')[0], notes: '' })
+const attachments = ref<any[]>([])
+const uploadCategory = ref('other')
 
 const healthBookData = computed(() => {
   if (!patient.value?.healthBook) return {}
@@ -303,5 +418,169 @@ const fetchPatient = async () => {
   }
 }
 
-onMounted(fetchPatient)
+const loadWeightRecords = async () => {
+  if (!patient.value?.name) return
+  const response = await api.get<any>(`/vet/weight?petName=${encodeURIComponent(patient.value.name)}`)
+  if (response.success && response.data) {
+    weightRecords.value = response.data
+  }
+}
+
+const getWeightBarHeight = (weight: number) => {
+  if (weightRecords.value.length === 0) return 0
+  const max = Math.max(...weightRecords.value.map((w: any) => w.weight))
+  return max > 0 ? (weight / max) * 100 : 0
+}
+
+const addWeight = async () => {
+  const response = await api.post<any>('/vet/weight', {
+    petName: patient.value.name,
+    petId: patient.value.id,
+    ...weightForm.value,
+    unit: 'kg',
+  })
+  if (response.success) {
+    showAddWeight.value = false
+    weightForm.value = { weight: 0, date: new Date().toISOString().split('T')[0], notes: '' }
+    loadWeightRecords()
+  }
+}
+
+const loadAttachments = async () => {
+  if (!patient.value?.name) return
+  const response = await api.get<any>(`/vet/attachments?petName=${encodeURIComponent(patient.value.name)}`)
+  if (response.success && response.data) {
+    attachments.value = response.data
+  }
+}
+
+const uploadFile = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('petName', patient.value.name)
+  formData.append('category', 'other')
+
+  const authStore = useVetAuthStore()
+  const config = useRuntimeConfig()
+  const baseUrl = config.public.apiBase || 'http://localhost:3333'
+
+  try {
+    const res = await fetch(`${baseUrl}/vet/attachments`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authStore.token}` },
+      body: formData,
+    })
+    const data = await res.json()
+    if (data.success) {
+      loadAttachments()
+    }
+  } catch {}
+  input.value = ''
+}
+
+const downloadAttachment = async (id: number, fileName: string) => {
+  const authStore = useVetAuthStore()
+  const config = useRuntimeConfig()
+  const baseUrl = config.public.apiBase || 'http://localhost:3333'
+
+  const res = await fetch(`${baseUrl}/vet/attachments/${id}/download`, {
+    headers: { Authorization: `Bearer ${authStore.token}` },
+  })
+  const blob = await res.blob()
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = fileName
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+const deleteAttachment = async (id: number) => {
+  if (!confirm('Supprimer ce fichier ?')) return
+  const response = await api.del<any>(`/vet/attachments/${id}`)
+  if (response.success) {
+    attachments.value = attachments.value.filter(a => a.id !== id)
+  }
+}
+
+const getFileTypeIcon = (type: string) => {
+  const icons: Record<string, string> = { pdf: '📄', jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', webp: '🖼️', doc: '📝', docx: '📝' }
+  return icons[type] || '📎'
+}
+
+const getFileTypeColor = (type: string) => {
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) return 'bg-blue-100'
+  if (type === 'pdf') return 'bg-danger-50'
+  return 'bg-surface-100'
+}
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' o'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' Ko'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' Mo'
+}
+
+const generateVaccinationCertificate = () => {
+  const vaccines = healthBookData.value.vaccines || []
+  if (vaccines.length === 0) return
+
+  const vaccineRows = vaccines.map((v: any) => `
+    <tr>
+      <td style="padding:8px;border-bottom:1px solid #eee">${v.name}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee">${v.date || '-'}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee">${v.nextDate || '-'}</td>
+      <td style="padding:8px;border-bottom:1px solid #eee">${v.batch || '-'}</td>
+    </tr>
+  `).join('')
+
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+  printWindow.document.write(`<html><head><title>Carnet de vaccination - ${patient.value.name}</title>
+<style>
+  body{font-family:system-ui,sans-serif;padding:40px;color:#333;max-width:800px;margin:0 auto}
+  table{width:100%;border-collapse:collapse;margin-top:16px}
+  th{text-align:left;padding:8px;border-bottom:2px solid #333;font-size:13px;text-transform:uppercase;color:#666}
+  .header{text-align:center;margin-bottom:32px;padding-bottom:16px;border-bottom:2px solid #333}
+  .pet-info{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;padding:16px;background:#f9fafb;border-radius:8px}
+  .pet-info div{font-size:14px}
+  .pet-info strong{display:block;font-size:12px;text-transform:uppercase;color:#666;margin-bottom:4px}
+  @media print{body{padding:20px}}
+</style></head><body>
+  <div class="header">
+    <h1 style="margin:0">Carnet de Vaccination</h1>
+    <p style="color:#666;margin:8px 0 0">Document veterinaire officiel</p>
+  </div>
+  <div class="pet-info">
+    <div><strong>Nom de l'animal</strong>${patient.value.name}</div>
+    <div><strong>Espece</strong>${patient.value.species === 'dog' ? 'Chien' : patient.value.species === 'cat' ? 'Chat' : patient.value.species}</div>
+    <div><strong>Race</strong>${patient.value.breed || 'Non renseignee'}</div>
+    <div><strong>Date de naissance</strong>${patient.value.birthDate ? formatDate(patient.value.birthDate) : 'Non renseignee'}</div>
+  </div>
+  <h2 style="font-size:16px;margin-bottom:8px">Historique vaccinal</h2>
+  <table>
+    <thead>
+      <tr><th>Vaccin</th><th>Date</th><th>Prochain rappel</th><th>N° Lot</th></tr>
+    </thead>
+    <tbody>${vaccineRows}</tbody>
+  </table>
+  <div style="margin-top:48px;padding-top:16px;border-top:1px solid #eee;display:flex;justify-content:space-between">
+    <div><p style="font-size:12px;color:#666">Date d'emission: ${new Date().toLocaleDateString('fr-FR')}</p></div>
+    <div style="text-align:right"><p style="font-size:12px;color:#666">Signature et cachet du veterinaire</p><div style="width:200px;height:60px;border:1px dashed #ccc;border-radius:4px;margin-top:8px"></div></div>
+  </div>
+</body></html>`)
+  printWindow.document.close()
+  printWindow.print()
+}
+
+onMounted(async () => {
+  await fetchPatient()
+  if (patient.value) {
+    loadWeightRecords()
+    loadAttachments()
+  }
+})
 </script>

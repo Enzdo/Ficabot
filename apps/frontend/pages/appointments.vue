@@ -135,6 +135,33 @@
             <p v-if="form.vetPhone">📞 {{ form.vetPhone }}</p>
           </div>
 
+          <!-- Online Booking Slots -->
+          <div v-if="selectedVetId && availableSlots.length > 0" class="bg-primary-50 rounded-xl p-4 border border-primary-100">
+            <p class="text-sm font-medium text-primary-700 mb-3">🗓️ Créneaux disponibles en ligne</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="slot in availableSlots"
+                :key="slot.time"
+                type="button"
+                @click="selectSlot(slot)"
+                :class="form.appointmentTime === slot.time ? 'bg-primary-600 text-white' : 'bg-white text-primary-700 border border-primary-200'"
+                class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                {{ slot.time }}
+              </button>
+            </div>
+            <p v-if="form.appointmentTime && selectedSlotEmployee" class="text-xs text-primary-600 mt-2">
+              Avec {{ selectedSlotEmployee }}
+            </p>
+          </div>
+          <div v-else-if="selectedVetId && loadingSlots" class="bg-gray-50 rounded-xl p-4 text-center">
+            <div class="animate-spin w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full mx-auto"></div>
+            <p class="text-xs text-gray-500 mt-2">Vérification des disponibilités...</p>
+          </div>
+          <div v-else-if="selectedVetId && slotsChecked && availableSlots.length === 0" class="bg-gray-50 rounded-xl p-3 text-sm text-gray-500">
+            Aucun créneau en ligne disponible pour cette date
+          </div>
+
           <div v-if="!selectedVetId">
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('appointments.form.phone') }}</label>
             <input type="tel" v-model="form.vetPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-base" :placeholder="$t('appointments.form.phone_placeholder')">
@@ -167,6 +194,10 @@ const loading = ref(false)
 const appointments = ref<any[]>([])
 const userVets = ref<any[]>([])
 const selectedVetId = ref<number | null>(null)
+const availableSlots = ref<any[]>([])
+const loadingSlots = ref(false)
+const slotsChecked = ref(false)
+const selectedSlotEmployee = ref('')
 
 const form = reactive({
   title: '',
@@ -203,6 +234,9 @@ const fetchUserVets = async () => {
 }
 
 const onVetSelected = () => {
+  availableSlots.value = []
+  slotsChecked.value = false
+  selectedSlotEmployee.value = ''
   if (selectedVetId.value) {
     const vet = userVets.value.find(v => v.id === selectedVetId.value)
     if (vet?.veterinarian) {
@@ -210,6 +244,7 @@ const onVetSelected = () => {
       form.vetName = v.clinicName || `Dr. ${v.firstName} ${v.lastName}`
       form.vetAddress = v.address || ''
       form.vetPhone = v.phone || ''
+      fetchAvailableSlots(v.id)
     }
   } else {
     form.vetName = ''
@@ -217,6 +252,35 @@ const onVetSelected = () => {
     form.vetPhone = ''
   }
 }
+
+const fetchAvailableSlots = async (vetId: number) => {
+  loadingSlots.value = true
+  slotsChecked.value = false
+  const api = useApi()
+  const response = await api.get<any>(`/public/booking/${vetId}/availability?date=${form.appointmentDate}`)
+  if (response.success && response.data?.slots) {
+    availableSlots.value = response.data.slots.filter((s: any) => s.available)
+  } else {
+    availableSlots.value = []
+  }
+  slotsChecked.value = true
+  loadingSlots.value = false
+}
+
+const selectSlot = (slot: any) => {
+  form.appointmentTime = slot.time
+  selectedSlotEmployee.value = slot.employeeName || ''
+}
+
+// Re-fetch slots when date changes and a vet is selected
+watch(() => form.appointmentDate, () => {
+  if (selectedVetId.value) {
+    const vet = userVets.value.find(v => v.id === selectedVetId.value)
+    if (vet?.veterinarian) {
+      fetchAvailableSlots(vet.veterinarian.id)
+    }
+  }
+})
 
 const fetchAppointments = async () => {
   const api = useApi()
@@ -229,9 +293,33 @@ const fetchAppointments = async () => {
 const createAppointment = async () => {
   loading.value = true
   const api = useApi()
+  const authStore = useAuthStore()
+
+  // If a vet is selected and a slot was picked, also book via public booking
+  if (selectedVetId.value && form.appointmentTime) {
+    const vet = userVets.value.find(v => v.id === selectedVetId.value)
+    if (vet?.veterinarian) {
+      const pet = petsStore.pets.find((p: any) => p.id === form.petId)
+      await api.post(`/public/booking/${vet.veterinarian.id}/book`, {
+        date: form.appointmentDate,
+        startTime: form.appointmentTime,
+        duration: 30,
+        type: 'consultation',
+        clientName: authStore.user?.email || '',
+        clientEmail: authStore.user?.email || '',
+        petName: pet?.name || '',
+        petSpecies: pet?.species || '',
+        reason: form.title,
+      })
+    }
+  }
+
   const response = await api.post('/appointments', form)
   if (response.success) {
     showAddModal.value = false
+    selectedVetId.value = null
+    availableSlots.value = []
+    slotsChecked.value = false
     Object.assign(form, { title: '', petId: null, appointmentTime: '', vetName: '', vetAddress: '', vetPhone: '', notes: '' })
     await fetchAppointments()
   }

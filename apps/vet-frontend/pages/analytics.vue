@@ -217,49 +217,51 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const api = useVetApi()
 const period = ref('month')
+const loading = ref(true)
 
-// Mock stats data
 const stats = ref({
-  totalAppointments: 156,
-  appointmentsTrend: 12,
-  totalClients: 89,
-  newClients: 7,
-  revenue: 12450,
-  revenueTrend: 8,
-  satisfaction: 4.8,
-  reviewCount: 42,
+  totalAppointments: 0,
+  appointmentsTrend: 0,
+  totalClients: 0,
+  newClients: 0,
+  revenue: 0,
+  revenueTrend: 0,
+  satisfaction: 0,
+  reviewCount: 0,
 })
 
-const appointmentTypes = ref([
-  { name: 'Consultation', count: 68, percentage: 44, color: '#0d9488' },
-  { name: 'Vaccination', count: 42, percentage: 27, color: '#8b5cf6' },
-  { name: 'Chirurgie', count: 18, percentage: 12, color: '#f59e0b' },
-  { name: 'Urgence', count: 15, percentage: 10, color: '#ef4444' },
-  { name: 'Toilettage', count: 13, percentage: 8, color: '#3b82f6' },
-])
+const appointmentTypes = ref<any[]>([])
+const employeeStats = ref<any[]>([])
+const topPatients = ref<any[]>([])
+const recentActivity = ref<any[]>([])
 
-const topPatients = ref([
-  { id: 1, name: 'Max', species: 'dog', ownerName: 'Jean Dupont', visits: 12 },
-  { id: 2, name: 'Luna', species: 'cat', ownerName: 'Marie Martin', visits: 9 },
-  { id: 3, name: 'Rocky', species: 'dog', ownerName: 'Pierre Bernard', visits: 7 },
-  { id: 4, name: 'Milo', species: 'cat', ownerName: 'Sophie Durand', visits: 6 },
-  { id: 5, name: 'Bella', species: 'dog', ownerName: 'Lucas Petit', visits: 5 },
-])
+const fetchAnalytics = async () => {
+  loading.value = true
+  const response = await api.get<any>(`/vet/analytics?period=${period.value}`)
+  if (response.success && response.data) {
+    stats.value = {
+      totalAppointments: response.data.totalAppointments || 0,
+      appointmentsTrend: response.data.appointmentsTrend || 0,
+      totalClients: response.data.totalClients || 0,
+      newClients: response.data.newClients || 0,
+      revenue: response.data.revenue || 0,
+      revenueTrend: response.data.revenueTrend || 0,
+      satisfaction: response.data.satisfaction || 0,
+      reviewCount: response.data.reviewCount || 0,
+    }
+    appointmentTypes.value = response.data.appointmentTypes || []
+    employeeStats.value = (response.data.employeeStats || []).map((e: any) => ({
+      ...e,
+      rating: Number(e.rating?.toFixed(1)) || 0,
+    }))
+  }
+  loading.value = false
+}
 
-const employeeStats = ref([
-  { id: 1, name: 'Dr. Martin', initials: 'DM', role: 'Vétérinaire', color: '#0d9488', appointments: 78, completionRate: 95, rating: 4.9, revenue: 8200 },
-  { id: 2, name: 'Julie Blanc', initials: 'JB', role: 'Assistante', color: '#8b5cf6', appointments: 45, completionRate: 88, rating: 4.7, revenue: 2800 },
-  { id: 3, name: 'Marc Duval', initials: 'MD', role: 'Vétérinaire', color: '#f59e0b', appointments: 33, completionRate: 92, rating: 4.6, revenue: 1450 },
-])
-
-const recentActivity = ref([
-  { id: 1, type: 'appointment', description: 'Nouveau RDV confirmé pour Max (Vaccination)', time: 'Il y a 5 min' },
-  { id: 2, type: 'client', description: 'Nouveau client inscrit: Sophie Durand', time: 'Il y a 15 min' },
-  { id: 3, type: 'message', description: 'Message reçu de Jean Dupont', time: 'Il y a 30 min' },
-  { id: 4, type: 'appointment', description: 'RDV terminé: Luna - Consultation', time: 'Il y a 1h' },
-  { id: 5, type: 'appointment', description: 'RDV annulé: Rocky - Toilettage', time: 'Il y a 2h' },
-])
+onMounted(fetchAnalytics)
+watch(period, fetchAnalytics)
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)

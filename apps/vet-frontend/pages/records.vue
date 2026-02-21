@@ -213,120 +213,42 @@ definePageMeta({
   middleware: 'auth',
 })
 
+const api = useVetApi()
 const searchQuery = ref('')
 const filterType = ref('')
 const filterSpecies = ref('')
 const selectedRecord = ref<any>(null)
+const loading = ref(true)
+const records = ref<any[]>([])
+const stats = ref({ total: 0, thisMonth: 0, vaccinations: 0, surgeries: 0 })
 
-// Mock data - à remplacer par des appels API
-const records = ref([
-  {
-    id: 1,
-    petName: 'Max',
-    petSpecies: 'dog',
-    petBreed: 'Labrador',
-    petAge: '5 ans',
-    clientName: 'Jean Dupont',
-    date: new Date(),
-    type: 'consultation',
-    reason: 'Boiterie patte arrière gauche',
-    diagnosis: 'Entorse légère du ligament croisé antérieur. Pas de rupture détectée à la palpation.',
-    treatment: 'Repos strict pendant 2 semaines, anti-inflammatoires pendant 5 jours.',
-    medications: [
-      { name: 'Metacam', dosage: '0.1mg/kg 1x/jour' },
-      { name: 'Tramadol', dosage: '2mg/kg 2x/jour si douleur' },
-    ],
-    vitals: { weight: 32, temperature: 38.5, heartRate: 90 },
-    notes: 'Propriétaire informé des signes à surveiller. Revoir dans 2 semaines.',
-    followUp: 'Contrôle dans 2 semaines pour évaluer la récupération',
-  },
-  {
-    id: 2,
-    petName: 'Luna',
-    petSpecies: 'cat',
-    petBreed: 'Européen',
-    petAge: '3 ans',
-    clientName: 'Marie Martin',
-    date: new Date(Date.now() - 86400000 * 2),
-    type: 'vaccination',
-    reason: 'Rappel vaccin annuel',
-    diagnosis: 'Animal en bonne santé. Vaccination effectuée.',
-    treatment: 'Vaccin Purevax RCPCh administré.',
-    medications: [],
-    vitals: { weight: 4.2, temperature: 38.8, heartRate: 140 },
-    notes: 'Légère réaction locale possible dans les 24-48h.',
-    followUp: 'Prochain rappel dans 1 an',
-  },
-  {
-    id: 3,
-    petName: 'Rocky',
-    petSpecies: 'dog',
-    petBreed: 'Berger Allemand',
-    petAge: '7 ans',
-    clientName: 'Pierre Bernard',
-    date: new Date(Date.now() - 86400000 * 5),
-    type: 'surgery',
-    reason: 'Castration programmée',
-    diagnosis: 'Intervention chirurgicale réalisée sans complication.',
-    treatment: 'Antibiotiques préventifs, collerette pendant 10 jours.',
-    medications: [
-      { name: 'Synulox', dosage: '250mg 2x/jour pendant 5 jours' },
-    ],
-    vitals: { weight: 38, temperature: 38.2, heartRate: 85 },
-    notes: 'Réveil post-anesthésique normal. Propriétaire informé des soins post-op.',
-    followUp: 'Retrait des points dans 10 jours',
-  },
-  {
-    id: 4,
-    petName: 'Milo',
-    petSpecies: 'cat',
-    petBreed: 'Maine Coon',
-    petAge: '2 ans',
-    clientName: 'Sophie Leroy',
-    date: new Date(Date.now() - 86400000 * 7),
-    type: 'checkup',
-    reason: 'Bilan de santé annuel',
-    diagnosis: 'Animal en excellente santé. Poids stable, dentition saine.',
-    treatment: 'Aucun traitement nécessaire.',
-    medications: [],
-    vitals: { weight: 6.8, temperature: 38.6, heartRate: 130 },
-    notes: 'Recommandation de continuer l\'alimentation actuelle.',
-    followUp: 'Prochain bilan dans 1 an',
-  },
-])
+const fetchRecords = async () => {
+  loading.value = true
+  const params = new URLSearchParams()
+  if (filterType.value) params.set('type', filterType.value)
+  if (filterSpecies.value) params.set('species', filterSpecies.value)
+  if (searchQuery.value) params.set('search', searchQuery.value)
 
-const stats = computed(() => ({
-  total: records.value.length,
-  thisMonth: records.value.filter(r => {
-    const now = new Date()
-    const recordDate = new Date(r.date)
-    return recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear()
-  }).length,
-  vaccinations: records.value.filter(r => r.type === 'vaccination').length,
-  surgeries: records.value.filter(r => r.type === 'surgery').length,
-}))
+  const response = await api.get<any>(`/vet/records?${params.toString()}`)
+  if (response.success) {
+    records.value = response.data
+    if (response.stats) stats.value = response.stats
+  }
+  loading.value = false
+}
+
+onMounted(fetchRecords)
+
+watch([filterType, filterSpecies], fetchRecords)
+
+let searchTimeout: any = null
+watch(searchQuery, () => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(fetchRecords, 400)
+})
 
 const filteredRecords = computed(() => {
-  let result = records.value
-
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(r => 
-      r.petName.toLowerCase().includes(query) ||
-      r.clientName.toLowerCase().includes(query) ||
-      r.diagnosis.toLowerCase().includes(query)
-    )
-  }
-
-  if (filterType.value) {
-    result = result.filter(r => r.type === filterType.value)
-  }
-
-  if (filterSpecies.value) {
-    result = result.filter(r => r.petSpecies === filterSpecies.value)
-  }
-
-  return result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return records.value.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
 })
 
 const formatDate = (date: Date | string) => {

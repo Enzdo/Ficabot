@@ -59,6 +59,25 @@
           </div>
         </div>
 
+        <!-- Hospitalization Alert -->
+        <div v-if="activeHospitalization" class="bg-red-50 rounded-2xl p-4 border-2 border-red-200 animate-pulse-slow">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl shrink-0">🏥</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-red-900">Actuellement hospitalisé</p>
+              <p class="text-sm text-red-700">{{ activeHospitalization.reason }}</p>
+              <p class="text-xs text-red-600 mt-1">
+                Depuis le {{ formatDate(activeHospitalization.admissionDate) }}
+                <span v-if="activeHospitalization.cageNumber"> — Cage {{ activeHospitalization.cageNumber }}</span>
+              </p>
+              <p class="text-xs text-red-500 mt-0.5">{{ activeHospitalization.vetName }} — {{ activeHospitalization.clinicName }}</p>
+            </div>
+          </div>
+          <div v-if="activeHospitalization.diagnosis" class="mt-3 bg-white/60 rounded-xl p-3">
+            <p class="text-xs text-red-600 font-medium">Diagnostic : {{ activeHospitalization.diagnosis }}</p>
+          </div>
+        </div>
+
         <!-- Quick Actions -->
         <div class="grid grid-cols-2 gap-3">
           <NuxtLink :to="`/pets/${route.params.id}/carnet`" class="bg-blue-50 p-4 rounded-2xl border border-blue-100 active:scale-[0.98] transition-transform">
@@ -207,6 +226,31 @@
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Vet Attachments -->
+        <div v-if="vetAttachments.length > 0" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <h3 class="font-bold text-gray-900 mb-3">📎 Documents du vétérinaire</h3>
+          <div class="space-y-2">
+            <div
+              v-for="att in vetAttachments.slice(0, 5)"
+              :key="att.id"
+              class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl"
+            >
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
+                :class="att.category === 'xray' ? 'bg-blue-100 text-blue-600' : att.category === 'lab' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'">
+                {{ att.category === 'xray' ? '🩻' : att.category === 'lab' ? '🧪' : att.category === 'photo' ? '📷' : '📄' }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">{{ att.fileName }}</p>
+                <p class="text-xs text-gray-500">{{ att.vetName }} — {{ formatDate(att.createdAt) }}</p>
+              </div>
+              <span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{{ formatFileSize(att.fileSize) }}</span>
+            </div>
+          </div>
+          <p v-if="vetAttachments.length > 5" class="text-xs text-primary-600 font-medium mt-2 text-center">
+            + {{ vetAttachments.length - 5 }} autres documents
+          </p>
         </div>
 
         <!-- Export PDF -->
@@ -471,6 +515,38 @@ const inviting = ref(false)
 
 const petOwners = ref<any[]>([])
 const pendingOwners = ref<any[]>([])
+
+// Vet data
+const activeHospitalization = ref<any>(null)
+const vetAttachments = ref<any[]>([])
+
+const formatFileSize = (bytes: number) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
+}
+
+const fetchVetData = async () => {
+  const api = useApi()
+  try {
+    const [hospRes, attRes] = await Promise.all([
+      api.get<any[]>('/user/vet-data/hospitalizations'),
+      api.get<any[]>(`/user/vet-data/attachments?petId=${route.params.id}`),
+    ])
+    if (hospRes.success && hospRes.data) {
+      activeHospitalization.value = hospRes.data.find(
+        (h: any) => h.status === 'active' && h.petName?.toLowerCase() === petsStore.currentPet?.name?.toLowerCase()
+      ) || null
+    }
+    if (attRes.success && attRes.data) {
+      vetAttachments.value = attRes.data
+    }
+  } catch (e) {
+    console.error('Error fetching vet data:', e)
+  }
+}
 
 // Public profile sharing
 const isPublic = ref(false)
@@ -808,10 +884,13 @@ watch(showEditModal, (show) => {
 
 onMounted(async () => {
   await petsStore.fetchPet(route.params.id as string)
-  await petsStore.fetchMedicalRecords(route.params.id as string)
-  await fetchOwners()
-  await fetchShareStatus()
-  await fetchVetAccess()
+  await Promise.all([
+    petsStore.fetchMedicalRecords(route.params.id as string),
+    fetchOwners(),
+    fetchShareStatus(),
+    fetchVetAccess(),
+    fetchVetData(),
+  ])
 })
 </script>
 
@@ -827,5 +906,14 @@ onMounted(async () => {
   to {
     transform: translateY(0);
   }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
 }
 </style>

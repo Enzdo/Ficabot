@@ -61,6 +61,22 @@
               >
                 {{ $t('nav.vets') }}
               </NuxtLink>
+              <NuxtLink
+                to="/vet-prescriptions"
+                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border border-transparent"
+                active-class="bg-primary-50 text-primary-700 border-primary-100 shadow-sm"
+                :class="$route.path === '/vet-prescriptions' ? '' : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
+              >
+                Ordonnances
+              </NuxtLink>
+              <NuxtLink
+                to="/vet-invoices"
+                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border border-transparent"
+                active-class="bg-primary-50 text-primary-700 border-primary-100 shadow-sm"
+                :class="$route.path === '/vet-invoices' ? '' : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'"
+              >
+                Factures
+              </NuxtLink>
             </div>
           </div>
 

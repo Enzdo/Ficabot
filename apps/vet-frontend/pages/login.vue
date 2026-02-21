@@ -58,7 +58,13 @@
           </button>
         </form>
 
-        <div class="mt-6 text-center">
+        <div class="mt-4 text-center">
+          <NuxtLink to="/forgot-password" class="text-sm text-surface-400 hover:text-primary-600 transition-colors">
+            Mot de passe oublié ?
+          </NuxtLink>
+        </div>
+
+        <div class="mt-4 text-center">
           <p class="text-surface-500 text-sm">
             Pas encore de compte ?
             <NuxtLink to="/register" class="text-primary-600 font-medium hover:underline">

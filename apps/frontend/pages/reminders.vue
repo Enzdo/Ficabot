@@ -42,6 +42,32 @@
         </div>
       </div>
 
+      <!-- Vet Reminders -->
+      <div v-if="vetReminders.length > 0" class="mt-6">
+        <h2 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <span>🏥</span> Rappels de votre vétérinaire
+        </h2>
+        <div class="space-y-2">
+          <div
+            v-for="reminder in vetReminders"
+            :key="'vet-' + reminder.id"
+            class="bg-white rounded-xl p-4 shadow-sm border border-primary-100 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-3 flex-1 min-w-0 mr-3">
+              <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-lg shrink-0">
+                {{ getVetReminderIcon(reminder.type) }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-900 truncate">{{ reminder.title }}</p>
+                <p v-if="reminder.description" class="text-xs text-gray-600 truncate">{{ reminder.description }}</p>
+                <p class="text-xs text-gray-500 truncate">{{ formatDate(reminder.dueDate) }} • {{ reminder.petName || 'Général' }} • {{ reminder.vetName }}</p>
+              </div>
+            </div>
+            <span class="px-2 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded-full shrink-0">Véto</span>
+          </div>
+        </div>
+      </div>
+
       <div v-else class="text-center py-12">
         <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">🔔</div>
         <p class="text-gray-500">{{ $t('reminders.no_reminders') }}</p>
@@ -281,6 +307,7 @@ const selectedReminder = ref<any>(null)
 const isEditing = ref(false)
 const loading = ref(false)
 const reminders = ref<any[]>([])
+const vetReminders = ref<any[]>([])
 
 const form = reactive({
   type: 'vaccine',
@@ -326,11 +353,30 @@ const formatDate = (date: string) => {
   return d.toLocaleDateString(locale.value, { day: 'numeric', month: 'short' })
 }
 
+const getVetReminderIcon = (type: string) => {
+  const icons: Record<string, string> = {
+    vaccine: '💉',
+    checkup: '🩺',
+    treatment: '💊',
+    surgery: '🏥',
+    custom: '📋',
+  }
+  return icons[type] || '📋'
+}
+
 const fetchReminders = async () => {
   const api = useApi()
   const response = await api.get<any[]>('/reminders')
   if (response.success && response.data) {
     reminders.value = response.data
+  }
+}
+
+const fetchVetReminders = async () => {
+  const api = useApi()
+  const response = await api.get<any[]>('/user/vet-data/reminders')
+  if (response.success && response.data) {
+    vetReminders.value = response.data
   }
 }
 
@@ -409,5 +455,6 @@ const deleteReminder = async (id: number) => {
 onMounted(async () => {
   await petsStore.fetchPets()
   await fetchReminders()
+  await fetchVetReminders()
 })
 </script>
