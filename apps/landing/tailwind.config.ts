@@ -44,12 +44,23 @@ export default {
         'float': 'float 6s ease-in-out infinite',
         'float-delayed': 'float 6s ease-in-out 2s infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'glow': 'glow 3s ease-in-out infinite alternate',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-20px)' },
         },
+        glow: {
+          '0%': { 'box-shadow': '0 0 10px rgba(20, 184, 166, 0.2)' },
+          '100%': { 'box-shadow': '0 0 20px rgba(20, 184, 166, 0.6), 0 0 40px rgba(217, 70, 239, 0.3)' },
+        }
+      },
+      boxShadow: {
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+        'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
+        'neon': '0 0 15px rgba(20, 184, 166, 0.5), 0 0 30px rgba(20, 184, 166, 0.2)',
+        'glow-primary': '0 0 30px -5px rgba(20, 184, 166, 0.4)',
       },
     },
   },
