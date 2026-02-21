@@ -8,7 +8,7 @@ import type Pet from '#models/pet'
  * Email notification for urgent pre-diagnosis cases
  */
 export default class UrgentPreDiagnosisNotification extends BaseMail {
-  from = env.get('MAIL_FROM_ADDRESS') || 'noreply@ficabot.com'
+  from = env.get('MAIL_FROM_ADDRESS') || 'noreply@mbtilove.fr'
   subject = '[URGENT] Nouveau pré-diagnostic nécessitant votre attention'
 
   constructor(

@@ -6,7 +6,7 @@ import type User from '#models/user'
  * Email verification notification
  */
 export default class EmailVerificationNotification extends BaseMail {
-  from = env.get('MAIL_FROM_ADDRESS') || 'noreply@ficabot.com'
+  from = env.get('MAIL_FROM_ADDRESS') || 'noreply@mbtilove.fr'
   subject = 'Vérifiez votre adresse email - Ficabot'
 
   constructor(
