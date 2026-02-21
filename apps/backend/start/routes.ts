@@ -274,8 +274,8 @@ router.group(() => {
   router.get('/:petId/vet-access', [VetAccessController, 'getStatus'])
 }).prefix('/pets').use(middleware.auth())
 
-// Vet view (no auth required)
-router.get('/vet/:token', [VetAccessController, 'show'])
+// Vet view (no auth required) - renamed from /vet/:token to avoid conflict with /vet/* authenticated routes
+router.get('/pet-access/:token', [VetAccessController, 'show'])
 
 // Weight Goals (Diet Program)
 const WeightGoalsController = () => import('#controllers/weight_goals_controller')

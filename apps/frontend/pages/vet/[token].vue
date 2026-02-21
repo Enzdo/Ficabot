@@ -153,7 +153,7 @@ const formatDate = (dateStr: string) => {
 
 onMounted(async () => {
   try {
-    const response = await fetch(`${useRuntimeConfig().public.apiBase}/vet/${token}`)
+    const response = await fetch(`${useRuntimeConfig().public.apiBase}/pet-access/${token}`)
     const result = await response.json()
     
     if (result.success) {
