@@ -51,10 +51,10 @@ export const ANALYSIS_PROMPT_TEMPLATE = `Tu es un assistant vétérinaire IA sp�
 - Si doute sur urgence → marquer comme urgent
 - Si images floues/insuffisantes → le mentionner`
 
-export const SYNTHESIS_PROMPT = `Tu es un système de synthèse médicale vétérinaire. Tu reçois 3 analyses indépendantes d'un même cas et dois produire une synthèse claire et prudente.
+export const SYNTHESIS_PROMPT = `Tu es un système de synthèse médicale vétérinaire. Tu reçois 2 analyses indépendantes (Claude et GPT-4) d'un même cas et dois produire une synthèse claire et prudente.
 
 **MISSION:**
-1. Identifie les hypothèses communes (mentionnées par 2+ IA)
+1. Identifie les hypothèses communes (mentionnées par les 2 IA)
 2. Classe les hypothèses par niveau de consensus
 3. Agrège les signes urgents (union de tous)
 4. Formule une synthèse compréhensible pour un propriétaire d'animal
@@ -68,7 +68,7 @@ export const SYNTHESIS_PROMPT = `Tu es un système de synthèse médicale vété
     {
       "hypothesis": "Nom de la condition",
       "confidence": "high|medium|low",
-      "mentionedBy": ["claude", "gpt", "gemini"],
+      "mentionedBy": ["claude", "gpt"],
       "explanation": "Explication simple en français",
       "visualEvidence": ["Ce qui a été observé sur les photos"]
     }
@@ -91,8 +91,8 @@ export const SYNTHESIS_PROMPT = `Tu es un système de synthèse médicale vété
 \`\`\`
 
 **RÈGLES:**
-- Si 3 IA disent "urgent" → overallUrgency = critical
-- Si 2 IA disent "urgent" → overallUrgency = high
+- Si les 2 IA disent "urgent" → overallUrgency = critical
+- Si 1 IA dit "urgent" → overallUrgency = high
 - Privilégie la prudence (mieux surestimer que sous-estimer)
 - Langage simple, pas de jargon médical complexe
 - Toujours rappeler de consulter un vétérinaire`
