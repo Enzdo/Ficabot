@@ -20,7 +20,7 @@ export default class OpenAIService {
             const imageContent = this.prepareImages(context.imageUrls)
 
             const response = await this.client.chat.completions.create({
-                model: 'gpt-4-vision-preview',
+                model: 'gpt-4o',
                 max_tokens: 2000,
                 temperature: 0.3,
                 response_format: { type: 'json_object' },

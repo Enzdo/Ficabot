@@ -5,9 +5,6 @@ import Pet from '#models/pet'
 import PreDiagnosisService from '#services/pre_diagnosis_service'
 import { createPreDiagnosisValidator } from '#validators/pre_diagnosis'
 import { LEGAL_DISCLAIMERS } from '#services/ai/prompts'
-import app from '@adonisjs/core/services/app'
-import { cuid } from '@adonisjs/core/helpers'
-import PreDiagnosisJob from '#jobs/pre_diagnosis_job'
 import logger from '@adonisjs/core/services/logger'
 
 export default class PreDiagnosesController {
@@ -98,20 +95,12 @@ export default class PreDiagnosesController {
             },
         })
 
-        // Enqueue job for async processing with Bull Queue
-        try {
-            await PreDiagnosisJob.enqueue({
-                preDiagnosisId: preDiagnosis.id,
-                userId: user.id,
-                petId: pet.id,
-            })
-            logger.info(
-                `[PreDiagnosis] Enqueued job for pre-diagnosis ${preDiagnosis.id} (user: ${user.id}, pet: ${pet.id})`
-            )
-        } catch (error) {
-            logger.error(`[PreDiagnosis] Failed to enqueue job for pre-diagnosis ${preDiagnosis.id}:`, error)
-            // Don't fail the request, job will be retried
-        }
+        // Process in background (fire-and-forget) - no Redis/Bull dependency
+        this.preDiagnosisService.processPreDiagnosis(preDiagnosis.id).then(() => {
+            logger.info(`[PreDiagnosis] Completed processing for pre-diagnosis ${preDiagnosis.id}`)
+        }).catch((error) => {
+            logger.error(`[PreDiagnosis] Failed to process pre-diagnosis ${preDiagnosis.id}:`, error)
+        })
 
         return response.created({
             success: true,
@@ -127,7 +116,7 @@ export default class PreDiagnosesController {
      * Get pre-diagnosis status/result
      * GET /pre-diagnosis/:id
      */
-    async show({ params, auth, response }: HttpContext) {
+    async show({ params, auth, request, response }: HttpContext) {
         const user = auth.user!
 
         const preDiagnosis = await PreDiagnosis.query()
