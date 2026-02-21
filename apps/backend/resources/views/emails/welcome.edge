@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenue sur Ficabot !</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #F3F4F6;
+      color: #1F2937;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      width: 100%;
+      padding: 48px 16px;
+    }
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+    }
+    .header {
+      background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+      padding: 48px 32px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 180px;
+      height: 180px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -60px;
+      left: -20px;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+    }
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .logo-text {
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.3px;
+    }
+    .header-emoji {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.3;
+      position: relative;
+      z-index: 1;
+    }
+    .header p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      margin-top: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .content {
+      padding: 40px 40px 32px;
+    }
+    .greeting {
+      font-size: 17px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 16px;
+    }
+    .body-text {
+      font-size: 15px;
+      color: #4B5563;
+      line-height: 1.75;
+      margin-bottom: 12px;
+    }
+    .features-grid {
+      display: table;
+      width: 100%;
+      margin: 32px 0;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+    }
+    .feature-row {
+      display: table-row;
+    }
+    .feature-item {
+      background: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 10px;
+    }
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .feature-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
+    }
+    .cta-section {
+      text-align: center;
+      margin: 36px 0 8px;
+    }
+    .cta-button {
+      display: inline-block;
+      background: #7C3AED;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 15px 36px;
+      border-radius: 10px;
+      letter-spacing: 0.1px;
+    }
+    .divider {
+      height: 1px;
+      background: #F3F4F6;
+      margin: 32px 0;
+    }
+    .help-box {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .help-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .help-box p {
+      font-size: 13px;
+      color: #1E40AF;
+      line-height: 1.5;
+    }
+    .help-box a {
+      color: #1D4ED8;
+      font-weight: 600;
+    }
+    .footer {
+      background: #F9FAFB;
+      border-top: 1px solid #E5E7EB;
+      padding: 28px 40px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 13px;
+      color: #9CA3AF;
+      line-height: 1.6;
+    }
+    .footer strong {
+      color: #6B7280;
+    }
+    .footer-links {
+      margin-top: 16px;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: #9CA3AF;
+      text-decoration: none;
+    }
+    .footer-links span {
+      color: #D1D5DB;
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">🐾</div>
+          <span class="logo-text">Ficabot</span>
+        </div>
+        <span class="header-emoji">🎉</span>
+        <h1>Bienvenue sur Ficabot !</h1>
+        <p>Votre compte est maintenant actif</p>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <p class="greeting">Bonjour {{ user.firstName || 'cher utilisateur' }},</p>
+
+        <p class="body-text">
+          Votre email a bien été vérifié — votre compte est prêt. Bienvenue dans la communauté
+          <strong>Ficabot</strong>, l'assistant intelligent pour la santé de vos animaux.
+        </p>
+
+        <p class="body-text">
+          Voici ce que vous pouvez faire dès maintenant :
+        </p>
+
+        <!-- Features -->
+        <div style="margin: 24px 0;">
+          <div class="feature-item" style="margin-bottom: 10px;">
+            <div class="feature-icon">🐕</div>
+            <div class="feature-title">Ajoutez vos animaux</div>
+            <div class="feature-desc">Créez les profils de vos compagnons et suivez leur santé au quotidien.</div>
+          </div>
+          <div class="feature-item" style="margin-bottom: 10px;">
+            <div class="feature-icon">🤖</div>
+            <div class="feature-title">Assistant IA intégré</div>
+            <div class="feature-desc">Posez vos questions santé à notre assistant et obtenez des conseils personnalisés.</div>
+          </div>
+          <div class="feature-item" style="margin-bottom: 10px;">
+            <div class="feature-icon">🩺</div>
+            <div class="feature-title">Pré-diagnostic intelligent</div>
+            <div class="feature-desc">Analysez les symptômes et recevez une orientation médicale avant votre rendez-vous.</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📋</div>
+            <div class="feature-title">Carnet de santé numérique</div>
+            <div class="feature-desc">Centralisez les vaccins, ordonnances et visites vétérinaires en un seul endroit.</div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-section">
+          <a href="{{ appUrl }}" class="cta-button">
+            Accéder à mon compte
+          </a>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Help box -->
+        <div class="help-box">
+          <span class="help-icon">💬</span>
+          <p>
+            Des questions ? Notre équipe est là pour vous aider.
+            Contactez-nous à <a href="mailto:support@ficabot.com">support@ficabot.com</a>
+            ou consultez notre <a href="#">centre d'aide</a>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>
+          <strong>Ficabot</strong> — L'assistant santé pour vos animaux<br>
+          Plateforme de santé vétérinaire assistée par IA
+        </p>
+        <div class="footer-links">
+          <a href="#">Aide & Support</a>
+          <span>•</span>
+          <a href="#">Politique de confidentialité</a>
+          <span>•</span>
+          <a href="#">Se désabonner</a>
+        </div>
+        <p style="margin-top: 16px; font-size: 12px;">© 2026 Ficabot. Tous droits réservés.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

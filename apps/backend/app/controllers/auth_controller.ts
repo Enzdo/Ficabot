@@ -5,6 +5,9 @@ import logger from '@adonisjs/core/services/logger'
 import hash from '@adonisjs/core/services/hash'
 import mail from '@adonisjs/mail/services/main'
 import EmailVerificationNotification from '#mails/email_verification_notification'
+import WelcomeNotification from '#mails/welcome_notification'
+import PasswordResetNotification from '#mails/password_reset_notification'
+import PasswordChangedNotification from '#mails/password_changed_notification'
 import { DateTime } from 'luxon'
 import { randomBytes } from 'node:crypto'
 import env from '#start/env'
@@ -186,9 +189,96 @@ export default class AuthController {
     user.password = newPassword
     await user.save()
 
+    // Send password changed confirmation email (async)
+    mail.send(new PasswordChangedNotification(user)).catch((error) => {
+      logger.error('Failed to send password changed email:', error)
+    })
+
     return response.ok({
       success: true,
       message: 'Mot de passe mis à jour',
+    })
+  }
+
+  /**
+   * Request a password reset link
+   * POST /auth/forgot-password
+   */
+  async forgotPassword({ request, response }: HttpContext) {
+    const { email } = request.only(['email'])
+
+    const user = await User.findBy('email', email)
+
+    // Always return success to avoid email enumeration
+    if (!user) {
+      return response.ok({
+        success: true,
+        message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
+      })
+    }
+
+    // Generate reset token (1 hour expiry)
+    user.resetToken = randomBytes(32).toString('hex')
+    user.resetTokenExpiresAt = DateTime.now().plus({ hours: 1 })
+    await user.save()
+
+    const frontendUrl = env.get('VET_FRONTEND_URL') || 'http://localhost:3000'
+    const resetUrl = `${frontendUrl}/reset-password/${user.resetToken}`
+
+    mail.send(new PasswordResetNotification(user, resetUrl)).catch((error) => {
+      logger.error('Failed to send password reset email:', error)
+    })
+
+    logger.info(`Password reset email requested for ${user.email}`)
+
+    return response.ok({
+      success: true,
+      message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.',
+    })
+  }
+
+  /**
+   * Reset password with token
+   * POST /auth/reset-password
+   */
+  async resetPassword({ request, response }: HttpContext) {
+    const { token, password } = request.only(['token', 'password'])
+
+    const user = await User.query()
+      .where('resetToken', token)
+      .whereNotNull('resetToken')
+      .first()
+
+    if (!user) {
+      return response.badRequest({
+        success: false,
+        message: 'Lien de réinitialisation invalide ou expiré.',
+      })
+    }
+
+    if (user.resetTokenExpiresAt && user.resetTokenExpiresAt < DateTime.now()) {
+      return response.badRequest({
+        success: false,
+        message: 'Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau.',
+        code: 'TOKEN_EXPIRED',
+      })
+    }
+
+    user.password = password
+    user.resetToken = null
+    user.resetTokenExpiresAt = null
+    await user.save()
+
+    // Send confirmation email (async)
+    mail.send(new PasswordChangedNotification(user)).catch((error) => {
+      logger.error('Failed to send password changed email:', error)
+    })
+
+    logger.info(`Password reset successfully for ${user.email}`)
+
+    return response.ok({
+      success: true,
+      message: 'Mot de passe réinitialisé avec succès. Vous pouvez maintenant vous connecter.',
     })
   }
 
@@ -251,6 +341,11 @@ export default class AuthController {
     await user.save()
 
     logger.info(`Email verified for user ${user.email}`)
+
+    // Send welcome email (async, don't block response)
+    mail.send(new WelcomeNotification(user)).catch((error) => {
+      logger.error('Failed to send welcome email:', error)
+    })
 
     return response.ok({
       success: true,
