@@ -85,8 +85,8 @@
           <div
             v-for="pet in client.pets"
             :key="pet.id"
-            class="card-hover cursor-pointer"
-            @click="navigateTo(`/patients/${pet.id}`)"
+            :class="['card', pet.vetToken ? 'card-hover cursor-pointer' : 'opacity-60']"
+            @click="pet.vetToken && navigateTo(`/patients/${pet.vetToken}`)"
           >
             <div class="flex items-center gap-4">
               <div class="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
@@ -108,9 +108,10 @@
                     </svg>
                     Carnet de santé
                   </span>
+                  <span v-if="!pet.vetToken" class="text-surface-400 italic">Accès non partagé</span>
                 </div>
               </div>
-              <svg class="w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg v-if="pet.vetToken" class="w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </div>

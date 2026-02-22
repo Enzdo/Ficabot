@@ -404,6 +404,7 @@ export default class VetClientsController {
           birthDate: pet.birthDate,
           weight: pet.weight,
           avatarUrl: pet.avatarUrl,
+          vetToken: pet.vetToken,
           hasHealthBook: !!pet.healthBook,
         })),
       },
