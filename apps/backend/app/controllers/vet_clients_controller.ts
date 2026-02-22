@@ -1,11 +1,16 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { DateTime } from 'luxon'
+import mail from '@adonisjs/mail/services/main'
 import UserVeterinarian from '#models/user_veterinarian'
+import VetExternalClient from '#models/vet_external_client'
 import User from '#models/user'
 import Veterinarian from '#models/veterinarian'
+import VetClientInviteNotification from '#mails/vet_client_invite_notification'
 
 export default class VetClientsController {
   /**
    * List all clients for the authenticated veterinarian
+   * Returns: { clients, prospects, external }
    */
   async index({ response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
@@ -17,13 +22,71 @@ export default class VetClientsController {
       })
       .orderBy('created_at', 'desc')
 
+    const externalClients = await VetExternalClient.query()
+      .where('veterinarian_id', vet.id)
+      .orderBy('created_at', 'desc')
+
+    const mapLink = (link: UserVeterinarian) => ({
+      id: link.id,
+      status: link.status,
+      initiatedBy: link.initiatedBy,
+      isPrimary: link.isPrimary,
+      note: link.note,
+      createdAt: link.createdAt,
+      user: {
+        id: link.user.id,
+        email: link.user.email,
+        firstName: link.user.firstName,
+        lastName: link.user.lastName,
+        phone: link.user.phone,
+        avatarUrl: link.user.avatarUrl,
+        petsCount: link.user.pets?.length || 0,
+      },
+    })
+
     return response.ok({
       success: true,
-      data: links.map(link => ({
+      data: {
+        clients: links
+          .filter((l) => l.status === 'accepted')
+          .map(mapLink),
+        prospects: links
+          .filter((l) => l.status === 'pending' && l.initiatedBy === 'user')
+          .map(mapLink),
+        sentInvitations: links
+          .filter((l) => l.status === 'pending' && l.initiatedBy === 'vet')
+          .map(mapLink),
+        external: externalClients.map((c) => ({
+          id: c.id,
+          email: c.email,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          phone: c.phone,
+          notes: c.notes,
+          inviteSentAt: c.inviteSentAt,
+          createdAt: c.createdAt,
+        })),
+      },
+    })
+  }
+
+  /**
+   * Get prospects (users who requested to link with this vet)
+   */
+  async prospects({ response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const links = await UserVeterinarian.query()
+      .where('veterinarian_id', vet.id)
+      .where('status', 'pending')
+      .where('initiated_by', 'user')
+      .preload('user')
+      .orderBy('created_at', 'desc')
+
+    return response.ok({
+      success: true,
+      data: links.map((link) => ({
         id: link.id,
-        status: link.status,
-        initiatedBy: link.initiatedBy,
-        isPrimary: link.isPrimary,
         note: link.note,
         createdAt: link.createdAt,
         user: {
@@ -32,10 +95,59 @@ export default class VetClientsController {
           firstName: link.user.firstName,
           lastName: link.user.lastName,
           phone: link.user.phone,
-          avatarUrl: link.user.avatarUrl,
-          petsCount: link.user.pets?.length || 0,
         },
       })),
+    })
+  }
+
+  /**
+   * Get all external clients for the vet
+   */
+  async external({ response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const externalClients = await VetExternalClient.query()
+      .where('veterinarian_id', vet.id)
+      .orderBy('created_at', 'desc')
+
+    return response.ok({
+      success: true,
+      data: externalClients.map((c) => ({
+        id: c.id,
+        email: c.email,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        phone: c.phone,
+        notes: c.notes,
+        inviteSentAt: c.inviteSentAt,
+        createdAt: c.createdAt,
+      })),
+    })
+  }
+
+  /**
+   * Delete an external client
+   */
+  async deleteExternal({ params, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const client = await VetExternalClient.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!client) {
+      return response.notFound({
+        success: false,
+        message: 'Client externe non trouvé',
+      })
+    }
+
+    await client.delete()
+
+    return response.ok({
+      success: true,
+      message: 'Client externe supprimé',
     })
   }
 
@@ -54,7 +166,7 @@ export default class VetClientsController {
 
     return response.ok({
       success: true,
-      data: pendingLinks.map(link => ({
+      data: pendingLinks.map((link) => ({
         id: link.id,
         note: link.note,
         createdAt: link.createdAt,
@@ -127,46 +239,89 @@ export default class VetClientsController {
   }
 
   /**
-   * Invite a user to become a client (vet initiates)
+   * Invite a client by email (vet initiates).
+   * - If email exists in app → creates UserVeterinarian (pending, initiated_by=vet)
+   * - If not → creates VetExternalClient + sends invitation email
    */
   async invite({ request, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
-    const { email, note } = request.only(['email', 'note'])
+    const { email, note, firstName, lastName } = request.only([
+      'email',
+      'note',
+      'firstName',
+      'lastName',
+    ])
 
     const user = await User.findBy('email', email)
-    if (!user) {
-      return response.notFound({
-        success: false,
-        message: 'Utilisateur non trouvé avec cet email',
+
+    if (user) {
+      // User exists in the app — create a UserVeterinarian link
+      const existingLink = await UserVeterinarian.query()
+        .where('user_id', user.id)
+        .where('veterinarian_id', vet.id)
+        .first()
+
+      if (existingLink) {
+        return response.conflict({
+          success: false,
+          message: 'Une relation existe déjà avec cet utilisateur',
+          data: { status: existingLink.status },
+        })
+      }
+
+      const link = await UserVeterinarian.create({
+        userId: user.id,
+        veterinarianId: vet.id,
+        status: 'pending',
+        initiatedBy: 'vet',
+        note,
+      })
+
+      return response.created({
+        success: true,
+        type: 'app',
+        message: 'Invitation envoyée à un utilisateur Ficabot',
+        data: link,
       })
     }
 
-    // Check if link already exists
-    const existingLink = await UserVeterinarian.query()
-      .where('user_id', user.id)
+    // User not found — create external client record
+    const existingExternal = await VetExternalClient.query()
       .where('veterinarian_id', vet.id)
+      .where('email', email)
       .first()
 
-    if (existingLink) {
+    if (existingExternal) {
       return response.conflict({
         success: false,
-        message: 'Une relation existe déjà avec cet utilisateur',
-        data: { status: existingLink.status },
+        message: 'Un client externe avec cet email existe déjà',
+        data: { id: existingExternal.id },
       })
     }
 
-    const link = await UserVeterinarian.create({
-      userId: user.id,
+    const vetName = [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+
+    const externalClient = await VetExternalClient.create({
       veterinarianId: vet.id,
-      status: 'pending',
-      initiatedBy: 'vet',
-      note,
+      email,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      inviteSentAt: DateTime.now(),
     })
+
+    await mail.send(new VetClientInviteNotification(email, vetName, vet.clinicName))
 
     return response.created({
       success: true,
-      message: 'Invitation envoyée',
-      data: link,
+      type: 'external',
+      message: 'Client externe créé et invitation par email envoyée',
+      data: {
+        id: externalClient.id,
+        email: externalClient.email,
+        firstName: externalClient.firstName,
+        lastName: externalClient.lastName,
+        inviteSentAt: externalClient.inviteSentAt,
+      },
     })
   }
 
@@ -235,7 +390,7 @@ export default class VetClientsController {
           phone: link.user.phone,
           avatarUrl: link.user.avatarUrl,
         },
-        pets: link.user.pets.map(pet => ({
+        pets: link.user.pets.map((pet) => ({
           id: pet.id,
           name: pet.name,
           species: pet.species,
@@ -270,7 +425,7 @@ export default class VetClientsController {
 
     return response.ok({
       success: true,
-      data: users.map(user => ({
+      data: users.map((user) => ({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
