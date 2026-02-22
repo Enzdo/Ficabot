@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto'
 import type { HttpContext } from '@adonisjs/core/http'
 import Pet from '#models/pet'
 import PetOwner from '#models/pet_owner'
+import UserVeterinarian from '#models/user_veterinarian'
 import { createPetValidator, updatePetValidator } from '#validators/pet'
 import { DateTime } from 'luxon'
 
@@ -37,6 +39,12 @@ export default class PetsController {
     const user = auth.user!
     const data = await request.validateUsing(createPetValidator)
 
+    // Check if user has accepted vet relationships — if so, auto-grant access
+    const acceptedVetLink = await UserVeterinarian.query()
+      .where('userId', user.id)
+      .where('status', 'accepted')
+      .first()
+
     const pet = await Pet.create({
       userId: user.id,
       name: data.name,
@@ -45,6 +53,7 @@ export default class PetsController {
       birthDate: data.birthDate ? DateTime.fromISO(data.birthDate) : null,
       weight: data.weight,
       avatarUrl: data.avatarUrl,
+      vetToken: acceptedVetLink ? randomUUID() : null,
     })
 
     return response.created({

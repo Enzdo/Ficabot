@@ -1,12 +1,22 @@
+import { randomUUID } from 'node:crypto'
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import mail from '@adonisjs/mail/services/main'
 import UserVeterinarian from '#models/user_veterinarian'
 import VetExternalClient from '#models/vet_external_client'
 import User from '#models/user'
+import Pet from '#models/pet'
 import Veterinarian from '#models/veterinarian'
 import VetClientInviteNotification from '#mails/vet_client_invite_notification'
 import VetClientAppInviteNotification from '#mails/vet_client_app_invite_notification'
+
+async function ensurePetsHaveVetToken(userId: number) {
+  const pets = await Pet.query().where('userId', userId).whereNull('vetToken')
+  for (const pet of pets) {
+    pet.vetToken = randomUUID()
+    await pet.save()
+  }
+}
 
 export default class VetClientsController {
   /**
@@ -203,6 +213,8 @@ export default class VetClientsController {
 
     link.status = 'accepted'
     await link.save()
+
+    await ensurePetsHaveVetToken(link.userId)
 
     return response.ok({
       success: true,

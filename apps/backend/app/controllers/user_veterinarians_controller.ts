@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto'
 import type { HttpContext } from '@adonisjs/core/http'
 import UserVeterinarian from '#models/user_veterinarian'
 import Veterinarian from '#models/veterinarian'
+import Pet from '#models/pet'
 
 export default class UserVeterinariansController {
   /**
@@ -88,6 +90,13 @@ export default class UserVeterinariansController {
 
     link.status = 'accepted'
     await link.save()
+
+    // Auto-grant vet access to all user's pets
+    const pets = await Pet.query().where('userId', user.id).whereNull('vetToken')
+    for (const pet of pets) {
+      pet.vetToken = randomUUID()
+      await pet.save()
+    }
 
     return response.ok({
       success: true,
