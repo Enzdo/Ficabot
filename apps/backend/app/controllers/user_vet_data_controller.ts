@@ -126,9 +126,9 @@ export default class UserVetDataController {
        FROM vet_invoices i
        LEFT JOIN veterinarians v ON v.id = i.veterinarian_id
        WHERE i.veterinarian_id IN (${vetIds.map(() => '?').join(',')})
-       AND (i.user_id = ? OR LOWER(i.client_name) LIKE LOWER(?))
+       AND LOWER(i.client_name) LIKE LOWER(?)
        ORDER BY i.date DESC`,
-      [...vetIds, user.id, `%${userName}%`]
+      [...vetIds, `%${userName}%`]
     )
 
     return response.ok({
