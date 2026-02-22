@@ -22,6 +22,22 @@
       </div>
     </div>
 
+    <!-- Search -->
+    <div class="relative mb-5">
+      <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        v-model="search"
+        type="search"
+        placeholder="Rechercher par email, nom..."
+        class="w-full pl-12 pr-4 py-3 rounded-xl border border-surface-200 bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm"
+      />
+      <span v-if="search" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-surface-400">
+        {{ searchResultCount }} résultat{{ searchResultCount !== 1 ? 's' : '' }}
+      </span>
+    </div>
+
     <!-- Tabs -->
     <div class="flex gap-2 mb-6">
       <button
@@ -64,19 +80,19 @@
 
     <!-- Tab: Clients confirmés -->
     <div v-else-if="activeTab === 'clients'" class="space-y-4">
-      <div v-if="confirmedCount === 0" class="card text-center py-12">
+      <div v-if="filteredClients.length === 0 && filteredExternal.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
-        <p class="text-surface-500">Aucun client pour le moment</p>
-        <p class="text-sm text-surface-400 mt-1">Invitez des clients ou attendez leurs demandes</p>
+        <p class="text-surface-500">{{ search ? 'Aucun client trouvé pour cette recherche' : 'Aucun client pour le moment' }}</p>
+        <p v-if="!search" class="text-sm text-surface-400 mt-1">Invitez des clients ou attendez leurs demandes</p>
       </div>
 
       <!-- App clients -->
       <div
-        v-for="client in data.clients"
+        v-for="client in filteredClients"
         :key="`app-${client.id}`"
         class="card-hover"
       >
@@ -123,7 +139,7 @@
 
       <!-- External clients -->
       <div
-        v-for="client in data.external"
+        v-for="client in filteredExternal"
         :key="`ext-${client.id}`"
         class="card-hover"
       >
@@ -164,18 +180,18 @@
 
     <!-- Tab: Prospects -->
     <div v-else-if="activeTab === 'prospects'" class="space-y-4">
-      <div v-if="data.prospects.length === 0" class="card text-center py-12">
+      <div v-if="filteredProspects.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <p class="text-surface-500">Aucun prospect en attente</p>
-        <p class="text-sm text-surface-400 mt-1">Les utilisateurs qui vous choisissent apparaîtront ici</p>
+        <p class="text-surface-500">{{ search ? 'Aucun prospect trouvé pour cette recherche' : 'Aucun prospect en attente' }}</p>
+        <p v-if="!search" class="text-sm text-surface-400 mt-1">Les utilisateurs qui vous choisissent apparaîtront ici</p>
       </div>
 
       <div
-        v-for="client in data.prospects"
+        v-for="client in filteredProspects"
         :key="client.id"
         class="card border-l-4 border-l-warning-500"
       >
@@ -218,19 +234,19 @@
 
     <!-- Tab: Invitations envoyées -->
     <div v-else-if="activeTab === 'invitations'" class="space-y-4">
-      <div v-if="sentCount === 0" class="card text-center py-12">
+      <div v-if="filteredSentInvitations.length === 0 && externalWithInvite.length === 0" class="card text-center py-12">
         <div class="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <p class="text-surface-500">Aucune invitation envoyée</p>
-        <p class="text-sm text-surface-400 mt-1">Les invitations que vous envoyez apparaîtront ici</p>
+        <p class="text-surface-500">{{ search ? 'Aucune invitation trouvée pour cette recherche' : 'Aucune invitation envoyée' }}</p>
+        <p v-if="!search" class="text-sm text-surface-400 mt-1">Les invitations que vous envoyez apparaîtront ici</p>
       </div>
 
       <!-- Sent to app users (pending, initiated_by=vet) -->
       <div
-        v-for="client in data.sentInvitations"
+        v-for="client in filteredSentInvitations"
         :key="`sent-${client.id}`"
         class="card border-l-4 border-l-primary-300"
       >
@@ -419,9 +435,43 @@ const inviteForm = ref({
   note: '',
 })
 
+const search = ref('')
+
+const matchesSearch = (text: string) =>
+  !search.value || text.toLowerCase().includes(search.value.toLowerCase())
+
+const filteredClients = computed(() =>
+  data.value.clients.filter((c) =>
+    matchesSearch(c.user.email) || matchesSearch(`${c.user.firstName} ${c.user.lastName}`)
+  )
+)
+const filteredExternal = computed(() =>
+  data.value.external.filter((c) =>
+    matchesSearch(c.email) || matchesSearch(`${c.firstName || ''} ${c.lastName || ''}`)
+  )
+)
+const filteredProspects = computed(() =>
+  data.value.prospects.filter((c) =>
+    matchesSearch(c.user.email) || matchesSearch(`${c.user.firstName} ${c.user.lastName}`)
+  )
+)
+const filteredSentInvitations = computed(() =>
+  data.value.sentInvitations.filter((c) =>
+    matchesSearch(c.user.email) || matchesSearch(`${c.user.firstName} ${c.user.lastName}`)
+  )
+)
+const externalWithInvite = computed(() =>
+  data.value.external.filter((c) => c.inviteSentAt && (
+    matchesSearch(c.email) || matchesSearch(`${c.firstName || ''} ${c.lastName || ''}`)
+  ))
+)
+
 const confirmedCount = computed(() => data.value.clients.length + data.value.external.length)
-const sentCount = computed(() => data.value.sentInvitations.length + externalWithInvite.value.length)
-const externalWithInvite = computed(() => data.value.external.filter((c) => c.inviteSentAt))
+const sentCount = computed(() => data.value.sentInvitations.length + data.value.external.filter((c) => c.inviteSentAt).length)
+const searchResultCount = computed(() =>
+  filteredClients.value.length + filteredExternal.value.length +
+  filteredProspects.value.length + filteredSentInvitations.value.length
+)
 
 onMounted(async () => {
   await loadAll()
