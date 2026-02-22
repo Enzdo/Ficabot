@@ -53,12 +53,12 @@ export default defineNuxtConfig({
     strict: true,
   },
 
-  vite: {
-    resolve: {
-      alias: {
-        '@ficabot/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)),
-      },
-    },
+  alias: {
+    '@ficabot/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)),
+  },
+
+  build: {
+    transpile: ['@ficabot/shared'],
   },
 
   compatibilityDate: '2024-01-01',
