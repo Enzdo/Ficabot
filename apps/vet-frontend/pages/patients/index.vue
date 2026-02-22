@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <h1 class="text-2xl font-bold text-surface-900">Patients</h1>
-        <p class="text-surface-500 mt-1">{{ patients.length }} patient(s) avec accès partagé</p>
+        <p class="text-surface-500 mt-1">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} avec accès partagé</p>
       </div>
     </div>
 
@@ -14,12 +14,15 @@
         <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <input 
+        <input
           v-model="searchQuery"
-          type="text"
-          placeholder="Rechercher un patient..."
+          type="search"
+          placeholder="Rechercher par nom, race, propriétaire, email..."
           class="w-full pl-12 pr-4 py-3 rounded-xl border border-surface-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
         />
+        <span v-if="searchQuery" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-surface-400">
+          {{ filteredPatients.length }} résultat{{ filteredPatients.length !== 1 ? 's' : '' }}
+        </span>
       </div>
     </div>
 
@@ -69,7 +72,7 @@
       </div>
       <h3 class="text-lg font-semibold text-surface-900 mb-2">Aucun patient trouvé</h3>
       <p class="text-surface-500 max-w-sm mx-auto">
-        Les patients apparaîtront ici lorsque leurs propriétaires partageront l'accès à leur dossier via l'application Ficabot.
+        {{ searchQuery ? 'Aucun résultat pour "' + searchQuery + '"' : 'Les patients apparaîtront ici lorsque leurs propriétaires partageront l\'accès à leur dossier.' }}
       </p>
     </div>
 
@@ -94,6 +97,11 @@
           <div class="flex-1 min-w-0">
             <h3 class="font-semibold text-surface-900 truncate">{{ patient.name }}</h3>
             <p class="text-sm text-surface-500">{{ patient.breed || getSpeciesLabel(patient.species) }}</p>
+            <p v-if="patient.owner" class="text-xs text-surface-400 mt-0.5 truncate">
+              {{ patient.owner.firstName }} {{ patient.owner.lastName }}
+              <span class="text-surface-300">·</span>
+              {{ patient.owner.email }}
+            </p>
             <div class="flex items-center gap-2 mt-2">
               <span v-if="patient.hasHealthBook" class="badge-success">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,9 +141,12 @@ const filteredPatients = computed(() => {
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    result = result.filter(p => 
+    result = result.filter(p =>
       p.name.toLowerCase().includes(query) ||
-      (p.breed && p.breed.toLowerCase().includes(query))
+      (p.breed && p.breed.toLowerCase().includes(query)) ||
+      (p.owner?.email && p.owner.email.toLowerCase().includes(query)) ||
+      (p.owner?.firstName && p.owner.firstName.toLowerCase().includes(query)) ||
+      (p.owner?.lastName && p.owner.lastName.toLowerCase().includes(query))
     )
   }
 

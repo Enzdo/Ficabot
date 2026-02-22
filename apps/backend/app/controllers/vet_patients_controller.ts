@@ -10,6 +10,7 @@ export default class VetPatientsController {
     const pets = await Pet.query()
       .whereNotNull('vetToken')
       .preload('healthBook')
+      .preload('user')
       .orderBy('name', 'asc')
 
     return response.ok({
@@ -23,6 +24,11 @@ export default class VetPatientsController {
         avatarUrl: pet.avatarUrl,
         vetToken: pet.vetToken,
         hasHealthBook: !!pet.healthBook,
+        owner: {
+          firstName: pet.user.firstName,
+          lastName: pet.user.lastName,
+          email: pet.user.email,
+        },
       })),
     })
   }
