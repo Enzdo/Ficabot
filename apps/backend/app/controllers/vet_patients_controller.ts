@@ -35,6 +35,7 @@ export default class VetPatientsController {
       .where('vetToken', params.token)
       .preload('healthBook')
       .preload('medicalRecords')
+      .preload('user')
       .first()
 
     if (!pet) {
@@ -56,6 +57,13 @@ export default class VetPatientsController {
         avatarUrl: pet.avatarUrl,
         healthBook: pet.healthBook,
         medicalRecords: pet.medicalRecords,
+        owner: {
+          id: pet.user.id,
+          firstName: pet.user.firstName,
+          lastName: pet.user.lastName,
+          email: pet.user.email,
+          phone: pet.user.phone,
+        },
       },
     })
   }

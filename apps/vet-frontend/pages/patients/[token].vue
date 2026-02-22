@@ -62,6 +62,50 @@
         </div>
       </div>
 
+      <!-- Owner info -->
+      <div v-if="patient.owner" class="card mb-6 bg-surface-50">
+        <div class="flex items-center gap-4">
+          <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <span class="text-primary-700 font-semibold text-sm">
+              {{ patient.owner.firstName?.[0] || '?' }}{{ patient.owner.lastName?.[0] || '' }}
+            </span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-surface-900">
+              {{ patient.owner.firstName }} {{ patient.owner.lastName }}
+            </p>
+            <p class="text-xs text-surface-500">Propriétaire</p>
+          </div>
+          <div class="flex gap-2">
+            <a
+              v-if="patient.owner.phone"
+              :href="`tel:${patient.owner.phone}`"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-surface-200 rounded-lg text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              {{ patient.owner.phone }}
+            </a>
+            <a
+              :href="`mailto:${patient.owner.email}`"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-surface-200 rounded-lg text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              {{ patient.owner.email }}
+            </a>
+            <NuxtLink
+              :to="`/clients?owner=${patient.owner.id}`"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg text-sm text-primary-700 hover:bg-primary-100 transition-colors"
+            >
+              Voir le dossier client
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+
       <!-- Tabs -->
       <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
         <button 
