@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
@@ -49,6 +51,14 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
+  },
+
+  vite: {
+    resolve: {
+      alias: {
+        '@ficabot/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)),
+      },
+    },
   },
 
   compatibilityDate: '2024-01-01',
