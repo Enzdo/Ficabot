@@ -37,7 +37,7 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Gérez la santé de vos animaux de compagnie avec votre assistant virtuel' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
       ],
     },
   },

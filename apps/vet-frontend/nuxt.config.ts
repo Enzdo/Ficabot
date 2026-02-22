@@ -37,7 +37,7 @@ export default defineNuxtConfig({
         { name: 'description', content: 'Espace professionnel vétérinaire - Suivi de vos patients animaux' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
       ],
     },
   },
