@@ -6,6 +6,7 @@ import VetExternalClient from '#models/vet_external_client'
 import User from '#models/user'
 import Veterinarian from '#models/veterinarian'
 import VetClientInviteNotification from '#mails/vet_client_invite_notification'
+import VetClientAppInviteNotification from '#mails/vet_client_app_invite_notification'
 
 export default class VetClientsController {
   /**
@@ -275,6 +276,11 @@ export default class VetClientsController {
         status: 'pending',
         initiatedBy: 'vet',
         note,
+      })
+
+      const vetName = [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+      mail.send(new VetClientAppInviteNotification(user.email, vetName, vet.clinicName)).catch((err) => {
+        console.error('Failed to send app invite email:', err)
       })
 
       return response.created({

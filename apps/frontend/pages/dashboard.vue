@@ -97,6 +97,43 @@
       </div>
     </div>
 
+    <!-- Vet Invitations -->
+    <div v-if="vetInvitations.length > 0">
+      <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">🏥 Invitations de vétérinaires</h2>
+      <div class="space-y-3">
+        <div
+          v-for="inv in vetInvitations"
+          :key="inv.id"
+          class="bg-white rounded-2xl p-4 shadow-sm border border-amber-100 ring-1 ring-amber-200"
+        >
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-2xl shrink-0">🩺</div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-gray-900 truncate">
+                Dr. {{ inv.veterinarian.firstName }} {{ inv.veterinarian.lastName }}
+              </p>
+              <p v-if="inv.veterinarian.clinicName" class="text-sm text-gray-500 truncate">{{ inv.veterinarian.clinicName }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">Invitation reçue le {{ formatDate(inv.createdAt) }}</p>
+            </div>
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button
+              @click="acceptVetInvite(inv.id)"
+              class="flex-1 py-2 bg-primary-600 text-white rounded-xl text-sm font-semibold active:scale-95 transition-all"
+            >
+              Accepter
+            </button>
+            <button
+              @click="rejectVetInvite(inv.id)"
+              class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold active:scale-95 transition-all"
+            >
+              Refuser
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Vet Data Summary -->
     <div v-if="vetSummary.prescriptions > 0 || vetSummary.pendingInvoices > 0 || vetSummary.reminders > 0">
       <h2 class="text-lg font-bold text-gray-900 mb-4 px-1">🏥 Données vétérinaires</h2>
@@ -218,7 +255,35 @@ const upcomingAppointments = ref(0)
 const conversations = ref(0)
 const petHealthData = ref<any[]>([])
 const vetSummary = ref({ prescriptions: 0, pendingInvoices: 0, reminders: 0 })
+const vetInvitations = ref<any[]>([])
 let onboardingTimeout: ReturnType<typeof setTimeout> | null = null
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+
+const fetchVetInvitations = async () => {
+  const api = useApi()
+  try {
+    const res = await api.get<any[]>('/user/veterinarians/pending')
+    if (res.success && res.data) {
+      vetInvitations.value = res.data
+    }
+  } catch (e) {
+    // Non-blocking
+  }
+}
+
+const acceptVetInvite = async (id: number) => {
+  const api = useApi()
+  await api.post(`/user/veterinarians/${id}/accept`)
+  await fetchVetInvitations()
+}
+
+const rejectVetInvite = async (id: number) => {
+  const api = useApi()
+  await api.post(`/user/veterinarians/${id}/reject`)
+  await fetchVetInvitations()
+}
 
 const fetchVetSummary = async () => {
   const api = useApi()
@@ -309,7 +374,7 @@ const fetchStats = async () => {
 
 onMounted(async () => {
   await petsStore.fetchPets()
-  await Promise.all([fetchStats(), fetchPetHealthData(), fetchVetSummary()])
+  await Promise.all([fetchStats(), fetchPetHealthData(), fetchVetSummary(), fetchVetInvitations()])
 
   // Start onboarding tour for new users (only once)
   if (!hasCompletedOnboarding()) {
