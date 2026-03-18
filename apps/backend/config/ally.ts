@@ -1,4 +1,5 @@
 import { defineConfig, services } from '@adonisjs/ally'
+import type { InferSocialProviders } from '@adonisjs/ally'
 import env from '#start/env'
 
 const allyConfig = defineConfig({

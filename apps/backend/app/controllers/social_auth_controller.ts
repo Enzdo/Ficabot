@@ -8,8 +8,13 @@ export default class SocialAuthController {
    * Redirect user to Google OAuth
    * GET /auth/google
    */
-  async redirectToGoogle({ ally }: HttpContext) {
-    return ally.use('google').redirect()
+  async redirectToGoogle({ ally, response }: HttpContext) {
+    try {
+      return ally.use('google').redirect()
+    } catch (error) {
+      logger.error('[GoogleAuth] Redirect error:', error)
+      return response.internalServerError({ success: false, message: error.message })
+    }
   }
 
   /**
