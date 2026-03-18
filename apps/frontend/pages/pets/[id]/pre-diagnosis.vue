@@ -11,7 +11,7 @@
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2 mb-1">
             <h1 class="font-bold text-gray-900 text-lg leading-tight truncate">Pré-Diagnostic IA</h1>
-            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full shrink-0">3 IA</span>
+            <span class="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full shrink-0">2 IA</span>
           </div>
           <p class="text-xs text-gray-500 font-medium truncate" v-if="pet">{{ pet.name }}</p>
         </div>
@@ -24,11 +24,11 @@
         <div class="flex items-start gap-3">
           <div class="text-2xl shrink-0">🔬</div>
           <div>
-            <h3 class="font-bold text-indigo-900 mb-2">Pré-Diagnostic Complet par 3 IA</h3>
+            <h3 class="font-bold text-indigo-900 mb-2">Pré-Diagnostic Complet par 2 IA</h3>
             <div class="text-sm text-indigo-800 space-y-2">
-              <p>Cette analyse utilise <strong>3 intelligences artificielles</strong> (Claude, GPT-4, Gemini) qui analysent vos photos et symptômes en parallèle pour créer un <strong>consensus médical</strong>.</p>
+              <p>Cette analyse utilise <strong>2 intelligences artificielles</strong> (Claude, GPT-4) qui analysent vos photos et symptômes en parallèle pour créer un <strong>consensus médical</strong>.</p>
               <ul class="list-disc list-inside space-y-1 ml-2 mt-2">
-                <li>Consensus de 3 modèles IA pour plus de fiabilité</li>
+                <li>Consensus de 2 modèles IA pour plus de fiabilité</li>
                 <li>Analyse de 1 à 5 photos + description détaillée</li>
                 <li>Évaluation du niveau d'urgence</li>
                 <li>Hypothèses de diagnostics possibles</li>
@@ -151,28 +151,61 @@ const canSubmit = computed(() => {
          description.value.length <= 2000
 })
 
-const handleImageSelect = (event: Event) => {
+const convertToJpeg = (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.width
+      canvas.height = img.height
+      const ctx = canvas.getContext('2d')!
+      ctx.drawImage(img, 0, 0)
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url)
+          if (!blob) return reject(new Error('Conversion failed'))
+          const name = file.name.replace(/\.\w+$/, '.jpg')
+          resolve(new File([blob], name, { type: 'image/jpeg' }))
+        },
+        'image/jpeg',
+        0.9
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to load image'))
+    }
+    img.src = url
+  })
+}
+
+const handleImageSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const files = Array.from(target.files || [])
-  
+
   const remainingSlots = 5 - selectedImages.value.length
   const filesToAdd = files.slice(0, remainingSlots)
-  
-  filesToAdd.forEach(file => {
+
+  for (const file of filesToAdd) {
     if (file.size > 10 * 1024 * 1024) {
       alert('Image trop volumineuse (max 10MB)')
-      return
+      continue
     }
-    
+
+    // Convert HEIC/non-standard formats to JPEG for AI API compatibility
+    const needsConversion = file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic')
+    const processedFile = needsConversion ? await convertToJpeg(file) : file
+
     const reader = new FileReader()
     reader.onload = (e) => {
       selectedImages.value.push({
-        file,
+        file: processedFile,
         preview: e.target?.result as string
       })
     }
-    reader.readAsDataURL(file)
-  })
+    reader.readAsDataURL(processedFile)
+  }
 }
 
 const removeImage = (index: number) => {

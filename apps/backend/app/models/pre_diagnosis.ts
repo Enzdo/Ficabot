@@ -29,6 +29,7 @@ export default class PreDiagnosis extends BaseModel {
 
     @column({
         prepare: (value: string[]) => JSON.stringify(value),
+        consume: (value: string | string[]) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare imageUrls: string[]
 

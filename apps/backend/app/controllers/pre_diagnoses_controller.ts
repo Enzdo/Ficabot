@@ -32,14 +32,14 @@ export default class PreDiagnosesController {
         }
 
 
-        // Check cooldown (disabled for testing)
-        // const cooldownOk = await this.preDiagnosisService.checkCooldown(user.id)
-        // if (!cooldownOk) {
-        //     return response.badRequest({
-        //         success: false,
-        //         message: 'Veuillez attendre 30 minutes entre deux analyses',
-        //     })
-        // }
+        // Check cooldown
+        const cooldownOk = await this.preDiagnosisService.checkCooldown(user.id)
+        if (!cooldownOk) {
+            return response.badRequest({
+                success: false,
+                message: 'Veuillez attendre 30 minutes entre deux analyses',
+            })
+        }
 
 
         // Verify pet ownership
@@ -125,7 +125,7 @@ export default class PreDiagnosesController {
             .preload('synthesisResult')
             .preload('aiResponses')
             .preload('pet', (query) => {
-                query.preload('healthBook')
+                query.where('userId', user.id).preload('healthBook')
             })
             .firstOrFail()
 
@@ -166,8 +166,8 @@ export default class PreDiagnosesController {
                 synthesis: preDiagnosis.synthesisResult,
                 disclaimer: LEGAL_DISCLAIMERS.afterAnalysis,
                 veterinarian: {
-                    name: preDiagnosis.pet.healthBook?.emergencyVet?.name || 'Non renseigné',
-                    urgentContact: preDiagnosis.pet.healthBook?.emergencyVet?.phone || null,
+                    name: preDiagnosis.pet.healthBook?.emergencyVetName || 'Non renseigné',
+                    urgentContact: preDiagnosis.pet.healthBook?.emergencyVetPhone || null,
                     // Calendar integration for vet availabilities
                     // IMPLEMENTATION NEEDED: Calendar/booking system
                     // Options:

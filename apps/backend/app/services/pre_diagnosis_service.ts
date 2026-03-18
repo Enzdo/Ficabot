@@ -26,7 +26,7 @@ export default class PreDiagnosisService {
     /**
      * Main orchestration method - processes a pre-diagnosis with Claude + OpenAI
      */
-    async processPreDiagnosis(preDiagnosisId: string): Promise<void> {
+    async processPreDiagnosis(preDiagnosisId: number): Promise<void> {
         const preDiagnosis = await PreDiagnosis.findOrFail(preDiagnosisId)
 
         try {
@@ -113,7 +113,7 @@ export default class PreDiagnosisService {
                 userId: preDiagnosis.userId,
                 type: 'pre_diagnosis_completed',
                 title: '✅ Analyse IA terminée',
-                message: `L'analyse de ${pet.name} par nos 3 IA est prête. Consultez les résultats maintenant.`,
+                message: `L'analyse de ${pet.name} est prête. Consultez les résultats maintenant.`,
                 relatedEntityType: 'pre_diagnosis',
                 relatedEntityId: preDiagnosis.id,
                 isRead: false,
@@ -206,8 +206,8 @@ export default class PreDiagnosisService {
      * Save AI response to database
      */
     private async saveAIResponse(
-        preDiagnosisId: string,
-        model: 'claude' | 'gpt' | 'gemini',
+        preDiagnosisId: number,
+        model: 'claude' | 'gpt',
         response: any | null,
         status: 'success' | 'failed',
         errorMessage?: string
@@ -257,7 +257,7 @@ export default class PreDiagnosisService {
             .count('* as total')
 
         const limit = 3 // From ANALYSIS_LIMITS
-        return count[0].$extras.total < limit
+        return Number(count[0].$extras.total) < limit
     }
 
     /**

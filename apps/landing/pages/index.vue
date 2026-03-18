@@ -55,9 +55,9 @@
           <div class="lg:w-1/2 relative perspective-1000 mt-8 sm:mt-0">
             <div class="relative z-10 transform lg:rotate-y-[-5deg] lg:rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out">
               <!-- Mobile App Mockup (Premium Glassmorphism) -->
-              <div class="relative mx-auto bg-white/40 backdrop-blur-xl border border-white/60 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] h-[480px] sm:h-[550px] lg:h-[620px] w-[240px] sm:w-[280px] lg:w-[320px] shadow-glass flex flex-col overflow-hidden p-[6px] sm:p-[8px] lg:p-[12px] group-hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.3)] transition-all duration-700">
+              <div class="relative mx-auto bg-white/60 backdrop-blur-xl border border-white/40 rounded-[1.5rem] sm:rounded-[2rem] lg:rounded-[3rem] h-[480px] sm:h-[550px] lg:h-[620px] w-[240px] sm:w-[280px] lg:w-[320px] shadow-glass flex flex-col overflow-hidden p-[6px] sm:p-[8px] lg:p-[12px] group-hover:shadow-[0_20px_40px_-15px_rgba(20,184,166,0.3)] transition-all duration-700">
                 <!-- Inner screen -->
-                <div class="flex-1 bg-gray-50/90 relative overflow-hidden rounded-[1.2rem] sm:rounded-[1.6rem] lg:rounded-[2.4rem] shadow-inner border border-white/50 backdrop-blur-md">
+                <div class="flex-1 bg-gray-50/90 relative overflow-hidden rounded-[1.2rem] sm:rounded-[1.6rem] lg:rounded-[2.4rem] shadow-sm border border-white/50 backdrop-blur-md">
                   <!-- Notch -->
                   <div class="absolute top-0 inset-x-0 h-4 sm:h-5 lg:h-7 bg-white/80 backdrop-blur rounded-b-xl sm:rounded-b-2xl lg:rounded-b-3xl w-1/2 mx-auto shadow-sm z-30"></div>
                   
@@ -304,15 +304,15 @@
           </div>
           
           <div class="lg:w-1/2 relative perspective-1000">
-              <!-- Pro Dashboard Mockup (Premium Glassmorphism dark) -->
-            <div class="bg-slate-800/80 backdrop-blur-xl rounded-[2rem] p-4 sm:p-5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] border border-slate-700/50 transform rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out z-20 relative">
-              <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 border-b border-slate-700/50 pb-4 sm:pb-5">
+              <!-- Pro Dashboard Mockup (Premium Glassmorphism light) -->
+            <div class="bg-white/20 backdrop-blur-xl rounded-[2rem] p-4 sm:p-5 shadow-xl border border-white/30 transform rotate-y-[-10deg] rotate-x-[5deg] hover:rotate-0 transition-transform duration-700 ease-out z-20 relative">
+              <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6 border-b border-white/20 pb-4 sm:pb-5">
                 <div class="flex gap-1.5 sm:gap-2">
-                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-red-400/80 shadow-sm"></div>
-                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-amber-400/80 shadow-sm"></div>
-                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-green-400/80 shadow-sm"></div>
+                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-red-400/60 shadow-sm"></div>
+                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-amber-400/60 shadow-sm"></div>
+                  <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-green-400/60 shadow-sm"></div>
                 </div>
-                <div class="ml-2 sm:ml-4 bg-slate-900/50 text-[10px] sm:text-xs text-slate-400 font-mono px-3 py-1 sm:py-1.5 rounded-md flex-1 text-center border border-slate-700/50 truncate">pro.ficabot.com</div>
+                <div class="ml-2 sm:ml-4 bg-white/10 text-[10px] sm:text-xs text-slate-300 font-mono px-3 py-1 sm:py-1.5 rounded-md flex-1 text-center border border-white/10 truncate">pro.ficabot.com</div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div class="hidden sm:block col-span-1 bg-gray-900 rounded-xl h-64 p-3 space-y-3">

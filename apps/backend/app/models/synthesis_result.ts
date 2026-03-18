@@ -12,19 +12,19 @@ export default class SynthesisResult extends BaseModel {
 
     @column({
         prepare: (value: any[]) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare prioritizedHypotheses: any[]
 
     @column({
         prepare: (value: any[]) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare urgentSigns: any[]
 
     @column({
         prepare: (value: string[]) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare generalRecommendations: string[]
 

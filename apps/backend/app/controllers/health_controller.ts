@@ -55,10 +55,10 @@ export default class HealthController {
     }
 
     // Check mail configuration
-    const smtpHost = env.get('SMTP_HOST')
+    const resendKey = env.get('RESEND_API_KEY')
     checks.mail = {
-      status: smtpHost && smtpHost.length > 0 ? 'configured' : 'not_configured',
-      configured: Boolean(smtpHost && smtpHost.length > 0),
+      status: resendKey && resendKey.length > 0 ? 'configured' : 'not_configured',
+      configured: Boolean(resendKey && resendKey.length > 0),
     }
 
     // Check AI services
@@ -68,12 +68,6 @@ export default class HealthController {
       },
       anthropic: {
         configured: Boolean(env.get('ANTHROPIC_API_KEY')),
-      },
-      gemini: {
-        configured: Boolean(
-          env.get('GOOGLE_AI_API_KEY') &&
-            env.get('GOOGLE_AI_API_KEY') !== 'PLACEHOLDER'
-        ),
       },
     }
 

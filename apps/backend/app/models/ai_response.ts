@@ -11,23 +11,23 @@ export default class AIResponse extends BaseModel {
     declare preDiagnosisId: number
 
     @column()
-    declare model: 'claude' | 'gpt' | 'gemini'
+    declare model: 'claude' | 'gpt'
 
     @column({
         prepare: (value: object) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare rawResponse: object
 
     @column({
         prepare: (value: any[]) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare hypotheses: any[]
 
     @column({
         prepare: (value: string[]) => JSON.stringify(value),
-        consume: (value: string) => JSON.parse(value),
+        consume: (value: any) => typeof value === 'string' ? JSON.parse(value) : value,
     })
     declare urgentSigns: string[]
 

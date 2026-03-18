@@ -42,8 +42,8 @@ export default class VetNotificationService {
         if (isUrgent) {
             try {
                 // Check if email is configured
-                const smtpHost = env.get('SMTP_HOST')
-                if (smtpHost && smtpHost.length > 0) {
+                const resendKey = env.get('RESEND_API_KEY')
+                if (resendKey && resendKey.length > 0) {
                     await mail.send(new UrgentPreDiagnosisNotification(vet, preDiagnosis, pet))
                     logger.info(`[VetNotification] Urgent case email sent to ${vet.email}`)
                 } else {

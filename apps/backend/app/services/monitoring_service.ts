@@ -39,7 +39,7 @@ export default class MonitoringService {
    * Track AI model usage
    */
   trackAIUsage(data: {
-    model: 'claude' | 'gpt' | 'gemini'
+    model: 'claude' | 'gpt'
     operation: string
     duration: number
     tokensUsed?: number

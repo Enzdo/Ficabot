@@ -127,7 +127,7 @@ export const ANALYSIS_LIMITS = {
     maxImageSizeMB: 10,
     maxDescriptionLength: 2000,
     minDescriptionLength: 20,
-    allowedImageFormats: ['jpg', 'jpeg', 'png', 'heic', 'webp'],
+    allowedImageFormats: ['jpg', 'jpeg', 'png', 'heic', 'webp', 'JPG', 'JPEG', 'PNG', 'HEIC', 'WEBP'],
     maxRequestsPerDay: 3,
     cooldownMinutes: 30,
     aiTimeoutMs: 60000, // 60 seconds per AI

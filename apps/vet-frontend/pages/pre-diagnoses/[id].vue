@@ -69,7 +69,7 @@
 
         <!-- AI Synthesis -->
         <div v-if="preDiagnosis.synthesisResult" class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-bold mb-4">🤖 Analyse IA (Claude + GPT-4 + Gemini)</h2>
+          <h2 class="text-xl font-bold mb-4">🤖 Analyse IA (Claude + GPT-4)</h2>
           
           <div class="mb-6">
             <h3 class="font-semibold text-gray-900 mb-2">Résumé</h3>

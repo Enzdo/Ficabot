@@ -24,7 +24,7 @@
           <h3 class="font-bold text-blue-900 mb-1">Analyse Photo Rapide</h3>
           <p class="text-sm text-blue-800">
             Analysez une photo spécifique (peau, yeux, oreilles...) avec une IA pour obtenir des observations rapides.
-            <strong class="block mt-1">→ Pour un diagnostic complet avec symptômes, utilisez "Pré-Diagnostic IA" (consensus de 3 IA)</strong>
+            <strong class="block mt-1">→ Pour un diagnostic complet avec symptômes, utilisez "Pré-Diagnostic IA" (consensus de 2 IA)</strong>
           </p>
         </div>
       </div>
