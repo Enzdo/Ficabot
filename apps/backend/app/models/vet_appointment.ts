@@ -29,7 +29,7 @@ export default class VetAppointment extends BaseModel {
   @column()
   declare vetPhone: string | null
 
-  @column()
+  @column({ columnName: 'date' })
   declare appointmentDate: string
 
   @column()

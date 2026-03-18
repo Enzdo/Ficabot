@@ -32,7 +32,7 @@ export default class VetAppointmentsController {
       query = query.where('status', status)
     }
 
-    const appointments = await query.orderBy('appointmentDate', 'desc').preload('pet')
+    const appointments = await query.orderBy('date', 'desc').preload('pet')
 
     return response.ok({ success: true, data: appointments })
   }
