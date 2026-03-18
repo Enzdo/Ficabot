@@ -14,6 +14,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@adonisjs/ally':
+        specifier: ^6.0.0
+        version: 6.0.0(@adonisjs/assembler@7.8.2)(@adonisjs/core@6.19.1)
       '@adonisjs/auth':
         specifier: ^9.4.0
         version: 9.5.1(@adonisjs/assembler@7.8.2)(@adonisjs/core@6.19.1)(@adonisjs/lucid@21.8.1)(@japa/api-client@3.1.0)(@japa/plugin-adonisjs@4.0.0)
@@ -341,6 +344,21 @@ packages:
       yargs-parser: 21.1.1
       youch: 3.3.4
       youch-terminal: 2.2.3
+
+  /@adonisjs/ally@6.0.0(@adonisjs/assembler@7.8.2)(@adonisjs/core@6.19.1):
+    resolution: {integrity: sha512-lrN0xBI7WAZR0dOpGwgYvdqgxzd3lmoNc0PQQ5NZ6vC+xF5GJSf3lEwwMqZolSy0sJIK7xVNfJA82xjn43tsRQ==}
+    engines: {node: '>=20.6.0'}
+    peerDependencies:
+      '@adonisjs/assembler': ^8.0.0
+      '@adonisjs/core': ^7.0.0-next.8 || ^7.0.0
+    peerDependenciesMeta:
+      '@adonisjs/assembler':
+        optional: true
+    dependencies:
+      '@adonisjs/assembler': 7.8.2(typescript@5.8.3)
+      '@adonisjs/core': 6.19.1(@adonisjs/assembler@7.8.2)(@vinejs/vine@3.0.1)(bcrypt@6.0.0)(edge.js@6.4.0)
+      '@poppinss/oauth-client': 7.0.2
+    dev: false
 
   /@adonisjs/application@8.4.2(@adonisjs/config@5.0.3)(@adonisjs/fold@10.2.1):
     resolution: {integrity: sha512-gxyQgl1n7M/hv7ZKQOlTo2adBMehjEO0ssWSG3AGW2RXdCvkHQKlatFXMuXJMmGg2P1AWJX0LEiXey9+qxC9Uw==}
@@ -3919,6 +3937,14 @@ packages:
       http-errors: 2.0.1
       safe-buffer: 5.2.1
       uid-safe: 2.1.5
+
+  /@poppinss/oauth-client@7.0.2:
+    resolution: {integrity: sha512-7zFnfGtd7oLb9Ox9Kz77QwU8t4IV8PdHIicSkLgXGis1ZfLb/853dm+26xz0dPo0qZCJvbBVelgmDvm+JFMhQw==}
+    engines: {node: '>=24.0.0'}
+    dependencies:
+      '@poppinss/exception': 1.2.3
+      ky: 1.14.3
+    dev: false
 
   /@poppinss/object-builder@1.1.0:
     resolution: {integrity: sha512-FOrOq52l7u8goR5yncX14+k+Ewi5djnrt1JwXeS/FvnwAPOiveFhiczCDuvXdssAwamtrV2hp5Rw9v+n2T7hQg==}
@@ -8271,6 +8297,11 @@ packages:
   /kolorist@1.8.0:
     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
     dev: true
+
+  /ky@1.14.3:
+    resolution: {integrity: sha512-9zy9lkjac+TR1c2tG+mkNSVlyOpInnWdSMiue4F+kq8TwJSgv6o8jhLRg8Ho6SnZ9wOYUq/yozts9qQCfk7bIw==}
+    engines: {node: '>=18'}
+    dev: false
 
   /launch-editor@2.12.0:
     resolution: {integrity: sha512-giOHXoOtifjdHqUamwKq6c49GzBdLjvxrd2D+Q4V6uOHopJv7p9VJxikDsQ/CBXZbEITgUqSVHXLTG3VhPP1Dg==}

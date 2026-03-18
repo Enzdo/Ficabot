@@ -38,6 +38,11 @@ router.get('/health/detailed', [HealthController, 'detailed'])
 router.get('/health/ready', [HealthController, 'ready'])
 router.get('/health/live', [HealthController, 'live'])
 
+// Social auth (Google OAuth)
+const SocialAuthController = () => import('#controllers/social_auth_controller')
+router.get('/auth/google', [SocialAuthController, 'redirectToGoogle'])
+router.get('/auth/google/callback', [SocialAuthController, 'handleGoogleCallback'])
+
 router.group(() => {
   router.post('/register', [AuthController, 'register'])
   router.post('/login', [AuthController, 'login'])

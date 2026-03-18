@@ -53,7 +53,13 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: GOOGLE_AI_API_KEY
+      - key: FRONTEND_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
         sync: false
       - key: ENCRYPTION_KEY
         sync: false

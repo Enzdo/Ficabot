@@ -72,6 +72,16 @@ export default await Env.create(appRoot, {
   MAIL_FROM_ADDRESS: Env.schema.string.optional(),
   MAIL_FROM_NAME: Env.schema.string.optional(),
   VET_FRONTEND_URL: Env.schema.string.optional(),
+  FRONTEND_URL: Env.schema.string.optional(),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Google OAuth (Ally)
+  |--------------------------------------------------------------------------
+  */
+  GOOGLE_CLIENT_ID: Env.schema.string(),
+  GOOGLE_CLIENT_SECRET: Env.schema.string(),
+  GOOGLE_CALLBACK_URL: Env.schema.string(),
 
   /*
   |--------------------------------------------------------------------------

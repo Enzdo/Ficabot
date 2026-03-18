@@ -397,8 +397,8 @@ export default class AuthController {
    */
   private async sendVerificationEmail(user: User): Promise<void> {
     // Check if email is configured
-    const smtpHost = env.get('SMTP_HOST')
-    if (!smtpHost || smtpHost.length === 0) {
+    const resendKey = env.get('RESEND_API_KEY')
+    if (!resendKey || resendKey.length === 0) {
       logger.warn(`Email not configured - skipping verification email for ${user.email}`)
       return
     }
