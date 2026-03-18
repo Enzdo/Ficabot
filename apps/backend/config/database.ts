@@ -5,12 +5,18 @@ const databaseUrl = env.get('DATABASE_URL', '')
 
 // Parse DATABASE_URL manually to avoid pg-connection-string bugs with special chars
 function parseDbUrl(url: string) {
-  // Encode special chars in password before parsing (e.g. ? -> %3F)
-  const safeUrl = url.replace(
-    /^(postgresql?:\/\/[^:]+):([^@]+)@/,
-    (_match, prefix, password) => `${prefix}:${encodeURIComponent(password)}@`
-  )
-  const parsed = new URL(safeUrl)
+  let parsed: URL
+  try {
+    // Try parsing as-is first (URL already valid / password already encoded)
+    parsed = new URL(url)
+  } catch {
+    // Password contains unencoded special chars (e.g. ?) — encode it first
+    const safeUrl = url.replace(
+      /^(postgresql?:\/\/[^:]+):([^@]+)@/,
+      (_match, prefix, password) => `${prefix}:${encodeURIComponent(password)}@`
+    )
+    parsed = new URL(safeUrl)
+  }
   return {
     host: parsed.hostname,
     port: Number(parsed.port) || 5432,
