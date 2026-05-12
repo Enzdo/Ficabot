@@ -11,11 +11,9 @@ export default class WelcomeNotification extends BaseMail {
   }
 
   prepare() {
-    const appUrl = env.get('VET_FRONTEND_URL') || 'https://app.ficabot.com'
-
     this.message.to(this.user.email).htmlView('emails/welcome', {
       user: this.user,
-      appUrl,
+      appUrl: 'ficabot://',
       appName: 'Ficabot',
     })
   }
