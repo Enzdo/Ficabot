@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
@@ -167,9 +168,9 @@ export default function AppointmentsScreen() {
 
               {appointments.length === 0 && (
                 <View style={styles.empty}>
-                  <View style={styles.emptyIconWrap}>
+                  <LinearGradient colors={['#2A3520', colors.dark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyIconWrap}>
                     <Text style={styles.emptyEmoji}>📅</Text>
-                  </View>
+                  </LinearGradient>
                   <Text style={styles.emptyTitle}>Aucun rendez-vous</Text>
                   <Text style={styles.emptyDesc}>Planifiez vos consultations vétérinaires et ne manquez plus aucun suivi</Text>
                 </View>
@@ -209,9 +210,9 @@ export default function AppointmentsScreen() {
 
               {reminders.length === 0 && (
                 <View style={styles.empty}>
-                  <View style={styles.emptyIconWrap}>
+                  <LinearGradient colors={['#2A3520', colors.dark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyIconWrap}>
                     <Text style={styles.emptyEmoji}>🔔</Text>
-                  </View>
+                  </LinearGradient>
                   <Text style={styles.emptyTitle}>Aucun rappel</Text>
                   <Text style={styles.emptyDesc}>Créez des rappels pour les vaccins, traitements et soins de vos animaux</Text>
                 </View>
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
   pastList:        { opacity: 0.6 },
 
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 20 },
-  emptyIconWrap: { width: 100, height: 100, borderRadius: 50, backgroundColor: colors.greenLight, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  emptyIconWrap: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   emptyEmoji:    { fontSize: 52 },
   emptyTitle:    { fontSize: 20, fontWeight: '800', color: colors.dark, textAlign: 'center' },
   emptyDesc:     { fontSize: 14, color: colors.gray[500], textAlign: 'center', marginTop: 8, lineHeight: 20 },

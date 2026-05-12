@@ -56,7 +56,7 @@ export default class PreDiagnosesController {
         const imageUrls: string[] = []
         const fs = await import('node:fs/promises')
 
-        for (const image of payload.images) {
+        for (const image of payload.images ?? []) {
             // Read file content
             const fileBuffer = await fs.readFile(image.tmpPath!)
             const base64 = fileBuffer.toString('base64')

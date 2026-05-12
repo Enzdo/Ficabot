@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -117,9 +118,9 @@ export default function PetsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
           ListEmptyComponent={(
             <View style={styles.empty}>
-              <View style={styles.emptyIconWrap}>
+              <LinearGradient colors={['#2A3520', colors.dark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.emptyIconWrap}>
                 <Text style={styles.emptyEmoji}>🐾</Text>
-              </View>
+              </LinearGradient>
               <Text style={styles.emptyTitle}>Aucun animal pour l'instant</Text>
               <Text style={styles.emptyDesc}>Ajoutez votre premier compagnon pour commencer à suivre sa santé</Text>
               <Button title="Ajouter un animal" onPress={() => setShowModal(true)} style={styles.emptyBtn} />
@@ -187,7 +188,6 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', justifyContent: 'center', paddingTop: 60, paddingHorizontal: 20 },
   emptyIconWrap: {
     width: 100, height: 100, borderRadius: 50,
-    backgroundColor: colors.greenLight,
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
   emptyEmoji: { fontSize: 52 },

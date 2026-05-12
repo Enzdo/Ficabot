@@ -14,7 +14,6 @@ export const createPreDiagnosisValidator = vine.compile(
                 size: `${ANALYSIS_LIMITS.maxImageSizeMB}mb`,
                 extnames: ANALYSIS_LIMITS.allowedImageFormats,
             }))
-            .minLength(1)
-            .maxLength(ANALYSIS_LIMITS.maxImagesPerRequest),
+            .optional(),
     })
 )

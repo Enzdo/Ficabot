@@ -10,6 +10,7 @@ import * as Haptics from 'expo-haptics'
 import { useChatStore } from '@/stores/chat'
 import { usePetsStore } from '@/stores/pets'
 import { ConversationSkeleton } from '@/components/ui/Skeleton'
+import { MarkdownText } from '@/components/ui/MarkdownText'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { ChatMessage } from '@/types'
 
@@ -128,9 +129,13 @@ export default function ChatScreen() {
         )}
         <View style={[msgStyles.bubble, isUser ? msgStyles.bubbleUser : msgStyles.bubbleBot]}>
           {!isUser && <View style={msgStyles.botAccent} />}
-          <Text style={[msgStyles.text, isUser ? msgStyles.textUser : msgStyles.textBot]}>
-            {item.message}
-          </Text>
+          {isUser ? (
+            <Text style={[msgStyles.text, msgStyles.textUser]}>{item.message}</Text>
+          ) : (
+            <MarkdownText style={[msgStyles.text, msgStyles.textBot]} dark={false}>
+              {item.message}
+            </MarkdownText>
+          )}
           <Text style={[msgStyles.time, isUser ? msgStyles.timeUser : msgStyles.timeBot]}>
             {new Date(item.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
           </Text>

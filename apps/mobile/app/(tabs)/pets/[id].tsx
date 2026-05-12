@@ -1,14 +1,17 @@
-import { memo, useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
+import { api } from '@/services/api'
 import { usePetsStore } from '@/stores/pets'
 import { useHealthBookStore } from '@/stores/healthBook'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { DateInput } from '@/components/ui/DateInput'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { MedicalRecordSkeleton } from '@/components/ui/Skeleton'
 import { SPECIES_EMOJI, SPECIES_BG, SPECIES_LABEL } from '@/constants/pets'
@@ -47,7 +50,17 @@ const FOOD_TYPES: { value: FoodType; label: string; emoji: string }[] = [
   { value: 'treats',   label: 'Friandise',  emoji: '🦴' },
 ]
 
-type Tab = 'info' | 'carnet' | 'suivi' | 'medical'
+type Tab = 'info' | 'carnet' | 'suivi' | 'medical' | 'ia'
+
+type AiStatus = 'idle' | 'loading' | 'pending' | 'completed' | 'failed' | 'rate_limited'
+
+interface AiSynthesis {
+  prioritizedHypotheses: { title: string; description: string; probability?: string }[]
+  urgentSigns: string[]
+  generalRecommendations: string[]
+  userFriendlySummary: string
+  overallUrgency: 'low' | 'medium' | 'high' | 'critical'
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -93,6 +106,12 @@ export default function PetDetailScreen() {
 
   const [saving, setSaving] = useState(false)
 
+  const [aiStatus, setAiStatus] = useState<AiStatus>('idle')
+  const [aiDiagnosisId, setAiDiagnosisId] = useState<string | null>(null)
+  const [aiSynthesis, setAiSynthesis] = useState<AiSynthesis | null>(null)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const refreshAll = useCallback(() => {
     return Promise.all([
       fetchPet(id),
@@ -106,6 +125,77 @@ export default function PetDetailScreen() {
   }, [id, fetchPet, fetchMedicalRecords, fetchWeightHistory, fetchSymptomLogs, fetchActivities, fetchFeedingLogs, fetchHealthBook])
 
   useEffect(() => { if (id) refreshAll() }, [id, refreshAll])
+
+  // ── AI Analysis ─────────────────────────────────────────────────────────────
+
+  const startAiAnalysis = useCallback(async (pet: typeof currentPet, hb: typeof healthBook, conds: ChronicConditionEntry[], allergs: AllergyEntry[]) => {
+    if (!pet) return
+    setAiStatus('loading')
+    setAiError(null)
+
+    const parts: string[] = [
+      `Analyse du profil de ${pet.name}.`,
+      `Espèce: ${SPECIES_LABEL[pet.species] ?? pet.species}`,
+    ]
+    if (pet.breed) parts.push(`Race: ${pet.breed}`)
+    if (pet.birthDate) parts.push(`Âge: ${getAge(pet.birthDate)}`)
+    if (pet.weight) parts.push(`Poids: ${pet.weight} kg`)
+    if (hb?.isSterilized !== undefined) parts.push(`Stérilisé(e): ${hb.isSterilized ? 'oui' : 'non'}`)
+    if (conds.length > 0) parts.push(`Maladies chroniques: ${conds.map((c) => c.condition).join(', ')}`)
+    if (allergs.length > 0) parts.push(`Allergies: ${allergs.map((a) => a.allergen).join(', ')}`)
+    const description = parts.join('. ')
+
+    const formData = new FormData()
+    formData.append('description', description)
+
+    const res = await api.upload<{ id: string; status: string }>(`/pets/${pet.id}/pre-diagnosis`, formData)
+
+    if (!res.success) {
+      const msg = res.message ?? ''
+      if (msg.includes('Limite') || msg.includes('quotidienne')) {
+        setAiStatus('rate_limited')
+        setAiError('Limite quotidienne atteinte (3 analyses par jour)')
+      } else if (msg.includes('30 minutes') || msg.includes('cooldown')) {
+        setAiStatus('rate_limited')
+        setAiError('Veuillez attendre 30 minutes entre deux analyses')
+      } else {
+        setAiStatus('failed')
+        setAiError(msg || 'Erreur lors du lancement de l\'analyse')
+      }
+      return
+    }
+
+    setAiDiagnosisId(res.data!.id)
+    setAiStatus('pending')
+  }, [])
+
+  useEffect(() => {
+    if (aiStatus !== 'pending' || !aiDiagnosisId) return
+
+    pollRef.current = setInterval(async () => {
+      const res = await api.get<any>(`/pre-diagnosis/${aiDiagnosisId}`)
+      if (!res.success) return
+      const data = res.data
+      if (data?.status === 'completed') {
+        clearInterval(pollRef.current!)
+        setAiSynthesis(data.synthesis)
+        setAiStatus('completed')
+      } else if (data?.status === 'failed') {
+        clearInterval(pollRef.current!)
+        setAiStatus('failed')
+        setAiError('L\'analyse a échoué, veuillez réessayer')
+      }
+    }, 5000)
+
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [aiStatus, aiDiagnosisId])
+
+  useEffect(() => {
+    if (tab !== 'ia' || aiStatus !== 'idle' || !currentPet) return
+    const conds = (Array.isArray(healthBook?.chronicConditions) ? healthBook!.chronicConditions : []) as ChronicConditionEntry[]
+    const allergs = (Array.isArray(healthBook?.allergies) ? healthBook!.allergies : []) as AllergyEntry[]
+    startAiAnalysis(currentPet, healthBook, conds, allergs)
+  }, [tab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -267,6 +357,7 @@ export default function PetDetailScreen() {
     { key: 'carnet',  label: `🏥 Carnet${vaccines.length > 0 ? ` (${vaccines.length})` : ''}`  },
     { key: 'suivi',   label: '📊 Suivi'   },
     { key: 'medical', label: `💊 Dossier${medicalRecords.length > 0 ? ` (${medicalRecords.length})` : ''}` },
+    { key: 'ia',      label: '🤖 Analyse IA' },
   ]
 
   return (
@@ -531,6 +622,21 @@ export default function PetDetailScreen() {
           </>
         )}
 
+        {/* ── IA TAB ───────────────────────────────────────────────────────── */}
+        {tab === 'ia' && (
+          <AiAnalysisTab
+            status={aiStatus}
+            synthesis={aiSynthesis}
+            error={aiError}
+            onRetry={() => {
+              setAiStatus('idle')
+              setAiSynthesis(null)
+              setAiError(null)
+              setAiDiagnosisId(null)
+            }}
+          />
+        )}
+
         {/* ── MEDICAL TAB ──────────────────────────────────────────────────── */}
         {tab === 'medical' && (
           <>
@@ -570,7 +676,7 @@ export default function PetDetailScreen() {
           <View><Text style={s.fieldLabel}>Type</Text><View style={s.typeRow}>{RECORD_TYPES.map((t) => (<Pressable key={t.value} onPress={() => setRecordForm((f) => ({ ...f, type: t.value }))} style={[s.typeOpt, recordForm.type === t.value && { borderColor: t.text, backgroundColor: t.bg }]}><Text style={s.typeEmoji}>{t.emoji}</Text><Text style={[s.typeLabel, recordForm.type === t.value && { color: t.text }]}>{t.label}</Text></Pressable>))}</View></View>
           <Input label="Titre *" value={recordForm.title} onChangeText={(v) => setRecordForm((f) => ({ ...f, title: v }))} placeholder="Ex: Vaccin antirabique" />
           <Input label="Description" value={recordForm.description} onChangeText={(v) => setRecordForm((f) => ({ ...f, description: v }))} placeholder="Notes..." multiline />
-          <Input label="Date" value={recordForm.date} onChangeText={(v) => setRecordForm((f) => ({ ...f, date: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date" value={recordForm.date} onChange={(v) => setRecordForm((f) => ({ ...f, date: v }))} maximumDate={new Date()} />
           <Input label="Vétérinaire" value={recordForm.vetName} onChangeText={(v) => setRecordForm((f) => ({ ...f, vetName: v }))} placeholder="Dr. Martin" autoCapitalize="words" />
         </BottomModal>
       )}
@@ -578,7 +684,7 @@ export default function PetDetailScreen() {
       {showWeightModal && (
         <BottomModal visible={showWeightModal} title="Nouvelle mesure de poids" onClose={() => setShowWeightModal(false)} onConfirm={handleAddWeight} saving={saving}>
           <Input label="Poids (kg) *" value={weightForm.weight} onChangeText={(v) => setWeightForm((f) => ({ ...f, weight: v }))} placeholder="Ex: 4.5" keyboardType="decimal-pad" />
-          <Input label="Date" value={weightForm.date} onChangeText={(v) => setWeightForm((f) => ({ ...f, date: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date" value={weightForm.date} onChange={(v) => setWeightForm((f) => ({ ...f, date: v }))} maximumDate={new Date()} />
           <Input label="Notes" value={weightForm.notes} onChangeText={(v) => setWeightForm((f) => ({ ...f, notes: v }))} placeholder="Optionnel..." multiline />
         </BottomModal>
       )}
@@ -588,7 +694,7 @@ export default function PetDetailScreen() {
           <Input label="Symptôme *" value={symptomForm.symptom} onChangeText={(v) => setSymptomForm((f) => ({ ...f, symptom: v }))} placeholder="Ex: Toux, vomissements..." />
           <View><Text style={s.fieldLabel}>Sévérité</Text><View style={s.typeRow}>{SEVERITY_OPTIONS.map((sv) => (<Pressable key={sv.value} onPress={() => setSymptomForm((f) => ({ ...f, severity: sv.value }))} style={[s.typeOpt, symptomForm.severity === sv.value && { borderColor: sv.text, backgroundColor: sv.bg }]}><Text style={[s.typeLabel, symptomForm.severity === sv.value && { color: sv.text }]}>{sv.label}</Text></Pressable>))}</View></View>
           <Input label="Description" value={symptomForm.description} onChangeText={(v) => setSymptomForm((f) => ({ ...f, description: v }))} placeholder="Détails..." multiline />
-          <Input label="Date" value={symptomForm.observedAt} onChangeText={(v) => setSymptomForm((f) => ({ ...f, observedAt: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date" value={symptomForm.observedAt} onChange={(v) => setSymptomForm((f) => ({ ...f, observedAt: v }))} maximumDate={new Date()} />
         </BottomModal>
       )}
 
@@ -597,7 +703,7 @@ export default function PetDetailScreen() {
           <View><Text style={s.fieldLabel}>Type</Text><View style={[s.typeRow, { flexWrap: 'wrap' }]}>{ACTIVITY_TYPES.map((a) => (<Pressable key={a.value} onPress={() => setActivityForm((f) => ({ ...f, type: a.value }))} style={[s.typeOpt, { width: '30%' }, activityForm.type === a.value && { borderColor: colors.green, backgroundColor: colors.greenLight }]}><Text style={s.typeEmoji}>{a.emoji}</Text><Text style={[s.typeLabel, activityForm.type === a.value && { color: colors.greenDark }]}>{a.label}</Text></Pressable>))}</View></View>
           <Input label="Durée (min) *" value={activityForm.durationMinutes} onChangeText={(v) => setActivityForm((f) => ({ ...f, durationMinutes: v }))} placeholder="Ex: 30" keyboardType="numeric" />
           <Input label="Distance (km)" value={activityForm.distanceKm} onChangeText={(v) => setActivityForm((f) => ({ ...f, distanceKm: v }))} placeholder="Ex: 2.5" keyboardType="decimal-pad" />
-          <Input label="Date" value={activityForm.startedAt} onChangeText={(v) => setActivityForm((f) => ({ ...f, startedAt: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date" value={activityForm.startedAt} onChange={(v) => setActivityForm((f) => ({ ...f, startedAt: v }))} maximumDate={new Date()} />
           <Input label="Notes" value={activityForm.notes} onChangeText={(v) => setActivityForm((f) => ({ ...f, notes: v }))} placeholder="Optionnel..." multiline />
         </BottomModal>
       )}
@@ -608,15 +714,15 @@ export default function PetDetailScreen() {
           <Input label="Marque" value={feedingForm.brand} onChangeText={(v) => setFeedingForm((f) => ({ ...f, brand: v }))} placeholder="Ex: Royal Canin" />
           <Input label="Produit" value={feedingForm.productName} onChangeText={(v) => setFeedingForm((f) => ({ ...f, productName: v }))} placeholder="Ex: Mini Adult" />
           <Input label="Quantité" value={feedingForm.quantity} onChangeText={(v) => setFeedingForm((f) => ({ ...f, quantity: v }))} placeholder="Ex: 200" keyboardType="numeric" />
-          <Input label="Date *" value={feedingForm.fedAt} onChangeText={(v) => setFeedingForm((f) => ({ ...f, fedAt: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date *" value={feedingForm.fedAt} onChange={(v) => setFeedingForm((f) => ({ ...f, fedAt: v }))} maximumDate={new Date()} />
         </BottomModal>
       )}
 
       {showVaccineModal && (
         <BottomModal visible={showVaccineModal} title="Ajouter un vaccin" onClose={() => setShowVaccineModal(false)} onConfirm={handleAddVaccine} saving={saving}>
           <Input label="Nom du vaccin *" value={vaccineForm.name} onChangeText={(v) => setVaccineForm((f) => ({ ...f, name: v }))} placeholder="Ex: Vaccin antirabique" />
-          <Input label="Date *" value={vaccineForm.date} onChangeText={(v) => setVaccineForm((f) => ({ ...f, date: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
-          <Input label="Prochain rappel" value={vaccineForm.nextDueDate} onChangeText={(v) => setVaccineForm((f) => ({ ...f, nextDueDate: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date *" value={vaccineForm.date} onChange={(v) => setVaccineForm((f) => ({ ...f, date: v }))} maximumDate={new Date()} />
+          <DateInput label="Prochain rappel" value={vaccineForm.nextDueDate} onChange={(v) => setVaccineForm((f) => ({ ...f, nextDueDate: v }))} />
           <Input label="N° de lot" value={vaccineForm.batchNumber} onChangeText={(v) => setVaccineForm((f) => ({ ...f, batchNumber: v }))} placeholder="Ex: ABC123" />
           <Input label="Vétérinaire" value={vaccineForm.vetName} onChangeText={(v) => setVaccineForm((f) => ({ ...f, vetName: v }))} placeholder="Dr. Martin" autoCapitalize="words" />
           <Input label="Fabricant" value={vaccineForm.manufacturer} onChangeText={(v) => setVaccineForm((f) => ({ ...f, manufacturer: v }))} placeholder="Ex: Merial" />
@@ -628,7 +734,7 @@ export default function PetDetailScreen() {
           <Input label="Allergène *" value={allergyForm.allergen} onChangeText={(v) => setAllergyForm((f) => ({ ...f, allergen: v }))} placeholder="Ex: Poulet, acariens..." />
           <View><Text style={s.fieldLabel}>Sévérité</Text><View style={s.typeRow}>{SEVERITY_OPTIONS.map((sv) => (<Pressable key={sv.value} onPress={() => setAllergyForm((f) => ({ ...f, severity: sv.value }))} style={[s.typeOpt, allergyForm.severity === sv.value && { borderColor: sv.text, backgroundColor: sv.bg }]}><Text style={[s.typeLabel, allergyForm.severity === sv.value && { color: sv.text }]}>{sv.label}</Text></Pressable>))}</View></View>
           <Input label="Réaction" value={allergyForm.reaction} onChangeText={(v) => setAllergyForm((f) => ({ ...f, reaction: v }))} placeholder="Ex: Démangeaisons, éruption..." multiline />
-          <Input label="Date de diagnostic" value={allergyForm.diagnosedAt} onChangeText={(v) => setAllergyForm((f) => ({ ...f, diagnosedAt: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date de diagnostic" value={allergyForm.diagnosedAt} onChange={(v) => setAllergyForm((f) => ({ ...f, diagnosedAt: v }))} maximumDate={new Date()} />
         </BottomModal>
       )}
 
@@ -636,7 +742,7 @@ export default function PetDetailScreen() {
         <BottomModal visible={showConditionModal} title="Maladie chronique" onClose={() => setShowConditionModal(false)} onConfirm={handleAddCondition} saving={saving}>
           <Input label="Condition *" value={conditionForm.condition} onChangeText={(v) => setConditionForm((f) => ({ ...f, condition: v }))} placeholder="Ex: Diabète, insuffisance rénale..." />
           <Input label="Traitement" value={conditionForm.treatedWith} onChangeText={(v) => setConditionForm((f) => ({ ...f, treatedWith: v }))} placeholder="Ex: Insuline quotidienne" multiline />
-          <Input label="Date de diagnostic" value={conditionForm.diagnosedAt} onChangeText={(v) => setConditionForm((f) => ({ ...f, diagnosedAt: v }))} placeholder="AAAA-MM-JJ" keyboardType="numeric" />
+          <DateInput label="Date de diagnostic" value={conditionForm.diagnosedAt} onChange={(v) => setConditionForm((f) => ({ ...f, diagnosedAt: v }))} maximumDate={new Date()} />
           <Input label="Notes" value={conditionForm.notes} onChangeText={(v) => setConditionForm((f) => ({ ...f, notes: v }))} placeholder="Informations complémentaires..." multiline />
         </BottomModal>
       )}
@@ -695,6 +801,145 @@ const EmptyState = memo(function EmptyState({ emoji, title, desc, compact }: { e
       <Text style={s.emptyTitle}>{title}</Text>
       {desc ? <Text style={s.emptyDesc}>{desc}</Text> : null}
     </View>
+  )
+})
+
+const URGENCY_CONFIG = {
+  low:      { label: 'Faible',   bg: colors.greenLight,  text: colors.greenDark, bar: colors.green },
+  medium:   { label: 'Modéré',  bg: colors.orangeLight, text: colors.orange,   bar: colors.orange },
+  high:     { label: 'Élevé',   bg: colors.redLight,    text: colors.red,      bar: colors.red    },
+  critical: { label: 'Critique', bg: '#2D0000',          text: '#FF6B6B',       bar: '#FF6B6B'     },
+}
+
+const AiAnalysisTab = memo(function AiAnalysisTab({
+  status, synthesis, error, onRetry,
+}: {
+  status: AiStatus
+  synthesis: AiSynthesis | null
+  error: string | null
+  onRetry: () => void
+}) {
+  if (status === 'loading' || status === 'pending') {
+    return (
+      <View style={ai.loadingWrap}>
+        <LinearGradient colors={['#2A3520', colors.dark]} style={ai.loadingIcon}>
+          <Text style={{ fontSize: 32 }}>🤖</Text>
+        </LinearGradient>
+        <Text style={ai.loadingTitle}>
+          {status === 'loading' ? 'Lancement de l\'analyse…' : 'Analyse en cours…'}
+        </Text>
+        <Text style={ai.loadingDesc}>
+          Notre IA analyse le profil de votre animal{'\n'}Cela prend environ 2-3 minutes
+        </Text>
+        <View style={ai.dots}>
+          {[0, 1, 2].map((i) => <View key={i} style={[ai.dot, { opacity: 0.3 + i * 0.35 }]} />)}
+        </View>
+      </View>
+    )
+  }
+
+  if (status === 'rate_limited') {
+    return (
+      <View style={ai.loadingWrap}>
+        <View style={ai.errorIcon}><Text style={{ fontSize: 32 }}>⏳</Text></View>
+        <Text style={ai.loadingTitle}>Limite atteinte</Text>
+        <Text style={ai.loadingDesc}>{error}</Text>
+      </View>
+    )
+  }
+
+  if (status === 'failed' || (!synthesis && status === 'completed')) {
+    return (
+      <View style={ai.loadingWrap}>
+        <View style={ai.errorIcon}><Text style={{ fontSize: 32 }}>⚠️</Text></View>
+        <Text style={ai.loadingTitle}>Analyse échouée</Text>
+        <Text style={ai.loadingDesc}>{error ?? 'Une erreur est survenue'}</Text>
+        <Pressable onPress={onRetry} style={({ pressed }) => [ai.retryBtn, pressed && { opacity: 0.8 }]}>
+          <Text style={ai.retryBtnText}>Réessayer</Text>
+        </Pressable>
+      </View>
+    )
+  }
+
+  if (!synthesis) return null
+
+  const urg = URGENCY_CONFIG[synthesis.overallUrgency] ?? URGENCY_CONFIG.low
+
+  return (
+    <>
+      {/* Urgency banner */}
+      <View style={[ai.urgencyBanner, { backgroundColor: urg.bg }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[ai.urgencyLabel, { color: urg.text }]}>Niveau d'urgence</Text>
+          <Text style={[ai.urgencyValue, { color: urg.text }]}>{urg.label}</Text>
+        </View>
+        <View style={[ai.urgencyDot, { backgroundColor: urg.bar }]} />
+      </View>
+
+      {/* Summary */}
+      <Card>
+        <Text style={s.sectionTitle}>📋 Résumé de l'analyse</Text>
+        <Text style={ai.summaryText}>{synthesis.userFriendlySummary}</Text>
+      </Card>
+
+      {/* Urgent signs */}
+      {synthesis.urgentSigns.length > 0 && (
+        <Card>
+          <Text style={s.sectionTitle}>🚨 Signes à surveiller</Text>
+          {synthesis.urgentSigns.map((sign, i) => (
+            <View key={i} style={ai.listItem}>
+              <View style={ai.bullet} />
+              <Text style={ai.listText}>{sign}</Text>
+            </View>
+          ))}
+        </Card>
+      )}
+
+      {/* Hypotheses */}
+      {synthesis.prioritizedHypotheses.length > 0 && (
+        <Card>
+          <Text style={s.sectionTitle}>🔬 Hypothèses</Text>
+          {synthesis.prioritizedHypotheses.map((h, i) => (
+            <View key={i} style={[ai.hypothesisItem, i < synthesis.prioritizedHypotheses.length - 1 && ai.hypothesisBorder]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <View style={[ai.hypothesisNum, { backgroundColor: colors.greenLight }]}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: colors.greenDark }}>{i + 1}</Text>
+                </View>
+                <Text style={ai.hypothesisTitle}>{h.title}</Text>
+                {h.probability && (
+                  <View style={[ai.pill, { backgroundColor: colors.beigeLight }]}>
+                    <Text style={[ai.pillText, { color: colors.gray[600] }]}>{h.probability}</Text>
+                  </View>
+                )}
+              </View>
+              {h.description && <Text style={ai.listText}>{h.description}</Text>}
+            </View>
+          ))}
+        </Card>
+      )}
+
+      {/* Recommendations */}
+      {synthesis.generalRecommendations.length > 0 && (
+        <Card>
+          <Text style={s.sectionTitle}>💡 Recommandations</Text>
+          {synthesis.generalRecommendations.map((rec, i) => (
+            <View key={i} style={ai.listItem}>
+              <View style={[ai.bullet, { backgroundColor: colors.green }]} />
+              <Text style={ai.listText}>{rec}</Text>
+            </View>
+          ))}
+        </Card>
+      )}
+
+      {/* Disclaimer + retry */}
+      <View style={ai.disclaimer}>
+        <Text style={ai.disclaimerText}>⚕️ Cette analyse est indicative et ne remplace pas l'avis d'un vétérinaire.</Text>
+      </View>
+
+      <Pressable onPress={onRetry} style={({ pressed }) => [ai.retryBtn, { marginHorizontal: 0 }, pressed && { opacity: 0.8 }]}>
+        <Text style={ai.retryBtnText}>Relancer une analyse</Text>
+      </Pressable>
+    </>
   )
 })
 
@@ -804,4 +1049,38 @@ const s = StyleSheet.create({
   typeOpt:   { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.gray[200], backgroundColor: colors.white },
   typeEmoji: { fontSize: 20, marginBottom: 3 },
   typeLabel: { fontSize: 10, fontWeight: '700', color: colors.gray[500] },
+})
+
+const ai = StyleSheet.create({
+  loadingWrap:  { alignItems: 'center', paddingVertical: 40, gap: 14 },
+  loadingIcon:  { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
+  errorIcon:    { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.gray[100], alignItems: 'center', justifyContent: 'center' },
+  loadingTitle: { fontSize: 17, fontWeight: '800', color: colors.dark, textAlign: 'center' },
+  loadingDesc:  { fontSize: 13, color: colors.gray[500], textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 },
+  dots:         { flexDirection: 'row', gap: 8 },
+  dot:          { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.green },
+
+  urgencyBanner: { borderRadius: radius['2xl'], padding: 16, flexDirection: 'row', alignItems: 'center' },
+  urgencyLabel:  { fontSize: 11, fontWeight: '600', opacity: 0.7 },
+  urgencyValue:  { fontSize: 20, fontWeight: '800', marginTop: 2 },
+  urgencyDot:    { width: 14, height: 14, borderRadius: 7 },
+
+  summaryText:   { fontSize: 14, color: colors.gray[600], lineHeight: 22, marginTop: 10 },
+
+  listItem:  { flexDirection: 'row', gap: 10, marginTop: 10, alignItems: 'flex-start' },
+  bullet:    { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.orange, marginTop: 7, flexShrink: 0 },
+  listText:  { flex: 1, fontSize: 13, color: colors.gray[600], lineHeight: 20 },
+
+  hypothesisItem:   { paddingVertical: 10 },
+  hypothesisBorder: { borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  hypothesisNum:    { width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  hypothesisTitle:  { flex: 1, fontSize: 13, fontWeight: '700', color: colors.dark },
+  pill:             { paddingHorizontal: 7, paddingVertical: 2, borderRadius: radius.full },
+  pillText:         { fontSize: 10, fontWeight: '700' },
+
+  disclaimer:     { backgroundColor: colors.beigeLight, borderRadius: radius.xl, padding: 14 },
+  disclaimerText: { fontSize: 11, color: colors.gray[500], lineHeight: 18, textAlign: 'center' },
+
+  retryBtn:     { backgroundColor: colors.dark, borderRadius: radius['2xl'], paddingVertical: 13, alignItems: 'center' },
+  retryBtnText: { color: colors.white, fontWeight: '700', fontSize: 14 },
 })

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAuthStore } from '@/stores/auth'
+import { requestNotificationPermission } from '@/services/notifications'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -13,6 +14,7 @@ export default function RootLayout() {
   useEffect(() => {
     loadFromStorage().then(() => {
       SplashScreen.hideAsync()
+      requestNotificationPermission()
     })
   }, [loadFromStorage])
 

@@ -14,7 +14,6 @@ const TABS: { name: string; title: string; icon: IoniconName }[] = [
   { name: 'pets',         title: 'Animaux',   icon: 'paw'         },
   { name: 'chat',         title: 'Assistant', icon: 'chatbubbles' },
   { name: 'appointments', title: 'RDV',       icon: 'calendar'    },
-  { name: 'expenses',     title: 'Budget',    icon: 'wallet'      },
   { name: 'profile',      title: 'Profil',    icon: 'person'      },
 ]
 
@@ -35,9 +34,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View style={[tabStyles.container, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      {(state.routes as any[]).map((route: any, index: number) => {
-        const tab = TABS.find((t) => route.name.startsWith(t.name)) ?? TABS[0]
-        const isFocused = state.index === index
+      {(state.routes as any[]).filter((route: any) => TABS.some((t) => route.name.startsWith(t.name))).map((route: any) => {
+        const routeIndex = state.routes.indexOf(route)
+        const tab = TABS.find((t) => route.name.startsWith(t.name))!
+        const isFocused = state.index === routeIndex
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true })
           if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name as never)
@@ -54,7 +54,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               style={[
                 tabStyles.iconWrap,
                 isFocused && tabStyles.iconWrapActive,
-                { transform: [{ scale: scaleValues[index] }] },
+                { transform: [{ scale: scaleValues[routeIndex] }] },
               ]}
             >
               <Ionicons
@@ -111,6 +111,13 @@ export default function TabsLayout() {
     <Tabs
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
-    />
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="pets" />
+      <Tabs.Screen name="chat" />
+      <Tabs.Screen name="appointments" />
+      <Tabs.Screen name="profile" />
+      <Tabs.Screen name="expenses" options={{ href: null }} />
+    </Tabs>
   )
 }

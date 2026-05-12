@@ -4,7 +4,7 @@ import type { ApiResponse } from '@/types'
 
 function getApiBase(): string {
   if (process.env.EXPO_PUBLIC_API_BASE) {
-    const base = process.env.EXPO_PUBLIC_API_BASE
+    const base = process.env.EXPO_PUBLIC_API_BASE.replace(/\/$/, '')
     if (!__DEV__ && !base.startsWith('https://')) {
       throw new Error('EXPO_PUBLIC_API_BASE must use HTTPS in production')
     }
@@ -50,7 +50,7 @@ async function request<T>(
   }
 
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15000)
+  const timeout = setTimeout(() => controller.abort(), 30000)
 
   try {
     const response = await fetch(url, { ...options, headers, signal: controller.signal })
@@ -76,8 +76,8 @@ async function request<T>(
     return data
   } catch (error) {
     clearTimeout(timeout)
-    if (__DEV__) console.error('API Error:', error)
     const isTimeout = error instanceof Error && error.name === 'AbortError'
+    if (__DEV__ && !isTimeout) console.error('API Error:', error)
     return { success: false, message: isTimeout ? 'Délai dépassé, vérifiez votre connexion' : 'Erreur de connexion au serveur' }
   }
 }

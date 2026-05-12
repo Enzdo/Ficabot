@@ -47,7 +47,7 @@ export function DateInput({ label, value, onChange, mode = 'date', minimumDate, 
     }
   }
 
-  const handleIOSConfirm = () => {
+  const handleConfirm = () => {
     setShow(false)
     onChange(toISO(tempDate, mode))
   }
@@ -58,78 +58,78 @@ export function DateInput({ label, value, onChange, mode = 'date', minimumDate, 
     <View style={styles.wrapper}>
       {label && <Text style={styles.label}>{label}</Text>}
       <Pressable
-        style={({ pressed }) => [styles.btn, pressed && styles.btnPressed]}
-        onPress={() => { setTempDate(toDate(value)); setShow(true) }}
+        style={({ pressed }) => [styles.btn, show && styles.btnActive, pressed && styles.btnPressed]}
+        onPress={() => { setTempDate(toDate(value)); setShow((v) => !v) }}
       >
-        <Ionicons name="calendar-outline" size={16} color={isEmpty ? colors.gray[400] : colors.dark} style={styles.icon} />
+        <Ionicons name="calendar-outline" size={16} color={isEmpty ? colors.gray[400] : colors.dark} />
         <Text style={[styles.text, isEmpty && styles.placeholder]}>
           {isEmpty ? 'Choisir une date' : display(value, mode)}
         </Text>
-        <Ionicons name="chevron-down" size={14} color={colors.gray[400]} />
+        <Ionicons name={show ? 'chevron-up' : 'chevron-down'} size={14} color={colors.gray[400]} />
       </Pressable>
 
-      {show && (
-        <>
-          {Platform.OS === 'ios' && (
-            <View style={styles.iosSheet}>
-              <View style={styles.iosHeader}>
-                <Pressable onPress={() => setShow(false)}>
-                  <Text style={styles.iosCancel}>Annuler</Text>
-                </Pressable>
-                <Pressable onPress={handleIOSConfirm}>
-                  <Text style={styles.iosDone}>OK</Text>
-                </Pressable>
-              </View>
-              <DateTimePicker
-                value={tempDate}
-                mode={mode}
-                display="spinner"
-                onChange={handleChange}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
-                locale="fr-FR"
-              />
-            </View>
-          )}
-          {Platform.OS === 'android' && (
-            <DateTimePicker
-              value={tempDate}
-              mode={mode === 'datetime' ? 'date' : mode}
-              display="default"
-              onChange={handleChange}
-              minimumDate={minimumDate}
-              maximumDate={maximumDate}
-            />
-          )}
-        </>
+      {show && Platform.OS === 'ios' && (
+        <View style={styles.pickerWrap}>
+          <View style={styles.iosActions}>
+            <Pressable onPress={() => setShow(false)} hitSlop={12}>
+              <Text style={styles.iosCancel}>Annuler</Text>
+            </Pressable>
+            <Pressable onPress={handleConfirm} hitSlop={12}>
+              <Text style={styles.iosDone}>OK</Text>
+            </Pressable>
+          </View>
+          <DateTimePicker
+            value={tempDate}
+            mode={mode}
+            display="spinner"
+            onChange={handleChange}
+            minimumDate={minimumDate}
+            maximumDate={maximumDate}
+            locale="fr-FR"
+            themeVariant="light"
+          />
+        </View>
+      )}
+
+      {show && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={tempDate}
+          mode={mode === 'datetime' ? 'date' : mode}
+          display="default"
+          onChange={handleChange}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+        />
       )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrapper:  { gap: 6 },
-  label:    { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2 },
+  wrapper: { gap: 6 },
+  label:   { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2 },
+
   btn: {
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: colors.white, borderWidth: 1.5,
     borderColor: colors.gray[200], borderRadius: radius.xl,
-    paddingHorizontal: 14, paddingVertical: 13, gap: 8,
+    paddingHorizontal: 14, paddingVertical: 13,
   },
+  btnActive:   { borderColor: colors.green },
   btnPressed:  { borderColor: colors.green },
-  icon:        { },
   text:        { flex: 1, fontSize: 15, color: colors.dark },
   placeholder: { color: colors.gray[400] },
 
-  iosSheet: {
-    backgroundColor: colors.white, borderRadius: radius['2xl'],
-    borderWidth: 1, borderColor: colors.gray[200],
-    overflow: 'hidden', marginTop: 4,
+  pickerWrap: {
+    backgroundColor: colors.white, borderRadius: radius.xl,
+    borderWidth: 1.5, borderColor: colors.green,
+    overflow: 'hidden',
   },
-  iosHeader: {
+
+  iosActions: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: colors.gray[200],
+    borderTopWidth: 1, borderTopColor: colors.gray[200],
   },
   iosCancel: { fontSize: 15, color: colors.gray[500] },
   iosDone:   { fontSize: 15, fontWeight: '700', color: colors.green },
