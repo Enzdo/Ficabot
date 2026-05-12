@@ -31,11 +31,11 @@ export async function scheduleTestNotification(): Promise<boolean> {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: '🐾 Ficana — Test de notification',
+      title: '🐾 Ficabot — Test de notification',
       body: 'Les notifications fonctionnent correctement sur votre appareil !',
       sound: true,
     },
-    trigger: { seconds: 3 },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 3 },
   })
   return true
 }
@@ -46,7 +46,7 @@ export async function scheduleReminderNotification(title: string, body: string, 
 
   await Notifications.scheduleNotificationAsync({
     content: { title, body, sound: true },
-    trigger: { date },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date },
   })
 }
 

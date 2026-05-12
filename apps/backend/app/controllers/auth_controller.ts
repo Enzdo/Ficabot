@@ -403,8 +403,7 @@ export default class AuthController {
       return
     }
 
-    const frontendUrl = env.get('VET_FRONTEND_URL') || 'http://localhost:3000'
-    const verificationUrl = `${frontendUrl}/verify-email/${user.verificationToken}`
+    const verificationUrl = `ficabot://verify-email/${user.verificationToken}`
 
     await mail.send(new EmailVerificationNotification(user, verificationUrl))
     logger.info(`Verification email sent to ${user.email}`)
