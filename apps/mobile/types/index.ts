@@ -193,6 +193,7 @@ export interface HealthBook {
   sterilizationVetName?: string | null
   // Passport
   passportNumber?: string | null
+  passportIssueDate?: string | null
   // Blood
   bloodType?: string | null
   // Insurance

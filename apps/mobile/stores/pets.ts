@@ -21,6 +21,7 @@ interface PetsState {
   fetchPet: (id: string) => Promise<void>
   createPet: (data: CreatePetDTO) => Promise<Pet | null>
   updatePet: (id: string, data: UpdatePetDTO) => Promise<Pet | null>
+  uploadAvatar: (id: string, formData: FormData) => Promise<Pet | null>
   deletePet: (id: string) => Promise<boolean>
   fetchMedicalRecords: (petId: string) => Promise<void>
   createMedicalRecord: (petId: string, data: CreateMedicalRecordDTO) => Promise<MedicalRecord | null>
@@ -99,6 +100,19 @@ export const usePetsStore = create<PetsState>((set, get) => ({
       return updated
     }
     set({ error: response.message ?? 'Erreur lors de la mise à jour', loading: false })
+    return null
+  },
+
+  uploadAvatar: async (id, formData) => {
+    const response = await api.upload<Pet>(`/pets/${id}/avatar`, formData)
+    if (response.success && response.data) {
+      const updated = response.data
+      set((state) => ({
+        pets: state.pets.map((p) => (p.id === id ? updated : p)),
+        currentPet: state.currentPet?.id === id ? updated : state.currentPet,
+      }))
+      return updated
+    }
     return null
   },
 

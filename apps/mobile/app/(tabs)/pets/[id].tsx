@@ -1,6 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
+import * as ImagePicker from 'expo-image-picker'
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -73,6 +74,7 @@ export default function PetDetailScreen() {
     fetchSymptomLogs, addSymptomLog, deleteSymptomLog,
     fetchActivities, addActivity, deleteActivity,
     fetchFeedingLogs, addFeedingLog, deleteFeedingLog,
+    uploadAvatar,
   } = usePetsStore()
 
   const { healthBook, loading: hbLoading, fetchHealthBook, addVaccine, removeVaccine, addAllergy, removeAllergy, addChronicCondition, removeChronicCondition, updateHealthBook } = useHealthBookStore()
@@ -105,6 +107,10 @@ export default function PetDetailScreen() {
   const [conditionForm, setConditionForm] = useState({ condition: '', diagnosedAt: today(), notes: '', treatedWith: '' })
 
   const [saving, setSaving] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+
+  const [showIdModal, setShowIdModal] = useState(false)
+  const [idForm, setIdForm] = useState({ identificationNumber: '', identificationType: 'microchip' as 'microchip' | 'tattoo', identificationDate: '', passportNumber: '', passportIssueDate: '' })
 
   const [aiStatus, setAiStatus] = useState<AiStatus>('idle')
   const [aiDiagnosisId, setAiDiagnosisId] = useState<string | null>(null)
@@ -333,6 +339,50 @@ export default function PetDetailScreen() {
     ])
   }
 
+  const handlePickAvatar = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!perm.granted) {
+      Alert.alert('Permission refusée', 'Autorisez l\'accès à vos photos dans les réglages.')
+      return
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    })
+    if (result.canceled || !result.assets[0]) return
+
+    const asset = result.assets[0]
+    const formData = new FormData()
+    formData.append('avatar', {
+      uri: asset.uri,
+      type: asset.mimeType ?? 'image/jpeg',
+      name: `avatar.${asset.uri.split('.').pop() ?? 'jpg'}`,
+    } as any)
+
+    setUploadingAvatar(true)
+    await uploadAvatar(id, formData)
+    setUploadingAvatar(false)
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+  }
+
+  const handleSaveId = async () => {
+    setSaving(true)
+    const ok = await updateHealthBook(id, {
+      identificationNumber: idForm.identificationNumber || undefined,
+      identificationType: idForm.identificationType || undefined,
+      identificationDate: idForm.identificationDate || undefined,
+      passportNumber: idForm.passportNumber || undefined,
+      passportIssueDate: idForm.passportIssueDate || undefined,
+    } as any)
+    setSaving(false)
+    if (ok) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setShowIdModal(false)
+    }
+  }
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   if (loading && !currentPet) return <LoadingSpinner fullScreen />
@@ -375,9 +425,17 @@ export default function PetDetailScreen() {
 
       {/* Hero card */}
       <View style={[s.hero, shadow.sm]}>
-        <View style={[s.heroAvatar, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
-          <Text style={s.heroEmoji}>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
-        </View>
+        <Pressable onPress={handlePickAvatar} style={s.heroAvatarWrap} disabled={uploadingAvatar}>
+          <View style={[s.heroAvatar, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
+            {pet.avatarUrl
+              ? <Image source={{ uri: pet.avatarUrl }} style={s.heroAvatarImg} />
+              : <Text style={s.heroEmoji}>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+            }
+          </View>
+          <View style={s.avatarEditBadge}>
+            <Text style={{ fontSize: 10 }}>{uploadingAvatar ? '⏳' : '📷'}</Text>
+          </View>
+        </Pressable>
         <View style={s.heroInfo}>
           <Text style={s.heroName}>{pet.name}</Text>
           <Text style={s.heroBreed}>{SPECIES_LABEL[pet.species] ?? pet.species}{pet.breed ? ` · ${pet.breed}` : ''}</Text>
@@ -419,6 +477,41 @@ export default function PetDetailScreen() {
         {/* ── INFO TAB ─────────────────────────────────────────────────────── */}
         {tab === 'info' && (
           <>
+            {/* Identification / Microchip */}
+            <View style={s.sectionHeader}>
+              <Text style={s.sectionTitle}>🔖 Identification</Text>
+              <Pressable
+                onPress={() => {
+                  setIdForm({
+                    identificationNumber: healthBook?.identificationNumber ?? '',
+                    identificationType: (healthBook?.identificationType as any) ?? 'microchip',
+                    identificationDate: healthBook?.identificationDate ?? '',
+                    passportNumber: healthBook?.passportNumber ?? '',
+                    passportIssueDate: healthBook?.passportIssueDate ?? '',
+                  })
+                  setShowIdModal(true)
+                }}
+                style={s.sectionAddBtn}
+              >
+                <Ionicons name="pencil" size={18} color={colors.green} />
+              </Pressable>
+            </View>
+            <Card>
+              {healthBook?.identificationNumber
+                ? <>
+                    <InfoRow label="N° puce / tatouage" value={healthBook.identificationNumber} />
+                    {healthBook.identificationType && <InfoRow label="Type" value={healthBook.identificationType === 'microchip' ? '🔵 Puce électronique' : '🖊️ Tatouage'} />}
+                    {healthBook.identificationDate && <InfoRow label="Date" value={fmtDate(healthBook.identificationDate)} />}
+                    {healthBook.passportNumber && <InfoRow label="N° passeport" value={healthBook.passportNumber} />}
+                    {healthBook.passportIssueDate && <InfoRow label="Date passeport" value={fmtDate(healthBook.passportIssueDate)} last />}
+                  </>
+                : <View style={s.empty}>
+                    <Text style={s.emptyTitle}>Aucune identification</Text>
+                    <Text style={s.emptyDesc}>Ajoutez le numéro de puce ou de passeport</Text>
+                  </View>
+              }
+            </Card>
+
             <Card>
               <Text style={s.sectionTitle}>Informations générales</Text>
               <InfoRow label="Espèce"   value={SPECIES_LABEL[pet.species] ?? pet.species} />
@@ -427,7 +520,6 @@ export default function PetDetailScreen() {
               {ageText       && <InfoRow label="Âge"               value={ageText} />}
               {pet.weight    && <InfoRow label="Poids actuel"      value={`${pet.weight} kg`} />}
               {healthBook?.bloodType && <InfoRow label="Groupe sanguin" value={healthBook.bloodType} />}
-              {healthBook?.identificationNumber && <InfoRow label="Identification" value={`${healthBook.identificationNumber} (${healthBook.identificationType ?? ''})`} />}
               {healthBook?.isSterilized !== undefined && <InfoRow label="Stérilisé(e)" value={healthBook.isSterilized ? 'Oui' : 'Non'} last />}
             </Card>
 
@@ -746,6 +838,28 @@ export default function PetDetailScreen() {
           <Input label="Notes" value={conditionForm.notes} onChangeText={(v) => setConditionForm((f) => ({ ...f, notes: v }))} placeholder="Informations complémentaires..." multiline />
         </BottomModal>
       )}
+
+      {showIdModal && (
+        <BottomModal visible={showIdModal} title="Identification" onClose={() => setShowIdModal(false)} onConfirm={handleSaveId} saving={saving}>
+          <Input label="N° puce / tatouage" value={idForm.identificationNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, identificationNumber: v }))} placeholder="Ex: 250268500123456" keyboardType="numeric" />
+          <View>
+            <Text style={s.fieldLabel}>Type d'identification</Text>
+            <View style={s.typeRow}>
+              <Pressable onPress={() => setIdForm((f) => ({ ...f, identificationType: 'microchip' }))} style={[s.typeOpt, idForm.identificationType === 'microchip' && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                <Text style={s.typeEmoji}>🔵</Text>
+                <Text style={[s.typeLabel, idForm.identificationType === 'microchip' && { color: colors.greenDark }]}>Puce</Text>
+              </Pressable>
+              <Pressable onPress={() => setIdForm((f) => ({ ...f, identificationType: 'tattoo' }))} style={[s.typeOpt, idForm.identificationType === 'tattoo' && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                <Text style={s.typeEmoji}>🖊️</Text>
+                <Text style={[s.typeLabel, idForm.identificationType === 'tattoo' && { color: colors.greenDark }]}>Tatouage</Text>
+              </Pressable>
+            </View>
+          </View>
+          <DateInput label="Date d'identification" value={idForm.identificationDate} onChange={(v) => setIdForm((f) => ({ ...f, identificationDate: v }))} maximumDate={new Date()} />
+          <Input label="N° passeport européen" value={idForm.passportNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, passportNumber: v }))} placeholder="Ex: FR12345678" autoCapitalize="characters" />
+          <DateInput label="Date d'émission passeport" value={idForm.passportIssueDate} onChange={(v) => setIdForm((f) => ({ ...f, passportIssueDate: v }))} maximumDate={new Date()} />
+        </BottomModal>
+      )}
     </SafeAreaView>
   )
 }
@@ -975,9 +1089,12 @@ const s = StyleSheet.create({
   headerTitle: { flex: 1, fontSize: 20, fontWeight: '800', color: colors.dark },
   deleteBtn:   { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.redLight },
 
-  hero:       { marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 18, flexDirection: 'row', gap: 14, borderWidth: 1, borderColor: colors.gray[200] },
-  heroAvatar: { width: 72, height: 72, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center' },
-  heroEmoji:  { fontSize: 40 },
+  hero:           { marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 18, flexDirection: 'row', gap: 14, borderWidth: 1, borderColor: colors.gray[200] },
+  heroAvatarWrap: { position: 'relative' },
+  heroAvatar:     { width: 72, height: 72, borderRadius: radius.xl, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  heroAvatarImg:  { width: 72, height: 72, borderRadius: radius.xl },
+  heroEmoji:      { fontSize: 40 },
+  avatarEditBadge:{ position: 'absolute', bottom: 0, right: 0, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.gray[200], alignItems: 'center', justifyContent: 'center' },
   heroInfo:   { flex: 1, justifyContent: 'center' },
   heroName:   { fontSize: 22, fontWeight: '800', color: colors.dark },
   heroBreed:  { fontSize: 13, color: colors.gray[500], marginTop: 2 },

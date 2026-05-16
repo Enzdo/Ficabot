@@ -41,7 +41,13 @@
         }
       ],
       "expo-secure-store",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Ficabot accède à vos photos pour définir la photo de votre animal."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

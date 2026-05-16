@@ -9,6 +9,24 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
+import app from '@adonisjs/core/services/app'
+import { createReadStream, existsSync } from 'node:fs'
+
+// Serve uploaded files (avatars, photos)
+router.get('/uploads/*', async ({ params, response }) => {
+  const filePath = app.makePath('uploads', params['*'].join('/'))
+  if (!existsSync(filePath)) {
+    return response.notFound({ success: false, message: 'Fichier non trouvé' })
+  }
+  const ext = params['*'].join('/').split('.').pop() ?? 'jpg'
+  const mimeTypes: Record<string, string> = {
+    jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
+    webp: 'image/webp', gif: 'image/gif', heic: 'image/heic',
+  }
+  response.header('Content-Type', mimeTypes[ext] ?? 'application/octet-stream')
+  response.header('Cache-Control', 'public, max-age=31536000')
+  return response.stream(createReadStream(filePath))
+})
 
 const AuthController = () => import('#controllers/auth_controller')
 const PetsController = () => import('#controllers/pets_controller')
@@ -76,6 +94,7 @@ router.group(() => {
   router.get('/:id', [PetsController, 'show'])
   router.put('/:id', [PetsController, 'update'])
   router.delete('/:id', [PetsController, 'destroy'])
+  router.post('/:id/avatar', [PetsController, 'uploadAvatar'])
 
   router.get('/:id/medical-records', [MedicalRecordsController, 'index'])
   router.post('/:id/medical-records', [MedicalRecordsController, 'store'])

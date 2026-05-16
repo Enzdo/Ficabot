@@ -5,6 +5,9 @@ import PetOwner from '#models/pet_owner'
 import UserVeterinarian from '#models/user_veterinarian'
 import { createPetValidator, updatePetValidator } from '#validators/pet'
 import { DateTime } from 'luxon'
+import app from '@adonisjs/core/services/app'
+import { cuid } from '@adonisjs/core/helpers'
+import env from '#start/env'
 
 export default class PetsController {
   async index({ auth, response }: HttpContext) {
@@ -164,5 +167,32 @@ export default class PetsController {
       success: true,
       message: 'Animal supprimé',
     })
+  }
+
+  async uploadAvatar({ auth, params, request, response }: HttpContext) {
+    const user = auth.user!
+    const pet = await Pet.query().where('id', params.id).where('userId', user.id).first()
+
+    if (!pet) {
+      return response.notFound({ success: false, message: 'Animal non trouvé' })
+    }
+
+    const file = request.file('avatar', {
+      size: '5mb',
+      extnames: ['jpg', 'jpeg', 'png', 'webp', 'heic'],
+    })
+
+    if (!file || !file.isValid) {
+      return response.badRequest({ success: false, message: file?.errors?.[0]?.message ?? 'Photo invalide' })
+    }
+
+    const fileName = `${cuid()}.${file.extname}`
+    await file.move(app.makePath('uploads/avatars'), { name: fileName })
+
+    const appUrl = env.get('APP_URL') || 'http://localhost:3333'
+    pet.avatarUrl = `${appUrl}/uploads/avatars/${fileName}`
+    await pet.save()
+
+    return response.ok({ success: true, data: pet })
   }
 }
