@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --ignore-scripts && ./node_modules/.bin/nuxt prepare",
-  "buildCommand": "npm run build",
+  "installCommand": "cd ../.. && npx --yes pnpm@9 install --filter @votre-assistant-virtuel/landing...",
+  "buildCommand": "pnpm build",
   "framework": "nuxtjs"
 }
