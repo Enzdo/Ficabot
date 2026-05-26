@@ -14,7 +14,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       colors: {
         // [DA-MOBILE] Vert Ficana — primary
@@ -76,18 +76,32 @@ export default {
         'm2xl': '32px',
       },
       animation: {
-        'float': 'float 8s ease-in-out infinite',
-        'float-delayed': 'float 8s ease-in-out 2s infinite',
-        'fade-up': 'fadeUp 0.6s ease-out forwards',
+        'float':          'float 8s ease-in-out infinite',
+        'float-delayed':  'float 8s ease-in-out 2s infinite',
+        'float-slow':     'float 14s ease-in-out infinite',
+        'float-slow-alt': 'float 11s ease-in-out 3.5s infinite',
+        'float-xs':       'floatXs 6s ease-in-out infinite',
+        'float-xs-alt':   'floatXs 7s ease-in-out 1.5s infinite',
+        'spin-slow':      'spin 22s linear infinite',
+        'fade-up':        'fadeUp 0.6s ease-out forwards',
+        'pulse-soft':     'pulseSoft 4s ease-in-out infinite',
       },
       keyframes: {
         float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-12px)' },
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%':      { transform: 'translateY(-14px)' },
+        },
+        floatXs: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%':      { transform: 'translateY(-6px)' },
         },
         fadeUp: {
-          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '0%':   { opacity: '0', transform: 'translateY(16px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseSoft: {
+          '0%, 100%': { opacity: '1' },
+          '50%':      { opacity: '0.55' },
         },
       },
       boxShadow: {

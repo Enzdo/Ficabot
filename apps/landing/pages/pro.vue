@@ -68,16 +68,16 @@ throw createError({ statusCode: 404, statusMessage: 'Page Not Found', fatal: tru
                 </div>
                 <button class="hidden sm:block ml-auto text-xs bg-primary-600/20 text-primary-400 px-2 py-1 rounded">En cours</button>
               </div>
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-700/50 rounded-lg border-l-4 border-blue-500">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 bg-gray-700/50 rounded-lg border-l-4 border-secondary-400">
                 <div class="flex items-center justify-between sm:justify-start w-full sm:w-auto">
-                  <span class="font-mono text-blue-300">10:30</span>
-                  <button class="sm:hidden text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">À venir</button>
+                  <span class="font-mono text-secondary-300">10:30</span>
+                  <button class="sm:hidden text-xs bg-secondary-600/20 text-secondary-400 px-2 py-1 rounded">À venir</button>
                 </div>
                 <div class="flex-1">
                   <p class="font-bold text-sm">Chirurgie - Luna (Siamois)</p>
                   <p class="text-xs text-gray-400">Stérilisation</p>
                 </div>
-                <button class="hidden sm:block ml-auto text-xs bg-blue-600/20 text-blue-400 px-2 py-1 rounded">À venir</button>
+                <button class="hidden sm:block ml-auto text-xs bg-secondary-600/20 text-secondary-400 px-2 py-1 rounded">À venir</button>
               </div>
             </div>
           </div>

@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm install && cd apps/landing && pnpm build",
+  "installCommand": "cd ../.. && pnpm install",
+  "framework": "nuxtjs"
+}

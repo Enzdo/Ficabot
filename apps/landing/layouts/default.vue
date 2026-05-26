@@ -5,12 +5,8 @@
       <div class="container-custom">
         <div class="flex items-center justify-between">
           <!-- Logo -->
-          <NuxtLink to="/" class="flex items-center gap-2 group z-50 relative">
-            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
+          <NuxtLink to="/" class="flex items-center gap-2.5 group z-50 relative">
+            <img :src="logoSrc" alt="Ficabot" class="h-10 w-10 group-hover:scale-110 transition-transform duration-300" />
             <span class="text-xl font-bold text-gray-900 tracking-tight">Ficabot</span>
           </NuxtLink>
 
@@ -72,12 +68,23 @@
     <slot />
 
     <!-- Footer — [DA-MOBILE] beige plus chaud (gray.100 mobile) pour se détacher du body beige pâle -->
-    <footer class="bg-gray-100 py-12 border-t border-gray-200">
-      <div class="container-custom">
+    <footer class="bg-gray-100 py-12 border-t border-gray-200 relative overflow-hidden">
+      <!-- Décors footer : patte + os + cœur -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Patte top-right -->
+        <svg class="absolute top-4 right-8 w-32 h-32 text-gray-500 opacity-[0.18] rotate-12" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Patte bottom-left -->
+        <svg class="absolute bottom-4 left-4 w-24 h-24 text-primary-600 opacity-[0.14] -rotate-6" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Os centre-haut -->
+        <svg class="absolute top-6 left-1/2 w-48 h-18 text-gray-400 opacity-[0.12] -translate-x-1/2 rotate-[-4deg]" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Cœur bottom-right -->
+        <svg class="absolute bottom-6 right-24 w-16 h-16 text-primary-500 opacity-[0.12] rotate-8" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="grid md:grid-cols-4 gap-8 mb-8">
           <div class="col-span-1 md:col-span-2">
             <div class="flex items-center gap-2 mb-4">
-              <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center text-white text-sm">F</div>
+              <img :src="logoSrc" alt="Ficabot" class="h-8 w-8" />
               <span class="text-xl font-bold text-gray-900">Ficabot</span>
             </div>
             <p class="text-gray-500 text-sm max-w-xs mb-5">
@@ -117,6 +124,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import logoSrc from '~/assets/images/logo.png'
 
 const scrolled = ref(false)
 const mobileMenuOpen = ref(false)

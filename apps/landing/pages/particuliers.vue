@@ -52,7 +52,7 @@
                     </div>
                     <span class="text-red-500 font-bold">!</span>
                   </div>
-                  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-l-4 border-blue-500">
+                  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border-l-4 border-primary-500">
                     <div>
                       <p class="font-bold text-gray-900">Traitement Antipuce</p>
                       <p class="text-sm text-gray-500">Dans 3 jours</p>

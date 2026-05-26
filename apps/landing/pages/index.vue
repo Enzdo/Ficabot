@@ -1,8 +1,19 @@
 <template>
   <div class="min-h-screen font-sans selection:bg-primary-100 selection:text-primary-900">
     <!-- [DA-MOBILE] Hero — sobre, photo réelle, pas de mockup 3D ni blobs animés -->
-    <section class="bg-hero pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-44 lg:pb-28">
-      <div class="container-custom">
+    <section class="bg-hero pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-44 lg:pb-28 relative overflow-hidden">
+      <!-- Décors hero : patte + os + cœurs -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Grande patte top-right — float lent -->
+        <svg class="absolute -top-8 -right-14 w-80 h-80 text-primary-600 opacity-[0.13] rotate-12 animate-float-slow" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Os bottom-left — float décalé -->
+        <svg class="absolute -bottom-4 -left-8 w-72 h-28 text-secondary-500 opacity-[0.15] -rotate-12 animate-float-slow-alt" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Cœur milieu-gauche — float xs -->
+        <svg class="absolute top-1/3 left-8 w-20 h-20 text-primary-400 opacity-[0.10] rotate-[-8deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Petite patte bottom-right — float xs décalé -->
+        <svg class="absolute bottom-10 right-1/4 w-16 h-16 text-primary-500 opacity-[0.08] rotate-20 animate-float-xs-alt" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <div class="lg:col-span-6 text-center lg:text-left">
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
@@ -33,12 +44,14 @@
 
           <!-- [DA-MOBILE] Visuel — une photo, une carte d'info simple. Pas de notch / pas de 3D. -->
           <div class="lg:col-span-6 relative">
-            <div class="relative aspect-[4/5] max-w-md mx-auto lg:ml-auto lg:max-w-[480px] rounded-m2xl overflow-hidden border border-gray-200 shadow-card">
+            <div class="group relative aspect-[4/5] max-w-md mx-auto lg:ml-auto lg:max-w-[480px] rounded-m2xl overflow-hidden border border-gray-200 shadow-card transition-shadow duration-500 hover:shadow-cta-lg">
               <img
-                src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=80"
-                alt="Golden retriever paisible"
-                class="w-full h-full object-cover"
+                src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=85"
+                alt="Chien golden retriever"
+                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
+              <!-- Overlay vert discret au hover -->
+              <div class="absolute inset-0 bg-gradient-to-t from-primary-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <!-- Carte info posée en bas — simple, sobre, alignée DA mobile -->
               <div class="absolute bottom-5 left-5 right-5 sm:bottom-6 sm:left-6 sm:right-6 bg-white/95 backdrop-blur-sm rounded-mxl border border-gray-200 p-4 sm:p-5 shadow-soft">
                 <div class="flex items-center gap-3 sm:gap-4">
@@ -60,8 +73,19 @@
     </section>
 
     <!-- [DA-MOBILE] Features — icons sobres, fond uniforme, hover discret -->
-    <section id="features" class="section bg-white">
-      <div class="container-custom">
+    <section id="features" class="section bg-white relative overflow-hidden">
+      <!-- Décors features : croix santé + feuille + blob vert -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Croix santé top-right — spin lent -->
+        <svg class="absolute top-8 -right-6 w-56 h-56 text-primary-500 opacity-[0.09] animate-spin-slow" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
+        <!-- Feuille top-left — float lent -->
+        <svg class="absolute top-6 left-6 w-24 h-32 text-primary-600 opacity-[0.08] rotate-[-15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Blob vert bottom-left -->
+        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-[0.10]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 70%);transform:translate(-40%,40%)"></div>
+        <!-- Petit os bottom-right -->
+        <svg class="absolute bottom-8 right-6 w-40 h-16 text-secondary-400 opacity-[0.12] rotate-6" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="max-w-2xl mb-12 lg:mb-16">
           <p class="text-sm font-semibold text-primary-600 mb-3">Fonctionnalités</p>
           <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
@@ -74,7 +98,7 @@
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           <div class="card-hover">
-            <div class="w-12 h-12 rounded-mmd bg-primary-100 text-primary-700 flex items-center justify-center mb-5">
+            <div class="card-icon w-12 h-12 rounded-mmd bg-primary-100 text-primary-700 flex items-center justify-center mb-5">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">Carnet de santé complet</h3>
@@ -82,7 +106,7 @@
           </div>
 
           <div class="card-hover">
-            <div class="w-12 h-12 rounded-mmd bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5">
+            <div class="card-icon w-12 h-12 rounded-mmd bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">Rappels intelligents</h3>
@@ -90,7 +114,7 @@
           </div>
 
           <div class="card-hover">
-            <div class="w-12 h-12 rounded-mmd flex items-center justify-center mb-5" style="background:#EAF0FA;color:#5885C2">
+            <div class="card-icon w-12 h-12 rounded-mmd bg-gray-100 text-gray-600 flex items-center justify-center mb-5">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">Multi-animaux</h3>
@@ -100,9 +124,83 @@
       </div>
     </section>
 
+    <!-- Comment ça marche -->
+    <section class="section bg-secondary-50 relative overflow-hidden">
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <svg class="absolute top-6 right-10 w-36 h-48 text-primary-600 opacity-[0.08] rotate-[15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <svg class="absolute bottom-8 left-4 w-32 h-32 text-secondary-500 opacity-[0.14] -rotate-[8deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <svg class="absolute top-1/2 right-4 w-16 h-16 text-primary-400 opacity-[0.09] rotate-[12deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+      </div>
+
+      <div class="container-custom relative z-10">
+        <div class="max-w-2xl mb-12 lg:mb-16">
+          <p class="text-sm font-semibold text-primary-600 mb-3">En 3 étapes</p>
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+            Prêt en moins de 2 minutes.
+          </h2>
+          <p class="text-base sm:text-lg text-gray-600">
+            Pas de configuration complexe. Vous ouvrez l'app, vous ajoutez votre animal, c'est parti.
+          </p>
+        </div>
+
+        <div class="grid lg:grid-cols-[1fr_40px_1fr_40px_1fr] items-center gap-5 lg:gap-0">
+          <!-- Étape 1 -->
+          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">01</span>
+            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Créez votre compte</h3>
+            <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Téléchargez l'app et inscrivez-vous en 30 secondes. Aucune carte bancaire requise.</p>
+          </div>
+
+          <!-- Flèche desktop -->
+          <div class="hidden lg:flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary-400 opacity-50" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+          <!-- Étape 2 -->
+          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">02</span>
+            <div class="w-12 h-12 rounded-mxl bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5 relative z-10">
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 32 32"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Ajoutez vos animaux</h3>
+            <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Renseignez le profil de chaque compagnon : espèce, âge, poids, antécédents médicaux.</p>
+          </div>
+
+          <!-- Flèche desktop -->
+          <div class="hidden lg:flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary-400 opacity-50" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </div>
+
+          <!-- Étape 3 -->
+          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">03</span>
+            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Recevez vos rappels</h3>
+            <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Ficabot vous prévient avant chaque vaccin, traitement ou rendez-vous. Sans effort.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- [DA-MOBILE] Split Particuliers — photo nette, pas de blob décoratif, pas de fake stats -->
-    <section id="particuliers" class="section bg-secondary-100">
-      <div class="container-custom">
+    <section id="particuliers" class="section bg-secondary-100 relative overflow-hidden">
+      <!-- Décors particuliers : os + cœurs + feuille -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Grand os top-right -->
+        <svg class="absolute -top-4 right-4 w-72 h-28 text-secondary-500 opacity-[0.16] rotate-[-6deg]" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Grande feuille bottom-left -->
+        <svg class="absolute -bottom-6 -left-4 w-32 h-44 text-primary-600 opacity-[0.12] rotate-12" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Cœur top-left -->
+        <svg class="absolute top-8 left-10 w-14 h-14 text-secondary-600 opacity-[0.15] rotate-[-10deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Patte bottom-right -->
+        <svg class="absolute -bottom-8 right-8 w-44 h-44 text-secondary-600 opacity-[0.18] -rotate-6" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
           <div class="order-2 lg:order-1">
             <div class="rounded-m2xl overflow-hidden border border-gray-200 shadow-card">
@@ -160,8 +258,17 @@
     </section>
 
     <!-- [DA-MOBILE] Articles récents — 3 derniers articles "owner" depuis useBlog -->
-    <section class="section bg-white">
-      <div class="container-custom">
+    <section class="section bg-white relative overflow-hidden">
+      <!-- Décors blog : patte + croix + os -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Croix santé top-right -->
+        <svg class="absolute top-8 right-8 w-44 h-44 text-primary-500 opacity-[0.09] rotate-12" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
+        <!-- Patte partiellement cachée top-left -->
+        <svg class="absolute top-0 left-0 w-48 h-48 text-secondary-500 opacity-[0.16] rotate-[-20deg] -translate-x-1/3" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Os bottom-center -->
+        <svg class="absolute -bottom-4 left-1/2 w-64 h-24 text-primary-400 opacity-[0.08] -translate-x-1/2 rotate-3" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12 lg:mb-14">
           <div class="max-w-xl">
             <p class="text-sm font-semibold text-primary-600 mb-3">Le blog</p>
@@ -307,8 +414,19 @@
     </section>
 
     <!-- [DA-MOBILE] Pricing — sobre, plan vedette en vert Ficana (plus de slate-900) -->
-    <section id="pricing" class="section bg-white">
-      <div class="container-custom">
+    <section id="pricing" class="section bg-white relative overflow-hidden">
+      <!-- Décors pricing : blob vert + patte + cœur + feuille -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <!-- Blob vert top-right -->
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.08]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 65%);transform:translate(30%,-30%)"></div>
+        <!-- Cœur top-left -->
+        <svg class="absolute top-10 left-10 w-28 h-28 text-primary-500 opacity-[0.10] rotate-[-8deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Patte bottom-left -->
+        <svg class="absolute bottom-10 left-0 w-52 h-52 text-primary-600 opacity-[0.11] -rotate-12 -translate-x-1/4" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Petite feuille bottom-right -->
+        <svg class="absolute bottom-8 right-12 w-20 h-28 text-primary-500 opacity-[0.08] rotate-[20deg]" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+      </div>
+      <div class="container-custom relative z-10">
         <div class="max-w-2xl mb-12 lg:mb-16">
           <p class="text-sm font-semibold text-primary-600 mb-3">Tarifs</p>
           <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
@@ -321,14 +439,14 @@
 
         <div v-if="pricingMode === 'owners'" class="grid lg:grid-cols-3 gap-5 lg:gap-6">
           <!-- Découverte -->
-          <div class="card">
+          <div class="card flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-dark hover:border-gray-300">
             <h3 class="text-lg font-bold text-gray-900 mb-2">Découverte</h3>
             <div class="flex items-baseline gap-1 mb-3">
               <span class="text-4xl font-bold text-gray-900">0€</span>
               <span class="text-sm text-gray-500">/mois</span>
             </div>
             <p class="text-sm text-gray-600 mb-8">Pour démarrer en douceur.</p>
-            <ul class="space-y-3 mb-8">
+            <ul class="space-y-3 mb-8 flex-1">
               <li class="flex items-start gap-3 text-sm text-gray-700">
                 <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                 Jusqu'à 2 animaux
@@ -342,11 +460,14 @@
                 Rappels par email
               </li>
             </ul>
-            <p class="text-xs text-gray-500 text-center pt-4 border-t border-gray-200">Activable depuis l'app Ficabot</p>
+            <div class="border-t border-gray-200 pt-5 mt-auto">
+              <NuxtLink to="/contact" class="btn-secondary w-full justify-center text-sm py-3">Télécharger gratuitement</NuxtLink>
+              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficabot</p>
+            </div>
           </div>
 
           <!-- Premium — plan vedette, vert Ficana foncé -->
-          <div class="relative rounded-m2xl p-8 lg:p-9 text-white" style="background:linear-gradient(180deg,#5C8A2A 0%,#476a21 100%);box-shadow:0 10px 24px -8px rgba(92,138,42,0.35);">
+          <div class="relative rounded-m2xl p-8 lg:p-9 text-white flex flex-col" style="background:linear-gradient(180deg,#5C8A2A 0%,#476a21 100%);box-shadow:0 10px 24px -8px rgba(92,138,42,0.35);">
             <span class="absolute -top-3 left-8 inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-white text-primary-700 shadow-soft">Recommandé</span>
             <h3 class="text-lg font-bold mb-2">Premium</h3>
             <div class="flex items-baseline gap-1 mb-3">
@@ -354,7 +475,7 @@
               <span class="text-sm text-primary-100">/mois</span>
             </div>
             <p class="text-sm text-primary-100 mb-8">L'expérience complète au quotidien.</p>
-            <ul class="space-y-3 mb-8">
+            <ul class="space-y-3 mb-8 flex-1">
               <li class="flex items-start gap-3 text-sm">
                 <svg class="w-5 h-5 text-primary-200 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                 Jusqu'à 5 animaux
@@ -372,18 +493,23 @@
                 Photos d'analyses illimitées
               </li>
             </ul>
-            <p class="text-xs text-primary-100 text-center pt-4 border-t border-white/20">Activable depuis l'app Ficabot</p>
+            <div class="border-t border-white/20 pt-5 mt-auto">
+              <NuxtLink to="/contact" class="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-bold bg-white text-primary-700 rounded-xl hover:bg-primary-50 transition-colors">
+                Commencer Premium
+              </NuxtLink>
+              <p class="text-xs text-primary-100 text-center mt-3">Activable depuis l'app Ficabot</p>
+            </div>
           </div>
 
           <!-- Famille -->
-          <div class="card">
+          <div class="card flex flex-col transition-all duration-300 hover:-translate-y-2 hover:shadow-dark hover:border-gray-300">
             <h3 class="text-lg font-bold text-gray-900 mb-2">Famille</h3>
             <div class="flex items-baseline gap-1 mb-3">
               <span class="text-4xl font-bold text-gray-900">9,99€</span>
               <span class="text-sm text-gray-500">/mois</span>
             </div>
             <p class="text-sm text-gray-600 mb-8">Pour les grandes tribus.</p>
-            <ul class="space-y-3 mb-8">
+            <ul class="space-y-3 mb-8 flex-1">
               <li class="flex items-start gap-3 text-sm text-gray-700">
                 <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                 Animaux illimités
@@ -401,7 +527,10 @@
                 Support prioritaire
               </li>
             </ul>
-            <p class="text-xs text-gray-500 text-center pt-4 border-t border-gray-200">Activable depuis l'app Ficabot</p>
+            <div class="border-t border-gray-200 pt-5 mt-auto">
+              <NuxtLink to="/contact" class="btn-secondary w-full justify-center text-sm py-3">Choisir ce plan</NuxtLink>
+              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficabot</p>
+            </div>
           </div>
         </div>
 
@@ -488,6 +617,37 @@
             </ul>
             <a href="mailto:contact@ficabot.com" class="btn-secondary w-full text-sm py-4 rounded-xl font-bold bg-gray-50 border-gray-200 hover:bg-gray-100">Contacter l'équipe</a>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA final -->
+    <section class="relative overflow-hidden py-24 lg:py-32" style="background:linear-gradient(135deg,#8EC347 0%,#7EB13F 50%,#5C8A2A 100%)">
+      <!-- Décorations fond vert -->
+      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <svg class="absolute -top-8 -right-12 w-80 h-80 text-white opacity-[0.07] rotate-[18deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <svg class="absolute -bottom-6 -left-10 w-72 h-72 text-white opacity-[0.06] -rotate-[10deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <svg class="absolute top-10 left-1/4 w-16 h-16 text-white opacity-[0.08] rotate-[-12deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <div class="absolute inset-0 opacity-[0.04]" style="background:radial-gradient(ellipse at top left,#FFFFFF 0%,transparent 60%)"></div>
+      </div>
+
+      <div class="container-custom relative z-10 text-center">
+        <p class="text-white/80 text-sm font-semibold uppercase tracking-widest mb-4">Commencer, c'est gratuit</p>
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-5 leading-tight">
+          Prêt à simplifier le suivi<br class="hidden sm:block"> de votre animal ?
+        </h2>
+        <p class="text-white/75 text-base sm:text-lg mb-10 max-w-xl mx-auto">
+          Rejoignez les propriétaires qui ont dit adieu au carnet papier. Téléchargez l'app, c'est gratuit.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+          <NuxtLink to="/contact" class="inline-flex items-center justify-center px-7 py-4 text-base font-bold bg-white text-primary-700 rounded-[20px] shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:bg-primary-50 hover:-translate-y-0.5 transition-all duration-200 w-full sm:w-auto">
+            Télécharger gratuitement
+          </NuxtLink>
+        </div>
+
+        <div class="flex justify-center">
+          <StoreBadges size="md" />
         </div>
       </div>
     </section>

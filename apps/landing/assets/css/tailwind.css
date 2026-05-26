@@ -63,7 +63,8 @@
   }
 
   .btn-secondary {
-    @apply btn text-ink bg-white;
+    @apply btn bg-white;
+    color: var(--color-ink);
     border: 1.5px solid var(--color-border);
     box-shadow: 0 1px 3px rgba(26, 22, 20, 0.04);
   }
@@ -113,12 +114,18 @@
   }
 
   .card-hover {
-    @apply card transition-all duration-200;
+    @apply card transition-all duration-300;
   }
   .card-hover:hover {
-    border-color: var(--color-border-strong);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px -4px rgba(26, 22, 20, 0.10);
+    border-color: var(--color-primary);
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px -8px rgba(26,22,20,0.13), 0 0 0 1.5px rgba(126,177,63,0.18);
+  }
+  .card-hover:hover .card-icon {
+    transform: scale(1.15) rotate(-8deg);
+  }
+  .card-icon {
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
   }
 
   /* [DA-MOBILE] Navbar — fond beige translucide, border discret */
