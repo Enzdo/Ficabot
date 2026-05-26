@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm install && cd apps/landing && pnpm build",
-  "installCommand": "cd ../.. && pnpm install",
+  "installCommand": "npm install --ignore-scripts && ./node_modules/.bin/nuxt prepare",
+  "buildCommand": "npm run build",
   "framework": "nuxtjs"
 }
