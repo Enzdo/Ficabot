@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen font-sans selection:bg-primary-100 selection:text-primary-900">
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" :class="scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'">
+    <!-- [DA-MOBILE] Navigation — bg beige translucide cohérent avec body -->
+    <nav class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" :class="scrolled ? 'nav-glass py-3' : 'bg-transparent py-5'">
       <div class="container-custom">
         <div class="flex items-center justify-between">
           <!-- Logo -->
@@ -25,9 +25,11 @@
           </button>
 
           <!-- Desktop Nav -->
-          <div class="hidden lg:flex items-center gap-8 bg-white/50 px-6 py-2 rounded-full border border-gray-100/50 backdrop-blur-sm">
+          <div class="hidden lg:flex items-center gap-8 px-6 py-2 rounded-full">
             <NuxtLink to="/particuliers" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Particuliers</NuxtLink>
+            <!-- [VETO-PRIVATE] Lien Vétérinaires masqué tant que la partie pro reste privée
             <NuxtLink to="/pro" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Vétérinaires</NuxtLink>
+            -->
             <NuxtLink to="/blog" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Blog</NuxtLink>
             <a href="/#pricing" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Tarifs</a>
             <NuxtLink to="/contact" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Contact</NuxtLink>
@@ -35,28 +37,31 @@
 
           <!-- CTA -->
           <div class="hidden lg:flex items-center gap-4">
-            <NuxtLink to="/contact" class="btn-primary px-5 py-2.5 text-sm rounded-full shadow-lg shadow-primary-600/20">
+            <NuxtLink to="/contact" class="btn-primary text-sm py-2.5 px-5">
               Nous contacter
             </NuxtLink>
           </div>
         </div>
       </div>
 
-      <!-- Mobile Menu Overlay -->
-      <div 
-        class="fixed inset-0 bg-white z-40 lg:hidden transition-transform duration-300 ease-in-out pt-24 px-6"
+      <!-- Mobile Menu Overlay — [DA-MOBILE] fond beige cohérent avec body -->
+      <div
+        class="fixed inset-0 z-40 lg:hidden transition-transform duration-300 ease-in-out pt-24 px-6"
+        style="background:#FAF7F2"
         :class="mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'"
       >
         <div class="flex flex-col gap-6 text-center">
           <NuxtLink @click="mobileMenuOpen = false" to="/particuliers" class="text-xl font-medium text-gray-900 hover:text-primary-600">Particuliers</NuxtLink>
+          <!-- [VETO-PRIVATE] Lien Vétérinaires masqué tant que la partie pro reste privée
           <NuxtLink @click="mobileMenuOpen = false" to="/pro" class="text-xl font-medium text-gray-900 hover:text-primary-600">Vétérinaires</NuxtLink>
+          -->
           <NuxtLink @click="mobileMenuOpen = false" to="/blog" class="text-xl font-medium text-gray-900 hover:text-primary-600">Blog</NuxtLink>
           <a @click="mobileMenuOpen = false" href="/#pricing" class="text-xl font-medium text-gray-900 hover:text-primary-600">Tarifs</a>
           <NuxtLink @click="mobileMenuOpen = false" to="/contact" class="text-xl font-medium text-gray-900 hover:text-primary-600">Contact</NuxtLink>
           
           <div class="h-px bg-gray-100 my-2"></div>
           
-          <NuxtLink to="/contact" class="btn-primary py-3 rounded-xl shadow-lg shadow-primary-600/20 w-full justify-center">
+          <NuxtLink to="/contact" class="btn-primary w-full justify-center">
             Nous contacter
           </NuxtLink>
         </div>
@@ -66,8 +71,8 @@
     <!-- Page Content -->
     <slot />
 
-    <!-- Footer -->
-    <footer class="bg-gray-50 py-12 border-t border-gray-200">
+    <!-- Footer — [DA-MOBILE] beige plus chaud (gray.100 mobile) pour se détacher du body beige pâle -->
+    <footer class="bg-gray-100 py-12 border-t border-gray-200">
       <div class="container-custom">
         <div class="grid md:grid-cols-4 gap-8 mb-8">
           <div class="col-span-1 md:col-span-2">
@@ -75,15 +80,19 @@
               <div class="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center text-white text-sm">F</div>
               <span class="text-xl font-bold text-gray-900">Ficabot</span>
             </div>
-            <p class="text-gray-500 text-sm max-w-xs">
-              La plateforme de santé animale nouvelle génération. Connectez-vous, suivez et protégez vos compagnons.
+            <p class="text-gray-500 text-sm max-w-xs mb-5">
+              Le carnet de santé numérique de vos animaux, simple et rassurant.
             </p>
+            <!-- [DA-MOBILE] Badges stores -->
+            <StoreBadges size="sm" gap="sm" />
           </div>
           <div>
             <h4 class="font-bold text-gray-900 mb-4">Produit</h4>
             <ul class="space-y-2 text-sm text-gray-600">
               <li><NuxtLink to="/particuliers" class="hover:text-primary-600">Pour les Particuliers</NuxtLink></li>
+              <!-- [VETO-PRIVATE] Lien Vétérinaires masqué tant que la partie pro reste privée
               <li><NuxtLink to="/pro" class="hover:text-primary-600">Pour les Vétérinaires</NuxtLink></li>
+              -->
               <li><a href="/#pricing" class="hover:text-primary-600">Tarifs</a></li>
               <li><NuxtLink to="/blog" class="hover:text-primary-600">Blog</NuxtLink></li>
               <li><NuxtLink to="/contact" class="hover:text-primary-600">Contact</NuxtLink></li>
@@ -92,9 +101,9 @@
           <div>
             <h4 class="font-bold text-gray-900 mb-4">Légal</h4>
             <ul class="space-y-2 text-sm text-gray-600">
-              <li><a href="#" class="hover:text-primary-600">Confidentialité</a></li>
-              <li><a href="#" class="hover:text-primary-600">CGU</a></li>
-              <li><a href="#" class="hover:text-primary-600">Mentions légales</a></li>
+              <li><NuxtLink to="/mentions-legales" class="hover:text-primary-600">Confidentialité</NuxtLink></li>
+              <li><NuxtLink to="/cgv" class="hover:text-primary-600">CGU & CGV</NuxtLink></li>
+              <li><NuxtLink to="/mentions-legales" class="hover:text-primary-600">Mentions légales</NuxtLink></li>
             </ul>
           </div>
         </div>

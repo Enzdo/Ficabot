@@ -2,54 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
+/* [DA-MOBILE] Synchronisé avec apps/mobile/constants/theme.ts (Ficana) */
 @layer base {
+  :root {
+    --color-bg: #FAF7F2;          /* beige pâle — fond global */
+    --color-bg-soft: #F5EEE4;     /* beige clair — surfaces */
+    --color-card: #FFFFFF;
+
+    --color-primary: #7EB13F;     /* vert Ficana */
+    --color-primary-dark: #5C8A2A;
+    --color-primary-light: #EBF3DE;
+
+    --color-ink: #1A1614;         /* texte principal */
+    --color-ink-soft: #6B5E52;
+    --color-ink-mute: #8A7B6C;
+
+    --color-border: #E0D5C9;
+    --color-border-strong: #C4B8A8;
+  }
+
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
     @apply font-sans antialiased;
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    color: var(--color-ink-soft);
+    line-height: 1.65;
   }
 }
 
 @layer components {
+  /* [DA-MOBILE] Boutons — gradient vert 3-stops + shadow verte douce, radius 20px */
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 font-semibold rounded-xl transition-all duration-200;
+    @apply inline-flex items-center justify-center px-5 py-[14px] text-[15px] font-bold transition-all duration-200;
+    border-radius: 20px;
   }
-  
+
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/25 active:scale-95;
+    @apply btn text-white;
+    background-image: linear-gradient(135deg, #8EC347 0%, #7EB13F 50%, #5C8A2A 100%);
+    box-shadow: 0 4px 10px rgba(126, 177, 63, 0.28);
   }
-  
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(126, 177, 63, 0.35);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
   .btn-secondary {
-    @apply btn bg-white text-primary-700 border-2 border-primary-200 hover:border-primary-400 hover:bg-primary-50;
+    @apply btn text-ink bg-white;
+    border: 1.5px solid var(--color-border);
+    box-shadow: 0 1px 3px rgba(26, 22, 20, 0.04);
   }
-  
+  .btn-secondary:hover {
+    border-color: var(--color-border-strong);
+    background: var(--color-bg-soft);
+  }
+
+  .btn-ghost {
+    @apply btn;
+    color: var(--color-primary-dark);
+    background: transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--color-primary-light);
+  }
+
   .btn-white {
-    @apply btn bg-white text-gray-900 hover:bg-gray-100 shadow-lg;
+    @apply btn-secondary;
   }
-  
+
   .btn-lg {
-    @apply px-8 py-4 text-lg;
+    @apply px-7 py-4 text-base;
   }
-  
+
+  /* [DA-MOBILE] Layout — rythme aéré mais sobre */
   .section {
-    @apply py-20 lg:py-32;
+    @apply py-20 lg:py-28;
   }
-  
+
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-6xl mx-auto px-5 sm:px-6 lg:px-8;
   }
-  
+
+  /* [DA-MOBILE] Texte accentué — vert plein, pas de gradient flashy */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent;
+    color: var(--color-primary-dark);
   }
-  
+
+  /* [DA-MOBILE] Cards — blanc, border douce, shadow minimaliste (cf. mobile Card) */
   .card {
-    @apply bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-6 lg:p-8;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    box-shadow: 0 3px 8px -2px rgba(26, 22, 20, 0.06);
+    @apply p-6 lg:p-8;
   }
-  
+
   .card-hover {
-    @apply card hover:shadow-2xl hover:shadow-primary-600/10 hover:-translate-y-1 transition-all duration-300;
+    @apply card transition-all duration-200;
+  }
+  .card-hover:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -4px rgba(26, 22, 20, 0.10);
+  }
+
+  /* [DA-MOBILE] Navbar — fond beige translucide, border discret */
+  .nav-glass {
+    background: rgba(250, 247, 242, 0.85);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* [DA-MOBILE] Hero background — beige doux avec halo vert très discret */
+  .bg-hero {
+    background:
+      radial-gradient(ellipse at top right, rgba(126, 177, 63, 0.08) 0%, transparent 55%),
+      radial-gradient(ellipse at bottom left, rgba(212, 188, 159, 0.18) 0%, transparent 60%),
+      #FAF7F2;
+  }
+
+  /* [DA-MOBILE] Chip / badge — sobre, border discret */
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold;
+    border-radius: 9999px;
+    background: #FFFFFF;
+    color: var(--color-ink-soft);
+    border: 1px solid var(--color-border);
+  }
+
+  .chip-primary {
+    @apply chip;
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    border-color: rgba(126, 177, 63, 0.25);
   }
 }

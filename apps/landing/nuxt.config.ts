@@ -23,6 +23,7 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        // [DA-MOBILE] Inter — clean, neutre, cohérent avec l'app mobile
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap' },
       ],
     },
@@ -38,4 +39,5 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2024-01-01',
+  // touched to refresh routes
 })

@@ -1,5 +1,12 @@
+// [SEO-BLOG] Imports clusters thématiques (50 articles répartis sur 5 fichiers)
+import { dogHealthPosts } from './posts/dog-health'
+import { catHealthPosts } from './posts/cat-health'
+import { nutritionPosts } from './posts/nutrition'
+import { behaviorPosts } from './posts/behavior'
+import { practicalPosts } from './posts/practical'
+
 export const useBlog = () => {
-  const posts = [
+  const legacyPosts = [
     // ARTICLES POUR PROFESSIONNELS (Vétérinaires)
     {
       slug: 'reduire-absenteisme-cabinet-veterinaire',
@@ -187,6 +194,16 @@ export const useBlog = () => {
         <p>Chien, chat, lapin... Avoir 3 carnets différents, c'est l'enfer administratif. Ficabot permet de créer un profil pour chaque animal de la maison au sein de la même interface. Vous visualisez la santé de toute la famille en un coup d'œil.</p>
       `
     }
+  ]
+
+  // [SEO-BLOG] Concaténation : articles d'origine + 5 clusters (50 nouveaux articles)
+  const posts = [
+    ...legacyPosts,
+    ...dogHealthPosts,
+    ...catHealthPosts,
+    ...nutritionPosts,
+    ...behaviorPosts,
+    ...practicalPosts,
   ]
 
   const getPostBySlug = (slug: string) => {

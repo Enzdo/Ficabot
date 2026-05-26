@@ -2,20 +2,22 @@
   <div class="pt-20 lg:pt-24 pb-12 lg:pb-20">
     <!-- Header -->
     <div class="container-custom mb-12 lg:mb-16 text-center pt-8 lg:pt-12">
+      <!-- [VETO-PRIVATE] Onglet "Vétérinaires" masqué tant que la partie pro reste privée
       <div class="inline-flex bg-gray-100 p-1 rounded-xl gap-2 mb-6 lg:mb-8">
-        <button 
+        <button
           @click="targetFilter = 'pro'"
           :class="['px-4 lg:px-6 py-2 lg:py-2.5 rounded-lg text-sm font-medium transition-all duration-200', targetFilter === 'pro' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
         >
           Vétérinaires
         </button>
-        <button 
+        <button
           @click="targetFilter = 'owner'"
           :class="['px-4 lg:px-6 py-2 lg:py-2.5 rounded-lg text-sm font-medium transition-all duration-200', targetFilter === 'owner' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900']"
         >
           Propriétaires
         </button>
       </div>
+      -->
 
       <h1 class="text-3xl sm:text-4xl lg:text-6xl font-extrabold text-gray-900 mb-4 lg:mb-6 leading-tight">
         Le Blog <span class="gradient-text">Votre Assistant Virtuel {{ targetFilter === 'pro' ? 'Pro' : 'Family' }}</span>
@@ -114,7 +116,8 @@
 import { computed, ref } from 'vue'
 
 const { posts } = useBlog()
-const targetFilter = ref<'pro' | 'owner'>('pro')
+// [VETO-PRIVATE] Filtre forcé sur 'owner' tant que la partie pro reste privée (était 'pro' par défaut)
+const targetFilter = ref<'pro' | 'owner'>('owner')
 
 const filteredPosts = computed(() => posts.filter(post => post.target === targetFilter.value))
 

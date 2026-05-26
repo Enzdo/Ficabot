@@ -1,3 +1,9 @@
+<script setup lang="ts">
+// [VETO-PRIVATE] Page Vétérinaires inaccessible tant que la partie pro reste privée.
+// Pour la réactiver, supprimer ce bloc <script setup>.
+throw createError({ statusCode: 404, statusMessage: 'Page Not Found', fatal: true })
+</script>
+
 <template>
   <div class="pt-20 lg:pt-24 pb-12 lg:pb-20 bg-gray-900 text-white">
     <!-- Hero -->

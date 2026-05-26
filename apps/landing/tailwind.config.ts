@@ -1,5 +1,8 @@
 import type { Config } from 'tailwindcss'
 
+// [DA-MOBILE] Charte synchronisée avec apps/mobile/constants/theme.ts (Ficana)
+// Source palette : vert Ficana #7EB13F · beige #D4BC9F · marron foncé #1A1614
+
 export default {
   content: [
     './components/**/*.{js,vue,ts}',
@@ -11,56 +14,93 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       colors: {
+        // [DA-MOBILE] Vert Ficana — primary
         primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e',
+          50:  '#f4faec',
+          100: '#EBF3DE',
+          200: '#d4e8b6',
+          300: '#b8d886',
+          400: '#9bc657',
+          500: '#7EB13F',
+          600: '#5C8A2A',
+          700: '#476a21',
+          800: '#36511b',
+          900: '#283c15',
+          950: '#142008',
         },
+        // [DA-MOBILE] Beige chaud — surfaces / secondary
         secondary: {
-          50: '#fdf4ff',
-          100: '#fae8ff',
-          200: '#f5d0fe',
-          300: '#f0abfc',
-          400: '#e879f9',
-          500: '#d946ef',
-          600: '#c026d3',
-          700: '#a21caf',
-          800: '#86198f',
-          900: '#701a75',
+          50:  '#FAF7F2',
+          100: '#F5EEE4',
+          200: '#E8D9C2',
+          300: '#D4BC9F',
+          400: '#bd9d7a',
+          500: '#a5805a',
+          600: '#876644',
+          700: '#675035',
+          800: '#4a3a27',
+          900: '#2f261a',
         },
+        // [DA-MOBILE] Greys teintés beige (alignés sur mobile gray scale)
+        gray: {
+          50:  '#FAF7F2',
+          100: '#F0EBE3',
+          200: '#E0D5C9',
+          300: '#C4B8A8',
+          400: '#A8998A',
+          500: '#8A7B6C',
+          600: '#6B5E52',
+          700: '#4D4038',
+          800: '#2F2520',
+          900: '#1A1614',
+        },
+        // [DA-MOBILE] Couleurs annexes mobile
+        info:    '#5885C2',
+        infoSoft:'#EAF0FA',
+        warn:    '#ED783B',
+        warnSoft:'#FDF0E8',
+        danger:  '#CB3840',
+        dangerSoft:'#FAEAEA',
+        ink:     '#1A1614',
+      },
+      borderRadius: {
+        // [DA-MOBILE] mobile radius scale (sm 8 → 3xl 32)
+        'mxs': '8px',
+        'msm': '12px',
+        'mmd': '16px',
+        'mlg': '20px',
+        'mxl': '24px',
+        'm2xl': '32px',
       },
       animation: {
-        'float': 'float 6s ease-in-out infinite',
-        'float-delayed': 'float 6s ease-in-out 2s infinite',
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'glow': 'glow 3s ease-in-out infinite alternate',
+        'float': 'float 8s ease-in-out infinite',
+        'float-delayed': 'float 8s ease-in-out 2s infinite',
+        'fade-up': 'fadeUp 0.6s ease-out forwards',
       },
       keyframes: {
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-20px)' },
+          '50%': { transform: 'translateY(-12px)' },
         },
-        glow: {
-          '0%': { 'box-shadow': '0 0 10px rgba(20, 184, 166, 0.2)' },
-          '100%': { 'box-shadow': '0 0 20px rgba(20, 184, 166, 0.6), 0 0 40px rgba(217, 70, 239, 0.3)' },
-        }
+        fadeUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-        'glass-sm': '0 4px 16px 0 rgba(31, 38, 135, 0.05)',
-        'neon': '0 0 15px rgba(20, 184, 166, 0.5), 0 0 30px rgba(20, 184, 166, 0.2)',
-        'glow-primary': '0 0 30px -5px rgba(20, 184, 166, 0.4)',
+        // [DA-MOBILE] Shadows colorées + douces (cf. mobile theme.ts)
+        'soft':   '0 1px 3px rgba(26,22,20,0.07)',
+        'card':   '0 3px 8px -2px rgba(26,22,20,0.08)',
+        'cta':    '0 6px 14px -4px rgba(126,177,63,0.4)',
+        'cta-lg': '0 10px 24px -6px rgba(126,177,63,0.45)',
+        'dark':   '0 6px 14px -4px rgba(26,22,20,0.18)',
+      },
+      backgroundImage: {
+        // [DA-MOBILE] CTA gradient — clair → foncé (mêmes stops que mobile Button.tsx)
+        'gradient-cta': 'linear-gradient(135deg, #8EC347 0%, #7EB13F 50%, #5C8A2A 100%)',
       },
     },
   },
