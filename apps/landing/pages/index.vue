@@ -97,28 +97,34 @@
         </div>
 
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-          <div class="card-hover">
-            <div class="card-icon w-12 h-12 rounded-mmd bg-primary-100 text-primary-700 flex items-center justify-center mb-5">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+          <!-- Carnet de santé -->
+          <div class="card-hover group cursor-default">
+            <div class="w-12 h-12 rounded-mmd bg-primary-100 text-primary-700 flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary-200 group-hover:shadow-[0_0_16px_rgba(126,177,63,0.3)] group-hover:rotate-3">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:-rotate-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Carnet de santé complet</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 transition-colors duration-200 group-hover:text-primary-700">Carnet de santé complet</h3>
             <p class="text-sm text-gray-600">Vaccins, traitements, poids, photos d'analyses. Toute l'histoire médicale, au même endroit.</p>
+            <div class="mt-4 h-0.5 w-0 bg-primary-400 rounded-full transition-all duration-500 group-hover:w-12 opacity-60"></div>
           </div>
 
-          <div class="card-hover">
-            <div class="card-icon w-12 h-12 rounded-mmd bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <!-- Rappels intelligents -->
+          <div class="card-hover group cursor-default">
+            <div class="w-12 h-12 rounded-mmd bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-secondary-200 group-hover:shadow-[0_0_16px_rgba(212,176,97,0.3)]">
+              <svg class="w-6 h-6 transition-transform duration-500 group-hover:rotate-12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Rappels intelligents</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 transition-colors duration-200 group-hover:text-secondary-700">Rappels intelligents</h3>
             <p class="text-sm text-gray-600">Vaccins, antiparasitaires, rendez-vous. Vous êtes prévenu juste avant, jamais trop tard.</p>
+            <div class="mt-4 h-0.5 w-0 bg-secondary-400 rounded-full transition-all duration-500 group-hover:w-12 opacity-60"></div>
           </div>
 
-          <div class="card-hover">
-            <div class="card-icon w-12 h-12 rounded-mmd bg-gray-100 text-gray-600 flex items-center justify-center mb-5">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+          <!-- Multi-animaux -->
+          <div class="card-hover group cursor-default">
+            <div class="w-12 h-12 rounded-mmd bg-gray-100 text-gray-600 flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary-100 group-hover:text-primary-600 group-hover:shadow-[0_0_16px_rgba(126,177,63,0.3)]">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Multi-animaux</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 transition-colors duration-200 group-hover:text-primary-700">Multi-animaux</h3>
             <p class="text-sm text-gray-600">Chien, chat, NAC : chaque compagnon a son espace. Vous basculez d'un profil à l'autre en un geste.</p>
+            <div class="mt-4 h-0.5 w-0 bg-primary-400 rounded-full transition-all duration-500 group-hover:w-12 opacity-60"></div>
           </div>
         </div>
       </div>
@@ -148,12 +154,12 @@
 
         <div class="grid lg:grid-cols-[1fr_40px_1fr_40px_1fr] items-center gap-5 lg:gap-0">
           <!-- Étape 1 -->
-          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
-            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">01</span>
-            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <div class="group relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none transition-all duration-300 group-hover:text-primary-600/20" style="color:rgba(126,177,63,0.07)">01</span>
+            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary-200 group-hover:shadow-[0_0_12px_rgba(126,177,63,0.25)]">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Créez votre compte</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10 transition-colors duration-200 group-hover:text-primary-700">Créez votre compte</h3>
             <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Téléchargez l'app et inscrivez-vous en 30 secondes. Aucune carte bancaire requise.</p>
           </div>
 
@@ -163,12 +169,12 @@
           </div>
 
           <!-- Étape 2 -->
-          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
-            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">02</span>
-            <div class="w-12 h-12 rounded-mxl bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5 relative z-10">
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 32 32"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+          <div class="group relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none transition-all duration-300 group-hover:text-primary-600/20" style="color:rgba(126,177,63,0.07)">02</span>
+            <div class="w-12 h-12 rounded-mxl bg-secondary-100 text-secondary-700 flex items-center justify-center mb-5 relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:bg-secondary-200 group-hover:shadow-[0_0_12px_rgba(212,176,97,0.25)]">
+              <svg class="w-6 h-6 transition-transform duration-500 group-hover:scale-125 group-hover:bounce" fill="currentColor" viewBox="0 0 32 32"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Ajoutez vos animaux</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10 transition-colors duration-200 group-hover:text-primary-700">Ajoutez vos animaux</h3>
             <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Renseignez le profil de chaque compagnon : espèce, âge, poids, antécédents médicaux.</p>
           </div>
 
@@ -178,12 +184,12 @@
           </div>
 
           <!-- Étape 3 -->
-          <div class="relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
-            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none" style="color:rgba(126,177,63,0.07)">03</span>
-            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+          <div class="group relative bg-white rounded-m2xl border border-gray-200 p-7 shadow-soft overflow-hidden hover:-translate-y-1 hover:shadow-card hover:border-primary-200 transition-all duration-300">
+            <span class="absolute -top-4 -right-2 text-[8rem] font-black leading-none select-none pointer-events-none transition-all duration-300 group-hover:text-primary-600/20" style="color:rgba(126,177,63,0.07)">03</span>
+            <div class="w-12 h-12 rounded-mxl bg-primary-100 text-primary-700 flex items-center justify-center mb-5 relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary-200 group-hover:shadow-[0_0_12px_rgba(126,177,63,0.25)]">
+              <svg class="w-6 h-6 transition-transform duration-300 group-hover:-rotate-12 group-hover:scale-110" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Recevez vos rappels</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10 transition-colors duration-200 group-hover:text-primary-700">Recevez vos rappels</h3>
             <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Ficana vous prévient avant chaque vaccin, traitement ou rendez-vous. Sans effort.</p>
           </div>
         </div>

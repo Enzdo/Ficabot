@@ -114,33 +114,65 @@
               </ul>
             </div>
             <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="bg-white rounded-m2xl border border-gray-200 shadow-card p-6 sm:p-8">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Prochains rappels — Max</p>
-              <div class="mockup-stagger space-y-3">
-                <div class="flex items-center gap-4 p-4 bg-red-50 rounded-mxl border border-red-100">
-                  <div class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse"></div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900">Rappel Rage</p>
-                    <p class="text-xs text-gray-500">Dans 3 jours — obligatoire voyage</p>
-                  </div>
-                  <span class="text-xs font-bold text-red-600 flex-shrink-0">Urgent</span>
-                </div>
-                <div class="flex items-center gap-4 p-4 bg-amber-50 rounded-mxl border border-amber-100">
-                  <div class="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0"></div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900">Antiparasitaire externe</p>
-                    <p class="text-xs text-gray-500">Dans 12 jours</p>
-                  </div>
-                  <span class="text-xs font-bold text-amber-600 flex-shrink-0">Bientôt</span>
-                </div>
-                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-mxl border border-gray-100">
-                  <div class="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0"></div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900">Bilan annuel vétérinaire</p>
-                    <p class="text-xs text-gray-500">Dans 2 mois</p>
-                  </div>
-                  <span class="text-xs font-bold text-gray-400 flex-shrink-0">Planifié</span>
-                </div>
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Prochains rappels — Max</p>
+                <button
+                  v-if="rappelsDone"
+                  @click="resetRappels"
+                  class="flex items-center gap-1 text-[10px] font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  Réinitialiser
+                </button>
               </div>
+              <!-- Empty state -->
+              <Transition name="fade-mockup">
+                <div v-if="rappelsDone" class="py-6 text-center">
+                  <p class="text-3xl mb-2">🐾</p>
+                  <p class="text-sm font-semibold text-primary-700">Tous les rappels traités !</p>
+                  <p class="text-xs text-gray-400 mt-1">Ficana vous préviendra avant la prochaine échéance.</p>
+                </div>
+              </Transition>
+              <!-- Interactive rows -->
+              <TransitionGroup v-if="!rappelsDone" tag="div" name="rappel-item" class="mockup-stagger space-y-3">
+                <button
+                  v-for="r in activeRappels"
+                  :key="r.id"
+                  @click="confirmRappel(r.id)"
+                  @mouseenter="hoveredRappelId = r.id"
+                  @mouseleave="hoveredRappelId = null"
+                  class="w-full flex items-center gap-4 p-4 rounded-mxl border cursor-pointer select-none transition-all duration-200 hover:-translate-y-px hover:shadow-sm text-left"
+                  :class="{
+                    'bg-red-50 border-red-100 hover:border-red-300': r.color === 'red',
+                    'bg-amber-50 border-amber-100 hover:border-amber-300': r.color === 'amber',
+                    'bg-gray-50 border-gray-100 hover:border-gray-300': r.color === 'gray',
+                  }"
+                >
+                  <div class="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-200"
+                    :class="{
+                      'bg-red-500 animate-pulse': r.color === 'red' && hoveredRappelId !== r.id,
+                      'bg-primary-500': hoveredRappelId === r.id,
+                      'bg-amber-500': r.color === 'amber' && hoveredRappelId !== r.id,
+                      'bg-gray-300': r.color === 'gray' && hoveredRappelId !== r.id,
+                    }">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold transition-colors duration-200"
+                      :class="hoveredRappelId === r.id ? 'text-primary-700' : 'text-gray-900'">
+                      {{ r.label }}
+                    </p>
+                    <p class="text-xs text-gray-500">{{ r.sub }}</p>
+                  </div>
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 transition-all duration-200"
+                    :class="hoveredRappelId === r.id
+                      ? 'bg-primary-100 text-primary-700'
+                      : r.color === 'red' ? 'bg-red-100 text-red-600'
+                      : r.color === 'amber' ? 'bg-amber-100 text-amber-600'
+                      : 'bg-gray-100 text-gray-400'">
+                    {{ hoveredRappelId === r.id ? '✓ Confirmer' : r.badge }}
+                  </span>
+                </button>
+              </TransitionGroup>
             </div>
           </div>
 
@@ -183,9 +215,34 @@
                 </div>
               </div>
               <div class="px-5 sm:px-6 pb-5 sm:pb-6">
-                <button class="w-full btn-secondary text-sm py-3 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  Exporter le PDF
+                <button
+                  @click="triggerPdfExport"
+                  :disabled="pdfState !== 'idle'"
+                  class="w-full text-sm py-3 flex items-center justify-center gap-2 transition-all duration-300 rounded-xl border font-medium"
+                  :class="{
+                    'btn-secondary hover:scale-[1.02]': pdfState === 'idle',
+                    'bg-gray-50 border-gray-200 text-gray-400 cursor-wait': pdfState === 'loading',
+                    'bg-primary-50 border-primary-300 text-primary-700 scale-[1.02]': pdfState === 'done',
+                  }"
+                >
+                  <!-- Idle -->
+                  <template v-if="pdfState === 'idle'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Exporter le PDF
+                  </template>
+                  <!-- Loading -->
+                  <template v-else-if="pdfState === 'loading'">
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    Génération en cours…
+                  </template>
+                  <!-- Done -->
+                  <template v-else>
+                    <svg class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    PDF prêt — Max.pdf
+                  </template>
                 </button>
               </div>
             </div>
@@ -228,23 +285,38 @@
               </ul>
             </div>
             <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="bg-white rounded-m2xl border border-gray-200 shadow-card p-6 sm:p-8">
-              <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Mes animaux</p>
+              <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mes animaux</p>
+                <span class="text-xs font-medium text-primary-600">
+                  Sélectionné : {{ pets.find(p => p.active)?.name }}
+                </span>
+              </div>
               <div class="mockup-stagger space-y-3">
-                <div v-for="pet in pets" :key="pet.name"
-                  class="flex items-center gap-4 p-3.5 rounded-mxl border transition-all duration-200 cursor-pointer"
-                  :class="pet.active ? 'border-primary-200 bg-primary-50' : 'border-gray-100 bg-gray-50 hover:border-gray-200 hover:bg-white'">
-                  <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img :src="pet.img" :alt="pet.name" class="w-full h-full object-cover" />
+                <button
+                  v-for="(pet, i) in pets"
+                  :key="pet.name"
+                  @click="selectPet(i)"
+                  class="w-full flex items-center gap-4 p-3.5 rounded-mxl border transition-all duration-200 cursor-pointer text-left"
+                  :class="pet.active
+                    ? 'border-primary-200 bg-primary-50 shadow-sm scale-[1.01]'
+                    : 'border-gray-100 bg-gray-50 hover:border-primary-200 hover:bg-primary-50/40 hover:scale-[1.005]'"
+                >
+                  <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    <img :src="pet.img" :alt="pet.name" class="w-full h-full object-cover transition-transform duration-300" :class="pet.active ? 'scale-110' : ''" />
+                    <!-- Checkmark overlay if active -->
+                    <div v-if="pet.active" class="absolute inset-0 bg-primary-600/30 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900">{{ pet.name }}</p>
+                    <p class="text-sm font-semibold transition-colors duration-200" :class="pet.active ? 'text-primary-700' : 'text-gray-900'">{{ pet.name }}</p>
                     <p class="text-xs text-gray-500">{{ pet.desc }}</p>
                   </div>
-                  <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                  <span class="text-xs font-medium px-2 py-0.5 rounded-full transition-all duration-200"
                     :class="pet.status === 'À jour' ? 'bg-primary-100 text-primary-700' : 'bg-amber-100 text-amber-700'">
                     {{ pet.status }}
                   </span>
-                </div>
+                </button>
               </div>
               <button class="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-mxl border-2 border-dashed border-gray-200 text-sm text-gray-400 hover:border-primary-300 hover:text-primary-600 transition-all duration-200 hover:scale-[1.01]">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
@@ -380,10 +452,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Directive, DirectiveBinding } from 'vue'
 
 const openFaq = ref<number | null>(null)
+
+// ─── Rappels interactifs ────────────────────────────────────────────
+interface RappelItem { id: number; label: string; sub: string; color: string; badge: string; confirmed: boolean }
+const rappelItems = ref<RappelItem[]>([
+  { id: 1, label: 'Rappel Rage', sub: 'Dans 3 jours — obligatoire voyage', color: 'red', badge: 'Urgent', confirmed: false },
+  { id: 2, label: 'Antiparasitaire externe', sub: 'Dans 12 jours', color: 'amber', badge: 'Bientôt', confirmed: false },
+  { id: 3, label: 'Bilan annuel vétérinaire', sub: 'Dans 2 mois', color: 'gray', badge: 'Planifié', confirmed: false },
+])
+const hoveredRappelId = ref<number | null>(null)
+const activeRappels = computed(() => rappelItems.value.filter(r => !r.confirmed))
+const rappelsDone = computed(() => rappelItems.value.every(r => r.confirmed))
+const confirmRappel = (id: number) => {
+  const item = rappelItems.value.find(r => r.id === id)
+  if (item) item.confirmed = true
+}
+const resetRappels = () => rappelItems.value.forEach(r => { r.confirmed = false })
+
+// ─── Export PDF ──────────────────────────────────────────────────────
+const pdfState = ref<'idle' | 'loading' | 'done'>('idle')
+const triggerPdfExport = () => {
+  if (pdfState.value !== 'idle') return
+  pdfState.value = 'loading'
+  setTimeout(() => {
+    pdfState.value = 'done'
+    setTimeout(() => { pdfState.value = 'idle' }, 2500)
+  }, 1400)
+}
 
 // ─── Directive v-reveal : fade + slide depuis bottom / left / right ───
 const vReveal: Directive = {
@@ -475,11 +574,14 @@ const pdfLines = [
   'Courbe de poids (12 derniers mois)',
   'Allergies et contre-indications',
 ]
-const pets = [
+const pets = ref([
   { name: 'Max', desc: 'Golden Retriever · 3 ans', status: 'À jour', active: true, img: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' },
   { name: 'Luna', desc: 'Chat européen · 5 ans', status: 'Rappel bientôt', active: false, img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' },
   { name: 'Noisette', desc: 'Lapin nain · 2 ans', status: 'À jour', active: false, img: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80' },
-]
+])
+const selectPet = (index: number) => {
+  pets.value.forEach((p, i) => { p.active = i === index })
+}
 const profiles = [
   { emoji: '🏡', title: 'Le propriétaire classique', desc: 'Un chien, un chat, et une vie bien remplie. Ficana vous décharge de la gestion médicale pour que vous profitiez de l\'essentiel.' },
   { emoji: '👨‍👩‍👧', title: 'La famille multi-animaux', desc: 'Plusieurs compagnons, plusieurs rappels, zéro chaos. Chaque profil est indépendant et clair.' },
@@ -496,6 +598,33 @@ const faqs = [
 </script>
 
 <style scoped>
+/* ─── Rappel item remove (TransitionGroup) ─── */
+.rappel-item-leave-active {
+  transition: opacity 0.3s ease, transform 0.35s ease, max-height 0.4s ease, padding 0.4s ease, margin 0.4s ease;
+  max-height: 80px;
+  overflow: hidden;
+}
+.rappel-item-leave-to {
+  opacity: 0;
+  transform: translateX(16px) scale(0.97);
+  max-height: 0;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+.rappel-item-move {
+  transition: transform 0.3s ease;
+}
+
+/* ─── Fade pour l'empty state rappels ─── */
+.fade-mockup-enter-active, .fade-mockup-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.fade-mockup-enter-from, .fade-mockup-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
 /* ─── FAQ accordion transition ─── */
 .faq-slide-enter-active,
 .faq-slide-leave-active {
