@@ -2,14 +2,15 @@
   <div class="bg-hero pt-24 lg:pt-32 pb-16 lg:pb-24">
     <article v-if="post" class="container-custom">
       <div class="max-w-3xl mx-auto">
-        <NuxtLink to="/blog" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-700 mb-6 lg:mb-8 transition-colors">
-          <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          Retour au blog
-        </NuxtLink>
-
-        <span class="chip-primary mb-5">{{ post.category }}</span>
+        <div class="flex items-center justify-between mb-6 lg:mb-8">
+          <NuxtLink to="/blog" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-primary-700 transition-colors">
+            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Retour au blog
+          </NuxtLink>
+          <span class="chip-primary">{{ post.category }}</span>
+        </div>
 
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-900 mb-5 leading-tight">
           {{ post.title }}

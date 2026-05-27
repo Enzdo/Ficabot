@@ -4,6 +4,10 @@ import { catHealthPosts } from './posts/cat-health'
 import { nutritionPosts } from './posts/nutrition'
 import { behaviorPosts } from './posts/behavior'
 import { practicalPosts } from './posts/practical'
+// Nouveaux clusters
+import { urgencesPosts } from './posts/urgences'
+import { hygienePosts } from './posts/hygiene'
+import { seniorPosts } from './posts/senior'
 
 export const useBlog = () => {
   const legacyPosts = [
@@ -196,7 +200,7 @@ export const useBlog = () => {
     }
   ]
 
-  // [SEO-BLOG] Concaténation : articles d'origine + 5 clusters (50 nouveaux articles)
+  // [SEO-BLOG] Concaténation : articles d'origine + 8 clusters
   const posts = [
     ...legacyPosts,
     ...dogHealthPosts,
@@ -204,6 +208,9 @@ export const useBlog = () => {
     ...nutritionPosts,
     ...behaviorPosts,
     ...practicalPosts,
+    ...urgencesPosts,
+    ...hygienePosts,
+    ...seniorPosts,
   ]
 
   const getPostBySlug = (slug: string) => {

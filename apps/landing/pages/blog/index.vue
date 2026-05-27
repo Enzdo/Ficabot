@@ -30,8 +30,28 @@
       </p>
     </div>
 
-    <!-- Featured Article -->
-    <section class="container-custom mb-16 lg:mb-20" v-if="featuredPost">
+    <!-- Filtres catégories -->
+    <div class="container-custom mb-10 lg:mb-12">
+      <div class="flex flex-wrap gap-2 justify-center">
+        <button
+          @click="categoryFilter = 'all'"
+          :class="['px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border', categoryFilter === 'all' ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600']"
+        >
+          Tous
+        </button>
+        <button
+          v-for="cat in categories"
+          :key="cat"
+          @click="categoryFilter = cat"
+          :class="['px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border', categoryFilter === cat ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600']"
+        >
+          {{ cat }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Featured Article (uniquement sur "Tous") -->
+    <section class="container-custom mb-16 lg:mb-20" v-if="featuredPost && categoryFilter === 'all'">
       <NuxtLink :to="`/blog/${featuredPost.slug}`" class="relative rounded-2xl lg:rounded-[2rem] overflow-hidden group block">
         <img :src="featuredPost.image" :alt="featuredPost.title" class="w-full h-[400px] lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" />
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent"></div>
@@ -62,7 +82,7 @@
     <!-- Articles Grid -->
     <section class="container-custom">
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-        <article v-for="post in regularPosts" :key="post.slug" class="group cursor-pointer">
+        <article v-for="post in displayedPosts" :key="post.slug" class="group cursor-pointer">
           <NuxtLink :to="`/blog/${post.slug}`" class="block h-full flex flex-col">
             <div class="rounded-xl lg:rounded-2xl overflow-hidden mb-4 relative">
               <img :src="post.image" :alt="post.title" class="w-full h-48 sm:h-56 lg:h-64 object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -116,11 +136,20 @@
 import { computed, ref } from 'vue'
 
 const { posts } = useBlog()
-// [VETO-PRIVATE] Filtre forcé sur 'owner' tant que la partie pro reste privée (était 'pro' par défaut)
+// [VETO-PRIVATE] Filtre forcé sur 'owner' tant que la partie pro reste privée
 const targetFilter = ref<'pro' | 'owner'>('owner')
+const categoryFilter = ref<string>('all')
 
-const filteredPosts = computed(() => posts.filter(post => post.target === targetFilter.value))
+const filteredPosts = computed(() => posts.filter((post: { target: string }) => post.target === targetFilter.value))
+
+// Catégories uniques extraites des articles
+const categories = computed(() => [...new Set(filteredPosts.value.map((p: { category: string }) => p.category))])
 
 const featuredPost = computed(() => filteredPosts.value[0])
-const regularPosts = computed(() => filteredPosts.value.slice(1))
+
+// Grille : tous les posts filtrés par catégorie (hors featured si "Tous")
+const displayedPosts = computed(() => {
+  if (categoryFilter.value === 'all') return filteredPosts.value.slice(1)
+  return filteredPosts.value.filter((p: { category: string }) => p.category === categoryFilter.value)
+})
 </script>
