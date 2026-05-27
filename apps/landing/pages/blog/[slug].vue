@@ -43,7 +43,7 @@
         <!-- CTA bas d'article — vert Ficana, abonnement via app -->
         <div class="mt-14 lg:mt-16 pt-10 border-t border-gray-200">
           <div class="rounded-card p-6 lg:p-8" style="background:linear-gradient(135deg,#EBF3DE 0%,#F5EEE4 100%);border:1px solid rgba(126,177,63,0.25)">
-            <h2 class="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Continuez avec Ficabot</h2>
+            <h2 class="text-xl lg:text-2xl font-bold text-gray-900 mb-2">Continuez avec Ficana</h2>
             <p class="text-sm lg:text-base text-gray-700 mb-5">
               Le carnet de santé numérique pour vos animaux. Gratuit pour démarrer, installable depuis l'App Store et Google Play.
             </p>
@@ -99,9 +99,9 @@ const relatedPosts = computed(() => {
 })
 
 useHead({
-  title: post.value ? `${post.value.title} — Ficabot` : 'Article non trouvé — Ficabot',
+  title: post.value ? `${post.value.title} — Ficana` : 'Article non trouvé — Ficana',
   meta: [
-    { name: 'description', content: post.value?.excerpt || 'Article du blog Ficabot' },
+    { name: 'description', content: post.value?.excerpt || 'Article du blog Ficana' },
   ],
 })
 </script>

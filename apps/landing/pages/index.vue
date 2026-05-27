@@ -4,13 +4,13 @@
     <section class="bg-hero pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-44 lg:pb-28 relative overflow-hidden">
       <!-- Décors hero : patte + os + cœurs -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <!-- Grande patte top-right — float lent -->
-        <svg class="absolute -top-8 -right-14 w-80 h-80 text-primary-600 opacity-[0.13] rotate-12 animate-float-slow" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <!-- Os bottom-left — float décalé -->
-        <svg class="absolute -bottom-4 -left-8 w-72 h-28 text-secondary-500 opacity-[0.15] -rotate-12 animate-float-slow-alt" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
-        <!-- Cœur milieu-gauche — float xs -->
-        <svg class="absolute top-1/3 left-8 w-20 h-20 text-primary-400 opacity-[0.10] rotate-[-8deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
-        <!-- Petite patte bottom-right — float xs décalé -->
+        <!-- Grande patte top-right — float lent — masquée mobile -->
+        <svg class="hidden sm:block absolute -top-8 -right-14 w-80 h-80 text-primary-600 opacity-[0.13] rotate-12 animate-float-slow" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Os bottom-left — float décalé — masqué mobile -->
+        <svg class="hidden sm:block absolute -bottom-4 -left-8 w-72 h-28 text-secondary-500 opacity-[0.15] -rotate-12 animate-float-slow-alt" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Cœur milieu-gauche — float xs — gardé mobile (petit) -->
+        <svg class="absolute top-1/3 left-8 w-16 h-16 sm:w-20 sm:h-20 text-primary-400 opacity-[0.10] rotate-[-8deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Petite patte bottom-right — float xs décalé — gardée mobile -->
         <svg class="absolute bottom-10 right-1/4 w-16 h-16 text-primary-500 opacity-[0.08] rotate-20 animate-float-xs-alt" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
       </div>
       <div class="container-custom relative z-10">
@@ -23,7 +23,7 @@
             </h1>
 
             <p class="text-base sm:text-lg text-gray-600 mb-10 max-w-xl mx-auto lg:mx-0">
-              Ficabot regroupe les vaccins, traitements, rendez-vous et le poids de vos compagnons. Une seule app, calme et précise, pour ne plus rien oublier.
+              Ficana regroupe les vaccins, traitements, rendez-vous et le poids de vos compagnons. Une seule app, calme et précise, pour ne plus rien oublier.
             </p>
 
             <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
@@ -76,14 +76,14 @@
     <section id="features" class="section bg-white relative overflow-hidden">
       <!-- Décors features : croix santé + feuille + blob vert -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <!-- Croix santé top-right — spin lent -->
-        <svg class="absolute top-8 -right-6 w-56 h-56 text-primary-500 opacity-[0.09] animate-spin-slow" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
-        <!-- Feuille top-left — float lent -->
-        <svg class="absolute top-6 left-6 w-24 h-32 text-primary-600 opacity-[0.08] rotate-[-15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
-        <!-- Blob vert bottom-left -->
-        <div class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-[0.10]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 70%);transform:translate(-40%,40%)"></div>
-        <!-- Petit os bottom-right -->
-        <svg class="absolute bottom-8 right-6 w-40 h-16 text-secondary-400 opacity-[0.12] rotate-6" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Croix santé top-right — spin lent — masquée mobile -->
+        <svg class="hidden sm:block absolute top-8 -right-6 w-56 h-56 text-primary-500 opacity-[0.09] animate-spin-slow" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
+        <!-- Feuille top-left — float lent — réduite sur mobile -->
+        <svg class="absolute top-6 left-6 w-14 h-20 sm:w-24 sm:h-32 text-primary-600 opacity-[0.08] rotate-[-15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Blob vert bottom-left — masqué mobile -->
+        <div class="hidden sm:block absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-[0.10]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 70%);transform:translate(-40%,40%)"></div>
+        <!-- Petit os bottom-right — masqué mobile -->
+        <svg class="hidden sm:block absolute bottom-8 right-6 w-40 h-16 text-secondary-400 opacity-[0.12] rotate-6" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
       </div>
       <div class="container-custom relative z-10">
         <div class="max-w-2xl mb-12 lg:mb-16">
@@ -127,9 +127,12 @@
     <!-- Comment ça marche -->
     <section class="section bg-secondary-50 relative overflow-hidden">
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <svg class="absolute top-6 right-10 w-36 h-48 text-primary-600 opacity-[0.08] rotate-[15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
-        <svg class="absolute bottom-8 left-4 w-32 h-32 text-secondary-500 opacity-[0.14] -rotate-[8deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <svg class="absolute top-1/2 right-4 w-16 h-16 text-primary-400 opacity-[0.09] rotate-[12deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Feuille top-right — masquée mobile -->
+        <svg class="hidden sm:block absolute top-6 right-10 w-36 h-48 text-primary-600 opacity-[0.08] rotate-[15deg] animate-float-slow" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Patte bottom-left — masquée mobile -->
+        <svg class="hidden sm:block absolute bottom-8 left-4 w-32 h-32 text-secondary-500 opacity-[0.14] -rotate-[8deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Cœur right — gardé mobile (petit) -->
+        <svg class="absolute top-1/2 right-4 w-12 h-12 sm:w-16 sm:h-16 text-primary-400 opacity-[0.09] rotate-[12deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
       </div>
 
       <div class="container-custom relative z-10">
@@ -181,7 +184,7 @@
               <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2 relative z-10">Recevez vos rappels</h3>
-            <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Ficabot vous prévient avant chaque vaccin, traitement ou rendez-vous. Sans effort.</p>
+            <p class="text-sm text-gray-600 relative z-10 leading-relaxed">Ficana vous prévient avant chaque vaccin, traitement ou rendez-vous. Sans effort.</p>
           </div>
         </div>
       </div>
@@ -191,14 +194,14 @@
     <section id="particuliers" class="section bg-secondary-100 relative overflow-hidden">
       <!-- Décors particuliers : os + cœurs + feuille -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <!-- Grand os top-right -->
-        <svg class="absolute -top-4 right-4 w-72 h-28 text-secondary-500 opacity-[0.16] rotate-[-6deg]" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
-        <!-- Grande feuille bottom-left -->
-        <svg class="absolute -bottom-6 -left-4 w-32 h-44 text-primary-600 opacity-[0.12] rotate-12" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
-        <!-- Cœur top-left -->
-        <svg class="absolute top-8 left-10 w-14 h-14 text-secondary-600 opacity-[0.15] rotate-[-10deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
-        <!-- Patte bottom-right -->
-        <svg class="absolute -bottom-8 right-8 w-44 h-44 text-secondary-600 opacity-[0.18] -rotate-6" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Grand os top-right — masqué mobile -->
+        <svg class="hidden sm:block absolute -top-4 right-4 w-72 h-28 text-secondary-500 opacity-[0.16] rotate-[-6deg]" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Grande feuille bottom-left — masquée mobile -->
+        <svg class="hidden sm:block absolute -bottom-6 -left-4 w-32 h-44 text-primary-600 opacity-[0.12] rotate-12" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Cœur top-left — gardé mobile (petit) -->
+        <svg class="absolute top-8 left-6 sm:left-10 w-12 h-12 sm:w-14 sm:h-14 text-secondary-600 opacity-[0.15] rotate-[-10deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Patte bottom-right — masquée mobile -->
+        <svg class="hidden sm:block absolute -bottom-8 right-8 w-44 h-44 text-secondary-600 opacity-[0.18] -rotate-6" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
       </div>
       <div class="container-custom relative z-10">
         <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
@@ -261,12 +264,12 @@
     <section class="section bg-white relative overflow-hidden">
       <!-- Décors blog : patte + croix + os -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <!-- Croix santé top-right -->
-        <svg class="absolute top-8 right-8 w-44 h-44 text-primary-500 opacity-[0.09] rotate-12" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
-        <!-- Patte partiellement cachée top-left -->
-        <svg class="absolute top-0 left-0 w-48 h-48 text-secondary-500 opacity-[0.16] rotate-[-20deg] -translate-x-1/3" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <!-- Os bottom-center -->
-        <svg class="absolute -bottom-4 left-1/2 w-64 h-24 text-primary-400 opacity-[0.08] -translate-x-1/2 rotate-3" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
+        <!-- Croix santé top-right — masquée mobile -->
+        <svg class="hidden sm:block absolute top-8 right-8 w-44 h-44 text-primary-500 opacity-[0.09] rotate-12" viewBox="0 0 30 30" fill="currentColor"><rect x="11" y="2" width="8" height="26" rx="4"/><rect x="2" y="11" width="26" height="8" rx="4"/></svg>
+        <!-- Patte partiellement cachée top-left — masquée mobile -->
+        <svg class="hidden sm:block absolute top-0 left-0 w-48 h-48 text-secondary-500 opacity-[0.16] rotate-[-20deg] -translate-x-1/3" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Os bottom-center — masqué mobile -->
+        <svg class="hidden sm:block absolute -bottom-4 left-1/2 w-64 h-24 text-primary-400 opacity-[0.08] -translate-x-1/2 rotate-3" viewBox="0 0 80 30" fill="currentColor"><circle cx="12" cy="8" r="7"/><circle cx="12" cy="22" r="7"/><circle cx="68" cy="8" r="7"/><circle cx="68" cy="22" r="7"/><rect x="10" y="10" width="60" height="10"/></svg>
       </div>
       <div class="container-custom relative z-10">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-12 lg:mb-14">
@@ -322,7 +325,7 @@
             <h2 class="text-sm font-bold text-primary-400 uppercase tracking-widest mb-3">Pour les vétérinaires</h2>
             <h3 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-6 leading-tight">Modernisez <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-primary-200">votre clinique</span></h3>
             <p class="text-lg text-slate-300 mb-10 leading-relaxed font-light">
-              Ficabot Pro n'est pas juste un outil de gestion, c'est un lien direct et intelligent avec votre patientèle pour un meilleur suivi, moins de "lapins" et une fidélisation accrue.
+              Ficana Pro n'est pas juste un outil de gestion, c'est un lien direct et intelligent avec votre patientèle pour un meilleur suivi, moins de "lapins" et une fidélisation accrue.
             </p>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
@@ -362,7 +365,7 @@
                   <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-amber-400/60 shadow-sm"></div>
                   <div class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-green-400/60 shadow-sm"></div>
                 </div>
-                <div class="ml-2 sm:ml-4 bg-white/10 text-[10px] sm:text-xs text-slate-300 font-mono px-3 py-1 sm:py-1.5 rounded-md flex-1 text-center border border-white/10 truncate">pro.ficabot.com</div>
+                <div class="ml-2 sm:ml-4 bg-white/10 text-[10px] sm:text-xs text-slate-300 font-mono px-3 py-1 sm:py-1.5 rounded-md flex-1 text-center border border-white/10 truncate">pro.ficana.com</div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div class="hidden sm:block col-span-1 bg-gray-900 rounded-xl h-64 p-3 space-y-3">
@@ -417,14 +420,14 @@
     <section id="pricing" class="section bg-white relative overflow-hidden">
       <!-- Décors pricing : blob vert + patte + cœur + feuille -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <!-- Blob vert top-right -->
-        <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.08]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 65%);transform:translate(30%,-30%)"></div>
-        <!-- Cœur top-left -->
-        <svg class="absolute top-10 left-10 w-28 h-28 text-primary-500 opacity-[0.10] rotate-[-8deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
-        <!-- Patte bottom-left -->
-        <svg class="absolute bottom-10 left-0 w-52 h-52 text-primary-600 opacity-[0.11] -rotate-12 -translate-x-1/4" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <!-- Petite feuille bottom-right -->
-        <svg class="absolute bottom-8 right-12 w-20 h-28 text-primary-500 opacity-[0.08] rotate-[20deg]" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
+        <!-- Blob vert top-right — masqué mobile -->
+        <div class="hidden sm:block absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.08]" style="background:radial-gradient(circle,#7EB13F 0%,transparent 65%);transform:translate(30%,-30%)"></div>
+        <!-- Cœur top-left — réduit sur mobile -->
+        <svg class="absolute top-8 left-6 sm:top-10 sm:left-10 w-16 h-16 sm:w-28 sm:h-28 text-primary-500 opacity-[0.10] rotate-[-8deg]" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Patte bottom-left — masquée mobile -->
+        <svg class="hidden sm:block absolute bottom-10 left-0 w-52 h-52 text-primary-600 opacity-[0.11] -rotate-12 -translate-x-1/4" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Petite feuille bottom-right — masquée mobile -->
+        <svg class="hidden sm:block absolute bottom-8 right-12 w-20 h-28 text-primary-500 opacity-[0.08] rotate-[20deg]" viewBox="0 0 32 40" fill="currentColor"><path d="M16 2 C26 14 26 26 16 38 C6 26 6 14 16 2 Z"/></svg>
       </div>
       <div class="container-custom relative z-10">
         <div class="max-w-2xl mb-12 lg:mb-16">
@@ -462,14 +465,14 @@
             </ul>
             <div class="border-t border-gray-200 pt-5 mt-auto">
               <NuxtLink to="/contact" class="btn-secondary w-full justify-center text-sm py-3">Télécharger gratuitement</NuxtLink>
-              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficabot</p>
+              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficana</p>
             </div>
           </div>
 
           <!-- Premium — plan vedette, vert Ficana foncé -->
           <div class="relative rounded-m2xl p-8 lg:p-9 text-white flex flex-col" style="background:linear-gradient(180deg,#5C8A2A 0%,#476a21 100%);box-shadow:0 10px 24px -8px rgba(92,138,42,0.35);">
             <span class="absolute -top-3 left-8 inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-white text-primary-700 shadow-soft">Recommandé</span>
-            <h3 class="text-lg font-bold mb-2">Premium</h3>
+            <h3 class="text-lg font-bold text-white mb-2">Premium</h3>
             <div class="flex items-baseline gap-1 mb-3">
               <span class="text-4xl font-bold">4,99€</span>
               <span class="text-sm text-primary-100">/mois</span>
@@ -497,7 +500,7 @@
               <NuxtLink to="/contact" class="inline-flex items-center justify-center w-full px-5 py-3 text-sm font-bold bg-white text-primary-700 rounded-xl hover:bg-primary-50 transition-colors">
                 Commencer Premium
               </NuxtLink>
-              <p class="text-xs text-primary-100 text-center mt-3">Activable depuis l'app Ficabot</p>
+              <p class="text-xs text-primary-100 text-center mt-3">Activable depuis l'app Ficana</p>
             </div>
           </div>
 
@@ -529,7 +532,7 @@
             </ul>
             <div class="border-t border-gray-200 pt-5 mt-auto">
               <NuxtLink to="/contact" class="btn-secondary w-full justify-center text-sm py-3">Choisir ce plan</NuxtLink>
-              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficabot</p>
+              <p class="text-xs text-gray-400 text-center mt-3">Activable depuis l'app Ficana</p>
             </div>
           </div>
         </div>
@@ -615,7 +618,7 @@
                 API & Intégrations sur mesure
               </li>
             </ul>
-            <a href="mailto:contact@ficabot.com" class="btn-secondary w-full text-sm py-4 rounded-xl font-bold bg-gray-50 border-gray-200 hover:bg-gray-100">Contacter l'équipe</a>
+            <a href="mailto:contact@ficana.com" class="btn-secondary w-full text-sm py-4 rounded-xl font-bold bg-gray-50 border-gray-200 hover:bg-gray-100">Contacter l'équipe</a>
           </div>
         </div>
       </div>
@@ -625,9 +628,12 @@
     <section class="relative overflow-hidden py-24 lg:py-32" style="background:linear-gradient(135deg,#8EC347 0%,#7EB13F 50%,#5C8A2A 100%)">
       <!-- Décorations fond vert -->
       <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <svg class="absolute -top-8 -right-12 w-80 h-80 text-white opacity-[0.07] rotate-[18deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <svg class="absolute -bottom-6 -left-10 w-72 h-72 text-white opacity-[0.06] -rotate-[10deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <svg class="absolute top-10 left-1/4 w-16 h-16 text-white opacity-[0.08] rotate-[-12deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
+        <!-- Grande patte top-right — masquée mobile -->
+        <svg class="hidden sm:block absolute -top-8 -right-12 w-80 h-80 text-white opacity-[0.07] rotate-[18deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Grande patte bottom-left — masquée mobile -->
+        <svg class="hidden sm:block absolute -bottom-6 -left-10 w-72 h-72 text-white opacity-[0.06] -rotate-[10deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
+        <!-- Cœur centre — gardé mobile (petit) -->
+        <svg class="absolute top-10 left-1/4 w-12 h-12 sm:w-16 sm:h-16 text-white opacity-[0.08] rotate-[-12deg] animate-float-xs" viewBox="0 0 32 28" fill="currentColor"><path d="M16 26C16 26 2 17 2 8.5C2 4.4 5.4 2 9 2C12 2 14.5 3.8 16 6.2C17.5 3.8 20 2 23 2C26.6 2 30 4.4 30 8.5C30 17 16 26 16 26Z"/></svg>
         <div class="absolute inset-0 opacity-[0.04]" style="background:radial-gradient(ellipse at top left,#FFFFFF 0%,transparent 60%)"></div>
       </div>
 

@@ -1,5 +1,5 @@
 <template>
-  <div :class="['flex flex-wrap items-center', gapClass]">
+  <div :class="['flex flex-wrap items-center justify-center sm:justify-start', gapClass]">
     <!-- App Store -->
     <a
       :href="appStoreUrl"
@@ -59,8 +59,8 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   gap: 'md',
   // [À COMPLÉTER : remplacer par les vraies URLs des stores quand l'app est publiée]
-  appStoreUrl: 'https://apps.apple.com/app/ficabot/id000000000',
-  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.ficabot.app',
+  appStoreUrl: 'https://apps.apple.com/app/ficana/id000000000',
+  playStoreUrl: 'https://play.google.com/store/apps/details?id=com.ficana.app',
 })
 
 const sizeClass = computed(() => props.size === 'sm' ? 'px-3 py-2 text-sm' : '')

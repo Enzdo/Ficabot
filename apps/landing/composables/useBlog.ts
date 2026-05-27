@@ -30,13 +30,13 @@ export const useBlog = () => {
           <li><strong>À J-7 (Email) :</strong> Un rappel informatif avec les consignes pré-consultation (ex: mise à jeun).</li>
           <li><strong>À J-1 (SMS) :</strong> Un rappel court et percutant directement dans la poche du client. Le taux de lecture des SMS dépasse les 95% dans les 3 minutes suivant la réception.</li>
         </ul>
-        <p>Avec <strong>Ficabot Pro</strong>, ces scénarios sont pré-configurés. Nos cliniques partenaires constatent une chute de l'absentéisme sous la barre des 5% dès le premier mois.</p>
+        <p>Avec <strong>Ficana Pro</strong>, ces scénarios sont pré-configurés. Nos cliniques partenaires constatent une chute de l'absentéisme sous la barre des 5% dès le premier mois.</p>
 
         <h2>Faciliter l'annulation et la replanification</h2>
         <p>Paradoxalement, faciliter l'annulation réduit l'absentéisme. Si un client peut annuler en un clic via son application ou un lien SMS, il libère le créneau instantanément, le rendant disponible pour une urgence ou une liste d'attente. C'est le principe de la "flexibilité responsable".</p>
 
         <h2>L'éducation client via le carnet de santé digital</h2>
-        <p>Un client engagé est un client présent. En utilisant un carnet de santé numérique partagé comme Ficabot, le propriétaire reçoit des notifications contextuelles ("Max doit faire son rappel de vaccin dans 2 semaines"). Il ne subit plus le rendez-vous comme une contrainte administrative, mais le comprend comme une étape nécessaire du parcours de soin de son animal.</p>
+        <p>Un client engagé est un client présent. En utilisant un carnet de santé numérique partagé comme Ficana, le propriétaire reçoit des notifications contextuelles ("Max doit faire son rappel de vaccin dans 2 semaines"). Il ne subit plus le rendez-vous comme une contrainte administrative, mais le comprend comme une étape nécessaire du parcours de soin de son animal.</p>
 
         <div class="bg-primary-50 p-6 rounded-xl border-l-4 border-primary-500 my-8">
           <h3 class="text-primary-800 font-bold mb-2">Le conseil de l'expert</h3>
@@ -69,7 +69,7 @@ export const useBlog = () => {
         </ul>
 
         <h2>3. La communication asynchrone pour gagner du temps</h2>
-        <p>Le téléphone est un "voleur de temps". Il interrompt vos consultations et stresse vos équipes. Une messagerie sécurisée dédiée, comme celle intégrée à Ficabot Pro, permet de traiter les demandes non urgentes (demande de renouvellement, question post-opératoire simple) entre deux consultations, calmement et efficacement.</p>
+        <p>Le téléphone est un "voleur de temps". Il interrompt vos consultations et stresse vos équipes. Une messagerie sécurisée dédiée, comme celle intégrée à Ficana Pro, permet de traiter les demandes non urgentes (demande de renouvellement, question post-opératoire simple) entre deux consultations, calmement et efficacement.</p>
 
         <h2>Conclusion</h2>
         <p>Digitaliser n'est pas déshumaniser. Au contraire, en automatisant les tâches à faible valeur ajoutée, vous libérez du temps de cerveau et de cœur pour ce qui compte vraiment : le soin de l'animal et l'écoute du propriétaire.</p>
@@ -97,7 +97,7 @@ export const useBlog = () => {
         </ul>
 
         <h2>Le rôle du digital dans l'émotionnel</h2>
-        <p>Cela peut sembler contradictoire, mais le digital permet de renforcer l'émotionnel. Envoyer une notification d'anniversaire pour l'animal, partager une courbe de poids encourageante, féliciter pour une bonne observance du traitement... Ces "micro-interactions" via une application comme Ficabot tissent un lien quotidien, bien plus fort qu'une visite annuelle.</p>
+        <p>Cela peut sembler contradictoire, mais le digital permet de renforcer l'émotionnel. Envoyer une notification d'anniversaire pour l'animal, partager une courbe de poids encourageante, féliciter pour une bonne observance du traitement... Ces "micro-interactions" via une application comme Ficana tissent un lien quotidien, bien plus fort qu'une visite annuelle.</p>
       `
     },
 
@@ -133,8 +133,8 @@ export const useBlog = () => {
         <p>L'immunité n'est pas éternelle. Comme pour nous, elle diminue avec le temps. Le premier rappel annuel est CRUCIAL. Ensuite, selon le mode de vie de votre animal et le type de vaccin, votre vétérinaire adaptera le protocole (tous les ans ou tous les 3 ans).</p>
 
         <div class="bg-green-50 p-6 rounded-xl border-l-4 border-green-500 my-8">
-          <h3 class="text-green-800 font-bold mb-2">L'astuce Ficabot</h3>
-          <p class="text-green-700 m-0">Ne notez plus les dates sur un post-it ! Enregistrez les vaccins de votre animal dans l'application Ficabot. Nous calculons automatiquement la date du prochain rappel et vous notifions 1 mois avant, puis 1 semaine avant.</p>
+          <h3 class="text-green-800 font-bold mb-2">L'astuce Ficana</h3>
+          <p class="text-green-700 m-0">Ne notez plus les dates sur un post-it ! Enregistrez les vaccins de votre animal dans l'application Ficana. Nous calculons automatiquement la date du prochain rappel et vous notifions 1 mois avant, puis 1 semaine avant.</p>
         </div>
       `
     },
@@ -180,7 +180,7 @@ export const useBlog = () => {
         <p class="lead">Le carnet de santé papier est fragile. Il se perd, s'abîme, ou pire, on l'oublie le jour où on en a le plus besoin (en week-end ou en vacances). Passer au numérique, c'est sécuriser la vie de votre animal.</p>
 
         <h2>1. Vos données accessibles partout, tout le temps</h2>
-        <p>Imaginez : vous êtes en vacances dans le Sud et votre chien se blesse. Vous devez consulter un vétérinaire d'urgence qui ne connaît pas son historique. Avec Ficabot, vous sortez votre smartphone et vous avez accès instantanément :</p>
+        <p>Imaginez : vous êtes en vacances dans le Sud et votre chien se blesse. Vous devez consulter un vétérinaire d'urgence qui ne connaît pas son historique. Avec Ficana, vous sortez votre smartphone et vous avez accès instantanément :</p>
         <ul>
           <li>À son numéro de puce (I-CAD).</li>
           <li>À ses derniers vaccins (sont-ils à jour pour la pension ?).</li>
@@ -191,7 +191,7 @@ export const useBlog = () => {
         <p>Un carnet papier est passif. Il dort dans un tiroir. Un carnet numérique est actif : il vous rappelle les vermifuges, il trace la courbe de poids de votre chat pour détecter une obésité débutante, il vous alerte d'une anomalie. C'est un véritable assistant personnel.</p>
 
         <h2>3. Centraliser toute la "tribu"</h2>
-        <p>Chien, chat, lapin... Avoir 3 carnets différents, c'est l'enfer administratif. Ficabot permet de créer un profil pour chaque animal de la maison au sein de la même interface. Vous visualisez la santé de toute la famille en un coup d'œil.</p>
+        <p>Chien, chat, lapin... Avoir 3 carnets différents, c'est l'enfer administratif. Ficana permet de créer un profil pour chaque animal de la maison au sein de la même interface. Vous visualisez la santé de toute la famille en un coup d'œil.</p>
       `
     }
   ]

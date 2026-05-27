@@ -33,7 +33,7 @@
             <li><strong>RCS :</strong> [À COMPLÉTER : ville et numéro d'immatriculation]</li>
             <li><strong>N° SIRET :</strong> [À COMPLÉTER : numéro SIRET]</li>
             <li><strong>N° TVA intracommunautaire :</strong> [À COMPLÉTER : numéro de TVA]</li>
-            <li><strong>Email de contact :</strong> contact@ficabot.com</li>
+            <li><strong>Email de contact :</strong> contact@ficana.com</li>
             <li><strong>Directeur de la publication :</strong> [À COMPLÉTER : nom du directeur]</li>
           </ul>
         </section>
@@ -52,7 +52,7 @@
         <section id="propriete">
           <h2>3. Propriété intellectuelle</h2>
           <p>
-            L'ensemble des éléments du site (textes, images, logos, code source, marque "Ficabot") est la propriété exclusive de <strong>[À COMPLÉTER : raison sociale]</strong>, sauf mention contraire. Toute reproduction, représentation, modification ou exploitation, partielle ou totale, sans autorisation préalable écrite est strictement interdite et constitue une contrefaçon sanctionnée par les articles L.335-2 et suivants du Code de la propriété intellectuelle.
+            L'ensemble des éléments du site (textes, images, logos, code source, marque "Ficana") est la propriété exclusive de <strong>[À COMPLÉTER : raison sociale]</strong>, sauf mention contraire. Toute reproduction, représentation, modification ou exploitation, partielle ou totale, sans autorisation préalable écrite est strictement interdite et constitue une contrefaçon sanctionnée par les articles L.335-2 et suivants du Code de la propriété intellectuelle.
           </p>
         </section>
 
@@ -75,7 +75,7 @@
 
           <h3>Finalités du traitement</h3>
           <ul>
-            <li>Fournir et améliorer le service Ficabot.</li>
+            <li>Fournir et améliorer le service Ficana.</li>
             <li>Gérer votre compte et vos abonnements.</li>
             <li>Vous envoyer des notifications (rappels vaccins, RDV) que vous avez paramétrées.</li>
             <li>Assurer la sécurité de la plateforme.</li>
@@ -118,7 +118,7 @@
             <li><strong>Droit de retirer votre consentement</strong> à tout moment.</li>
           </ul>
           <p>
-            Pour exercer ces droits, écrivez-nous à <a href="mailto:contact@ficabot.com" class="text-primary-700 hover:underline">contact@ficabot.com</a>, ou par courrier postal à : <strong>[À COMPLÉTER : adresse postale]</strong>. Une réponse vous sera apportée sous 30 jours.
+            Pour exercer ces droits, écrivez-nous à <a href="mailto:contact@ficana.com" class="text-primary-700 hover:underline">contact@ficana.com</a>, ou par courrier postal à : <strong>[À COMPLÉTER : adresse postale]</strong>. Une réponse vous sera apportée sous 30 jours.
           </p>
           <p>
             Vous disposez également du droit d'introduire une réclamation auprès de la <a href="https://www.cnil.fr" target="_blank" rel="noopener" class="text-primary-700 hover:underline">CNIL</a> si vous estimez que vos droits ne sont pas respectés.
@@ -153,8 +153,8 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'Mentions légales — Ficabot',
-  meta: [{ name: 'description', content: 'Mentions légales et politique de confidentialité de Ficabot.' }],
+  title: 'Mentions légales — Ficana',
+  meta: [{ name: 'description', content: 'Mentions légales et politique de confidentialité de Ficana.' }],
 })
 </script>
 

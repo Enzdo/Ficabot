@@ -34,7 +34,7 @@
         <section id="objet">
           <h2>1. Objet</h2>
           <p>
-            Les présentes Conditions Générales d'Utilisation et de Vente (ci-après "<strong>CGV</strong>") régissent l'utilisation de l'application mobile Ficabot et du site web associé, édités par <strong>[À COMPLÉTER : raison sociale de l'éditeur]</strong>, ainsi que la souscription aux abonnements payants proposés.
+            Les présentes Conditions Générales d'Utilisation et de Vente (ci-après "<strong>CGV</strong>") régissent l'utilisation de l'application mobile Ficana et du site web associé, édités par <strong>[À COMPLÉTER : raison sociale de l'éditeur]</strong>, ainsi que la souscription aux abonnements payants proposés.
           </p>
           <p>
             Toute utilisation du service implique l'acceptation pleine et entière des présentes CGV.
@@ -51,7 +51,7 @@
             <li><strong>RCS :</strong> [À COMPLÉTER : ville et numéro d'immatriculation]</li>
             <li><strong>N° SIRET :</strong> [À COMPLÉTER : numéro SIRET]</li>
             <li><strong>N° TVA intracommunautaire :</strong> [À COMPLÉTER : numéro de TVA]</li>
-            <li><strong>Email :</strong> contact@ficabot.com</li>
+            <li><strong>Email :</strong> contact@ficana.com</li>
             <li><strong>Directeur de la publication :</strong> [À COMPLÉTER : nom du directeur]</li>
           </ul>
         </section>
@@ -59,7 +59,7 @@
         <section id="definitions">
           <h2>3. Définitions</h2>
           <ul>
-            <li><strong>Service / Application :</strong> l'application mobile Ficabot et le site ficabot.com.</li>
+            <li><strong>Service / Application :</strong> l'application mobile Ficana et le site ficana.com.</li>
             <li><strong>Utilisateur :</strong> toute personne physique majeure utilisant le Service.</li>
             <li><strong>Compte :</strong> espace personnel créé par l'Utilisateur pour accéder aux fonctionnalités du Service.</li>
             <li><strong>Abonnement :</strong> souscription payante donnant accès à des fonctionnalités premium.</li>
@@ -132,7 +132,7 @@
         <section id="responsabilite">
           <h2>10. Responsabilité</h2>
           <p>
-            Ficabot est un outil de suivi personnel. Les informations affichées (rappels, conseils, contenus du blog) ne constituent <strong>en aucun cas un avis vétérinaire</strong> et ne sauraient se substituer à une consultation auprès d'un professionnel de santé animale.
+            Ficana est un outil de suivi personnel. Les informations affichées (rappels, conseils, contenus du blog) ne constituent <strong>en aucun cas un avis vétérinaire</strong> et ne sauraient se substituer à une consultation auprès d'un professionnel de santé animale.
           </p>
           <p>
             L'éditeur ne saurait être tenu responsable de tout dommage résultant de l'utilisation des informations fournies par le Service. L'Utilisateur reste seul responsable des décisions prises concernant la santé de ses animaux.
@@ -142,7 +142,7 @@
         <section id="propriete">
           <h2>11. Propriété intellectuelle</h2>
           <p>
-            L'ensemble des éléments du Service (textes, images, logos, code, marque "Ficabot") est protégé par le droit de la propriété intellectuelle. Toute reproduction, représentation, modification ou exploitation, totale ou partielle, sans autorisation préalable écrite de l'éditeur est interdite.
+            L'ensemble des éléments du Service (textes, images, logos, code, marque "Ficana") est protégé par le droit de la propriété intellectuelle. Toute reproduction, représentation, modification ou exploitation, totale ou partielle, sans autorisation préalable écrite de l'éditeur est interdite.
           </p>
           <p>
             L'Utilisateur conserve l'entière propriété des contenus qu'il publie sur le Service (informations sur ses animaux, photos, etc.) et concède à l'éditeur une licence d'utilisation strictement nécessaire au fonctionnement du Service.
@@ -179,8 +179,8 @@
 
 <script setup lang="ts">
 useHead({
-  title: 'CGV — Ficabot',
-  meta: [{ name: 'description', content: 'Conditions générales d\'utilisation et de vente de Ficabot.' }],
+  title: 'CGV — Ficana',
+  meta: [{ name: 'description', content: 'Conditions générales d\'utilisation et de vente de Ficana.' }],
 })
 </script>
 
