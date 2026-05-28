@@ -61,6 +61,7 @@ router.get('/health/live', [HealthController, 'live'])
 // Blog (public, no auth)
 router.group(() => {
   router.get('/posts', [BlogPostsController, 'index'])
+  router.get('/recommended', [BlogPostsController, 'recommended'])
   router.get('/posts/:slug', [BlogPostsController, 'show'])
 }).prefix('/blog')
 

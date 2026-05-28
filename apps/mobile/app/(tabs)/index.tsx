@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -13,6 +13,7 @@ import { colors, radius, shadow } from '@/constants/theme'
 import type { VetAppointment, Reminder } from '@/types'
 
 type MonthlyTip = { id: number; species: string; month: number; title: string; body: string; emoji: string | null }
+type RecommendedPost = { id: number; slug: string; title: string; excerpt: string; category: string; image?: string | null; readTime?: string | null }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,6 +57,8 @@ export default function DashboardScreen() {
   const [reminders,   setReminders]   = useState<Reminder[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [tips,        setTips]        = useState<MonthlyTip[]>([])
+  const [recommended, setRecommended] = useState<RecommendedPost[]>([])
+  const [season,      setSeason]      = useState<'winter'|'spring'|'summer'|'autumn'|null>(null)
 
   const load = useCallback(async () => {
     setLoadingData(true)
@@ -81,14 +84,21 @@ export default function DashboardScreen() {
     setLoadingData(false)
   }, [fetchPets, fetchExpenses])
 
-  // Fetch tips after pets are loaded (depends on species)
+  // Fetch tips + recommended blog posts after pets are loaded (depends on species)
   useEffect(() => {
     const species = Array.from(new Set(pets.map((p) => p.species)))
-    if (species.length === 0) { setTips([]); return }
+    if (species.length === 0) { setTips([]); setRecommended([]); return }
     const month = new Date().getMonth() + 1
     api
       .get<MonthlyTip[]>(`/tips?species=${species.join(',')}&month=${month}`)
       .then((r) => { if (r.success && r.data) setTips(r.data) })
+    api
+      .get<RecommendedPost[]>(`/blog/recommended?species=${species.join(',')}&month=${month}&limit=6`)
+      .then((r) => {
+        if (r.success && r.data) setRecommended(r.data)
+        const meta = (r as any)?.meta
+        if (meta?.season) setSeason(meta.season)
+      })
   }, [pets])
 
   useEffect(() => { load() }, [load])
@@ -184,6 +194,41 @@ export default function DashboardScreen() {
             </ScrollView>
           )}
         </View>
+
+        {/* ── Recommandé pour vous (saison × espèce) ── */}
+        {recommended.length > 0 && (
+          <View>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>
+                {season === 'winter' ? '❄️ Recommandé cet hiver'
+                 : season === 'spring' ? '🌷 Recommandé ce printemps'
+                 : season === 'summer' ? '☀️ Recommandé cet été'
+                 : season === 'autumn' ? '🍂 Recommandé cet automne'
+                 : 'Recommandé pour vous'}
+              </Text>
+              <Pressable onPress={() => router.push('/blog')} style={s.seeAll}>
+                <Text style={s.seeAllText}>Voir tout</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.green} />
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.recoRow}>
+              {recommended.map((post) => (
+                <Pressable
+                  key={post.slug}
+                  onPress={() => { Haptics.selectionAsync(); router.push(`/blog/${post.slug}`) }}
+                  style={[s.recoCard, shadow.sm]}
+                >
+                  {post.image && <Image source={{ uri: post.image }} style={s.recoImg} />}
+                  <View style={s.recoBody}>
+                    <Text style={s.recoCategory}>{post.category}</Text>
+                    <Text style={s.recoTitle} numberOfLines={2}>{post.title}</Text>
+                    {post.readTime && <Text style={s.recoMeta}>📖 {post.readTime}</Text>}
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* ── Conseils du mois ── */}
         {tips.length > 0 && (
@@ -456,6 +501,15 @@ const s = StyleSheet.create({
   reminderDue:     { fontSize: 11, fontWeight: '600', color: colors.gray[400] },
   reminderDueOverdue: { color: colors.red },
   reminderDueToday:   { color: colors.orange },
+
+  // Recommended posts (seasonal × species)
+  recoRow:         { gap: 12, paddingBottom: 4 },
+  recoCard:        { width: 240, backgroundColor: colors.white, borderRadius: radius.lg, overflow: 'hidden' },
+  recoImg:         { width: '100%', height: 120, backgroundColor: colors.gray[200] },
+  recoBody:        { padding: 12, gap: 4 },
+  recoCategory:    { fontSize: 10, fontWeight: '700', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.5 },
+  recoTitle:       { fontSize: 14, fontWeight: '700', color: colors.dark, lineHeight: 18 },
+  recoMeta:        { fontSize: 11, color: colors.gray[500], marginTop: 4 },
 
   // Monthly tips
   tipsRow:         { gap: 12, paddingBottom: 4 },
