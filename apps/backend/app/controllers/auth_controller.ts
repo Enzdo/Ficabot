@@ -108,6 +108,9 @@ export default class AuthController {
         phone: user.phone,
         createdAt: user.createdAt,
         language: user.language,
+        isPremium: (user as any).hasActivePremium,
+        premiumPlan: user.premiumPlan,
+        premiumExpiresAt: user.premiumExpiresAt,
       },
     })
   }

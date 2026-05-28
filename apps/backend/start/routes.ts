@@ -125,11 +125,20 @@ router.group(() => {
   router.get('/invitations', [PetOwnersController, 'pendingInvitations'])
 }).prefix('/user').use(middleware.auth())
 
+// Subscription / Premium
+const SubscriptionsController = () => import('#controllers/subscriptions_controller')
+router.group(() => {
+  router.get('/subscription', [SubscriptionsController, 'show'])
+  router.post('/subscription/activate', [SubscriptionsController, 'activate'])
+  router.post('/subscription/cancel', [SubscriptionsController, 'cancel'])
+}).prefix('/user').use(middleware.auth())
+
 router.group(() => {
   router.put('/:recordId', [MedicalRecordsController, 'update'])
   router.delete('/:recordId', [MedicalRecordsController, 'destroy'])
 }).prefix('/medical-records').use(middleware.auth())
 
+// AI Chat — PREMIUM ONLY
 router.group(() => {
   router.get('/conversations', [ChatController, 'conversations'])
   router.post('/conversations', [ChatController, 'createConversation'])
@@ -137,14 +146,14 @@ router.group(() => {
   router.get('/', [ChatController, 'index'])
   router.post('/', [ChatController, 'send'])
   router.delete('/', [ChatController, 'clear'])
-}).prefix('/chat').use(middleware.auth())
+}).prefix('/chat').use([middleware.auth(), middleware.premium()])
 
-// AI Actions (for chat confirmations)
+// AI Actions (for chat confirmations) — PREMIUM ONLY
 const ChatActionsController = () => import('#controllers/chat_actions_controller')
 router.group(() => {
   router.post('/actions/confirm', [ChatActionsController, 'confirmAction'])
   router.post('/actions/cancel', [ChatActionsController, 'cancelAction'])
-}).prefix('/chat').use(middleware.auth())
+}).prefix('/chat').use([middleware.auth(), middleware.premium()])
 
 // Health Book routes
 router.group(() => {
@@ -187,9 +196,9 @@ router.group(() => {
   router.post('/:id/health-book/weight-history', [HealthBooksController, 'addWeightHistory'])
   router.delete('/:id/health-book/weight-history', [HealthBooksController, 'removeWeightHistory'])
 
-  // Scan photo with GPT Vision
-  router.post('/:id/health-book/scan', [HealthBooksController, 'scanPhoto'])
-  router.post('/:id/health-book/apply-scan', [HealthBooksController, 'applyScannedData'])
+  // Scan photo with GPT Vision — PREMIUM ONLY (AI feature)
+  router.post('/:id/health-book/scan', [HealthBooksController, 'scanPhoto']).use(middleware.premium())
+  router.post('/:id/health-book/apply-scan', [HealthBooksController, 'applyScannedData']).use(middleware.premium())
 
   // Feeding logs
   router.get('/:petId/feeding', [FeedingLogsController, 'index'])
@@ -277,11 +286,12 @@ router.group(() => {
 // Photo Analysis (AI Vision)
 const PhotoAnalysisController = () => import('#controllers/photo_analysis_controller')
 router.group(() => {
-  router.post('/:petId/analyze-photo', [PhotoAnalysisController, 'analyze'])
+  // Photo analysis — PREMIUM ONLY (AI feature)
+  router.post('/:petId/analyze-photo', [PhotoAnalysisController, 'analyze']).use(middleware.premium())
 
-  // Pre-Diagnosis (AI Multi-Model Analysis)
+  // Pre-Diagnosis (AI Multi-Model Analysis) — PREMIUM ONLY
   const PreDiagnosesController = () => import('#controllers/pre_diagnoses_controller')
-  router.post('/:id/pre-diagnosis', [PreDiagnosesController, 'create'])
+  router.post('/:id/pre-diagnosis', [PreDiagnosesController, 'create']).use(middleware.premium())
 }).prefix('/pets').use(middleware.auth())
 
 // Pre-Diagnosis routes

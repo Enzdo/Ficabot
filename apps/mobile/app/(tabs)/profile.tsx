@@ -142,8 +142,10 @@ export default function ProfileScreen() {
     ? [firstName[0], lastName[0]].filter(Boolean).join('').toUpperCase()
     : (user?.email?.[0] ?? 'U').toUpperCase()
 
+  const isPremium = !!user?.isPremium
   const menuItems: MenuItem[] = [
     { icon: 'person-outline',        label: 'Modifier mon profil', sub: 'Prénom, nom, téléphone',   iconBg: colors.greenLight,  iconColor: colors.greenDark, onPress: () => setShowEditModal(true) },
+    { icon: (isPremium ? 'star' : 'star-outline') as any, label: isPremium ? 'Premium actif 👑' : 'Passer à Premium', sub: isPremium ? 'Toutes les fonctionnalités IA débloquées' : "Débloquez l'IA, le scan et plus", iconBg: colors.orangeLight, iconColor: colors.orange, onPress: () => router.push('/paywall') },
     { icon: 'book-outline',          label: 'Blog & conseils',     sub: 'Articles adaptés à vos animaux', iconBg: colors.beigeLight, iconColor: colors.greenDark, onPress: () => router.push('/blog') },
     { icon: 'notifications-outline', label: 'Notifications',       sub: 'Gérer mes alertes',        iconBg: colors.orangeLight, iconColor: colors.orange,   onPress: () => setShowNotifModal(true) },
     { icon: 'lock-closed-outline',   label: 'Sécurité',            sub: 'Changer le mot de passe',  iconBg: colors.beigeLight,  iconColor: colors.gray[700], onPress: () => setShowPwdModal(true) },

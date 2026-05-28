@@ -14,6 +14,9 @@ export interface User {
   language?: string
   createdAt: string
   updatedAt: string
+  isPremium?: boolean
+  premiumPlan?: 'monthly' | 'yearly' | 'lifetime' | null
+  premiumExpiresAt?: string | null
 }
 
 export interface Pet {

@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics'
 import { api } from '@/services/api'
 import { usePetsStore } from '@/stores/pets'
 import { useHealthBookStore } from '@/stores/healthBook'
+import { useAuthStore } from '@/stores/auth'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -78,6 +79,7 @@ export default function PetDetailScreen() {
   } = usePetsStore()
 
   const { healthBook, loading: hbLoading, fetchHealthBook, addVaccine, removeVaccine, addAllergy, removeAllergy, addChronicCondition, removeChronicCondition, updateHealthBook } = useHealthBookStore()
+  const isPremium = useAuthStore((s) => !!s.user?.isPremium)
 
   const [tab, setTab] = useState<Tab>('info')
 
@@ -516,15 +518,26 @@ export default function PetDetailScreen() {
         </View>
       </View>
 
-      {/* AI Pre-diagnosis CTA */}
+      {/* AI Pre-diagnosis CTA — premium gated */}
       <Pressable
-        onPress={() => router.push({ pathname: '/(tabs)/chat', params: { petId: id, preDiagnosis: '1' } })}
+        onPress={() => {
+          Haptics.selectionAsync()
+          if (isPremium) {
+            router.push({ pathname: '/(tabs)/chat', params: { petId: id, preDiagnosis: '1' } })
+          } else {
+            router.push({ pathname: '/paywall', params: { feature: 'prediag' } })
+          }
+        }}
         style={({ pressed }) => [s.aiCta, pressed && { opacity: 0.85 }]}
       >
-        <View style={s.aiCtaIcon}><Text style={{ fontSize: 18 }}>🤖</Text></View>
+        <View style={s.aiCtaIcon}>
+          <Text style={{ fontSize: 18 }}>{isPremium ? '🤖' : '🔒'}</Text>
+        </View>
         <View style={{ flex: 1 }}>
-          <Text style={s.aiCtaTitle}>Pré-diagnostic IA</Text>
-          <Text style={s.aiCtaDesc}>Décrivez les symptômes à l'assistant</Text>
+          <Text style={s.aiCtaTitle}>Pré-diagnostic IA {!isPremium && '· Premium'}</Text>
+          <Text style={s.aiCtaDesc}>
+            {isPremium ? "Décrivez les symptômes à l'assistant" : 'Débloquez avec Premium'}
+          </Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.green} />
       </Pressable>
@@ -851,17 +864,34 @@ export default function PetDetailScreen() {
 
         {/* ── IA TAB ───────────────────────────────────────────────────────── */}
         {tab === 'ia' && (
-          <AiAnalysisTab
-            status={aiStatus}
-            synthesis={aiSynthesis}
-            error={aiError}
-            onRetry={() => {
-              setAiStatus('idle')
-              setAiSynthesis(null)
-              setAiError(null)
-              setAiDiagnosisId(null)
-            }}
-          />
+          isPremium ? (
+            <AiAnalysisTab
+              status={aiStatus}
+              synthesis={aiSynthesis}
+              error={aiError}
+              onRetry={() => {
+                setAiStatus('idle')
+                setAiSynthesis(null)
+                setAiError(null)
+                setAiDiagnosisId(null)
+              }}
+            />
+          ) : (
+            <View style={s.aiLockedCard}>
+              <Text style={s.aiLockedEmoji}>👑</Text>
+              <Text style={s.aiLockedTitle}>Analyse IA Premium</Text>
+              <Text style={s.aiLockedDesc}>
+                Obtenez une analyse complète du profil santé de votre animal par notre IA vétérinaire.
+                Réservé aux comptes Premium.
+              </Text>
+              <Pressable
+                onPress={() => router.push({ pathname: '/paywall', params: { feature: 'prediag' } })}
+                style={s.aiLockedBtn}
+              >
+                <Text style={s.aiLockedBtnText}>Découvrir Premium</Text>
+              </Pressable>
+            </View>
+          )
         )}
 
         {/* ── MEDICAL TAB ──────────────────────────────────────────────────── */}
@@ -1377,6 +1407,12 @@ const s = StyleSheet.create({
   modalFields:          { gap: 18, paddingTop: 20, paddingBottom: 40 },
   fieldLabel:           { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2, marginBottom: 8 },
   modalSectionTitle:    { fontSize: 14, fontWeight: '700', color: colors.greenDark, marginTop: 8, marginBottom: 4 },
+  aiLockedCard:    { backgroundColor: colors.white, borderRadius: radius.lg, padding: 24, alignItems: 'center', marginHorizontal: 16, gap: 10 },
+  aiLockedEmoji:   { fontSize: 44 },
+  aiLockedTitle:   { fontSize: 18, fontWeight: '800', color: colors.dark, textAlign: 'center' },
+  aiLockedDesc:    { fontSize: 13, color: colors.gray[600], textAlign: 'center', lineHeight: 19, paddingHorizontal: 8 },
+  aiLockedBtn:     { backgroundColor: colors.greenDark, paddingHorizontal: 22, paddingVertical: 12, borderRadius: radius.md, marginTop: 8 },
+  aiLockedBtnText: { fontSize: 14, fontWeight: '700', color: colors.white },
 
   typeRow:   { flexDirection: 'row', gap: 8 },
   typeOpt:   { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.gray[200], backgroundColor: colors.white },

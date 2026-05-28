@@ -9,6 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 import { useChatStore } from '@/stores/chat'
 import { usePetsStore } from '@/stores/pets'
+import { useAuthStore } from '@/stores/auth'
+import { PremiumLockedScreen } from '@/components/PremiumLockedScreen'
 import { ConversationSkeleton } from '@/components/ui/Skeleton'
 import { MarkdownText } from '@/components/ui/MarkdownText'
 import { colors, radius, shadow } from '@/constants/theme'
@@ -83,6 +85,14 @@ const TypingIndicator = memo(function TypingIndicator() {
 })
 
 export default function ChatScreen() {
+  const isPremium = useAuthStore((s) => !!s.user?.isPremium)
+  if (!isPremium) {
+    return <PremiumLockedScreen feature="chat" title="Assistant IA Premium" description="Discutez avec un assistant vétérinaire IA spécialisé en santé animale, 24h/24." />
+  }
+  return <ChatScreenInner />
+}
+
+function ChatScreenInner() {
   const { conversations, currentConversationId, messages, loading, streaming, fetchConversations, createConversation, selectConversation, sendMessage, selectedPetId } = useChatStore()
   const { pets, fetchPets } = usePetsStore()
   const selectedPet = pets.find((p) => String(p.id) === String(selectedPetId))

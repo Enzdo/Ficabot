@@ -65,6 +65,14 @@ async function request<T>(
       return { success: false, message: 'Session expirée' }
     }
 
+    if (response.status === 402 || data?.code === 'PREMIUM_REQUIRED') {
+      return {
+        success: false,
+        message: data.message ?? 'Fonctionnalité Premium',
+        errors: { code: 'PREMIUM_REQUIRED' },
+      }
+    }
+
     if (!response.ok) {
       return {
         success: false,

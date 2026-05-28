@@ -15,6 +15,7 @@ interface AuthState {
   logout: () => Promise<void>
   loadFromStorage: () => Promise<void>
   updateUser: (user: User) => Promise<void>
+  fetchMe: () => Promise<void>
   markOnboardingDone: () => Promise<void>
 }
 
@@ -100,6 +101,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateUser: async (user) => {
     await secureStorage.setUser(JSON.stringify(user))
     set({ user })
+  },
+
+  fetchMe: async () => {
+    const { api } = await import('@/services/api')
+    const res = await api.get<User>('/auth/me')
+    if (res.success && res.data) {
+      await secureStorage.setUser(JSON.stringify(res.data))
+      set({ user: res.data })
+    }
   },
 
   markOnboardingDone: async () => {

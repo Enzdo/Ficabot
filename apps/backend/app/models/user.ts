@@ -60,6 +60,33 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ serializeAs: null })
   declare resetTokenExpiresAt: DateTime | null
 
+  @column()
+  declare isPremium: boolean
+
+  @column.dateTime()
+  declare premiumSince: DateTime | null
+
+  @column.dateTime()
+  declare premiumExpiresAt: DateTime | null
+
+  @column()
+  declare premiumPlan: string | null
+
+  @column()
+  declare premiumProvider: string | null
+
+  @column({ serializeAs: null })
+  declare premiumSubscriptionId: string | null
+
+  /**
+   * Computed property: premium is active if flag is true AND (no expiry OR expiry in future).
+   */
+  get hasActivePremium(): boolean {
+    if (!this.isPremium) return false
+    if (!this.premiumExpiresAt) return true
+    return this.premiumExpiresAt > DateTime.now()
+  }
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
