@@ -22,7 +22,7 @@ export default class PreDiagnosis extends BaseModel {
     declare veterinarianId: number | null
 
     @column()
-    declare species: 'dog' | 'cat'
+    declare species: 'dog' | 'cat' | 'nac'
 
     @column()
     declare userDescription: string

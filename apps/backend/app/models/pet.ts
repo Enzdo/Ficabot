@@ -17,7 +17,7 @@ export default class Pet extends BaseModel {
   declare name: string
 
   @column()
-  declare species: 'dog' | 'cat'
+  declare species: 'dog' | 'cat' | 'nac'
 
   @column()
   declare breed: string | null

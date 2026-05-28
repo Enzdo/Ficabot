@@ -14,8 +14,8 @@ import { MarkdownText } from '@/components/ui/MarkdownText'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { ChatMessage } from '@/types'
 
-const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐱', rabbit: '🐰', bird: '🦜' }
-const SPECIES_BG:    Record<string, string> = { dog: colors.beigeLight, cat: colors.greenLight, rabbit: colors.greenLight, bird: colors.beigeLight }
+const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐱', nac: '🐰' }
+const SPECIES_BG:    Record<string, string> = { dog: colors.beigeLight, cat: colors.greenLight, nac: colors.greenLight }
 
 const PulsingAvatar = memo(function PulsingAvatar() {
   const scale = useRef(new Animated.Value(1)).current
@@ -83,8 +83,10 @@ const TypingIndicator = memo(function TypingIndicator() {
 })
 
 export default function ChatScreen() {
-  const { conversations, currentConversationId, messages, loading, streaming, fetchConversations, createConversation, selectConversation, sendMessage } = useChatStore()
+  const { conversations, currentConversationId, messages, loading, streaming, fetchConversations, createConversation, selectConversation, sendMessage, selectedPetId } = useChatStore()
   const { pets, fetchPets } = usePetsStore()
+  const selectedPet = pets.find((p) => String(p.id) === String(selectedPetId))
+  const isNacChat = selectedPet?.species === 'nac'
   const [input, setInput] = useState('')
   const [showSidebar, setShowSidebar] = useState(false)
   const flatListRef = useRef<FlatList>(null)
@@ -291,6 +293,15 @@ export default function ChatScreen() {
         />
       )}
 
+      {isNacChat && (
+        <View style={styles.nacBanner}>
+          <Text style={styles.nacBannerEmoji}>🐰</Text>
+          <Text style={styles.nacBannerText}>
+            Animal NAC : les conseils sont à titre informatif uniquement. Consultez un vétérinaire spécialisé NAC pour toute question médicale précise.
+          </Text>
+        </View>
+      )}
+
       {/* Barre de saisie */}
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <View style={styles.inputBar}>
@@ -410,6 +421,9 @@ const styles = StyleSheet.create({
   emptyMsgText: { fontSize: 13, color: colors.gray[400] },
 
   inputBar:    { flexDirection: 'row', alignItems: 'flex-end', gap: 10, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.gray[200] },
+  nacBanner:   { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: colors.orangeLight, borderTopWidth: 1, borderTopColor: colors.orange },
+  nacBannerEmoji: { fontSize: 20 },
+  nacBannerText:  { flex: 1, fontSize: 12, color: colors.gray[700], lineHeight: 16 },
   textInput:   { flex: 1, backgroundColor: colors.gray[50], borderWidth: 1.5, borderColor: colors.gray[200], borderRadius: radius['2xl'], paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: colors.dark, maxHeight: 112 },
   sendBtnWrap: { borderRadius: 21 },
   sendBtn:     { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },

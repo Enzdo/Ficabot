@@ -39,5 +39,11 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2024-01-01',
+
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'https://ficabotbackend-production.up.railway.app',
+    },
+  },
   // touched to refresh routes
 })

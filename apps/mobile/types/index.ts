@@ -1,6 +1,6 @@
 // Types mirrored from @ficabot/shared
 
-export type Species = 'dog' | 'cat'
+export type Species = 'dog' | 'cat' | 'nac'
 export type MedicalRecordType = 'vaccine' | 'treatment' | 'visit'
 export type ChatRole = 'user' | 'assistant'
 
@@ -211,8 +211,39 @@ export interface HealthBook {
   surgeries?: SurgeryEntry[] | string | null
   medications?: unknown[] | string | null
   vetVisits?: unknown[] | string | null
+  // EU Passport (Règlement UE 576/2013)
+  chipVetName?: string | null
+  chipVetOrderNumber?: string | null
+  passportVetName?: string | null
+  passportVetOrderNumber?: string | null
+  passportVetStamp?: string | null
+  echinococcusTreatments?: EchinococcusTreatmentEntry[] | string | null
+  coatColor?: string | null
+  coatPattern?: string | null
+  distinctiveMarks?: string | null
+  sex?: 'male' | 'female' | null
+  // Categorized dogs FR (cat. 1/2)
+  dogCategory?: 1 | 2 | null
+  detentionPermitNumber?: string | null
+  detentionPermitIssuedAt?: string | null
+  detentionPermitCity?: string | null
+  aptitudeCertificateNumber?: string | null
+  aptitudeCertificateIssuedAt?: string | null
+  aptitudeCertificateTrainer?: string | null
+  liabilityInsuranceCompany?: string | null
+  liabilityInsurancePolicy?: string | null
+  liabilityInsuranceExpiresAt?: string | null
+  behavioralAssessmentVet?: string | null
+  behavioralAssessmentDate?: string | null
+  behavioralDangerLevel?: 1 | 2 | 3 | 4 | null
   createdAt: string
   updatedAt: string
+}
+
+export interface EchinococcusTreatmentEntry {
+  date: string
+  product: string
+  vetName?: string
 }
 
 // ─── Activities ───────────────────────────────────────────────────────────────

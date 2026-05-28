@@ -62,7 +62,7 @@ export default class OpenAIService {
     }
 
     private buildPrompt(context: AIAnalysisContext): string {
-        return ANALYSIS_PROMPT_TEMPLATE.replace('{species}', context.species === 'dog' ? 'Chien' : 'Chat')
+        return ANALYSIS_PROMPT_TEMPLATE.replace('{species}', context.species === 'dog' ? 'Chien' : context.species === 'cat' ? 'Chat' : 'NAC')
             .replace('{breed}', context.breed || 'Non renseignée')
             .replace('{age}', context.age?.toString() || 'Non renseigné')
             .replace('{medicalHistory}', context.medicalHistory || 'Aucun historique')

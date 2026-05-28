@@ -124,6 +124,51 @@ export default class HealthBooksController {
 
     if (data.notes !== undefined) healthBook.notes = data.notes || null
 
+    // EU Passport
+    if (data.chipVetName !== undefined) healthBook.chipVetName = data.chipVetName || null
+    if (data.chipVetOrderNumber !== undefined)
+      healthBook.chipVetOrderNumber = data.chipVetOrderNumber || null
+    if (data.passportVetName !== undefined)
+      healthBook.passportVetName = data.passportVetName || null
+    if (data.passportVetOrderNumber !== undefined)
+      healthBook.passportVetOrderNumber = data.passportVetOrderNumber || null
+    if (data.passportVetStamp !== undefined)
+      healthBook.passportVetStamp = data.passportVetStamp || null
+    if (data.echinococcusTreatments !== undefined)
+      healthBook.echinococcusTreatments = JSON.stringify(data.echinococcusTreatments)
+    if (data.coatColor !== undefined) healthBook.coatColor = data.coatColor || null
+    if (data.coatPattern !== undefined) healthBook.coatPattern = data.coatPattern || null
+    if (data.distinctiveMarks !== undefined)
+      healthBook.distinctiveMarks = data.distinctiveMarks || null
+    if (data.sex !== undefined) healthBook.sex = data.sex || null
+
+    // Categorized dogs FR
+    if (data.dogCategory !== undefined) healthBook.dogCategory = data.dogCategory ?? null
+    if (data.detentionPermitNumber !== undefined)
+      healthBook.detentionPermitNumber = data.detentionPermitNumber || null
+    if (data.detentionPermitIssuedAt !== undefined)
+      healthBook.detentionPermitIssuedAt = data.detentionPermitIssuedAt || null
+    if (data.detentionPermitCity !== undefined)
+      healthBook.detentionPermitCity = data.detentionPermitCity || null
+    if (data.aptitudeCertificateNumber !== undefined)
+      healthBook.aptitudeCertificateNumber = data.aptitudeCertificateNumber || null
+    if (data.aptitudeCertificateIssuedAt !== undefined)
+      healthBook.aptitudeCertificateIssuedAt = data.aptitudeCertificateIssuedAt || null
+    if (data.aptitudeCertificateTrainer !== undefined)
+      healthBook.aptitudeCertificateTrainer = data.aptitudeCertificateTrainer || null
+    if (data.liabilityInsuranceCompany !== undefined)
+      healthBook.liabilityInsuranceCompany = data.liabilityInsuranceCompany || null
+    if (data.liabilityInsurancePolicy !== undefined)
+      healthBook.liabilityInsurancePolicy = data.liabilityInsurancePolicy || null
+    if (data.liabilityInsuranceExpiresAt !== undefined)
+      healthBook.liabilityInsuranceExpiresAt = data.liabilityInsuranceExpiresAt || null
+    if (data.behavioralAssessmentVet !== undefined)
+      healthBook.behavioralAssessmentVet = data.behavioralAssessmentVet || null
+    if (data.behavioralAssessmentDate !== undefined)
+      healthBook.behavioralAssessmentDate = data.behavioralAssessmentDate || null
+    if (data.behavioralDangerLevel !== undefined)
+      healthBook.behavioralDangerLevel = data.behavioralDangerLevel ?? null
+
     await healthBook.save()
 
     return response.ok({

@@ -19,6 +19,7 @@ import type { Pet, Species } from '@/types'
 const SPECIES_OPTS: { value: Species; label: string; emoji: string; bg: string }[] = [
   { value: 'dog', label: 'Chien', emoji: '🐕', bg: colors.beigeLight },
   { value: 'cat', label: 'Chat',  emoji: '🐱', bg: colors.greenLight },
+  { value: 'nac', label: 'NAC',   emoji: '🐰', bg: colors.greenLight },
 ]
 
 const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {

@@ -1,14 +1,13 @@
 import { colors } from './theme'
 
 export const SPECIES_EMOJI: Record<string, string> = {
-  dog: '🐕', cat: '🐱', rabbit: '🐰', bird: '🦜',
+  dog: '🐕', cat: '🐱', nac: '🐰',
 }
 
 export const SPECIES_BG: Record<string, string> = {
-  dog: colors.beigeLight, cat: colors.greenLight,
-  rabbit: colors.greenLight, bird: colors.beigeLight,
+  dog: colors.beigeLight, cat: colors.greenLight, nac: colors.greenLight,
 }
 
 export const SPECIES_LABEL: Record<string, string> = {
-  dog: 'Chien', cat: 'Chat', rabbit: 'Lapin', bird: 'Oiseau',
+  dog: 'Chien', cat: 'Chat', nac: 'NAC',
 }

@@ -185,11 +185,26 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 
-const { posts } = useBlog()
+const route = useRoute()
+// [VETO-PRIVATE] Filtre forcé sur 'owner' tant que la partie pro reste privée
 const targetFilter = ref<'pro' | 'owner'>('owner')
 const categoryFilter = ref<string>('all')
 const searchQuery = ref<string>('')
 const showBookmarkedOnly = ref(false)
+
+// Optional ?species=dog,cat,nac filter from query string (deep-link from mobile app)
+const speciesFilter = computed(() => {
+  const q = route.query.species
+  if (!q) return undefined
+  return String(q).split(',').map((s) => s.trim()).filter(Boolean)
+})
+
+// Dynamic posts from backend API
+const { data: ownerPostsData } = useBlogPosts({
+  target: targetFilter.value,
+  species: speciesFilter.value,
+})
+const ownerPosts = computed(() => ownerPostsData.value ?? [])
 
 // ── Bookmarks (localStorage) ─────────────────────────────────────────
 const bookmarkedSlugs = ref<string[]>([])
@@ -221,14 +236,12 @@ const highlightText = (text: string) => {
 }
 
 // ── Posts filtrés ────────────────────────────────────────────────────
-const ownerPosts = computed(() => posts.filter((p: { target: string }) => p.target === targetFilter.value))
-
-const categories = computed(() => [...new Set(ownerPosts.value.map((p: { category: string }) => p.category))])
+const categories = computed(() => [...new Set(ownerPosts.value.map((p) => p.category))])
 
 const searchFilteredPosts = computed(() => {
   if (!searchQuery.value) return ownerPosts.value
   const q = normalise(searchQuery.value)
-  return ownerPosts.value.filter((p: { title: string; excerpt: string; category: string }) =>
+  return ownerPosts.value.filter((p) =>
     normalise(p.title).includes(q) || normalise(p.excerpt).includes(q) || normalise(p.category).includes(q)
   )
 })
@@ -236,15 +249,12 @@ const searchFilteredPosts = computed(() => {
 const featuredPost = computed(() => ownerPosts.value[0])
 
 const displayedPosts = computed(() => {
-  // Favoris en priorité
   if (showBookmarkedOnly.value) {
-    return ownerPosts.value.filter((p: { slug: string }) => bookmarkedSlugs.value.includes(p.slug))
+    return ownerPosts.value.filter((p) => bookmarkedSlugs.value.includes(p.slug))
   }
-  // Recherche active
   if (searchQuery.value) return searchFilteredPosts.value
-  // Filtre catégorie
   if (categoryFilter.value === 'all') return ownerPosts.value.slice(1)
-  return ownerPosts.value.filter((p: { category: string }) => p.category === categoryFilter.value)
+  return ownerPosts.value.filter((p) => p.category === categoryFilter.value)
 })
 
 const hasResults = computed(() => displayedPosts.value.length > 0)

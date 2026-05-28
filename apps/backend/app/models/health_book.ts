@@ -117,6 +117,78 @@ export default class HealthBook extends BaseModel {
   @column()
   declare notes: string | null
 
+  // === EU PASSPORT (Règlement UE 576/2013) — encrypted ===
+  @column()
+  declare chipVetName: string | null
+
+  @column()
+  declare chipVetOrderNumber: string | null
+
+  @column()
+  declare passportVetName: string | null
+
+  @column()
+  declare passportVetOrderNumber: string | null
+
+  @column()
+  declare passportVetStamp: string | null
+
+  @column()
+  declare echinococcusTreatments: string | null
+  // Structure: [{ date, product, vetName }]
+
+  @column()
+  declare coatColor: string | null
+
+  @column()
+  declare coatPattern: string | null
+
+  @column()
+  declare distinctiveMarks: string | null
+
+  @column()
+  declare sex: string | null // 'male' | 'female'
+
+  // === CATEGORIZED DOGS FR (cat. 1/2) ===
+  @column()
+  declare dogCategory: number | null // 1 | 2 | null — plain (UI logic)
+
+  @column()
+  declare detentionPermitNumber: string | null
+
+  @column()
+  declare detentionPermitIssuedAt: string | null
+
+  @column()
+  declare detentionPermitCity: string | null
+
+  @column()
+  declare aptitudeCertificateNumber: string | null
+
+  @column()
+  declare aptitudeCertificateIssuedAt: string | null
+
+  @column()
+  declare aptitudeCertificateTrainer: string | null
+
+  @column()
+  declare liabilityInsuranceCompany: string | null
+
+  @column()
+  declare liabilityInsurancePolicy: string | null
+
+  @column()
+  declare liabilityInsuranceExpiresAt: string | null
+
+  @column()
+  declare behavioralAssessmentVet: string | null
+
+  @column()
+  declare behavioralAssessmentDate: string | null
+
+  @column()
+  declare behavioralDangerLevel: number | null // 1-4
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -151,6 +223,25 @@ export default class HealthBook extends BaseModel {
       'emergencyVetPhone',
       'emergencyVetAddress',
       'notes',
+      // EU passport
+      'chipVetName',
+      'chipVetOrderNumber',
+      'passportVetName',
+      'passportVetOrderNumber',
+      'passportVetStamp',
+      'echinococcusTreatments',
+      'coatColor',
+      'coatPattern',
+      'distinctiveMarks',
+      'sex',
+      // Categorized dogs FR
+      'detentionPermitNumber',
+      'detentionPermitCity',
+      'aptitudeCertificateNumber',
+      'aptitudeCertificateTrainer',
+      'liabilityInsuranceCompany',
+      'liabilityInsurancePolicy',
+      'behavioralAssessmentVet',
     ]
 
     for (const field of fieldsToEncrypt) {
@@ -192,6 +283,22 @@ export default class HealthBook extends BaseModel {
       'emergencyVetPhone',
       'emergencyVetAddress',
       'notes',
+      'chipVetName',
+      'chipVetOrderNumber',
+      'passportVetName',
+      'passportVetOrderNumber',
+      'passportVetStamp',
+      'coatColor',
+      'coatPattern',
+      'distinctiveMarks',
+      'sex',
+      'detentionPermitNumber',
+      'detentionPermitCity',
+      'aptitudeCertificateNumber',
+      'aptitudeCertificateTrainer',
+      'liabilityInsuranceCompany',
+      'liabilityInsurancePolicy',
+      'behavioralAssessmentVet',
     ]
 
     const jsonFieldsToDecrypt = [
@@ -204,6 +311,7 @@ export default class HealthBook extends BaseModel {
       'medications',
       'vetVisits',
       'weightHistory',
+      'echinococcusTreatments',
     ]
 
     // Decrypt simple string fields
@@ -245,7 +353,46 @@ export default class HealthBook extends BaseModel {
         number: this.passportNumber,
         issueDate: this.passportIssueDate,
         issueLocation: this.passportIssueLocation,
+        vetName: this.passportVetName,
+        vetOrderNumber: this.passportVetOrderNumber,
+        vetStamp: this.passportVetStamp,
       },
+      chip: {
+        vetName: this.chipVetName,
+        vetOrderNumber: this.chipVetOrderNumber,
+      },
+      signalment: {
+        sex: this.sex,
+        coatColor: this.coatColor,
+        coatPattern: this.coatPattern,
+        distinctiveMarks: this.distinctiveMarks,
+      },
+      echinococcusTreatments: this.parseArrayField(this.echinococcusTreatments),
+      categorizedDog: this.dogCategory
+        ? {
+            category: this.dogCategory,
+            detentionPermit: {
+              number: this.detentionPermitNumber,
+              issuedAt: this.detentionPermitIssuedAt,
+              city: this.detentionPermitCity,
+            },
+            aptitudeCertificate: {
+              number: this.aptitudeCertificateNumber,
+              issuedAt: this.aptitudeCertificateIssuedAt,
+              trainer: this.aptitudeCertificateTrainer,
+            },
+            liabilityInsurance: {
+              company: this.liabilityInsuranceCompany,
+              policy: this.liabilityInsurancePolicy,
+              expiresAt: this.liabilityInsuranceExpiresAt,
+            },
+            behavioralAssessment: {
+              vet: this.behavioralAssessmentVet,
+              date: this.behavioralAssessmentDate,
+              dangerLevel: this.behavioralDangerLevel,
+            },
+          }
+        : null,
       sterilization: {
         isSterilized: this.isSterilized,
         date: this.sterilizationDate,

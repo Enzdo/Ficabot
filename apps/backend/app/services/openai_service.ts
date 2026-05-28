@@ -106,9 +106,14 @@ export default class OpenAIService {
     }
   }
 
-  async analyzeHealthBookPhoto(imageBase64: string, petSpecies: 'dog' | 'cat'): Promise<object> {
+  async analyzeHealthBookPhoto(
+    imageBase64: string,
+    petSpecies: 'dog' | 'cat' | 'nac'
+  ): Promise<object> {
+    const speciesLabel =
+      petSpecies === 'dog' ? 'chien' : petSpecies === 'cat' ? 'chat' : 'NAC (nouveau animal de compagnie)'
     const systemPrompt = `Tu es un assistant spécialisé dans l'extraction de données de carnets de santé d'animaux.
-Analyse cette photo d'un carnet de santé de ${petSpecies === 'dog' ? 'chien' : 'chat'} et extrait toutes les informations visibles.
+Analyse cette photo d'un carnet de santé de ${speciesLabel} et extrait toutes les informations visibles.
 
 Retourne UNIQUEMENT un objet JSON valide avec les champs suivants (laisse null si non visible):
 {
@@ -171,12 +176,18 @@ Règles importantes:
 - Pour les rappels de vaccins, base-toi sur les dates des derniers vaccins et les recommandations standards`
 
     if (pet) {
+      const speciesLabel =
+        pet.species === 'dog' ? 'Chien' : pet.species === 'cat' ? 'Chat' : 'NAC (nouveau animal de compagnie)'
       prompt += `\n\nContexte de l'animal concerné:
 - Nom: ${pet.name}
-- Espèce: ${pet.species === 'dog' ? 'Chien' : 'Chat'}
+- Espèce: ${speciesLabel}
 ${pet.breed ? `- Race: ${pet.breed}` : ''}
 ${pet.birthDate ? `- Date de naissance: ${pet.birthDate.toFormat('dd/MM/yyyy')}` : ''}
 ${pet.weight ? `- Poids actuel: ${pet.weight} kg` : ''}`
+
+      if (pet.species === 'nac') {
+        prompt += `\n\n⚠️ IMPORTANT — NAC: Cet animal est un NAC. Tes connaissances sur les NAC (lapins, rongeurs, furets, oiseaux, reptiles…) sont moins fiables que pour chien/chat. Précise systématiquement à l'utilisateur que pour un NAC il est préférable de consulter un vétérinaire spécialisé NAC. Évite les doses précises de médicaments sans validation vétérinaire. Si la race exacte (ex: lapin nain, hamster syrien, perruche…) est indiquée dans le champ Race, adapte ta réponse à cette espèce précise.`
+      }
     }
 
     if (healthBook) {

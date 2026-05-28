@@ -41,6 +41,8 @@ const PetPhotosController = () => import('#controllers/pet_photos_controller')
 const PetOwnersController = () => import('#controllers/pet_owners_controller')
 const HealthController = () => import('#controllers/health_controller')
 const UserNotificationsController = () => import('#controllers/user_notifications_controller')
+const BlogPostsController = () => import('#controllers/blog_posts_controller')
+const MonthlyTipsController = () => import('#controllers/monthly_tips_controller')
 
 router.get('/', async () => {
   return {
@@ -55,6 +57,15 @@ router.get('/health', [HealthController, 'index'])
 router.get('/health/detailed', [HealthController, 'detailed'])
 router.get('/health/ready', [HealthController, 'ready'])
 router.get('/health/live', [HealthController, 'live'])
+
+// Blog (public, no auth)
+router.group(() => {
+  router.get('/posts', [BlogPostsController, 'index'])
+  router.get('/posts/:slug', [BlogPostsController, 'show'])
+}).prefix('/blog')
+
+// Monthly tips (public)
+router.get('/tips', [MonthlyTipsController, 'index'])
 
 // Social auth (Google OAuth)
 const SocialAuthController = () => import('#controllers/social_auth_controller')

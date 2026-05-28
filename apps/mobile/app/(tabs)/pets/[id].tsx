@@ -110,7 +110,40 @@ export default function PetDetailScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   const [showIdModal, setShowIdModal] = useState(false)
-  const [idForm, setIdForm] = useState({ identificationNumber: '', identificationType: 'microchip' as 'microchip' | 'tattoo', identificationDate: '', passportNumber: '', passportIssueDate: '' })
+  const [idForm, setIdForm] = useState({
+    identificationNumber: '',
+    identificationType: 'microchip' as 'microchip' | 'tattoo',
+    identificationDate: '',
+    identificationLocation: '',
+    chipVetName: '',
+    chipVetOrderNumber: '',
+    passportNumber: '',
+    passportIssueDate: '',
+    passportIssueLocation: '',
+    passportVetName: '',
+    passportVetOrderNumber: '',
+    sex: '' as '' | 'male' | 'female',
+    coatColor: '',
+    coatPattern: '',
+    distinctiveMarks: '',
+  })
+
+  const [showCatDogModal, setShowCatDogModal] = useState(false)
+  const [catDogForm, setCatDogForm] = useState({
+    dogCategory: '' as '' | '1' | '2',
+    detentionPermitNumber: '',
+    detentionPermitIssuedAt: '',
+    detentionPermitCity: '',
+    aptitudeCertificateNumber: '',
+    aptitudeCertificateIssuedAt: '',
+    aptitudeCertificateTrainer: '',
+    liabilityInsuranceCompany: '',
+    liabilityInsurancePolicy: '',
+    liabilityInsuranceExpiresAt: '',
+    behavioralAssessmentVet: '',
+    behavioralAssessmentDate: '',
+    behavioralDangerLevel: '' as '' | '1' | '2' | '3' | '4',
+  })
 
   const [aiStatus, setAiStatus] = useState<AiStatus>('idle')
   const [aiDiagnosisId, setAiDiagnosisId] = useState<string | null>(null)
@@ -373,13 +406,49 @@ export default function PetDetailScreen() {
       identificationNumber: idForm.identificationNumber || undefined,
       identificationType: idForm.identificationType || undefined,
       identificationDate: idForm.identificationDate || undefined,
+      identificationLocation: idForm.identificationLocation || undefined,
+      chipVetName: idForm.chipVetName || undefined,
+      chipVetOrderNumber: idForm.chipVetOrderNumber || undefined,
       passportNumber: idForm.passportNumber || undefined,
       passportIssueDate: idForm.passportIssueDate || undefined,
+      passportIssueLocation: idForm.passportIssueLocation || undefined,
+      passportVetName: idForm.passportVetName || undefined,
+      passportVetOrderNumber: idForm.passportVetOrderNumber || undefined,
+      sex: idForm.sex || undefined,
+      coatColor: idForm.coatColor || undefined,
+      coatPattern: idForm.coatPattern || undefined,
+      distinctiveMarks: idForm.distinctiveMarks || undefined,
     } as any)
     setSaving(false)
     if (ok) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setShowIdModal(false)
+    }
+  }
+
+  const handleSaveCatDog = async () => {
+    setSaving(true)
+    const ok = await updateHealthBook(id, {
+      dogCategory: catDogForm.dogCategory ? (Number(catDogForm.dogCategory) as 1 | 2) : null,
+      detentionPermitNumber: catDogForm.detentionPermitNumber || undefined,
+      detentionPermitIssuedAt: catDogForm.detentionPermitIssuedAt || undefined,
+      detentionPermitCity: catDogForm.detentionPermitCity || undefined,
+      aptitudeCertificateNumber: catDogForm.aptitudeCertificateNumber || undefined,
+      aptitudeCertificateIssuedAt: catDogForm.aptitudeCertificateIssuedAt || undefined,
+      aptitudeCertificateTrainer: catDogForm.aptitudeCertificateTrainer || undefined,
+      liabilityInsuranceCompany: catDogForm.liabilityInsuranceCompany || undefined,
+      liabilityInsurancePolicy: catDogForm.liabilityInsurancePolicy || undefined,
+      liabilityInsuranceExpiresAt: catDogForm.liabilityInsuranceExpiresAt || undefined,
+      behavioralAssessmentVet: catDogForm.behavioralAssessmentVet || undefined,
+      behavioralAssessmentDate: catDogForm.behavioralAssessmentDate || undefined,
+      behavioralDangerLevel: catDogForm.behavioralDangerLevel
+        ? (Number(catDogForm.behavioralDangerLevel) as 1 | 2 | 3 | 4)
+        : null,
+    } as any)
+    setSaving(false)
+    if (ok) {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+      setShowCatDogModal(false)
     }
   }
 
@@ -486,8 +555,18 @@ export default function PetDetailScreen() {
                     identificationNumber: healthBook?.identificationNumber ?? '',
                     identificationType: (healthBook?.identificationType as any) ?? 'microchip',
                     identificationDate: healthBook?.identificationDate ?? '',
+                    identificationLocation: (healthBook as any)?.identificationLocation ?? '',
+                    chipVetName: healthBook?.chipVetName ?? '',
+                    chipVetOrderNumber: healthBook?.chipVetOrderNumber ?? '',
                     passportNumber: healthBook?.passportNumber ?? '',
                     passportIssueDate: healthBook?.passportIssueDate ?? '',
+                    passportIssueLocation: (healthBook as any)?.passportIssueLocation ?? '',
+                    passportVetName: healthBook?.passportVetName ?? '',
+                    passportVetOrderNumber: healthBook?.passportVetOrderNumber ?? '',
+                    sex: (healthBook?.sex as any) ?? '',
+                    coatColor: healthBook?.coatColor ?? '',
+                    coatPattern: healthBook?.coatPattern ?? '',
+                    distinctiveMarks: healthBook?.distinctiveMarks ?? '',
                   })
                   setShowIdModal(true)
                 }}
@@ -497,20 +576,76 @@ export default function PetDetailScreen() {
               </Pressable>
             </View>
             <Card>
-              {healthBook?.identificationNumber
+              {healthBook?.identificationNumber || healthBook?.passportNumber
                 ? <>
-                    <InfoRow label="N° puce / tatouage" value={healthBook.identificationNumber} />
+                    {healthBook.identificationNumber && <InfoRow label="N° puce / tatouage" value={healthBook.identificationNumber} />}
                     {healthBook.identificationType && <InfoRow label="Type" value={healthBook.identificationType === 'microchip' ? '🔵 Puce électronique' : '🖊️ Tatouage'} />}
-                    {healthBook.identificationDate && <InfoRow label="Date" value={fmtDate(healthBook.identificationDate)} />}
-                    {healthBook.passportNumber && <InfoRow label="N° passeport" value={healthBook.passportNumber} />}
-                    {healthBook.passportIssueDate && <InfoRow label="Date passeport" value={fmtDate(healthBook.passportIssueDate)} last />}
+                    {healthBook.identificationDate && <InfoRow label="Date d'identification" value={fmtDate(healthBook.identificationDate)} />}
+                    {healthBook.chipVetName && <InfoRow label="Vétérinaire poseur" value={`Dr. ${healthBook.chipVetName}${healthBook.chipVetOrderNumber ? ` (N° ${healthBook.chipVetOrderNumber})` : ''}`} />}
+                    {healthBook.passportNumber && <InfoRow label="N° passeport EU" value={healthBook.passportNumber} />}
+                    {healthBook.passportIssueDate && <InfoRow label="Émis le" value={fmtDate(healthBook.passportIssueDate)} />}
+                    {healthBook.passportVetName && <InfoRow label="Vétérinaire émetteur" value={`Dr. ${healthBook.passportVetName}${healthBook.passportVetOrderNumber ? ` (N° ${healthBook.passportVetOrderNumber})` : ''}`} />}
+                    {healthBook.sex && <InfoRow label="Sexe" value={healthBook.sex === 'male' ? '♂️ Mâle' : '♀️ Femelle'} />}
+                    {healthBook.coatColor && <InfoRow label="Robe" value={`${healthBook.coatColor}${healthBook.coatPattern ? ` · ${healthBook.coatPattern}` : ''}`} />}
+                    {healthBook.distinctiveMarks && <InfoRow label="Signes particuliers" value={healthBook.distinctiveMarks} last />}
                   </>
                 : <View style={s.empty}>
                     <Text style={s.emptyTitle}>Aucune identification</Text>
-                    <Text style={s.emptyDesc}>Ajoutez le numéro de puce ou de passeport</Text>
+                    <Text style={s.emptyDesc}>Ajoutez le numéro de puce ou de passeport européen</Text>
                   </View>
               }
             </Card>
+
+            {pet.species === 'dog' && (
+              <>
+                <View style={s.sectionHeader}>
+                  <Text style={s.sectionTitle}>⚠️ Chien catégorisé</Text>
+                  <Pressable
+                    onPress={() => {
+                      setCatDogForm({
+                        dogCategory: healthBook?.dogCategory ? (String(healthBook.dogCategory) as '1' | '2') : '',
+                        detentionPermitNumber: healthBook?.detentionPermitNumber ?? '',
+                        detentionPermitIssuedAt: healthBook?.detentionPermitIssuedAt ?? '',
+                        detentionPermitCity: healthBook?.detentionPermitCity ?? '',
+                        aptitudeCertificateNumber: healthBook?.aptitudeCertificateNumber ?? '',
+                        aptitudeCertificateIssuedAt: healthBook?.aptitudeCertificateIssuedAt ?? '',
+                        aptitudeCertificateTrainer: healthBook?.aptitudeCertificateTrainer ?? '',
+                        liabilityInsuranceCompany: healthBook?.liabilityInsuranceCompany ?? '',
+                        liabilityInsurancePolicy: healthBook?.liabilityInsurancePolicy ?? '',
+                        liabilityInsuranceExpiresAt: healthBook?.liabilityInsuranceExpiresAt ?? '',
+                        behavioralAssessmentVet: healthBook?.behavioralAssessmentVet ?? '',
+                        behavioralAssessmentDate: healthBook?.behavioralAssessmentDate ?? '',
+                        behavioralDangerLevel: healthBook?.behavioralDangerLevel ? (String(healthBook.behavioralDangerLevel) as '1' | '2' | '3' | '4') : '',
+                      })
+                      setShowCatDogModal(true)
+                    }}
+                    style={s.sectionAddBtn}
+                  >
+                    <Ionicons name="pencil" size={18} color={colors.green} />
+                  </Pressable>
+                </View>
+                <Card>
+                  {healthBook?.dogCategory ? (
+                    <>
+                      <InfoRow label="Catégorie" value={`Catégorie ${healthBook.dogCategory} (${healthBook.dogCategory === 1 ? "chien d'attaque" : 'chien de garde/défense'})`} />
+                      {healthBook.detentionPermitNumber && <InfoRow label="Permis détention" value={`${healthBook.detentionPermitNumber}${healthBook.detentionPermitCity ? ` · ${healthBook.detentionPermitCity}` : ''}`} />}
+                      {healthBook.detentionPermitIssuedAt && <InfoRow label="Délivré le" value={fmtDate(healthBook.detentionPermitIssuedAt)} />}
+                      {healthBook.aptitudeCertificateNumber && <InfoRow label="Attest. aptitude" value={healthBook.aptitudeCertificateNumber} />}
+                      {healthBook.aptitudeCertificateTrainer && <InfoRow label="Formateur" value={healthBook.aptitudeCertificateTrainer} />}
+                      {healthBook.liabilityInsuranceCompany && <InfoRow label="Assurance RC" value={`${healthBook.liabilityInsuranceCompany}${healthBook.liabilityInsurancePolicy ? ` · ${healthBook.liabilityInsurancePolicy}` : ''}`} />}
+                      {healthBook.liabilityInsuranceExpiresAt && <InfoRow label="RC expire le" value={fmtDate(healthBook.liabilityInsuranceExpiresAt)} />}
+                      {healthBook.behavioralAssessmentVet && <InfoRow label="Évaluation comp." value={`Dr. ${healthBook.behavioralAssessmentVet}${healthBook.behavioralAssessmentDate ? ` · ${fmtDate(healthBook.behavioralAssessmentDate)}` : ''}`} />}
+                      {healthBook.behavioralDangerLevel && <InfoRow label="Niveau dangerosité" value={`${healthBook.behavioralDangerLevel}/4`} last />}
+                    </>
+                  ) : (
+                    <View style={s.empty}>
+                      <Text style={s.emptyTitle}>Pas de catégorisation</Text>
+                      <Text style={s.emptyDesc}>Si votre chien est de cat. 1 ou 2, ajoutez les documents légaux requis (permis, attestation, assurance RC)</Text>
+                    </View>
+                  )}
+                </Card>
+              </>
+            )}
 
             <Card>
               <Text style={s.sectionTitle}>Informations générales</Text>
@@ -840,7 +975,8 @@ export default function PetDetailScreen() {
       )}
 
       {showIdModal && (
-        <BottomModal visible={showIdModal} title="Identification" onClose={() => setShowIdModal(false)} onConfirm={handleSaveId} saving={saving}>
+        <BottomModal visible={showIdModal} title="Identification & Passeport EU" onClose={() => setShowIdModal(false)} onConfirm={handleSaveId} saving={saving}>
+          <Text style={s.modalSectionTitle}>🔖 Identification</Text>
           <Input label="N° puce / tatouage" value={idForm.identificationNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, identificationNumber: v }))} placeholder="Ex: 250268500123456" keyboardType="numeric" />
           <View>
             <Text style={s.fieldLabel}>Type d'identification</Text>
@@ -856,8 +992,87 @@ export default function PetDetailScreen() {
             </View>
           </View>
           <DateInput label="Date d'identification" value={idForm.identificationDate} onChange={(v) => setIdForm((f) => ({ ...f, identificationDate: v }))} maximumDate={new Date()} />
+          <Input label="Lieu d'identification" value={idForm.identificationLocation} onChangeText={(v) => setIdForm((f) => ({ ...f, identificationLocation: v }))} placeholder="Ex: Clinique vétérinaire X" />
+          <Input label="Vétérinaire poseur (nom)" value={idForm.chipVetName} onChangeText={(v) => setIdForm((f) => ({ ...f, chipVetName: v }))} placeholder="Dr. Nom" />
+          <Input label="N° ordre du vétérinaire" value={idForm.chipVetOrderNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, chipVetOrderNumber: v }))} placeholder="Ex: 12345" />
+
+          <Text style={s.modalSectionTitle}>🇪🇺 Passeport européen</Text>
           <Input label="N° passeport européen" value={idForm.passportNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, passportNumber: v }))} placeholder="Ex: FR12345678" autoCapitalize="characters" />
-          <DateInput label="Date d'émission passeport" value={idForm.passportIssueDate} onChange={(v) => setIdForm((f) => ({ ...f, passportIssueDate: v }))} maximumDate={new Date()} />
+          <DateInput label="Date d'émission" value={idForm.passportIssueDate} onChange={(v) => setIdForm((f) => ({ ...f, passportIssueDate: v }))} maximumDate={new Date()} />
+          <Input label="Lieu d'émission" value={idForm.passportIssueLocation} onChangeText={(v) => setIdForm((f) => ({ ...f, passportIssueLocation: v }))} placeholder="Ex: Clinique X, Paris" />
+          <Input label="Vétérinaire émetteur" value={idForm.passportVetName} onChangeText={(v) => setIdForm((f) => ({ ...f, passportVetName: v }))} placeholder="Dr. Nom" />
+          <Input label="N° ordre vétérinaire émetteur" value={idForm.passportVetOrderNumber} onChangeText={(v) => setIdForm((f) => ({ ...f, passportVetOrderNumber: v }))} placeholder="Ex: 12345" />
+
+          <Text style={s.modalSectionTitle}>📋 Signalement</Text>
+          <View>
+            <Text style={s.fieldLabel}>Sexe</Text>
+            <View style={s.typeRow}>
+              <Pressable onPress={() => setIdForm((f) => ({ ...f, sex: 'male' }))} style={[s.typeOpt, idForm.sex === 'male' && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                <Text style={s.typeEmoji}>♂️</Text>
+                <Text style={[s.typeLabel, idForm.sex === 'male' && { color: colors.greenDark }]}>Mâle</Text>
+              </Pressable>
+              <Pressable onPress={() => setIdForm((f) => ({ ...f, sex: 'female' }))} style={[s.typeOpt, idForm.sex === 'female' && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                <Text style={s.typeEmoji}>♀️</Text>
+                <Text style={[s.typeLabel, idForm.sex === 'female' && { color: colors.greenDark }]}>Femelle</Text>
+              </Pressable>
+            </View>
+          </View>
+          <Input label="Couleur de robe" value={idForm.coatColor} onChangeText={(v) => setIdForm((f) => ({ ...f, coatColor: v }))} placeholder="Ex: Noir et feu" />
+          <Input label="Motif" value={idForm.coatPattern} onChangeText={(v) => setIdForm((f) => ({ ...f, coatPattern: v }))} placeholder="Ex: Tigré, bringé, uni..." />
+          <Input label="Signes particuliers" value={idForm.distinctiveMarks} onChangeText={(v) => setIdForm((f) => ({ ...f, distinctiveMarks: v }))} placeholder="Ex: Tache blanche au poitrail, cicatrice..." />
+        </BottomModal>
+      )}
+
+      {showCatDogModal && (
+        <BottomModal visible={showCatDogModal} title="Chien catégorisé" onClose={() => setShowCatDogModal(false)} onConfirm={handleSaveCatDog} saving={saving}>
+          <Text style={s.modalSectionTitle}>⚠️ Catégorie</Text>
+          <View>
+            <Text style={s.fieldLabel}>Catégorie du chien</Text>
+            <View style={s.typeRow}>
+              <Pressable onPress={() => setCatDogForm((f) => ({ ...f, dogCategory: '' }))} style={[s.typeOpt, catDogForm.dogCategory === '' && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                <Text style={[s.typeLabel, catDogForm.dogCategory === '' && { color: colors.greenDark }]}>Aucune</Text>
+              </Pressable>
+              <Pressable onPress={() => setCatDogForm((f) => ({ ...f, dogCategory: '1' }))} style={[s.typeOpt, catDogForm.dogCategory === '1' && { borderColor: colors.red, backgroundColor: colors.redLight }]}>
+                <Text style={[s.typeLabel, catDogForm.dogCategory === '1' && { color: colors.red }]}>Cat. 1</Text>
+              </Pressable>
+              <Pressable onPress={() => setCatDogForm((f) => ({ ...f, dogCategory: '2' }))} style={[s.typeOpt, catDogForm.dogCategory === '2' && { borderColor: colors.orange, backgroundColor: colors.orangeLight }]}>
+                <Text style={[s.typeLabel, catDogForm.dogCategory === '2' && { color: colors.orange }]}>Cat. 2</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {catDogForm.dogCategory !== '' && (
+            <>
+              <Text style={s.modalSectionTitle}>🏛️ Permis de détention (mairie)</Text>
+              <Input label="N° du permis" value={catDogForm.detentionPermitNumber} onChangeText={(v) => setCatDogForm((f) => ({ ...f, detentionPermitNumber: v }))} placeholder="Ex: 2024-12345" />
+              <DateInput label="Date de délivrance" value={catDogForm.detentionPermitIssuedAt} onChange={(v) => setCatDogForm((f) => ({ ...f, detentionPermitIssuedAt: v }))} maximumDate={new Date()} />
+              <Input label="Mairie / Commune" value={catDogForm.detentionPermitCity} onChangeText={(v) => setCatDogForm((f) => ({ ...f, detentionPermitCity: v }))} placeholder="Ex: Paris 11ème" />
+
+              <Text style={s.modalSectionTitle}>🎓 Attestation d'aptitude (CETAC)</Text>
+              <Input label="N° d'attestation" value={catDogForm.aptitudeCertificateNumber} onChangeText={(v) => setCatDogForm((f) => ({ ...f, aptitudeCertificateNumber: v }))} />
+              <DateInput label="Date de délivrance" value={catDogForm.aptitudeCertificateIssuedAt} onChange={(v) => setCatDogForm((f) => ({ ...f, aptitudeCertificateIssuedAt: v }))} maximumDate={new Date()} />
+              <Input label="Formateur agréé" value={catDogForm.aptitudeCertificateTrainer} onChangeText={(v) => setCatDogForm((f) => ({ ...f, aptitudeCertificateTrainer: v }))} placeholder="Nom du formateur" />
+
+              <Text style={s.modalSectionTitle}>🛡️ Assurance responsabilité civile</Text>
+              <Input label="Compagnie" value={catDogForm.liabilityInsuranceCompany} onChangeText={(v) => setCatDogForm((f) => ({ ...f, liabilityInsuranceCompany: v }))} />
+              <Input label="N° de police" value={catDogForm.liabilityInsurancePolicy} onChangeText={(v) => setCatDogForm((f) => ({ ...f, liabilityInsurancePolicy: v }))} />
+              <DateInput label="Date d'expiration" value={catDogForm.liabilityInsuranceExpiresAt} onChange={(v) => setCatDogForm((f) => ({ ...f, liabilityInsuranceExpiresAt: v }))} />
+
+              <Text style={s.modalSectionTitle}>🧠 Évaluation comportementale</Text>
+              <Input label="Vétérinaire évaluateur" value={catDogForm.behavioralAssessmentVet} onChangeText={(v) => setCatDogForm((f) => ({ ...f, behavioralAssessmentVet: v }))} placeholder="Dr. Nom" />
+              <DateInput label="Date d'évaluation" value={catDogForm.behavioralAssessmentDate} onChange={(v) => setCatDogForm((f) => ({ ...f, behavioralAssessmentDate: v }))} maximumDate={new Date()} />
+              <View>
+                <Text style={s.fieldLabel}>Niveau de dangerosité (1-4)</Text>
+                <View style={s.typeRow}>
+                  {(['1', '2', '3', '4'] as const).map((lvl) => (
+                    <Pressable key={lvl} onPress={() => setCatDogForm((f) => ({ ...f, behavioralDangerLevel: lvl }))} style={[s.typeOpt, catDogForm.behavioralDangerLevel === lvl && { borderColor: colors.green, backgroundColor: colors.greenLight }]}>
+                      <Text style={[s.typeLabel, catDogForm.behavioralDangerLevel === lvl && { color: colors.greenDark }]}>{lvl}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+            </>
+          )}
         </BottomModal>
       )}
     </SafeAreaView>
@@ -1161,6 +1376,7 @@ const s = StyleSheet.create({
   modalScroll:          { flex: 1, paddingHorizontal: 20 },
   modalFields:          { gap: 18, paddingTop: 20, paddingBottom: 40 },
   fieldLabel:           { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2, marginBottom: 8 },
+  modalSectionTitle:    { fontSize: 14, fontWeight: '700', color: colors.greenDark, marginTop: 8, marginBottom: 4 },
 
   typeRow:   { flexDirection: 'row', gap: 8 },
   typeOpt:   { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.gray[200], backgroundColor: colors.white },

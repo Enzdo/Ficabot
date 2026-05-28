@@ -231,13 +231,15 @@
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
 const route = useRoute()
-const { getPostBySlug, posts } = useBlog()
-const post = computed(() => getPostBySlug(route.params.slug as string))
+const slug = route.params.slug as string
+
+const { data: post } = useBlogPost(slug)
+const { data: allPosts } = useBlogPosts({ target: 'owner' })
 
 const relatedPosts = computed(() => {
   if (!post.value) return []
-  return posts
-    .filter((p: { slug: string; category: string }) => p.category === post.value!.category && p.slug !== post.value!.slug)
+  return (allPosts.value ?? [])
+    .filter((p) => p.category === post.value!.category && p.slug !== post.value!.slug)
     .slice(0, 4)
 })
 

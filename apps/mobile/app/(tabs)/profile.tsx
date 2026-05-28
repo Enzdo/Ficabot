@@ -144,6 +144,7 @@ export default function ProfileScreen() {
 
   const menuItems: MenuItem[] = [
     { icon: 'person-outline',        label: 'Modifier mon profil', sub: 'Prénom, nom, téléphone',   iconBg: colors.greenLight,  iconColor: colors.greenDark, onPress: () => setShowEditModal(true) },
+    { icon: 'book-outline',          label: 'Blog & conseils',     sub: 'Articles adaptés à vos animaux', iconBg: colors.beigeLight, iconColor: colors.greenDark, onPress: () => router.push('/blog') },
     { icon: 'notifications-outline', label: 'Notifications',       sub: 'Gérer mes alertes',        iconBg: colors.orangeLight, iconColor: colors.orange,   onPress: () => setShowNotifModal(true) },
     { icon: 'lock-closed-outline',   label: 'Sécurité',            sub: 'Changer le mot de passe',  iconBg: colors.beigeLight,  iconColor: colors.gray[700], onPress: () => setShowPwdModal(true) },
     { icon: 'help-circle-outline',   label: 'Aide et support',                                      iconBg: colors.blueLight,   iconColor: colors.blue,      onPress: () => Alert.alert('Bientôt disponible') },

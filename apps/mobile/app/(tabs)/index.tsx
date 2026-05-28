@@ -12,6 +12,8 @@ import { api } from '@/services/api'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { VetAppointment, Reminder } from '@/types'
 
+type MonthlyTip = { id: number; species: string; month: number; title: string; body: string; emoji: string | null }
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐱', rabbit: '🐰', bird: '🦜' }
@@ -53,6 +55,7 @@ export default function DashboardScreen() {
   const [nextAppt,    setNextAppt]    = useState<VetAppointment | null>(null)
   const [reminders,   setReminders]   = useState<Reminder[]>([])
   const [loadingData, setLoadingData] = useState(true)
+  const [tips,        setTips]        = useState<MonthlyTip[]>([])
 
   const load = useCallback(async () => {
     setLoadingData(true)
@@ -77,6 +80,16 @@ export default function DashboardScreen() {
     ])
     setLoadingData(false)
   }, [fetchPets, fetchExpenses])
+
+  // Fetch tips after pets are loaded (depends on species)
+  useEffect(() => {
+    const species = Array.from(new Set(pets.map((p) => p.species)))
+    if (species.length === 0) { setTips([]); return }
+    const month = new Date().getMonth() + 1
+    api
+      .get<MonthlyTip[]>(`/tips?species=${species.join(',')}&month=${month}`)
+      .then((r) => { if (r.success && r.data) setTips(r.data) })
+  }, [pets])
 
   useEffect(() => { load() }, [load])
 
@@ -155,7 +168,7 @@ export default function DashboardScreen() {
                   </View>
                   <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
                   <Text style={s.petBreed} numberOfLines={1}>
-                    {pet.species === 'dog' ? 'Chien' : pet.species === 'cat' ? 'Chat' : pet.species}
+                    {pet.species === 'dog' ? 'Chien' : pet.species === 'cat' ? 'Chat' : pet.species === 'nac' ? 'NAC' : pet.species}
                   </Text>
                 </Pressable>
               ))}
@@ -171,6 +184,35 @@ export default function DashboardScreen() {
             </ScrollView>
           )}
         </View>
+
+        {/* ── Conseils du mois ── */}
+        {tips.length > 0 && (
+          <View>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>Conseil du mois</Text>
+              <Pressable onPress={() => router.push('/blog')} style={s.seeAll}>
+                <Text style={s.seeAllText}>Tous les conseils</Text>
+                <Ionicons name="chevron-forward" size={13} color={colors.green} />
+              </Pressable>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tipsRow}>
+              {tips.map((tip) => (
+                <View key={tip.id} style={[s.tipCard, shadow.sm]}>
+                  <View style={s.tipHeader}>
+                    <Text style={s.tipEmoji}>{tip.emoji ?? '💡'}</Text>
+                    <View style={s.tipSpeciesBadge}>
+                      <Text style={s.tipSpeciesText}>
+                        {tip.species === 'dog' ? 'Chien' : tip.species === 'cat' ? 'Chat' : 'NAC'}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={s.tipTitle} numberOfLines={2}>{tip.title}</Text>
+                  <Text style={s.tipBody} numberOfLines={5}>{tip.body}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* ── Prochain rendez-vous ── */}
         <View>
@@ -414,6 +456,16 @@ const s = StyleSheet.create({
   reminderDue:     { fontSize: 11, fontWeight: '600', color: colors.gray[400] },
   reminderDueOverdue: { color: colors.red },
   reminderDueToday:   { color: colors.orange },
+
+  // Monthly tips
+  tipsRow:         { gap: 12, paddingBottom: 4 },
+  tipCard:         { width: 280, backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 16, gap: 10, borderWidth: 1, borderColor: colors.greenLight },
+  tipHeader:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  tipEmoji:        { fontSize: 28 },
+  tipSpeciesBadge: { backgroundColor: colors.greenLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  tipSpeciesText:  { fontSize: 10, fontWeight: '700', color: colors.greenDark, textTransform: 'uppercase', letterSpacing: 0.5 },
+  tipTitle:        { fontSize: 14, fontWeight: '700', color: colors.dark, lineHeight: 18 },
+  tipBody:         { fontSize: 12, color: colors.gray[600], lineHeight: 18 },
 
   // Budget
   budgetCard:    { backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 18, borderWidth: 1, borderColor: colors.gray[200] },

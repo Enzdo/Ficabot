@@ -82,6 +82,13 @@ const weightHistorySchema = vine.object({
   notes: vine.string().optional(),
 })
 
+// Echinococcus treatment entry schema (EU passport — required for FI/IE/NO/MT)
+const echinococcusTreatmentSchema = vine.object({
+  date: vine.string(),
+  product: vine.string().minLength(1).maxLength(200),
+  vetName: vine.string().maxLength(200).optional(),
+})
+
 // Create/Update health book validator
 export const createHealthBookValidator = vine.compile(
   vine.object({
@@ -127,8 +134,37 @@ export const createHealthBookValidator = vine.compile(
 
     // Notes
     notes: vine.string().optional(),
+
+    // === EU Passport (Règlement UE 576/2013) ===
+    chipVetName: vine.string().maxLength(200).optional(),
+    chipVetOrderNumber: vine.string().maxLength(50).optional(),
+    passportVetName: vine.string().maxLength(200).optional(),
+    passportVetOrderNumber: vine.string().maxLength(50).optional(),
+    passportVetStamp: vine.string().maxLength(500).optional(),
+    echinococcusTreatments: vine.array(echinococcusTreatmentSchema).optional(),
+    coatColor: vine.string().maxLength(100).optional(),
+    coatPattern: vine.string().maxLength(200).optional(),
+    distinctiveMarks: vine.string().maxLength(500).optional(),
+    sex: vine.enum(['male', 'female']).optional(),
+
+    // === Categorized dogs FR (cat. 1/2) ===
+    dogCategory: vine.number().in([1, 2]).optional(),
+    detentionPermitNumber: vine.string().maxLength(100).optional(),
+    detentionPermitIssuedAt: vine.string().optional(),
+    detentionPermitCity: vine.string().maxLength(200).optional(),
+    aptitudeCertificateNumber: vine.string().maxLength(100).optional(),
+    aptitudeCertificateIssuedAt: vine.string().optional(),
+    aptitudeCertificateTrainer: vine.string().maxLength(200).optional(),
+    liabilityInsuranceCompany: vine.string().maxLength(200).optional(),
+    liabilityInsurancePolicy: vine.string().maxLength(100).optional(),
+    liabilityInsuranceExpiresAt: vine.string().optional(),
+    behavioralAssessmentVet: vine.string().maxLength(200).optional(),
+    behavioralAssessmentDate: vine.string().optional(),
+    behavioralDangerLevel: vine.number().in([1, 2, 3, 4]).optional(),
   })
 )
+
+export const addEchinococcusTreatmentValidator = vine.compile(echinococcusTreatmentSchema)
 
 export const updateHealthBookValidator = createHealthBookValidator
 
