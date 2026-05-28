@@ -16,10 +16,20 @@ import { SPECIES_EMOJI, SPECIES_BG, SPECIES_LABEL } from '@/constants/pets'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { Pet, Species } from '@/types'
 
-const SPECIES_OPTS: { value: Species; label: string; emoji: string; bg: string }[] = [
-  { value: 'dog', label: 'Chien', emoji: '🐕', bg: colors.beigeLight },
-  { value: 'cat', label: 'Chat',  emoji: '🐱', bg: colors.greenLight },
-  { value: 'nac', label: 'NAC',   emoji: '🐰', bg: colors.greenLight },
+// Sub-types prefill the breed field; the DB species is the underlying enum.
+type PetTypeOption = { label: string; species: Species; breedPrefill: string; emoji: string; bg: string }
+
+const PET_TYPES: PetTypeOption[] = [
+  { label: 'Chien',          species: 'dog', breedPrefill: '',           emoji: '🐕', bg: colors.beigeLight },
+  { label: 'Chat',           species: 'cat', breedPrefill: '',           emoji: '🐱', bg: colors.greenLight },
+  { label: 'Lapin',          species: 'nac', breedPrefill: 'Lapin',      emoji: '🐰', bg: colors.greenLight },
+  { label: 'Cochon d\'Inde', species: 'nac', breedPrefill: 'Cochon d\'Inde', emoji: '🐹', bg: colors.beigeLight },
+  { label: 'Hamster',        species: 'nac', breedPrefill: 'Hamster',    emoji: '🐹', bg: colors.beigeLight },
+  { label: 'Rat / Souris',   species: 'nac', breedPrefill: 'Rongeur',    emoji: '🐭', bg: colors.beigeLight },
+  { label: 'Furet',          species: 'nac', breedPrefill: 'Furet',      emoji: '🦦', bg: colors.beigeLight },
+  { label: 'Oiseau',         species: 'nac', breedPrefill: 'Oiseau',     emoji: '🦜', bg: colors.greenLight },
+  { label: 'Reptile',        species: 'nac', breedPrefill: 'Reptile',    emoji: '🦎', bg: colors.greenLight },
+  { label: 'Autre NAC',      species: 'nac', breedPrefill: '',           emoji: '🐾', bg: colors.gray[100] },
 ]
 
 const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {
@@ -47,8 +57,8 @@ const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {
   )
 })
 
-type FormState = { name: string; species: Species; breed: string; birthDate: string; weight: string }
-const INITIAL_FORM: FormState = { name: '', species: 'dog', breed: '', birthDate: '', weight: '' }
+type FormState = { name: string; typeLabel: string; species: Species; breed: string; birthDate: string; weight: string }
+const INITIAL_FORM: FormState = { name: '', typeLabel: 'Chien', species: 'dog', breed: '', birthDate: '', weight: '' }
 
 export default function PetsScreen() {
   const { pets, loading, error, fetchPets, createPet } = usePetsStore()
@@ -145,25 +155,33 @@ export default function PetsScreen() {
         saving={saving}
       >
         <View>
-          <Text style={styles.fieldLabel}>Espèce</Text>
-          <View style={styles.speciesRow}>
-            {SPECIES_OPTS.map((opt) => (
-              <Pressable
-                key={opt.value}
-                onPress={() => { Haptics.selectionAsync(); setField('species', opt.value) }}
-                style={[styles.speciesOpt, form.species === opt.value && styles.speciesOptActive]}
-              >
-                <View style={[styles.speciesEmojiWrap, { backgroundColor: opt.bg }]}>
-                  <Text style={styles.speciesEmoji}>{opt.emoji}</Text>
-                </View>
-                <Text style={[styles.speciesLabel, form.species === opt.value && styles.speciesLabelActive]}>
-                  {opt.label}
-                </Text>
-                {form.species === opt.value && (
-                  <Ionicons name="checkmark-circle" size={18} color={colors.green} />
-                )}
-              </Pressable>
-            ))}
+          <Text style={styles.fieldLabel}>Type d'animal</Text>
+          <View style={styles.typeList}>
+            {PET_TYPES.map((opt) => {
+              const active = form.typeLabel === opt.label
+              return (
+                <Pressable
+                  key={opt.label}
+                  onPress={() => {
+                    Haptics.selectionAsync()
+                    setForm((f) => ({
+                      ...f,
+                      typeLabel: opt.label,
+                      species: opt.species,
+                      // Auto-prefill breed only if user hasn't typed anything yet
+                      breed: f.breed && f.breed !== '' && !PET_TYPES.some((t) => t.breedPrefill === f.breed) ? f.breed : opt.breedPrefill,
+                    }))
+                  }}
+                  style={[styles.typeOpt, active && styles.typeOptActive]}
+                >
+                  <View style={[styles.typeEmojiWrap, { backgroundColor: opt.bg }]}>
+                    <Text style={styles.typeEmoji}>{opt.emoji}</Text>
+                  </View>
+                  <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>{opt.label}</Text>
+                  {active && <Ionicons name="checkmark-circle" size={20} color={colors.green} />}
+                </Pressable>
+              )
+            })}
           </View>
         </View>
         <Input label="Prénom *" value={form.name} onChangeText={(v) => setField('name', v)} placeholder="Ex: Max" autoCapitalize="words" />
@@ -216,17 +234,17 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
 
-  fieldLabel:   { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2, marginBottom: 8 },
-  speciesRow: { flexDirection: 'row', gap: 12 },
-  speciesOpt: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
+  fieldLabel:   { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2, marginBottom: 10 },
+  typeList:     { gap: 8 },
+  typeOpt: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 14, paddingVertical: 12,
     borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.gray[200],
     backgroundColor: colors.white,
   },
-  speciesOptActive:   { borderColor: colors.green, backgroundColor: colors.greenLight },
-  speciesEmojiWrap:   { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  speciesEmoji:       { fontSize: 20 },
-  speciesLabel:       { flex: 1, fontSize: 14, fontWeight: '600', color: colors.gray[600] },
-  speciesLabelActive: { color: colors.greenDark },
+  typeOptActive:   { borderColor: colors.green, backgroundColor: colors.greenLight },
+  typeEmojiWrap:   { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  typeEmoji:       { fontSize: 22 },
+  typeLabel:       { flex: 1, fontSize: 15, fontWeight: '600', color: colors.gray[700] },
+  typeLabelActive: { color: colors.greenDark, fontWeight: '700' },
 })
