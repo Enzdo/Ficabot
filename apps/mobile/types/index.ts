@@ -84,10 +84,11 @@ export interface VetAppointment {
   pet?: Pet
   vetId?: string
   vetName?: string
-  date: string
-  reason: string
+  appointmentDate: string
+  appointmentTime?: string
+  title: string
   notes?: string
-  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled'
+  status?: 'scheduled' | 'completed' | 'cancelled'
   createdAt: string
 }
 

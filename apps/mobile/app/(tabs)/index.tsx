@@ -69,8 +69,8 @@ export default function DashboardScreen() {
         const r = await api.get<VetAppointment[]>('/appointments')
         if (r.success && r.data) {
           const upcoming = r.data
-            .filter((a) => new Date(a.date) >= new Date() && a.status !== 'cancelled')
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .filter((a) => new Date(a.appointmentDate) >= new Date() && a.status !== 'cancelled')
+            .sort((a, b) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime())
           setNextAppt(upcoming[0] ?? null)
         }
       })(),
@@ -282,16 +282,16 @@ export default function DashboardScreen() {
                 <Text style={s.apptIcon}>📅</Text>
               </LinearGradient>
               <View style={{ flex: 1 }}>
-                <Text style={s.apptReason} numberOfLines={1}>{nextAppt.reason}</Text>
+                <Text style={s.apptReason} numberOfLines={1}>{nextAppt.title}</Text>
                 <Text style={s.apptMeta}>
-                  {friendlyDate(nextAppt.date)}
+                  {friendlyDate(nextAppt.appointmentDate)}
                   {nextAppt.vetName ? ` · ${nextAppt.vetName}` : ''}
                   {nextAppt.pet ? ` · ${nextAppt.pet.name}` : ''}
                 </Text>
               </View>
-              <View style={[s.apptBadge, daysUntil(nextAppt.date) <= 1 && s.apptBadgeUrgent]}>
-                <Text style={[s.apptBadgeText, daysUntil(nextAppt.date) <= 1 && s.apptBadgeTextUrgent]}>
-                  {friendlyDate(nextAppt.date)}
+              <View style={[s.apptBadge, daysUntil(nextAppt.appointmentDate) <= 1 && s.apptBadgeUrgent]}>
+                <Text style={[s.apptBadgeText, daysUntil(nextAppt.appointmentDate) <= 1 && s.apptBadgeTextUrgent]}>
+                  {friendlyDate(nextAppt.appointmentDate)}
                 </Text>
               </View>
             </Pressable>

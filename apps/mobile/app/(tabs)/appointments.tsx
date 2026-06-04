@@ -16,8 +16,7 @@ import { colors, radius, shadow } from '@/constants/theme'
 import type { Pet, VetAppointment, Reminder } from '@/types'
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
-  pending:   { label: 'En attente', bg: colors.orangeLight, text: colors.orange },
-  confirmed: { label: 'Confirmé',   bg: colors.greenLight,  text: colors.greenDark },
+  scheduled: { label: 'Programmé',  bg: colors.greenLight,  text: colors.greenDark },
   completed: { label: 'Terminé',    bg: colors.gray[100],   text: colors.gray[600]  },
   cancelled: { label: 'Annulé',     bg: colors.redLight,    text: colors.red        },
 }
@@ -30,7 +29,7 @@ export default function AppointmentsScreen() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [showReminderModal, setShowReminderModal] = useState(false)
-  const [form, setForm] = useState({ petId: '', reason: '', date: '', vetName: '', notes: '' })
+  const [form, setForm] = useState({ petId: '', title: '', appointmentDate: '', vetName: '', notes: '' })
   const [reminderForm, setReminderForm] = useState({ title: '', description: '', dueDate: '', petId: '' })
   const [saving, setSaving] = useState(false)
   const [apptError, setApptError] = useState<string | null>(null)
@@ -52,7 +51,7 @@ export default function AppointmentsScreen() {
   useEffect(() => { fetchAppointments(); fetchReminders(); fetchPets() }, [fetchAppointments, fetchReminders, fetchPets])
 
   const handleCreate = async () => {
-    if (!form.petId || !form.reason || !form.date) { Alert.alert('Champs requis', 'Animal, motif et date sont obligatoires'); return }
+    if (!form.petId || !form.title || !form.appointmentDate) { Alert.alert('Champs requis', 'Animal, motif et date sont obligatoires'); return }
     setSaving(true)
     const r = await api.post<VetAppointment>('/appointments', form)
     setSaving(false)
@@ -60,7 +59,7 @@ export default function AppointmentsScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
       setAppointments((prev) => [r.data!, ...prev])
       setShowModal(false)
-      setForm({ petId: '', reason: '', date: '', vetName: '', notes: '' })
+      setForm({ petId: '', title: '', appointmentDate: '', vetName: '', notes: '' })
     } else Alert.alert('Erreur', r.message ?? 'Erreur lors de la création')
   }
 
@@ -102,8 +101,8 @@ export default function AppointmentsScreen() {
   }
 
   const now = new Date()
-  const upcoming          = useMemo(() => appointments.filter((a) => new Date(a.date) >= now && a.status !== 'cancelled'), [appointments])
-  const past              = useMemo(() => appointments.filter((a) => new Date(a.date) < now  || a.status === 'cancelled'), [appointments])
+  const upcoming          = useMemo(() => appointments.filter((a) => new Date(a.appointmentDate) >= now && a.status !== 'cancelled'), [appointments])
+  const past              = useMemo(() => appointments.filter((a) => new Date(a.appointmentDate) < now  || a.status === 'cancelled'), [appointments])
   const pendingReminders  = useMemo(() => reminders.filter((r) => !r.isCompleted), [reminders])
   const completedReminders = useMemo(() => reminders.filter((r) => r.isCompleted), [reminders])
 
@@ -291,8 +290,8 @@ export default function AppointmentsScreen() {
               </View>
             )}
           </View>
-          <Input label="Motif *" value={form.reason} onChangeText={(v) => setForm((f) => ({ ...f, reason: v }))} placeholder="Ex: Vaccination annuelle" />
-          <DateInput label="Date et heure *" value={form.date} onChange={(v) => setForm((f) => ({ ...f, date: v }))} mode="datetime" minimumDate={new Date()} />
+          <Input label="Motif *" value={form.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} placeholder="Ex: Vaccination annuelle" />
+          <DateInput label="Date et heure *" value={form.appointmentDate} onChange={(v) => setForm((f) => ({ ...f, appointmentDate: v }))} mode="datetime" minimumDate={new Date()} />
           <Input label="Vétérinaire" value={form.vetName} onChangeText={(v) => setForm((f) => ({ ...f, vetName: v }))} placeholder="Dr. Leblanc" autoCapitalize="words" />
           <Input label="Notes" value={form.notes} onChangeText={(v) => setForm((f) => ({ ...f, notes: v }))} placeholder="Informations supplémentaires..." multiline numberOfLines={3} />
         </BottomModal>
@@ -349,9 +348,9 @@ const remStyles = StyleSheet.create({
 
 const ApptCard = memo(function ApptCard({ appt, pets }: { appt: VetAppointment; pets: Pet[] }) {
   const pet    = pets.find((p) => p.id === appt.petId)
-  const status = appt.status ?? 'pending'
-  const cfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending
-  const d      = new Date(appt.date)
+  const status = appt.status ?? 'scheduled'
+  const cfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.scheduled
+  const d      = new Date(appt.appointmentDate)
   const isToday    = new Date().toDateString() === d.toDateString()
   const isTomorrow = new Date(Date.now() + 86400000).toDateString() === d.toDateString()
   const timeLabel  = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -365,7 +364,7 @@ const ApptCard = memo(function ApptCard({ appt, pets }: { appt: VetAppointment; 
         </View>
         <View style={apptStyles.info}>
           <View style={apptStyles.titleRow}>
-            <Text style={apptStyles.reason} numberOfLines={1}>{appt.reason}</Text>
+            <Text style={apptStyles.reason} numberOfLines={1}>{appt.title}</Text>
             <View style={[apptStyles.badge, { backgroundColor: cfg.bg }]}>
               <Text style={[apptStyles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
             </View>
