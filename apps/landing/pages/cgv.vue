@@ -6,7 +6,7 @@
         Conditions Générales d'Utilisation et de Vente
       </h1>
       <p class="text-sm text-gray-500 mb-10">
-        Dernière mise à jour : <span class="font-medium text-gray-700">[À COMPLÉTER : date de mise à jour]</span>
+        Dernière mise à jour : <span class="font-medium text-gray-700">4 juin 2026</span>
       </p>
 
       <!-- Sommaire -->
@@ -34,7 +34,7 @@
         <section id="objet">
           <h2>1. Objet</h2>
           <p>
-            Les présentes Conditions Générales d'Utilisation et de Vente (ci-après "<strong>CGV</strong>") régissent l'utilisation de l'application mobile Ficana et du site web associé, édités par <strong>[À COMPLÉTER : raison sociale de l'éditeur]</strong>, ainsi que la souscription aux abonnements payants proposés.
+            Les présentes Conditions Générales d'Utilisation et de Vente (ci-après "<strong>CGV</strong>") régissent l'utilisation de l'application mobile Ficana et du site web associé, édités par <strong>SAS Ficana</strong>, ainsi que la souscription aux abonnements payants proposés.
           </p>
           <p>
             Toute utilisation du service implique l'acceptation pleine et entière des présentes CGV.
@@ -44,15 +44,15 @@
         <section id="editeur">
           <h2>2. Éditeur du service</h2>
           <ul>
-            <li><strong>Raison sociale :</strong> [À COMPLÉTER : raison sociale]</li>
-            <li><strong>Forme juridique :</strong> [À COMPLÉTER : SAS / SARL / etc.]</li>
-            <li><strong>Capital social :</strong> [À COMPLÉTER : montant en euros]</li>
-            <li><strong>Siège social :</strong> [À COMPLÉTER : adresse complète]</li>
-            <li><strong>RCS :</strong> [À COMPLÉTER : ville et numéro d'immatriculation]</li>
-            <li><strong>N° SIRET :</strong> [À COMPLÉTER : numéro SIRET]</li>
-            <li><strong>N° TVA intracommunautaire :</strong> [À COMPLÉTER : numéro de TVA]</li>
+            <li><strong>Raison sociale :</strong> Ficana</li>
+            <li><strong>Forme juridique :</strong> Société par actions simplifiée</li>
+            <li><strong>Capital social :</strong> 1 000,00 Euros</li>
+            <li><strong>Siège social :</strong> 17 rue du Montin, 87270 Couzeix</li>
+            <li><strong>RCS :</strong> 985 237 643 R.C.S. Limoges</li>
+            <li><strong>N° SIRET :</strong> 98523764300012</li>
+            <li><strong>N° TVA intracommunautaire :</strong> FR42985237643</li>
             <li><strong>Email :</strong> contact@ficana.com</li>
-            <li><strong>Directeur de la publication :</strong> [À COMPLÉTER : nom du directeur]</li>
+            <li><strong>Directeur de la publication :</strong> M. BEDU</li>
           </ul>
         </section>
 
@@ -91,11 +91,14 @@
           <p>Les abonnements sont proposés aux conditions suivantes :</p>
           <ul>
             <li><strong>Découverte :</strong> gratuit, fonctionnalités limitées.</li>
-            <li><strong>Premium :</strong> [À COMPLÉTER : 4,99€] par mois TTC.</li>
-            <li><strong>Famille :</strong> [À COMPLÉTER : 9,99€] par mois TTC.</li>
+            <li><strong>Premium :</strong> 4,99€ par mois TTC.</li>
+            <li><strong>Famille :</strong> 9,99€ par mois TTC.</li>
           </ul>
           <p>
-            Les tarifs sont indiqués en euros, toutes taxes comprises. L'éditeur se réserve le droit de modifier ses tarifs à tout moment, sous réserve d'en informer l'Utilisateur par email <strong>[À COMPLÉTER : délai de préavis, par ex. 30 jours]</strong> avant l'entrée en vigueur des nouveaux tarifs.
+            Les tarifs sont indiqués en euros, toutes taxes comprises. L'éditeur se réserve le droit de modifier ses tarifs à tout moment, sous réserve d'en informer l'Utilisateur par email dans un délai de préavis de <strong>30 jours</strong> avant l'entrée en vigueur des nouveaux tarifs.
+          </p>
+          <p>
+            L'abonné dispose d'un délai de 4 mois à compter de la notification par mail pour résilier son abonnement sans frais ni pénalités s'il n'accepte pas la modification.
           </p>
         </section>
 
@@ -125,7 +128,7 @@
             L'Utilisateur peut résilier son abonnement à tout moment depuis les paramètres de son compte sur la plateforme de distribution (App Store ou Google Play). La résiliation prend effet à la fin de la période d'abonnement en cours.
           </p>
           <p>
-            L'éditeur se réserve le droit de résilier le compte de l'Utilisateur en cas de manquement grave aux présentes CGV, après notification restée sans effet pendant <strong>[À COMPLÉTER : délai, par ex. 15 jours]</strong>.
+            L'éditeur se réserve le droit de résilier le compte de l'Utilisateur en cas de manquement grave aux présentes CGV. Après notification restée sans réponse, l'éditeur se réserve le droit de résilier le contrat sans délai de préavis et sans indemnité.
           </p>
         </section>
 
@@ -159,18 +162,23 @@
         <section id="modifications">
           <h2>13. Modifications des CGV</h2>
           <p>
-            L'éditeur se réserve le droit de modifier les présentes CGV à tout moment. Les modifications seront notifiées à l'Utilisateur par email ou via l'application <strong>[À COMPLÉTER : délai de préavis, par ex. 30 jours]</strong> avant leur entrée en vigueur.
+            L'éditeur se réserve le droit de modifier les présentes CGV à tout moment. Les modifications seront notifiées à l'Utilisateur par email ou via l'application dans un délai de <strong>30 jours</strong> faisant office de préavis avant leur entrée en vigueur.
           </p>
         </section>
 
         <section id="droit">
           <h2>14. Droit applicable et juridiction</h2>
           <p>
-            Les présentes CGV sont soumises au droit français. Tout litige relatif à leur interprétation ou à leur exécution relèvera de la compétence exclusive des tribunaux du ressort de <strong>[À COMPLÉTER : ville du tribunal compétent]</strong>, sous réserve des règles impératives de compétence applicables aux consommateurs.
+            Les présentes CGV sont soumises au droit français. Tout litige relatif à leur interprétation ou à leur exécution relèvera de la compétence exclusive des tribunaux du ressort de <strong>Limoges</strong>, sous réserve des règles impératives de compétence applicables aux consommateurs.
           </p>
           <p>
-            En cas de litige, l'Utilisateur peut recourir gratuitement au médiateur de la consommation <strong>[À COMPLÉTER : nom et coordonnées du médiateur]</strong> avant toute action judiciaire.
+            En cas de litige, l'Utilisateur peut recourir gratuitement au médiateur de la consommation avant toute action judiciaire :
           </p>
+          <ul>
+            <li><strong>Nom :</strong> ANM Conso (Association Nationale des Médiateurs de la Consommation)</li>
+            <li><strong>Email :</strong> contact@anm-conso.com</li>
+            <li><strong>Site web :</strong> <a href="https://www.anm-conso.com" target="_blank" rel="noopener" class="text-primary-700 hover:underline">www.anm-conso.com</a></li>
+          </ul>
         </section>
       </div>
     </article>
