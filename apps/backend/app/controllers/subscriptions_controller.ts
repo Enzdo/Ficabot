@@ -27,7 +27,7 @@ export default class SubscriptionsController {
 
   /**
    * POST /user/subscription/activate
-   * Body: { plan: 'monthly'|'yearly'|'lifetime', adminToken?: string }
+   * Body: { plan: 'monthly'|'quarterly', adminToken?: string }
    *
    * Without real payment integration yet: activates premium if the
    * admin token matches (for testing / manual provisioning), or if
@@ -39,11 +39,11 @@ export default class SubscriptionsController {
     const user = auth.user! as import('#models/user').default
     const { plan, adminToken } = request.only(['plan', 'adminToken'])
 
-    const validPlan = ['monthly', 'yearly', 'lifetime'].includes(plan)
+    const validPlan = ['monthly', 'quarterly'].includes(plan)
     if (!validPlan) {
       return response.badRequest({
         success: false,
-        message: 'Plan invalide. Choisir: monthly, yearly, lifetime',
+        message: 'Plan invalide. Choisir: monthly, quarterly',
       })
     }
 
@@ -65,9 +65,7 @@ export default class SubscriptionsController {
     user.premiumPlan = plan
     user.premiumProvider = 'manual'
     user.premiumExpiresAt =
-      plan === 'monthly' ? now.plus({ months: 1 })
-      : plan === 'yearly' ? now.plus({ years: 1 })
-      : null // lifetime
+      plan === 'monthly' ? now.plus({ months: 1 }) : now.plus({ months: 3 })
     await user.save()
 
     return response.ok({

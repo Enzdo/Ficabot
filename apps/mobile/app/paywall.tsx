@@ -10,10 +10,9 @@ import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/Button'
 import { colors, radius, shadow } from '@/constants/theme'
 
-const PLANS: { id: 'monthly' | 'yearly' | 'lifetime'; label: string; price: string; sub: string; badge?: string }[] = [
-  { id: 'monthly',  label: 'Mensuel',  price: '4,99 €', sub: '/mois',  badge: undefined },
-  { id: 'yearly',   label: 'Annuel',   price: '39,99 €', sub: '/an',   badge: '−33%' },
-  { id: 'lifetime', label: 'À vie',    price: '99 €',    sub: 'unique', badge: 'Best' },
+const PLANS: { id: 'monthly' | 'quarterly'; label: string; price: string; sub: string; badge?: string }[] = [
+  { id: 'monthly',   label: 'Mensuel',     price: '4,99 €', sub: '/mois',       badge: undefined },
+  { id: 'quarterly', label: 'Trimestriel', price: '9,99 €', sub: '/trimestre',  badge: '−33%' },
 ]
 
 const FEATURES = [
@@ -28,7 +27,7 @@ const FEATURES = [
 export default function PaywallScreen() {
   const params = useLocalSearchParams<{ feature?: string }>()
   const { user, fetchMe } = useAuthStore()
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly')
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('quarterly')
   const [activating, setActivating] = useState(false)
 
   const handleActivate = async () => {

@@ -15,7 +15,7 @@ export interface User {
   createdAt: string
   updatedAt: string
   isPremium?: boolean
-  premiumPlan?: 'monthly' | 'yearly' | 'lifetime' | null
+  premiumPlan?: 'monthly' | 'quarterly' | null
   premiumExpiresAt?: string | null
 }
 
