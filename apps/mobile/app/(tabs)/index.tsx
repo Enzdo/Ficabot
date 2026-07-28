@@ -130,13 +130,13 @@ export default function DashboardScreen() {
       })
   }, [selectedPet?.id, selectedPet?.species, selectedPet?.breed, selectedPet?.birthDate])
 
-  // Météo du lieu de vie : mise en cache une heure côté service.
+  // Météo du lieu de vie : le backend détient la clé et mutualise le cache.
   useEffect(() => {
-    if (user?.latitude == null || user?.longitude == null) { setWeather(null); return }
+    if (!user?.city) { setWeather(null); return }
     let cancelled = false
-    fetchWeather(user.latitude, user.longitude).then((w) => { if (!cancelled) setWeather(w) })
+    fetchWeather().then((w) => { if (!cancelled) setWeather(w) })
     return () => { cancelled = true }
-  }, [user?.latitude, user?.longitude])
+  }, [user?.city])
 
   useEffect(() => { load() }, [load])
 

@@ -1,13 +1,13 @@
 /**
- * Météo locale via Open-Meteo.
+ * Météo locale.
  *
- * Choisi parce qu'il ne demande ni clé ni inscription : rien à provisionner
- * côté Railway, rien à faire fuiter dans le bundle. Deux points d'entrée :
- * le géocodage d'une ville saisie à l'onboarding, puis la météo du jour.
+ * L'app ne parle plus directement à un fournisseur météo : tout passe par
+ * notre backend, qui détient la clé et mutualise le cache entre les
+ * utilisateurs d'une même ville. Une clé embarquée dans un bundle mobile
+ * s'extrait en quelques minutes.
  */
 
-const GEO_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-const METEO_URL = 'https://api.open-meteo.com/v1/forecast'
+import { api } from './api'
 
 export interface GeocodedCity {
   name: string
@@ -20,7 +20,7 @@ export interface GeocodedCity {
 export interface Weather {
   temperature: number
   feelsLike: number
-  /** Code WMO renvoyé par Open-Meteo. */
+  /** Code WMO, normalisé par le backend quelle que soit la source. */
   code: number
   windSpeed: number
   precipitation: number
@@ -28,73 +28,18 @@ export interface Weather {
   tempMax: number
   tempMin: number
   isDay: boolean
-  fetchedAt: number
+  city?: string | null
 }
 
-/** Recherche une ville par son nom. Les résultats français passent devant. */
 export async function geocodeCity(query: string): Promise<GeocodedCity[]> {
-  const url = `${GEO_URL}?name=${encodeURIComponent(query)}&count=5&language=fr&format=json`
-  try {
-    const res = await fetch(url)
-    if (!res.ok) return []
-    const json = await res.json()
-    const results: any[] = json?.results ?? []
-    return results
-      .sort((a, b) => (b.country_code === 'FR' ? 1 : 0) - (a.country_code === 'FR' ? 1 : 0))
-      .map((r) => ({
-        name: r.name,
-        latitude: r.latitude,
-        longitude: r.longitude,
-        admin: r.admin1 ?? null,
-        country: r.country ?? null,
-      }))
-  } catch {
-    return []
-  }
+  const res = await api.get<GeocodedCity[]>(`/weather/cities?q=${encodeURIComponent(query)}`)
+  return res.success && res.data ? res.data : []
 }
 
-// Un relevé par heure suffit largement, et évite de rappeler l'API à chaque
-// retour sur l'accueil.
-const CACHE_TTL = 60 * 60 * 1000
-let cache: { key: string; value: Weather } | null = null
-
-export async function fetchWeather(latitude: number, longitude: number): Promise<Weather | null> {
-  const key = `${latitude.toFixed(2)},${longitude.toFixed(2)}`
-  if (cache && cache.key === key && Date.now() - cache.value.fetchedAt < CACHE_TTL) {
-    return cache.value
-  }
-
-  const url =
-    `${METEO_URL}?latitude=${latitude}&longitude=${longitude}` +
-    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,precipitation,is_day' +
-    '&daily=temperature_2m_max,temperature_2m_min,uv_index_max' +
-    '&timezone=auto&forecast_days=1'
-
-  try {
-    const res = await fetch(url)
-    if (!res.ok) return null
-    const json = await res.json()
-    const c = json?.current
-    const d = json?.daily
-    if (!c) return null
-
-    const weather: Weather = {
-      temperature: Math.round(c.temperature_2m),
-      feelsLike: Math.round(c.apparent_temperature ?? c.temperature_2m),
-      code: c.weather_code ?? 0,
-      windSpeed: Math.round(c.wind_speed_10m ?? 0),
-      precipitation: c.precipitation ?? 0,
-      uvIndex: Math.round(d?.uv_index_max?.[0] ?? 0),
-      tempMax: Math.round(d?.temperature_2m_max?.[0] ?? c.temperature_2m),
-      tempMin: Math.round(d?.temperature_2m_min?.[0] ?? c.temperature_2m),
-      isDay: c.is_day === 1,
-      fetchedAt: Date.now(),
-    }
-    cache = { key, value: weather }
-    return weather
-  } catch {
-    return null
-  }
+/** Météo du lieu enregistré sur le compte. Null tant qu'aucune ville n'est connue. */
+export async function fetchWeather(): Promise<Weather | null> {
+  const res = await api.get<Weather | null>('/weather')
+  return res.success && res.data ? res.data : null
 }
 
 /** Libellé et emoji correspondant à un code WMO. */

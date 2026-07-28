@@ -43,6 +43,7 @@ const HealthController = () => import('#controllers/health_controller')
 const UserNotificationsController = () => import('#controllers/user_notifications_controller')
 const BlogPostsController = () => import('#controllers/blog_posts_controller')
 const MonthlyTipsController = () => import('#controllers/monthly_tips_controller')
+const WeatherController = () => import('#controllers/weather_controller')
 
 router.get('/', async () => {
   return {
@@ -67,6 +68,12 @@ router.group(() => {
 
 // Monthly tips (public)
 router.get('/tips', [MonthlyTipsController, 'index'])
+
+// ── Météo (coordonnées lues sur le profil, clé côté serveur) ──────────────────
+router.group(() => {
+  router.get('/', [WeatherController, 'show'])
+  router.get('/cities', [WeatherController, 'cities'])
+}).prefix('/weather').use(middleware.auth())
 
 // Social auth (Google OAuth)
 const SocialAuthController = () => import('#controllers/social_auth_controller')

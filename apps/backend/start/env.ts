@@ -74,6 +74,15 @@ export default await Env.create(appRoot, {
 
   /*
   |--------------------------------------------------------------------------
+  | Météo
+  |--------------------------------------------------------------------------
+  | Clé WeatherAPI.com. Absente, le serveur interroge Open-Meteo sans clé
+  | (à réserver au développement : cette offre exclut l'usage commercial).
+  */
+  WEATHERAPI_KEY: Env.schema.string.optional(),
+
+  /*
+  |--------------------------------------------------------------------------
   | Mail (SMTP)
   |--------------------------------------------------------------------------
   */
