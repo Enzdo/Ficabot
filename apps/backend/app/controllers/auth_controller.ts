@@ -108,6 +108,9 @@ export default class AuthController {
         phone: user.phone,
         createdAt: user.createdAt,
         language: user.language,
+        city: user.city,
+        latitude: user.latitude === null ? null : Number(user.latitude),
+        longitude: user.longitude === null ? null : Number(user.longitude),
         // Faux pour les comptes créés via Google : ils n'ont pas de mot de passe,
         // le client n'a donc pas à le demander pour supprimer le compte.
         hasPassword: !!user.password,
@@ -121,13 +124,19 @@ export default class AuthController {
 
   async updateProfile({ auth, request, response }: HttpContext) {
     const user = auth.user as User
-    const data = request.only(['firstName', 'lastName', 'phone', 'avatarUrl', 'language'])
+    const data = request.only([
+      'firstName', 'lastName', 'phone', 'avatarUrl', 'language',
+      'city', 'latitude', 'longitude',
+    ])
 
     if (data.firstName !== undefined) user.firstName = data.firstName
     if (data.lastName !== undefined) user.lastName = data.lastName
     if (data.phone !== undefined) user.phone = data.phone
     if (data.avatarUrl !== undefined) user.avatarUrl = data.avatarUrl
     if (data.language !== undefined) user.language = data.language
+    if (data.city !== undefined) user.city = data.city
+    if (data.latitude !== undefined) user.latitude = data.latitude
+    if (data.longitude !== undefined) user.longitude = data.longitude
 
     await user.save()
 
@@ -142,6 +151,9 @@ export default class AuthController {
         avatarUrl: user.avatarUrl,
         phone: user.phone,
         language: user.language,
+        city: user.city,
+        latitude: user.latitude === null ? null : Number(user.latitude),
+        longitude: user.longitude === null ? null : Number(user.longitude),
       },
     })
   }

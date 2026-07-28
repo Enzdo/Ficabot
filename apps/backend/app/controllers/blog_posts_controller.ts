@@ -1,6 +1,12 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import BlogPost from '#models/blog_post'
 
+const SPECIES_LABEL: Record<string, string> = { dog: 'Chien', cat: 'Chat', nac: 'NAC' }
+
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1)
+}
+
 export default class BlogPostsController {
   /**
    * GET /api/blog/posts
@@ -109,19 +115,99 @@ export default class BlogPostsController {
     }
 
     const all = await query
-    // Score: lower index in preferredOrder = higher priority. Unmatched → end.
+
+    // ── Pertinence par rapport à l'animal ───────────────────────────────
+    // La saison ne départage que les articles également pertinents : ce qui
+    // parle de l'espèce, de la race ou de l'âge de l'animal passe devant.
+    const breed = String(request.input('breed') ?? '').trim().toLowerCase()
+    const stage = String(request.input('stage') ?? '').trim() // baby | adult | senior
+
+    // Mots-clés de stade, propres à l'espèce : « chaton » ne doit pas remonter
+    // pour un chiot, alors que les deux articles sont tagués dog,cat.
+    const STAGE_KEYWORDS: Record<string, Record<string, string[]>> = {
+      dog: {
+        baby:   ['chiot', 'croissance', 'sevrage', 'socialisation', 'primovaccination'],
+        adult:  ['adulte', 'stérilisation', 'entretien'],
+        senior: ['senior', 'âgé', 'agé', 'vieillissement', 'arthrose', 'gériatrie'],
+      },
+      cat: {
+        baby:   ['chaton', 'croissance', 'sevrage', 'socialisation', 'primovaccination'],
+        adult:  ['adulte', 'stérilisation', 'entretien'],
+        senior: ['senior', 'âgé', 'agé', 'vieillissement', 'rénale', 'gériatrie'],
+      },
+      nac: {
+        baby:   ['lapereau', 'juvénile', 'croissance', 'sevrage'],
+        adult:  ['adulte', 'entretien'],
+        senior: ['senior', 'âgé', 'agé', 'vieillissement'],
+      },
+    }
+
+    // Un mot de race isolé suffit : « Berger allemand » doit matcher « berger ».
+    const breedWords = breed
+      .split(/[\s/-]+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 4)
+
+    const speciesList = speciesParam
+      ? String(speciesParam).split(',').map((s) => s.trim()).filter(Boolean)
+      : []
+
+    const mainSpecies = speciesList[0] ?? 'dog'
+    const stageWords = STAGE_KEYWORDS[mainSpecies]?.[stage] ?? []
+
+    // Beaucoup d'articles sont tagués pour plusieurs espèces alors qu'ils n'en
+    // traitent qu'une. Un titre qui nomme une autre espèce est donc relégué.
+    const OTHER_SPECIES_WORDS: Record<string, RegExp> = {
+      dog: /\b(chats?|chatons?|félins?|felins?)\b/,
+      cat: /\b(chiens?|chiots?|canins?)\b/,
+      nac: /\b(chiens?|chiots?|chats?|chatons?)\b/,
+    }
+    const ownSpeciesWord: Record<string, RegExp> = {
+      dog: /\b(chiens?|chiots?|canins?)\b/,
+      cat: /\b(chats?|chatons?|félins?|felins?)\b/,
+      nac: /\b(lapins?|rongeurs?|furets?|oiseaux?|reptiles?|nac)\b/,
+    }
+
     const scored = all
-      .map((p) => {
-        const idx = preferredOrder.indexOf(p.category)
-        return { post: p, score: idx === -1 ? 999 : idx }
+      .map((post) => {
+        const haystack = `${post.title} ${post.excerpt} ${post.category}`.toLowerCase()
+
+        const matchedBreed = breedWords.find((w) => haystack.includes(w)) ?? null
+        const matchedStage = stageWords.find((w) => haystack.includes(w)) ?? null
+        // `species` est un CSV ; null = article généraliste, moins spécifique.
+        const targetsSpecies =
+          !!post.species && speciesList.some((sp) => post.species!.split(',').includes(sp))
+
+        const seasonIdx = preferredOrder.indexOf(post.category)
+        const seasonScore = seasonIdx === -1 ? preferredOrder.length : seasonIdx
+
+        // Plus le score est bas, plus l'article remonte.
+        let score = seasonScore
+        if (matchedBreed) score -= 300
+        if (matchedStage) score -= 200
+        if (targetsSpecies) score -= 100
+
+        // Parle d'une autre espèce sans jamais nommer la sienne → hors sujet.
+        const mentionsOther = OTHER_SPECIES_WORDS[mainSpecies]?.test(haystack) ?? false
+        const mentionsOwn = ownSpeciesWord[mainSpecies]?.test(haystack) ?? false
+        if (mentionsOther && !mentionsOwn) score += 1000
+
+        const reason =
+          matchedBreed ? capitalize(matchedBreed)
+          : matchedStage ? capitalize(matchedStage)
+          : targetsSpecies ? SPECIES_LABEL[speciesList[0]] ?? null
+          : null
+
+        return { post, score, reason }
       })
-      .sort((a, b) => a.score - b.score || Math.random() - 0.5)
+      // Tri déterministe : l'accueil ne doit pas se réordonner à chaque ouverture.
+      .sort((a, b) => a.score - b.score || a.post.id - b.post.id)
       .slice(0, limit)
 
     response.header('Cache-Control', 'public, max-age=3600')
     return response.ok({
       success: true,
-      data: scored.map(({ post }) => post.toJSON()),
+      data: scored.map(({ post, reason }) => ({ ...post.toJSON(), reason })),
       meta: { season, month },
     })
   }

@@ -27,7 +27,8 @@ import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
 import { useAuthStore } from '@/stores/auth'
 import { usePetsStore } from '@/stores/pets'
-import { secureStorage } from '@/services/api'
+import { api, secureStorage } from '@/services/api'
+import { geocodeCity, type GeocodedCity } from '@/services/weather'
 import { Button } from '@/components/ui/Button'
 import { DateInput } from '@/components/ui/DateInput'
 import { colors, radius, shadow } from '@/constants/theme'
@@ -41,13 +42,13 @@ import {
   type PetKind,
   type PetKindProfile,
 } from '@/constants/petProfiles'
-import type { Pet } from '@/types'
+import type { Pet, User } from '@/types'
 
 type Msg = { id: number; from: 'bot' | 'user'; text: string }
-type Step = 'kind' | 'name' | 'age' | 'breed' | 'weight'
+type Step = 'kind' | 'name' | 'age' | 'breed' | 'weight' | 'city'
 type Phase = 'chat' | 'loading' | 'done'
 
-const STEP_ORDER: Step[] = ['kind', 'name', 'age', 'breed', 'weight']
+const STEP_ORDER: Step[] = ['kind', 'name', 'age', 'breed', 'weight', 'city']
 
 const LOADING_LINES = [
   'Création de son profil…',
@@ -130,6 +131,7 @@ export default function PetSetupScreen() {
   const firstName = useAuthStore((state) => state.user?.firstName)
   const userId = useAuthStore((state) => state.user?.id)
   const createPet = usePetsStore((state) => state.createPet)
+  const updateUser = useAuthStore((state) => state.updateUser)
 
   const [messages, setMessages] = useState<Msg[]>([])
   const [typing, setTyping] = useState(false)
@@ -142,7 +144,9 @@ export default function PetSetupScreen() {
   const [name, setName] = useState('')
   const [birthDate, setBirthDate] = useState<string | undefined>(undefined)
   const [breed, setBreed] = useState<string | undefined>(undefined)
+  const [weight, setWeight] = useState<number | null>(null)
   const [createdPet, setCreatedPet] = useState<Pet | null>(null)
+  const [cityResults, setCityResults] = useState<GeocodedCity[]>([])
 
   const [draft, setDraft] = useState('')
   const [dateMode, setDateMode] = useState(false)
@@ -247,27 +251,61 @@ export default function PetSetupScreen() {
     setDraft('')
     setStep(null)
     pushUser(clean || 'Je ne sais pas')
-    await pushBot([`Dernière question : combien pèse ${name || 'votre compagnon'}, à peu près ? (en kg)`])
+    await pushBot([`Et combien pèse ${name || 'votre compagnon'}, à peu près ? (en kg)`])
     setStep('weight')
   }, [profile, name, pushBot, pushUser])
 
-  // ── Création ──
-  const submit = useCallback(async (value: number | null) => {
-    if (!profile) return
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+  const answerWeight = useCallback(async (value: number | null) => {
+    Haptics.selectionAsync()
+    setWeight(value)
     setDraft('')
     setStep(null)
     pushUser(value === null ? 'Je ne sais pas' : `${value} kg`)
+    await pushBot([
+      'Dernière chose : dans quelle ville vivez-vous ?',
+      'Ça me permet d\'adapter les conseils à la météo du jour — canicule, gel, sol brûlant.',
+    ])
+    setStep('city')
+  }, [pushBot, pushUser])
+
+  // Recherche de la ville pendant la frappe, à partir de 3 lettres.
+  useEffect(() => {
+    if (step !== 'city' || draft.trim().length < 3) { setCityResults([]); return }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      geocodeCity(draft.trim()).then((results) => { if (!cancelled) setCityResults(results) })
+    }, 350)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [draft, step])
+
+  // ── Création ──
+  const submit = useCallback(async (city: GeocodedCity | null) => {
+    if (!profile) return
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    setDraft('')
+    setCityResults([])
+    setStep(null)
+    pushUser(city ? city.name : 'Je préfère ne pas le dire')
     setPhase('loading')
     setError(null)
 
     const startedAt = Date.now()
+
+    // La ville se rattache au compte, pas à l'animal : échec sans conséquence
+    // sur la création, on ne bloque donc pas le parcours dessus.
+    if (city) {
+      const res = await api.put<User>('/auth/profile', {
+        city: city.name, latitude: city.latitude, longitude: city.longitude,
+      })
+      if (res.success && res.data) await updateUser(res.data)
+    }
+
     const pet = await createPet({
       name,
       species: profile.species,
       breed,
       birthDate,
-      weight: value ?? undefined,
+      weight: weight ?? undefined,
     })
     const elapsed = Date.now() - startedAt
     if (elapsed < 2800) await wait(2800 - elapsed)
@@ -275,7 +313,7 @@ export default function PetSetupScreen() {
     if (!pet) {
       setPhase('chat')
       setError('La création a échoué. Vérifiez votre connexion et réessayez.')
-      setStep('weight')
+      setStep('city')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
       return
     }
@@ -283,7 +321,7 @@ export default function PetSetupScreen() {
     setCreatedPet(pet)
     setPhase('done')
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-  }, [profile, name, breed, birthDate, createPet, pushUser])
+  }, [profile, name, breed, birthDate, weight, createPet, updateUser, pushUser])
 
   // Défilement des messages de chargement
   useEffect(() => {
@@ -524,13 +562,13 @@ export default function PetSetupScreen() {
                     returnKeyType="send"
                     onSubmitEditing={() => {
                       const parsed = parseFloat(draft.replace(',', '.'))
-                      if (parsed > 0) submit(parsed)
+                      if (parsed > 0) answerWeight(parsed)
                     }}
                   />
                   <Pressable
                     onPress={() => {
                       const parsed = parseFloat(draft.replace(',', '.'))
-                      if (parsed > 0) submit(parsed)
+                      if (parsed > 0) answerWeight(parsed)
                     }}
                     disabled={!(parseFloat(draft.replace(',', '.')) > 0)}
                     style={[
@@ -542,8 +580,46 @@ export default function PetSetupScreen() {
                     <Ionicons name="arrow-up" size={20} color={colors.white} />
                   </Pressable>
                 </View>
-                <Pressable onPress={() => submit(null)} style={({ pressed }) => [s.chip, s.chipGhost, s.chipSolo, pressed && s.pressed]}>
+                <Pressable onPress={() => answerWeight(null)} style={({ pressed }) => [s.chip, s.chipGhost, s.chipSolo, pressed && s.pressed]}>
                   <Text style={s.chipTextMuted}>Je ne sais pas</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {step === 'city' && (
+              <View style={s.breedWrap}>
+                {cityResults.length > 0 && (
+                  <View style={s.cityList}>
+                    {cityResults.map((city) => (
+                      <Pressable
+                        key={`${city.name}-${city.latitude}`}
+                        onPress={() => submit(city)}
+                        style={({ pressed }) => [s.cityRow, pressed && s.pressed]}
+                      >
+                        <Ionicons name="location-outline" size={18} color={accent} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={s.cityName}>{city.name}</Text>
+                          <Text style={s.cityMeta} numberOfLines={1}>
+                            {[city.admin, city.country].filter(Boolean).join(' · ')}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+                <View style={s.inputRow}>
+                  <TextInput
+                    style={s.textInput}
+                    value={draft}
+                    onChangeText={setDraft}
+                    placeholder="Ex : Lyon"
+                    placeholderTextColor={colors.gray[400]}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                  />
+                </View>
+                <Pressable onPress={() => submit(null)} style={({ pressed }) => [s.chip, s.chipGhost, s.chipSolo, pressed && s.pressed]}>
+                  <Text style={s.chipTextMuted}>Passer cette question</Text>
                 </Pressable>
               </View>
             )}
@@ -661,6 +737,10 @@ const s = StyleSheet.create({
   chipTextMuted: { fontSize: 14, fontWeight: '600', color: colors.gray[500] },
 
   breedWrap: { gap: 10 },
+  cityList:  { backgroundColor: colors.white, borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1.5, borderColor: colors.gray[200] },
+  cityRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  cityName:  { fontSize: 15, fontWeight: '700', color: colors.dark },
+  cityMeta:  { fontSize: 12, color: colors.gray[500], marginTop: 1 },
   dateWrap: { gap: 10 },
   linkBtn: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
 

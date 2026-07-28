@@ -14,6 +14,10 @@ export interface User {
   language?: string
   createdAt: string
   updatedAt: string
+  /** Ville et coordonnées saisies à l'onboarding, pour la météo. */
+  city?: string | null
+  latitude?: number | null
+  longitude?: number | null
   /** Faux pour les comptes Google, qui n'ont pas de mot de passe. */
   hasPassword?: boolean
   isPremium?: boolean

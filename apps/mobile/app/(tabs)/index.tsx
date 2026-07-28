@@ -11,11 +11,15 @@ import { usePetsStore } from '@/stores/pets'
 import { useExpensesStore } from '@/stores/expenses'
 import { api, secureStorage } from '@/services/api'
 import { colors, radius, shadow } from '@/constants/theme'
-import { describeStage, getPetProfile, getStageTips } from '@/constants/petProfiles'
+import { describeStage, getEducationTopics, getLifeStage, getPetProfile, getStageTips, resolveKind } from '@/constants/petProfiles'
+import type { EducationTopic, Tip } from '@/constants/petProfiles'
+import { DetailSheet } from '@/components/ui/DetailSheet'
+import { describeWeather, fetchWeather, type Weather } from '@/services/weather'
+import { getWeatherAdvice } from '@/constants/weatherAdvice'
 import type { VetAppointment, Reminder } from '@/types'
 
 type MonthlyTip = { id: number; species: string; month: number; title: string; body: string; emoji: string | null }
-type RecommendedPost = { id: number; slug: string; title: string; excerpt: string; category: string; image?: string | null; readTime?: string | null }
+type RecommendedPost = { id: number; slug: string; title: string; excerpt: string; category: string; image?: string | null; readTime?: string | null; reason?: string | null }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +59,9 @@ export default function DashboardScreen() {
   const [recommended, setRecommended] = useState<RecommendedPost[]>([])
   const [season,      setSeason]      = useState<'winter'|'spring'|'summer'|'autumn'|null>(null)
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
+  // Conseil ou sujet d'éducation ouvert en lecture.
+  const [openDetail, setOpenDetail] = useState<(Tip | EducationTopic) | null>(null)
+  const [weather, setWeather] = useState<Weather | null>(null)
 
   const load = useCallback(async () => {
     setLoadingData(true)
@@ -110,14 +117,26 @@ export default function DashboardScreen() {
     api
       .get<MonthlyTip[]>(`/tips?species=${selectedPet.species}&month=${month}`)
       .then((r) => { if (r.success && r.data) setTips(r.data) })
+    const stage = getLifeStage(resolveKind(selectedPet), selectedPet.birthDate).key
+    const breed = selectedPet.breed ? `&breed=${encodeURIComponent(selectedPet.breed)}` : ''
     api
-      .get<RecommendedPost[]>(`/blog/recommended?species=${selectedPet.species}&month=${month}&limit=6`)
+      .get<RecommendedPost[]>(
+        `/blog/recommended?species=${selectedPet.species}&month=${month}&stage=${stage}${breed}&limit=6`
+      )
       .then((r) => {
         if (r.success && r.data) setRecommended(r.data)
         const meta = (r as any)?.meta
         if (meta?.season) setSeason(meta.season)
       })
-  }, [selectedPet?.id, selectedPet?.species])
+  }, [selectedPet?.id, selectedPet?.species, selectedPet?.breed, selectedPet?.birthDate])
+
+  // Météo du lieu de vie : mise en cache une heure côté service.
+  useEffect(() => {
+    if (user?.latitude == null || user?.longitude == null) { setWeather(null); return }
+    let cancelled = false
+    fetchWeather(user.latitude, user.longitude).then((w) => { if (!cancelled) setWeather(w) })
+    return () => { cancelled = true }
+  }, [user?.latitude, user?.longitude])
 
   useEffect(() => { load() }, [load])
 
@@ -133,15 +152,25 @@ export default function DashboardScreen() {
       .reduce<Record<string, number>>((acc, e) => { acc[e.category] = (acc[e.category] ?? 0) + Number(e.amount); return acc }, {})
   ).sort((a, b) => b[1] - a[1]).slice(0, 3)
 
-  // Greeting
-  const firstName = user?.firstName ?? user?.email?.split('@')[0] ?? 'là'
-  const hour      = now.getHours()
-  const greeting  = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
+  // Greeting — prénom et nom, jamais l'email : on préfère saluer sans nom.
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+  const hour        = now.getHours()
+  const greeting    = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
   // L'accueil s'habille aux couleurs de l'animal sélectionné et affiche
   // les conseils correspondant à son espèce et à son stade de vie.
   const heroProfile  = selectedPet ? getPetProfile(selectedPet) : null
   const stageTips    = selectedPet ? getStageTips(selectedPet) : []
+  const education    = selectedPet ? getEducationTopics(selectedPet) : []
+
+  const weatherAdvice = weather && selectedPet
+    ? getWeatherAdvice({
+        weather,
+        kind: resolveKind(selectedPet),
+        stage: getLifeStage(resolveKind(selectedPet), selectedPet.birthDate).key,
+        name: selectedPet.name,
+      })
+    : []
 
   const isRefreshing = loading || loadingData
 
@@ -162,9 +191,15 @@ export default function DashboardScreen() {
             style={s.hero}
           >
             <View style={s.greeting}>
-              <View>
-                <Text style={s.greetingLine}>{greeting},</Text>
-                <Text style={s.greetingName}>{firstName} 👋</Text>
+              <View style={s.greetingText}>
+                {displayName ? (
+                  <>
+                    <Text style={s.greetingLine}>{greeting},</Text>
+                    <Text style={s.greetingName} numberOfLines={1}>{displayName} 👋</Text>
+                  </>
+                ) : (
+                  <Text style={s.greetingName}>{greeting} 👋</Text>
+                )}
               </View>
               <Pressable
                 onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${selectedPet.id}`) }}
@@ -214,9 +249,15 @@ export default function DashboardScreen() {
           </LinearGradient>
         ) : (
           <View style={s.greeting}>
-            <View>
-              <Text style={s.greetingLine}>{greeting},</Text>
-              <Text style={s.greetingName}>{firstName} 👋</Text>
+            <View style={s.greetingText}>
+              {displayName ? (
+                <>
+                  <Text style={s.greetingLine}>{greeting},</Text>
+                  <Text style={s.greetingName} numberOfLines={1}>{displayName} 👋</Text>
+                </>
+              ) : (
+                <Text style={s.greetingName}>{greeting} 👋</Text>
+              )}
             </View>
             <View style={s.aiPill}>
               <View style={s.aiDot} />
@@ -278,6 +319,83 @@ export default function DashboardScreen() {
           )}
         </View>
 
+        {/* ── Météo du jour traduite en conseils ── */}
+        {weather && selectedPet && heroProfile && weatherAdvice.length > 0 && (
+          <View>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle} numberOfLines={1}>
+                Aujourd'hui{user?.city ? ` à ${user.city}` : ''}
+              </Text>
+              <View style={s.weatherNow}>
+                <Text style={s.weatherEmoji}>{describeWeather(weather.code).emoji}</Text>
+                <Text style={s.weatherTemp}>{weather.temperature}°</Text>
+              </View>
+            </View>
+
+            <View style={s.weatherMeta}>
+              <Text style={s.weatherMetaText}>
+                {describeWeather(weather.code).label} · {weather.tempMin}° / {weather.tempMax}°
+                {weather.windSpeed >= 20 ? ` · vent ${weather.windSpeed} km/h` : ''}
+                {weather.uvIndex >= 6 ? ` · UV ${weather.uvIndex}` : ''}
+              </Text>
+            </View>
+
+            <View style={s.eduList}>
+              {weatherAdvice.map((advice) => (
+                <View
+                  key={advice.title}
+                  style={[
+                    s.weatherCard,
+                    shadow.sm,
+                    advice.priority === 3 && { borderColor: colors.red, backgroundColor: colors.redLight },
+                  ]}
+                >
+                  <Text style={s.weatherAdviceEmoji}>{advice.emoji}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.weatherAdviceTitle}>{advice.title}</Text>
+                    <Text style={s.weatherAdviceBody}>{advice.body}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ── Éducation, selon l'espèce et le stade de vie ── */}
+        {selectedPet && heroProfile && education.length > 0 && (
+          <View>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>Éducation</Text>
+              <View style={[s.stageBadge, { backgroundColor: heroProfile.accentSoft }]}>
+                <Text style={[s.stageBadgeText, { color: heroProfile.accent }]}>
+                  {getLifeStage(resolveKind(selectedPet), selectedPet.birthDate).label}
+                </Text>
+              </View>
+            </View>
+            <View style={s.eduList}>
+              {education.map((topic) => (
+                <Pressable
+                  key={topic.title}
+                  onPress={() => { Haptics.selectionAsync(); setOpenDetail(topic) }}
+                  style={({ pressed }) => [s.eduCard, shadow.sm, pressed && s.pressed]}
+                >
+                  <View style={[s.eduIcon, { backgroundColor: heroProfile.accentSoft }]}>
+                    <Text style={s.eduEmoji}>{topic.emoji}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.eduTitle}>{topic.title}</Text>
+                    <Text style={s.eduBody} numberOfLines={2}>{topic.body}</Text>
+                    <Text style={[s.eduSteps, { color: heroProfile.accent }]}>
+                      {topic.steps.length} étapes · le pourquoi
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.gray[300]} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* ── Conseils selon l'espèce et le stade de vie ── */}
         {selectedPet && heroProfile && stageTips.length > 0 && (
           <View>
@@ -289,13 +407,18 @@ export default function DashboardScreen() {
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.stageRow}>
               {stageTips.map((tip) => (
-                <View key={tip.title} style={[s.stageCard, shadow.sm, { borderColor: heroProfile.accentSoft }]}>
+                <Pressable
+                  key={tip.title}
+                  onPress={() => { Haptics.selectionAsync(); setOpenDetail(tip) }}
+                  style={({ pressed }) => [s.stageCard, shadow.sm, { borderColor: heroProfile.accentSoft }, pressed && s.pressed]}
+                >
                   <View style={[s.stageIcon, { backgroundColor: heroProfile.accentSoft }]}>
                     <Text style={s.stageEmoji}>{tip.emoji}</Text>
                   </View>
                   <Text style={s.stageTitle} numberOfLines={3}>{tip.title}</Text>
-                  <Text style={s.stageBody} numberOfLines={4}>{tip.body}</Text>
-                </View>
+                  <Text style={s.stageBody} numberOfLines={3}>{tip.body}</Text>
+                  <Text style={[s.stageMore, { color: heroProfile.accent }]}>Pourquoi ? →</Text>
+                </Pressable>
               ))}
             </ScrollView>
           </View>
@@ -305,12 +428,12 @@ export default function DashboardScreen() {
         {recommended.length > 0 && (
           <View>
             <View style={s.sectionRow}>
-              <Text style={s.sectionTitle}>
-                {season === 'winter' ? '❄️ Recommandé cet hiver'
-                 : season === 'spring' ? '🌷 Recommandé ce printemps'
-                 : season === 'summer' ? '☀️ Recommandé cet été'
-                 : season === 'autumn' ? '🍂 Recommandé cet automne'
-                 : 'Recommandé pour vous'}
+              <Text style={s.sectionTitle} numberOfLines={1}>
+                {selectedPet ? `Pour ${selectedPet.name}` : 'Recommandé pour vous'}
+                {season === 'winter' ? ' cet hiver ❄️'
+                 : season === 'spring' ? ' ce printemps 🌷'
+                 : season === 'summer' ? ' cet été ☀️'
+                 : season === 'autumn' ? ' cet automne 🍂' : ''}
               </Text>
               <Pressable onPress={() => router.push('/blog')} style={s.seeAll}>
                 <Text style={s.seeAllText}>Voir tout</Text>
@@ -326,7 +449,16 @@ export default function DashboardScreen() {
                 >
                   {post.image && <Image source={{ uri: post.image }} style={s.recoImg} />}
                   <View style={s.recoBody}>
-                    <Text style={s.recoCategory}>{post.category}</Text>
+                    <View style={s.recoTop}>
+                      <Text style={s.recoCategory} numberOfLines={1}>{post.category}</Text>
+                      {post.reason && heroProfile && (
+                        <View style={[s.recoReason, { backgroundColor: heroProfile.accentSoft }]}>
+                          <Text style={[s.recoReasonText, { color: heroProfile.accent }]} numberOfLines={1}>
+                            {post.reason}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={s.recoTitle} numberOfLines={2}>{post.title}</Text>
                     {post.readTime && <Text style={s.recoMeta}>📖 {post.readTime}</Text>}
                   </View>
@@ -537,6 +669,21 @@ export default function DashboardScreen() {
         </Pressable>
 
       </ScrollView>
+
+      {openDetail && heroProfile && selectedPet && (
+        <DetailSheet
+          visible
+          onClose={() => setOpenDetail(null)}
+          emoji={openDetail.emoji}
+          title={openDetail.title}
+          body={openDetail.body}
+          why={openDetail.why}
+          steps={'steps' in openDetail ? openDetail.steps : undefined}
+          accent={heroProfile.accent}
+          accentSoft={heroProfile.accentSoft}
+          context={`${selectedPet.name} · ${describeStage(selectedPet)}`}
+        />
+      )}
     </SafeAreaView>
   )
 }
@@ -570,6 +717,7 @@ const s = StyleSheet.create({
   switchName:  { fontSize: 13, fontWeight: '600', color: colors.gray[700], flexShrink: 1 },
 
   greeting:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  greetingText:  { flex: 1, paddingRight: 12 },
   greetingLine:  { fontSize: 15, color: colors.gray[500], fontWeight: '600' },
   greetingName:  { fontSize: 28, fontWeight: '800', color: colors.dark, marginTop: 2 },
   aiPill:        { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: colors.dark, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full },
@@ -632,7 +780,10 @@ const s = StyleSheet.create({
   recoCard:        { width: 240, backgroundColor: colors.white, borderRadius: radius.lg, overflow: 'hidden' },
   recoImg:         { width: '100%', height: 120, backgroundColor: colors.gray[200] },
   recoBody:        { padding: 12, gap: 4 },
-  recoCategory:    { fontSize: 10, fontWeight: '700', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.5 },
+  recoTop:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  recoCategory:    { flexShrink: 1, fontSize: 10, fontWeight: '700', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.5 },
+  recoReason:      { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.full },
+  recoReasonText:  { fontSize: 10, fontWeight: '700' },
   recoTitle:       { fontSize: 14, fontWeight: '700', color: colors.dark, lineHeight: 18 },
   recoMeta:        { fontSize: 11, color: colors.gray[500], marginTop: 4 },
 
@@ -645,6 +796,33 @@ const s = StyleSheet.create({
   stageEmoji:     { fontSize: 20 },
   stageTitle:     { fontSize: 14, fontWeight: '800', color: colors.dark, lineHeight: 19 },
   stageBody:      { fontSize: 12, color: colors.gray[600], lineHeight: 18 },
+  stageMore:      { fontSize: 12, fontWeight: '800', marginTop: 2 },
+
+  weatherNow:      { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  weatherEmoji:    { fontSize: 20 },
+  weatherTemp:     { fontSize: 18, fontWeight: '800', color: colors.dark },
+  weatherMeta:     { marginTop: -6, marginBottom: 12 },
+  weatherMetaText: { fontSize: 12, color: colors.gray[500], fontWeight: '600' },
+  weatherCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 16,
+    borderWidth: 1.5, borderColor: colors.gray[200],
+  },
+  weatherAdviceEmoji: { fontSize: 24 },
+  weatherAdviceTitle: { fontSize: 14, fontWeight: '800', color: colors.dark, lineHeight: 19 },
+  weatherAdviceBody:  { fontSize: 13, color: colors.gray[700], lineHeight: 20, marginTop: 5 },
+
+  eduList:  { gap: 10 },
+  eduCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 14,
+    borderWidth: 1, borderColor: colors.gray[200],
+  },
+  eduIcon:  { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  eduEmoji: { fontSize: 22 },
+  eduTitle: { fontSize: 14, fontWeight: '800', color: colors.dark, lineHeight: 19 },
+  eduBody:  { fontSize: 12, color: colors.gray[600], lineHeight: 17, marginTop: 3 },
+  eduSteps: { fontSize: 11, fontWeight: '700', marginTop: 5 },
 
   // Monthly tips
   tipsRow:         { gap: 12, paddingBottom: 4 },

@@ -43,6 +43,16 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare googleId: string | null
 
+  /** Ville saisie à l'onboarding, pour les conseils liés à la météo. */
+  @column()
+  declare city: string | null
+
+  @column()
+  declare latitude: number | null
+
+  @column()
+  declare longitude: number | null
+
   @column()
   declare emailVerified: boolean
 

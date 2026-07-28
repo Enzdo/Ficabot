@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useState } from 'react'
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import type { Href } from 'expo-router'
@@ -14,24 +14,10 @@ import { DateInput } from '@/components/ui/DateInput'
 import { BottomModal } from '@/components/ui/BottomModal'
 import { PetCardSkeleton } from '@/components/ui/Skeleton'
 import { petEmoji, petBg, petLabel } from '@/constants/pets'
+import { PET_KINDS, breedForKind, getKindProfile, type PetKind } from '@/constants/petProfiles'
 import { colors, radius, shadow } from '@/constants/theme'
-import type { Pet, Species } from '@/types'
+import type { Pet } from '@/types'
 
-// Sub-types prefill the breed field; the DB species is the underlying enum.
-type PetTypeOption = { label: string; species: Species; breedPrefill: string; emoji: string; bg: string }
-
-const PET_TYPES: PetTypeOption[] = [
-  { label: 'Chien',          species: 'dog', breedPrefill: '',           emoji: '🐕', bg: colors.beigeLight },
-  { label: 'Chat',           species: 'cat', breedPrefill: '',           emoji: '🐱', bg: colors.greenLight },
-  { label: 'Lapin',          species: 'nac', breedPrefill: 'Lapin',      emoji: '🐰', bg: colors.greenLight },
-  { label: 'Cochon d\'Inde', species: 'nac', breedPrefill: 'Cochon d\'Inde', emoji: '🐹', bg: colors.beigeLight },
-  { label: 'Hamster',        species: 'nac', breedPrefill: 'Hamster',    emoji: '🐹', bg: colors.beigeLight },
-  { label: 'Rat / Souris',   species: 'nac', breedPrefill: 'Rongeur',    emoji: '🐭', bg: colors.beigeLight },
-  { label: 'Furet',          species: 'nac', breedPrefill: 'Furet',      emoji: '🦦', bg: colors.beigeLight },
-  { label: 'Oiseau',         species: 'nac', breedPrefill: 'Oiseau',     emoji: '🦜', bg: colors.greenLight },
-  { label: 'Reptile',        species: 'nac', breedPrefill: 'Reptile',    emoji: '🦎', bg: colors.greenLight },
-  { label: 'Autre NAC',      species: 'nac', breedPrefill: '',           emoji: '🐾', bg: colors.gray[100] },
-]
 
 const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {
   return (
@@ -58,8 +44,8 @@ const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {
   )
 })
 
-type FormState = { name: string; typeLabel: string; species: Species; breed: string; birthDate: string; weight: string }
-const INITIAL_FORM: FormState = { name: '', typeLabel: 'Chien', species: 'dog', breed: '', birthDate: '', weight: '' }
+type FormState = { name: string; kind: PetKind; breed: string; birthDate: string; weight: string }
+const INITIAL_FORM: FormState = { name: '', kind: 'dog', breed: '', birthDate: '', weight: '' }
 
 export default function PetsScreen() {
   const { pets, loading, error, fetchPets, createPet } = usePetsStore()
@@ -77,8 +63,10 @@ export default function PetsScreen() {
     if (!form.name) { Alert.alert('Champ requis', 'Le prénom est obligatoire'); return }
     setSaving(true)
     const result = await createPet({
-      name: form.name, species: form.species,
-      breed: form.breed || undefined, birthDate: form.birthDate || undefined,
+      name: form.name,
+      species: getKindProfile(form.kind).species,
+      breed: breedForKind(form.kind, form.breed),
+      birthDate: form.birthDate || undefined,
       weight: form.weight ? parseFloat(form.weight) : undefined,
     })
     setSaving(false)
@@ -158,36 +146,71 @@ export default function PetsScreen() {
       >
         <View>
           <Text style={styles.fieldLabel}>Type d'animal</Text>
-          <View style={styles.typeList}>
-            {PET_TYPES.map((opt) => {
-              const active = form.typeLabel === opt.label
+          {/* Grille : les 8 types tiennent à l'écran, sans défilement interne. */}
+          <View style={styles.typeGrid}>
+            {PET_KINDS.map((opt) => {
+              const active = form.kind === opt.kind
               return (
                 <Pressable
-                  key={opt.label}
+                  key={opt.kind}
                   onPress={() => {
                     Haptics.selectionAsync()
+                    // La race n'est réinitialisée que si elle venait d'une suggestion.
                     setForm((f) => ({
                       ...f,
-                      typeLabel: opt.label,
-                      species: opt.species,
-                      // Auto-prefill breed only if user hasn't typed anything yet
-                      breed: f.breed && f.breed !== '' && !PET_TYPES.some((t) => t.breedPrefill === f.breed) ? f.breed : opt.breedPrefill,
+                      kind: opt.kind,
+                      breed: PET_KINDS.some((k) => k.breedSuggestions.includes(f.breed)) || !f.breed ? '' : f.breed,
                     }))
                   }}
-                  style={[styles.typeOpt, active && styles.typeOptActive]}
+                  style={({ pressed }) => [
+                    styles.typeTile,
+                    active && { borderColor: opt.accent, backgroundColor: opt.accentSoft },
+                    pressed && { transform: [{ scale: 0.95 }] },
+                  ]}
                 >
-                  <View style={[styles.typeEmojiWrap, { backgroundColor: opt.bg }]}>
-                    <Text style={styles.typeEmoji}>{opt.emoji}</Text>
-                  </View>
-                  <Text style={[styles.typeLabel, active && styles.typeLabelActive]}>{opt.label}</Text>
-                  {active && <Ionicons name="checkmark-circle" size={20} color={colors.green} />}
+                  <Text style={styles.typeEmoji}>{opt.emoji}</Text>
+                  <Text style={[styles.typeLabel, active && { color: colors.dark, fontWeight: '800' }]} numberOfLines={1}>
+                    {opt.label}
+                  </Text>
+                  {active && (
+                    <View style={[styles.typeCheck, { backgroundColor: opt.accent }]}>
+                      <Ionicons name="checkmark" size={11} color={colors.white} />
+                    </View>
+                  )}
                 </Pressable>
               )
             })}
           </View>
         </View>
+
         <Input label="Prénom *" value={form.name} onChangeText={(v) => setField('name', v)} placeholder="Ex: Max" autoCapitalize="words" />
-        <Input label="Race" value={form.breed} onChangeText={(v) => setField('breed', v)} placeholder="Ex: Labrador" autoCapitalize="words" />
+
+        <View>
+          <Input
+            label={getKindProfile(form.kind).breedQuestion.replace('?', '').trim()}
+            value={form.breed}
+            onChangeText={(v) => setField('breed', v)}
+            placeholder="Optionnel"
+            autoCapitalize="words"
+          />
+          {/* Raccourcis : évite de taper, et garantit une race exploitable. */}
+          {getKindProfile(form.kind).breedSuggestions.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.breedRow}>
+              {getKindProfile(form.kind).breedSuggestions.map((suggestion) => {
+                const active = form.breed === suggestion
+                return (
+                  <Pressable
+                    key={suggestion}
+                    onPress={() => { Haptics.selectionAsync(); setField('breed', active ? '' : suggestion) }}
+                    style={[styles.breedChip, active && { backgroundColor: colors.dark, borderColor: colors.dark }]}
+                  >
+                    <Text style={[styles.breedChipText, active && { color: colors.white }]}>{suggestion}</Text>
+                  </Pressable>
+                )
+              })}
+            </ScrollView>
+          )}
+        </View>
         <DateInput label="Date de naissance" value={form.birthDate} onChange={(v) => setField('birthDate', v)} maximumDate={new Date()} />
         <Input label="Poids (kg)" value={form.weight} onChangeText={(v) => setField('weight', v)} placeholder="Ex: 12.5" keyboardType="decimal-pad" />
       </BottomModal>
@@ -237,16 +260,28 @@ const styles = StyleSheet.create({
   },
 
   fieldLabel:   { fontSize: 13, fontWeight: '600', color: colors.gray[600], marginLeft: 2, marginBottom: 10 },
-  typeList:     { gap: 8 },
-  typeOpt: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 14, paddingVertical: 12,
-    borderRadius: radius.xl, borderWidth: 1.5, borderColor: colors.gray[200],
+
+  typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  typeTile: {
+    // 4 colonnes : 4×23 % + 3 espaces de 8 px tiennent sur un écran de 375 px.
+    width: '23%', aspectRatio: 0.95,
+    alignItems: 'center', justifyContent: 'center', gap: 4,
+    borderRadius: radius.lg, borderWidth: 1.5, borderColor: colors.gray[200],
     backgroundColor: colors.white,
   },
-  typeOptActive:   { borderColor: colors.green, backgroundColor: colors.greenLight },
-  typeEmojiWrap:   { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  typeEmoji:       { fontSize: 22 },
-  typeLabel:       { flex: 1, fontSize: 15, fontWeight: '600', color: colors.gray[700] },
-  typeLabelActive: { color: colors.greenDark, fontWeight: '700' },
+  typeEmoji: { fontSize: 24 },
+  typeLabel: { fontSize: 11, fontWeight: '600', color: colors.gray[600], paddingHorizontal: 2 },
+  typeCheck: {
+    position: 'absolute', top: 5, right: 5,
+    width: 16, height: 16, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  breedRow:      { gap: 6, paddingTop: 8, paddingRight: 4 },
+  breedChip: {
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: radius.full, borderWidth: 1.5,
+    borderColor: colors.gray[200], backgroundColor: colors.white,
+  },
+  breedChipText: { fontSize: 12, fontWeight: '600', color: colors.gray[700] },
 })
