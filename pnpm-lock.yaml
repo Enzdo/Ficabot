@@ -281,6 +281,9 @@ importers:
       expo-linking:
         specifier: ~8.0.12
         version: 8.0.12(expo@54.0.34)(react-native@0.81.5)(react@19.1.0)
+      expo-location:
+        specifier: ~19.0.8
+        version: 19.0.8(expo@54.0.34)
       expo-notifications:
         specifier: ~0.32.17
         version: 0.32.17(expo@54.0.34)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
@@ -3091,7 +3094,7 @@ packages:
       pathe: 2.0.3
       picocolors: 1.1.1
       unplugin: 2.3.11
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
       vue-i18n: 11.2.2(vue@3.5.25)
     transitivePeerDependencies:
       - '@vue/compiler-dom'
@@ -3126,7 +3129,7 @@ packages:
     dependencies:
       '@babel/parser': 7.28.5
       '@intlify/shared': 11.2.2
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
       vue-i18n: 11.2.2(vue@3.5.25)
     dev: false
 
@@ -6948,7 +6951,7 @@ packages:
     dependencies:
       hookable: 5.5.3
       unhead: 2.0.19
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /@urql/core@5.2.0:
@@ -7020,7 +7023,7 @@ packages:
       '@rolldown/pluginutils': 1.0.0-beta.54
       '@vue/babel-plugin-jsx': 2.0.1(@babel/core@7.28.5)
       vite: 7.2.7(@types/node@20.19.26)(jiti@2.6.1)
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -7034,7 +7037,7 @@ packages:
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.50
       vite: 7.2.7(@types/node@20.19.26)(jiti@2.6.1)
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /@volar/language-core@2.4.26:
@@ -7061,7 +7064,7 @@ packages:
       local-pkg: 1.1.2
       magic-string-ast: 1.0.3
       unplugin-utils: 0.3.1
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /@vue/babel-helper-vue-transform-on@1.5.0:
@@ -7195,7 +7198,7 @@ packages:
       nanoid: 5.1.6
       pathe: 1.1.2
       vite-hot-client: 0.2.4(vite@7.2.7)
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     transitivePeerDependencies:
       - vite
     dev: true
@@ -7211,7 +7214,7 @@ packages:
       nanoid: 5.1.6
       pathe: 2.0.3
       vite-hot-client: 2.1.0(vite@7.2.7)
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     transitivePeerDependencies:
       - vite
     dev: false
@@ -7314,7 +7317,7 @@ packages:
     dependencies:
       '@vue/compiler-ssr': 3.5.25
       '@vue/shared': 3.5.25
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
 
   /@vue/shared@3.5.25:
     resolution: {integrity: sha512-AbOPdQQnAnzs58H2FrrDxYj/TJfmeS2jdfEEhgiKINy+bnOANmVizIEgq1r+C5zsbs6l1CCQxtcj71rwNQ4jWg==}
@@ -7344,7 +7347,7 @@ packages:
       '@vueuse/core': 10.11.1(vue@3.5.25)
       '@vueuse/metadata': 10.11.1
       local-pkg: 0.5.1
-      nuxt: 3.20.2(@types/node@20.19.26)(@vue/compiler-sfc@3.5.25)(eslint@9.39.1)(rollup@4.53.3)(typescript@5.9.3)(vite@7.2.7)
+      nuxt: 3.20.2(@types/node@20.19.26)(@vue/compiler-sfc@3.5.25)(eslint@9.39.1)(rollup@4.53.3)(typescript@5.8.3)(vite@7.2.7)
       vue-demi: 0.14.10(vue@3.5.25)
     transitivePeerDependencies:
       - '@vue/composition-api'
@@ -9785,6 +9788,14 @@ packages:
     transitivePeerDependencies:
       - expo
       - supports-color
+
+  /expo-location@19.0.8(expo@54.0.34):
+    resolution: {integrity: sha512-H/FI75VuJ1coodJbbMu82pf+Zjess8X8Xkiv9Bv58ZgPKS/2ztjC1YO1/XMcGz7+s9DrbLuMIw22dFuP4HqneA==}
+    peerDependencies:
+      expo: '*'
+    dependencies:
+      expo: 54.0.34(@babel/core@7.28.5)(@expo/metro-runtime@6.1.2)(expo-router@6.0.23)(react-native@0.81.5)(react@19.1.0)(typescript@5.9.3)
+    dev: false
 
   /expo-manifests@1.0.11(expo@54.0.34):
     resolution: {integrity: sha512-6zItytTewN37Cjhp3glUg0ozrgW2GwB8x9wtfzUNoJIMmxO38nnGdTLMaotYhRqdf5PP2Dzdmej1HDHXVNUpRw==}
@@ -16910,7 +16921,7 @@ packages:
       pathe: 2.0.3
       source-map-js: 1.2.1
       vite: 7.2.7(@types/node@20.19.26)(jiti@2.6.1)
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /vite@7.2.7(@types/node@20.19.26)(jiti@2.6.1):
@@ -16984,7 +16995,7 @@ packages:
       vue: ^3.0.0-0 || ^2.7.0
     dependencies:
       chart.js: 4.5.1
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /vue-demi@0.14.10(vue@3.5.25):
@@ -16999,7 +17010,7 @@ packages:
       '@vue/composition-api':
         optional: true
     dependencies:
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /vue-devtools-stub@0.1.0:
@@ -17015,7 +17026,7 @@ packages:
       '@intlify/core-base': 11.2.2
       '@intlify/shared': 11.2.2
       '@vue/devtools-api': 6.6.4
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /vue-router@4.6.4(vue@3.5.25):
@@ -17024,7 +17035,7 @@ packages:
       vue: ^3.5.0
     dependencies:
       '@vue/devtools-api': 6.6.4
-      vue: 3.5.25(typescript@5.9.3)
+      vue: 3.5.25(typescript@5.8.3)
     dev: false
 
   /vue3-lottie@3.3.1(vue@3.5.25):
@@ -17053,7 +17064,6 @@ packages:
       '@vue/server-renderer': 3.5.25(vue@3.5.25)
       '@vue/shared': 3.5.25
       typescript: 5.8.3
-    dev: false
 
   /vue@3.5.25(typescript@5.9.3):
     resolution: {integrity: sha512-YLVdgv2K13WJ6n+kD5owehKtEXwdwXuj2TTyJMsO7pSeKw2bfRNZGjhB7YzrpbMYj5b5QsUebHpOqR3R3ziy/g==}
@@ -17069,6 +17079,7 @@ packages:
       '@vue/server-renderer': 3.5.25(vue@3.5.25)
       '@vue/shared': 3.5.25
       typescript: 5.9.3
+    dev: false
 
   /walker@1.0.8:
     resolution: {integrity: sha512-ts/8E8l5b7kY0vlWLewOkDXMmPdLcVV4GmOQLyxuSswIJsweeFZtAsMF7k1Nszz+TYBQrlYRmzOnr398y1JemQ==}
