@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button'
 import { BottomModal } from '@/components/ui/BottomModal'
 import { scheduleTestNotification } from '@/services/notifications'
 import { colors, radius, shadow } from '@/constants/theme'
+import { PAYWALL_VISIBLE } from '@/constants/features'
 
 const NOTIF_KEY = 'notif_prefs'
 
@@ -134,6 +135,44 @@ export default function ProfileScreen() {
     ])
   }
 
+  // Suppression du compte
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletePwd, setDeletePwd] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer définitivement ?',
+      'Vos animaux, carnets de santé, rendez-vous, dépenses et conversations seront effacés. Cette action est irréversible.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true)
+            const r = await api.del('/auth/account', deletePwd ? { password: deletePwd } : undefined)
+            setDeleting(false)
+
+            if (!r.success) {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+              Alert.alert('Suppression impossible', r.message ?? 'Réessayez plus tard')
+              return
+            }
+
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+            setShowDeleteModal(false)
+            setDeletePwd('')
+            // Purge la session locale, puis renvoie vers la création de compte.
+            await logout()
+            resetPets(); resetChat(); resetExpenses()
+            router.replace('/(auth)/register')
+          },
+        },
+      ]
+    )
+  }
+
   const firstName   = user?.firstName ?? ''
   const lastName    = user?.lastName  ?? ''
   const hasName     = !!(firstName || lastName)
@@ -145,12 +184,16 @@ export default function ProfileScreen() {
   const isPremium = !!user?.isPremium
   const menuItems: MenuItem[] = [
     { icon: 'person-outline',        label: 'Modifier mon profil', sub: 'Prénom, nom, téléphone',   iconBg: colors.greenLight,  iconColor: colors.greenDark, onPress: () => setShowEditModal(true) },
-    { icon: (isPremium ? 'star' : 'star-outline') as any, label: isPremium ? 'Premium actif 👑' : 'Passer à Premium', sub: isPremium ? 'Toutes les fonctionnalités IA débloquées' : "Débloquez l'IA, le scan et plus", iconBg: colors.orangeLight, iconColor: colors.orange, onPress: () => router.push('/paywall') },
+    // Entrée Premium masquée tant que PAYWALL_VISIBLE est à false.
+    ...(PAYWALL_VISIBLE
+      ? [{ icon: (isPremium ? 'star' : 'star-outline') as any, label: isPremium ? 'Premium actif 👑' : 'Passer à Premium', sub: isPremium ? 'Toutes les fonctionnalités IA débloquées' : "Débloquez l'IA, le scan et plus", iconBg: colors.orangeLight, iconColor: colors.orange, onPress: () => router.push('/paywall') } as MenuItem]
+      : []),
     { icon: 'book-outline',          label: 'Blog & conseils',     sub: 'Articles adaptés à vos animaux', iconBg: colors.beigeLight, iconColor: colors.greenDark, onPress: () => router.push('/blog') },
     { icon: 'notifications-outline', label: 'Notifications',       sub: 'Gérer mes alertes',        iconBg: colors.orangeLight, iconColor: colors.orange,   onPress: () => setShowNotifModal(true) },
     { icon: 'lock-closed-outline',   label: 'Sécurité',            sub: 'Changer le mot de passe',  iconBg: colors.beigeLight,  iconColor: colors.gray[700], onPress: () => setShowPwdModal(true) },
     { icon: 'help-circle-outline',   label: 'Aide et support',                                      iconBg: colors.blueLight,   iconColor: colors.blue,      onPress: () => Alert.alert('Bientôt disponible') },
     { icon: 'log-out-outline',       label: 'Se déconnecter',                                       iconBg: colors.redLight,    iconColor: colors.red,       onPress: handleLogout, danger: true },
+    { icon: 'trash-outline',         label: 'Supprimer mon compte', sub: 'Efface toutes vos données', iconBg: colors.redLight,  iconColor: colors.red,       onPress: () => setShowDeleteModal(true), danger: true },
   ]
 
   return (
@@ -355,11 +398,46 @@ export default function ProfileScreen() {
           leftIcon={<Ionicons name="checkmark-circle-outline" size={18} color={colors.gray[400]} />}
         />
       </BottomModal>
+
+      {/* Suppression du compte */}
+      <BottomModal
+        visible={showDeleteModal}
+        title="Supprimer mon compte"
+        onClose={() => { setShowDeleteModal(false); setDeletePwd('') }}
+        onConfirm={handleDeleteAccount}
+        saving={deleting}
+        confirmLabel="Continuer"
+      >
+        <View style={styles.deleteWarning}>
+          <Ionicons name="alert-circle" size={20} color={colors.red} />
+          <Text style={styles.deleteWarningText}>
+            Cette action est définitive. Vos animaux, carnets de santé, rendez-vous,
+            dépenses et conversations seront supprimés et ne pourront pas être récupérés.
+          </Text>
+        </View>
+        {/* Les comptes créés via Google n'ont pas de mot de passe : le jeton suffit. */}
+        {user?.hasPassword !== false && (
+          <Input
+            label="Confirmez avec votre mot de passe"
+            value={deletePwd}
+            onChangeText={setDeletePwd}
+            secureTextEntry
+            placeholder="••••••••"
+            leftIcon={<Ionicons name="lock-closed-outline" size={18} color={colors.gray[400]} />}
+          />
+        )}
+      </BottomModal>
     </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
+  deleteWarning: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    backgroundColor: colors.redLight, borderRadius: radius.lg, padding: 14,
+  },
+  deleteWarningText: { flex: 1, fontSize: 13, lineHeight: 19, color: colors.red, fontWeight: '500' },
+
   safe:    { flex: 1, backgroundColor: colors.beigePale },
   scroll:  { flex: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 40, gap: 16, paddingTop: 12 },

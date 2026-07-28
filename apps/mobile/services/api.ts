@@ -27,9 +27,21 @@ export const secureStorage = {
   setUser: (user: string) => SecureStore.setItemAsync('auth_user', user),
   getOnboarding: () => SecureStore.getItemAsync('onboarding_done'),
   setOnboarding: (val: string) => SecureStore.setItemAsync('onboarding_done', val),
+  // Onboarding conversationnel « premier animal » : passé ou terminé.
+  // Clé par utilisateur, sinon un compte créé après coup sur le même téléphone
+  // hériterait du choix du précédent et sauterait le parcours.
+  getPetSetup: (userId: string | number) => SecureStore.getItemAsync(`pet_setup_done_${userId}`),
+  setPetSetup: (userId: string | number, val: string) =>
+    SecureStore.setItemAsync(`pet_setup_done_${userId}`, val),
+  // Animal mis en avant sur l'accueil, conservé d'une session à l'autre.
+  getHomePet: (userId: string | number) => SecureStore.getItemAsync(`home_pet_${userId}`),
+  setHomePet: (userId: string | number, petId: string) =>
+    SecureStore.setItemAsync(`home_pet_${userId}`, petId),
   clear: () => Promise.all([
     SecureStore.deleteItemAsync('auth_token'),
     SecureStore.deleteItemAsync('auth_user'),
+    // Ancienne clé globale, supprimée au passage sur les appareils déjà installés.
+    SecureStore.deleteItemAsync('pet_setup_done'),
   ]),
 }
 

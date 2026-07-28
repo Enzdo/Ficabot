@@ -16,9 +16,10 @@ import { Input } from '@/components/ui/Input'
 import { DateInput } from '@/components/ui/DateInput'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { MedicalRecordSkeleton } from '@/components/ui/Skeleton'
-import { SPECIES_EMOJI, SPECIES_BG, SPECIES_LABEL } from '@/constants/pets'
+import { petEmoji, petBg, petLabel } from '@/constants/pets'
 import { today, fmtDate, getAge } from '@/utils/date'
 import { colors, radius, shadow } from '@/constants/theme'
+import { PAYWALL_VISIBLE } from '@/constants/features'
 import type { MedicalRecordType, ActivityType, FoodType, VaccineEntry, AllergyEntry, ChronicConditionEntry } from '@/types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -80,6 +81,8 @@ export default function PetDetailScreen() {
 
   const { healthBook, loading: hbLoading, fetchHealthBook, addVaccine, removeVaccine, addAllergy, removeAllergy, addChronicCondition, removeChronicCondition, updateHealthBook } = useHealthBookStore()
   const isPremium = useAuthStore((s) => !!s.user?.isPremium)
+  // Paywall masqué : les fonctions IA sont présentées comme ouvertes.
+  const aiUnlocked = !PAYWALL_VISIBLE || isPremium
 
   const [tab, setTab] = useState<Tab>('info')
 
@@ -176,7 +179,7 @@ export default function PetDetailScreen() {
 
     const parts: string[] = [
       `Analyse du profil de ${pet.name}.`,
-      `Espèce: ${SPECIES_LABEL[pet.species] ?? pet.species}`,
+      `Espèce: ${petLabel(pet)}`,
     ]
     if (pet.breed) parts.push(`Race: ${pet.breed}`)
     if (pet.birthDate) parts.push(`Âge: ${getAge(pet.birthDate)}`)
@@ -497,10 +500,10 @@ export default function PetDetailScreen() {
       {/* Hero card */}
       <View style={[s.hero, shadow.sm]}>
         <Pressable onPress={handlePickAvatar} style={s.heroAvatarWrap} disabled={uploadingAvatar}>
-          <View style={[s.heroAvatar, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
+          <View style={[s.heroAvatar, { backgroundColor: petBg(pet) }]}>
             {pet.avatarUrl
               ? <Image source={{ uri: pet.avatarUrl }} style={s.heroAvatarImg} />
-              : <Text style={s.heroEmoji}>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+              : <Text style={s.heroEmoji}>{petEmoji(pet)}</Text>
             }
           </View>
           <View style={s.avatarEditBadge}>
@@ -509,7 +512,7 @@ export default function PetDetailScreen() {
         </Pressable>
         <View style={s.heroInfo}>
           <Text style={s.heroName}>{pet.name}</Text>
-          <Text style={s.heroBreed}>{SPECIES_LABEL[pet.species] ?? pet.species}{pet.breed ? ` · ${pet.breed}` : ''}</Text>
+          <Text style={s.heroBreed}>{petLabel(pet)}{pet.breed ? ` · ${pet.breed}` : ''}</Text>
           <View style={s.heroBadges}>
             {ageText && <Badge text={`🎂 ${ageText}`} bg={colors.beigeLight} color={colors.gray[700]} />}
             {pet.weight && <Badge text={`⚖️ ${pet.weight} kg`} bg={colors.greenLight} color={colors.greenDark} />}
@@ -522,7 +525,7 @@ export default function PetDetailScreen() {
       <Pressable
         onPress={() => {
           Haptics.selectionAsync()
-          if (isPremium) {
+          if (aiUnlocked) {
             router.push({ pathname: '/(tabs)/chat', params: { petId: id, preDiagnosis: '1' } })
           } else {
             router.push({ pathname: '/paywall', params: { feature: 'prediag' } })
@@ -531,12 +534,12 @@ export default function PetDetailScreen() {
         style={({ pressed }) => [s.aiCta, pressed && { opacity: 0.85 }]}
       >
         <View style={s.aiCtaIcon}>
-          <Text style={{ fontSize: 18 }}>{isPremium ? '🤖' : '🔒'}</Text>
+          <Text style={{ fontSize: 18 }}>{aiUnlocked ? '🤖' : '🔒'}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={s.aiCtaTitle}>Pré-diagnostic IA {!isPremium && '· Premium'}</Text>
+          <Text style={s.aiCtaTitle}>Pré-diagnostic IA {!aiUnlocked && '· Premium'}</Text>
           <Text style={s.aiCtaDesc}>
-            {isPremium ? "Décrivez les symptômes à l'assistant" : 'Débloquez avec Premium'}
+            {aiUnlocked ? "Décrivez les symptômes à l'assistant" : 'Débloquez avec Premium'}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.green} />
@@ -662,7 +665,7 @@ export default function PetDetailScreen() {
 
             <Card>
               <Text style={s.sectionTitle}>Informations générales</Text>
-              <InfoRow label="Espèce"   value={SPECIES_LABEL[pet.species] ?? pet.species} />
+              <InfoRow label="Espèce"   value={petLabel(pet)} />
               {pet.breed     && <InfoRow label="Race"              value={pet.breed} />}
               {pet.birthDate && <InfoRow label="Date de naissance" value={new Date(pet.birthDate).toLocaleDateString('fr-FR')} />}
               {ageText       && <InfoRow label="Âge"               value={ageText} />}
@@ -864,7 +867,7 @@ export default function PetDetailScreen() {
 
         {/* ── IA TAB ───────────────────────────────────────────────────────── */}
         {tab === 'ia' && (
-          isPremium ? (
+          aiUnlocked ? (
             <AiAnalysisTab
               status={aiStatus}
               synthesis={aiSynthesis}

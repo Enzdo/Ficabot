@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Link, router } from 'expo-router'
+import type { Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuthStore } from '@/stores/auth'
@@ -20,7 +21,9 @@ export default function RegisterScreen() {
     setLoading(true); setError('')
     const result = await register(form)
     setLoading(false)
-    if (result.success) router.replace('/(tabs)')
+    // Un compte tout juste créé n'a aucun animal : on va droit à l'onboarding
+    // conversationnel, sans dépendre d'un appel réseau ni d'un drapeau local.
+    if (result.success) router.replace('/pet-setup' as Href)
     else setError(result.message ?? "Erreur lors de l'inscription")
   }
 

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/Input'
 import { DateInput } from '@/components/ui/DateInput'
 import { BottomModal } from '@/components/ui/BottomModal'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { SPECIES_EMOJI } from '@/constants/pets'
+import { petEmoji } from '@/constants/pets'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { Pet, VetAppointment, Reminder } from '@/types'
 
@@ -253,7 +253,7 @@ export default function AppointmentsScreen() {
                 {pets.map((pet) => (
                   <Pressable key={pet.id} onPress={() => setReminderForm((f) => ({ ...f, petId: pet.id }))}
                     style={[styles.petOpt, reminderForm.petId === pet.id && styles.petOptActive]}>
-                    <Text>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+                    <Text>{petEmoji(pet)}</Text>
                     <Text style={[styles.petOptLabel, reminderForm.petId === pet.id && styles.petOptLabelActive]}>{pet.name}</Text>
                   </Pressable>
                 ))}
@@ -282,7 +282,7 @@ export default function AppointmentsScreen() {
                 {pets.map((pet) => (
                   <Pressable key={pet.id} onPress={() => setForm((f) => ({ ...f, petId: pet.id }))}
                     style={[styles.petOpt, form.petId === pet.id && styles.petOptActive]}>
-                    <Text>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+                    <Text>{petEmoji(pet)}</Text>
                     <Text style={[styles.petOptLabel, form.petId === pet.id && styles.petOptLabelActive]}>{pet.name}</Text>
                     {form.petId === pet.id && <Ionicons name="checkmark-circle" size={16} color={colors.green} />}
                   </Pressable>
@@ -314,7 +314,7 @@ const ReminderCard = memo(function ReminderCard({ reminder, pets, onComplete, on
           {reminder.description && <Text style={remStyles.desc}>{reminder.description}</Text>}
           <Text style={[remStyles.date, isOverdue && !reminder.isCompleted && { color: colors.red }]}>
             📅 {new Date(reminder.dueDate).toLocaleDateString('fr-FR')}
-            {pet ? `  ·  ${SPECIES_EMOJI[pet.species] ?? '🐾'} ${pet.name}` : ''}
+            {pet ? `  ·  ${petEmoji(pet)} ${pet.name}` : ''}
             {isOverdue && !reminder.isCompleted ? '  ·  En retard' : ''}
           </Text>
         </View>
@@ -369,7 +369,7 @@ const ApptCard = memo(function ApptCard({ appt, pets }: { appt: VetAppointment; 
               <Text style={[apptStyles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
             </View>
           </View>
-          {pet && <Text style={apptStyles.pet}>{SPECIES_EMOJI[pet.species] ?? '🐾'} {pet.name}</Text>}
+          {pet && <Text style={apptStyles.pet}>{petEmoji(pet)} {pet.name}</Text>}
           <Text style={apptStyles.time}>
             🕐 {isToday ? `Aujourd'hui à ${timeLabel}` : isTomorrow ? `Demain à ${timeLabel}` : timeLabel}
             {appt.vetName ? `  ·  ${appt.vetName}` : ''}

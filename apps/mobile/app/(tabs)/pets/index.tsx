@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react'
 import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
+import type { Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import * as Haptics from 'expo-haptics'
@@ -12,7 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { DateInput } from '@/components/ui/DateInput'
 import { BottomModal } from '@/components/ui/BottomModal'
 import { PetCardSkeleton } from '@/components/ui/Skeleton'
-import { SPECIES_EMOJI, SPECIES_BG, SPECIES_LABEL } from '@/constants/pets'
+import { petEmoji, petBg, petLabel } from '@/constants/pets'
 import { colors, radius, shadow } from '@/constants/theme'
 import type { Pet, Species } from '@/types'
 
@@ -36,13 +37,13 @@ const PetItem = memo(function PetItem({ pet }: { pet: Pet }) {
   return (
     <Card onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${pet.id}`) }}>
       <View style={styles.petRow}>
-        <View style={[styles.petAvatar, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
-          <Text style={styles.petEmoji}>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+        <View style={[styles.petAvatar, { backgroundColor: petBg(pet) }]}>
+          <Text style={styles.petEmoji}>{petEmoji(pet)}</Text>
         </View>
         <View style={styles.petInfo}>
           <Text style={styles.petName}>{pet.name}</Text>
           <Text style={styles.petBreed}>
-            {SPECIES_LABEL[pet.species] ?? pet.species}
+            {petLabel(pet)}
             {pet.breed ? ` · ${pet.breed}` : ''}
           </Text>
           {pet.weight ? (
@@ -133,8 +134,9 @@ export default function PetsScreen() {
                 <Text style={styles.emptyEmoji}>🐾</Text>
               </LinearGradient>
               <Text style={styles.emptyTitle}>Aucun animal pour l'instant</Text>
-              <Text style={styles.emptyDesc}>Ajoutez votre premier compagnon pour commencer à suivre sa santé</Text>
-              <Button title="Ajouter un animal" onPress={() => setShowModal(true)} style={styles.emptyBtn} />
+              <Text style={styles.emptyDesc}>Créez son profil en répondant à quelques questions</Text>
+              <Button title="Créer son profil" onPress={() => router.push('/pet-setup' as Href)} style={styles.emptyBtn} />
+              <Button title="Utiliser le formulaire" variant="ghost" onPress={() => setShowModal(true)} style={styles.emptyBtn} />
             </View>
           )}
         />

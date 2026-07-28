@@ -14,10 +14,9 @@ import { PremiumLockedScreen } from '@/components/PremiumLockedScreen'
 import { ConversationSkeleton } from '@/components/ui/Skeleton'
 import { MarkdownText } from '@/components/ui/MarkdownText'
 import { colors, radius, shadow } from '@/constants/theme'
+import { PAYWALL_VISIBLE } from '@/constants/features'
+import { petBg, petEmoji } from '@/constants/pets'
 import type { ChatMessage } from '@/types'
-
-const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐱', nac: '🐰' }
-const SPECIES_BG:    Record<string, string> = { dog: colors.beigeLight, cat: colors.greenLight, nac: colors.greenLight }
 
 const PulsingAvatar = memo(function PulsingAvatar() {
   const scale = useRef(new Animated.Value(1)).current
@@ -86,7 +85,7 @@ const TypingIndicator = memo(function TypingIndicator() {
 
 export default function ChatScreen() {
   const isPremium = useAuthStore((s) => !!s.user?.isPremium)
-  if (!isPremium) {
+  if (PAYWALL_VISIBLE && !isPremium) {
     return <PremiumLockedScreen feature="chat" title="Assistant IA Premium" description="Discutez avec un assistant vétérinaire IA spécialisé en santé animale, 24h/24." />
   }
   return <ChatScreenInner />
@@ -244,8 +243,8 @@ function ChatScreenInner() {
                   onPress={() => { Haptics.selectionAsync(); createConversation(pet.id, `À propos de ${pet.name}`) }}
                   style={({ pressed }) => [styles.petPickerBtn, pressed && { opacity: 0.75, transform: [{ scale: 0.97 }] }]}
                 >
-                  <View style={[styles.petPickerIcon, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
-                    <Text>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
+                  <View style={[styles.petPickerIcon, { backgroundColor: petBg(pet) }]}>
+                    <Text>{petEmoji(pet)}</Text>
                   </View>
                   <Text style={styles.petPickerName}>{pet.name}</Text>
                   <Ionicons name="chevron-forward" size={15} color={colors.gray[400]} />

@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1A1614"
       },
-      "package": "com.ficabot.mobile"
+      "package": "com.ficabot.fr"
     },
     "web": {
       "bundler": "metro",

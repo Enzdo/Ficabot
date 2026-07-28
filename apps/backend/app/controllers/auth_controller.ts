@@ -108,7 +108,11 @@ export default class AuthController {
         phone: user.phone,
         createdAt: user.createdAt,
         language: user.language,
-        isPremium: (user as any).hasActivePremium,
+        // Faux pour les comptes créés via Google : ils n'ont pas de mot de passe,
+        // le client n'a donc pas à le demander pour supprimer le compte.
+        hasPassword: !!user.password,
+        // Pilote le déblocage des fonctionnalités côté client (mobile et web).
+        isPremium: (user as any).hasPremiumAccess,
         premiumPlan: user.premiumPlan,
         premiumExpiresAt: user.premiumExpiresAt,
       },
@@ -306,6 +310,49 @@ export default class AuthController {
         message: 'Déconnexion réussie',
       })
     }
+  }
+
+  /**
+   * Suppression définitive du compte et de toutes les données liées.
+   * DELETE /auth/account   body: { password? }
+   *
+   * Les tables enfants (animaux, carnets, rendez-vous, dépenses, conversations,
+   * jetons…) déclarent toutes ON DELETE CASCADE sur user_id : la suppression de
+   * la ligne `users` les emporte avec elle.
+   *
+   * Le mot de passe est exigé quand le compte en a un. Les comptes créés via
+   * Google n'en ont pas : le jeton d'accès fait alors seul foi.
+   */
+  async deleteAccount({ auth, request, response }: HttpContext) {
+    const user = auth.user as User
+
+    if (user.password) {
+      const { password } = request.only(['password'])
+
+      if (!password) {
+        return response.badRequest({
+          success: false,
+          message: 'Mot de passe requis pour supprimer le compte',
+        })
+      }
+
+      const validPassword = await hash.verify(user.password, password)
+      if (!validPassword) {
+        return response.unauthorized({
+          success: false,
+          message: 'Mot de passe incorrect',
+        })
+      }
+    }
+
+    const email = user.email
+    await user.delete()
+    logger.info(`Account deleted for user ${email}`)
+
+    return response.ok({
+      success: true,
+      message: 'Compte supprimé',
+    })
   }
 
   /**

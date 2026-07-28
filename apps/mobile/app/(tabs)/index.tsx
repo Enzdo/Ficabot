@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router } from 'expo-router'
+import type { Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -8,22 +9,15 @@ import * as Haptics from 'expo-haptics'
 import { useAuthStore } from '@/stores/auth'
 import { usePetsStore } from '@/stores/pets'
 import { useExpensesStore } from '@/stores/expenses'
-import { api } from '@/services/api'
+import { api, secureStorage } from '@/services/api'
 import { colors, radius, shadow } from '@/constants/theme'
+import { describeStage, getPetProfile, getStageTips } from '@/constants/petProfiles'
 import type { VetAppointment, Reminder } from '@/types'
 
 type MonthlyTip = { id: number; species: string; month: number; title: string; body: string; emoji: string | null }
 type RecommendedPost = { id: number; slug: string; title: string; excerpt: string; category: string; image?: string | null; readTime?: string | null }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const SPECIES_EMOJI: Record<string, string> = { dog: '🐕', cat: '🐱', rabbit: '🐰', bird: '🦜' }
-const SPECIES_BG:    Record<string, string> = {
-  dog:    colors.beigeLight,
-  cat:    colors.greenLight,
-  rabbit: colors.greenLight,
-  bird:   colors.beigeLight,
-}
 
 const CAT_COLORS: Record<string, string> = {
   vet: colors.blue, food: colors.green, grooming: colors.orange,
@@ -50,6 +44,7 @@ function friendlyDate(dateStr: string) {
 
 export default function DashboardScreen() {
   const user                          = useAuthStore((s) => s.user)
+  const userId                        = useAuthStore((s) => s.user?.id)
   const { pets, loading, fetchPets }  = usePetsStore()
   const { expenses, fetchExpenses }   = useExpensesStore()
 
@@ -59,6 +54,7 @@ export default function DashboardScreen() {
   const [tips,        setTips]        = useState<MonthlyTip[]>([])
   const [recommended, setRecommended] = useState<RecommendedPost[]>([])
   const [season,      setSeason]      = useState<'winter'|'spring'|'summer'|'autumn'|null>(null)
+  const [selectedPetId, setSelectedPetId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoadingData(true)
@@ -84,22 +80,44 @@ export default function DashboardScreen() {
     setLoadingData(false)
   }, [fetchPets, fetchExpenses])
 
-  // Fetch tips + recommended blog posts after pets are loaded (depends on species)
+  // Animal mis en avant : restauré depuis le stockage, sinon le plus récent.
   useEffect(() => {
-    const species = Array.from(new Set(pets.map((p) => p.species)))
-    if (species.length === 0) { setTips([]); setRecommended([]); return }
+    if (!userId || pets.length === 0) return
+    let cancelled = false
+    secureStorage.getHomePet(userId).then((saved) => {
+      if (cancelled) return
+      setSelectedPetId((current) => {
+        if (current && pets.some((p) => p.id === current)) return current
+        if (saved && pets.some((p) => p.id === saved)) return saved
+        return pets[0].id
+      })
+    })
+    return () => { cancelled = true }
+  }, [userId, pets])
+
+  const selectedPet = pets.find((p) => p.id === selectedPetId) ?? pets[0] ?? null
+
+  const selectPet = useCallback((petId: string) => {
+    Haptics.selectionAsync()
+    setSelectedPetId(petId)
+    if (userId) secureStorage.setHomePet(userId, petId)
+  }, [userId])
+
+  // Conseils du mois et articles recommandés : cadrés sur l'animal sélectionné.
+  useEffect(() => {
+    if (!selectedPet) { setTips([]); setRecommended([]); return }
     const month = new Date().getMonth() + 1
     api
-      .get<MonthlyTip[]>(`/tips?species=${species.join(',')}&month=${month}`)
+      .get<MonthlyTip[]>(`/tips?species=${selectedPet.species}&month=${month}`)
       .then((r) => { if (r.success && r.data) setTips(r.data) })
     api
-      .get<RecommendedPost[]>(`/blog/recommended?species=${species.join(',')}&month=${month}&limit=6`)
+      .get<RecommendedPost[]>(`/blog/recommended?species=${selectedPet.species}&month=${month}&limit=6`)
       .then((r) => {
         if (r.success && r.data) setRecommended(r.data)
         const meta = (r as any)?.meta
         if (meta?.season) setSeason(meta.season)
       })
-  }, [pets])
+  }, [selectedPet?.id, selectedPet?.species])
 
   useEffect(() => { load() }, [load])
 
@@ -120,6 +138,11 @@ export default function DashboardScreen() {
   const hour      = now.getHours()
   const greeting  = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir'
 
+  // L'accueil s'habille aux couleurs de l'animal sélectionné et affiche
+  // les conseils correspondant à son espèce et à son stade de vie.
+  const heroProfile  = selectedPet ? getPetProfile(selectedPet) : null
+  const stageTips    = selectedPet ? getStageTips(selectedPet) : []
+
   const isRefreshing = loading || loadingData
 
   return (
@@ -132,16 +155,75 @@ export default function DashboardScreen() {
       >
 
         {/* ── Greeting ── */}
-        <View style={s.greeting}>
-          <View>
-            <Text style={s.greetingLine}>{greeting},</Text>
-            <Text style={s.greetingName}>{firstName} 👋</Text>
+        {selectedPet && heroProfile ? (
+          <LinearGradient
+            colors={heroProfile.gradient}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.hero}
+          >
+            <View style={s.greeting}>
+              <View>
+                <Text style={s.greetingLine}>{greeting},</Text>
+                <Text style={s.greetingName}>{firstName} 👋</Text>
+              </View>
+              <Pressable
+                onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${selectedPet.id}`) }}
+                style={({ pressed }) => [s.heroAvatar, shadow.sm, pressed && s.pressed]}
+              >
+                <Text style={s.heroAvatarEmoji}>{heroProfile.emoji}</Text>
+              </Pressable>
+            </View>
+
+            {/* Sélecteur : n'apparaît qu'à partir de deux animaux */}
+            {pets.length > 1 && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.switchRow}>
+                {pets.map((pet) => {
+                  const active = pet.id === selectedPet.id
+                  const profile = getPetProfile(pet)
+                  return (
+                    <Pressable
+                      key={pet.id}
+                      onPress={() => selectPet(pet.id)}
+                      style={({ pressed }) => [
+                        s.switchChip,
+                        active && { backgroundColor: colors.white, borderColor: profile.accent },
+                        pressed && s.pressed,
+                      ]}
+                    >
+                      <Text style={s.switchEmoji}>{profile.emoji}</Text>
+                      <Text style={[s.switchName, active && { color: colors.dark, fontWeight: '800' }]} numberOfLines={1}>
+                        {pet.name}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </ScrollView>
+            )}
+
+            <View style={s.heroFooter}>
+              <View style={[s.heroBadge, { backgroundColor: heroProfile.accent }]}>
+                <Text style={s.heroBadgeText} numberOfLines={1}>
+                  {selectedPet.name} · {describeStage(selectedPet)}
+                </Text>
+              </View>
+              <View style={s.aiPill}>
+                <View style={s.aiDot} />
+                <Text style={s.aiPillText}>IA prête</Text>
+              </View>
+            </View>
+          </LinearGradient>
+        ) : (
+          <View style={s.greeting}>
+            <View>
+              <Text style={s.greetingLine}>{greeting},</Text>
+              <Text style={s.greetingName}>{firstName} 👋</Text>
+            </View>
+            <View style={s.aiPill}>
+              <View style={s.aiDot} />
+              <Text style={s.aiPillText}>IA prête</Text>
+            </View>
           </View>
-          <View style={s.aiPill}>
-            <View style={s.aiDot} />
-            <Text style={s.aiPillText}>IA prête</Text>
-          </View>
-        </View>
+        )}
 
         {/* ── Mes animaux ── */}
         <View>
@@ -155,33 +237,34 @@ export default function DashboardScreen() {
 
           {pets.length === 0 ? (
             <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/(tabs)/pets') }}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/pet-setup' as Href) }}
               style={({ pressed }) => [s.emptyPets, pressed && s.pressed]}
             >
               <Text style={s.emptyPetsEmoji}>🐾</Text>
               <View style={{ flex: 1 }}>
                 <Text style={s.emptyPetsTitle}>Aucun animal pour l'instant</Text>
-                <Text style={s.emptyPetsSub}>Appuyez pour ajouter votre premier compagnon</Text>
+                <Text style={s.emptyPetsSub}>Répondez à quelques questions, on s'occupe du reste</Text>
               </View>
               <Ionicons name="add-circle" size={28} color={colors.green} />
             </Pressable>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.petRow}>
-              {pets.map((pet) => (
-                <Pressable
-                  key={pet.id}
-                  onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${pet.id}`) }}
-                  style={({ pressed }) => [s.petCard, shadow.sm, pressed && s.pressed]}
-                >
-                  <View style={[s.petAvatar, { backgroundColor: SPECIES_BG[pet.species] ?? colors.beigeLight }]}>
-                    <Text style={s.petEmoji}>{SPECIES_EMOJI[pet.species] ?? '🐾'}</Text>
-                  </View>
-                  <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
-                  <Text style={s.petBreed} numberOfLines={1}>
-                    {pet.species === 'dog' ? 'Chien' : pet.species === 'cat' ? 'Chat' : pet.species === 'nac' ? 'NAC' : pet.species}
-                  </Text>
-                </Pressable>
-              ))}
+              {pets.map((pet) => {
+                const petProfile = getPetProfile(pet)
+                return (
+                  <Pressable
+                    key={pet.id}
+                    onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${pet.id}`) }}
+                    style={({ pressed }) => [s.petCard, shadow.sm, pressed && s.pressed]}
+                  >
+                    <View style={[s.petAvatar, { backgroundColor: petProfile.accentSoft }]}>
+                      <Text style={s.petEmoji}>{petProfile.emoji}</Text>
+                    </View>
+                    <Text style={s.petName} numberOfLines={1}>{pet.name}</Text>
+                    <Text style={s.petBreed} numberOfLines={1}>{petProfile.label}</Text>
+                  </Pressable>
+                )
+              })}
               <Pressable
                 onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push('/(tabs)/pets') }}
                 style={({ pressed }) => [s.petCardAdd, pressed && s.pressed]}
@@ -194,6 +277,29 @@ export default function DashboardScreen() {
             </ScrollView>
           )}
         </View>
+
+        {/* ── Conseils selon l'espèce et le stade de vie ── */}
+        {selectedPet && heroProfile && stageTips.length > 0 && (
+          <View>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionTitle}>Pour {selectedPet.name}</Text>
+              <View style={[s.stageBadge, { backgroundColor: heroProfile.accentSoft }]}>
+                <Text style={[s.stageBadgeText, { color: heroProfile.accent }]}>{describeStage(selectedPet)}</Text>
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.stageRow}>
+              {stageTips.map((tip) => (
+                <View key={tip.title} style={[s.stageCard, shadow.sm, { borderColor: heroProfile.accentSoft }]}>
+                  <View style={[s.stageIcon, { backgroundColor: heroProfile.accentSoft }]}>
+                    <Text style={s.stageEmoji}>{tip.emoji}</Text>
+                  </View>
+                  <Text style={s.stageTitle} numberOfLines={3}>{tip.title}</Text>
+                  <Text style={s.stageBody} numberOfLines={4}>{tip.body}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* ── Recommandé pour vous (saison × espèce) ── */}
         {recommended.length > 0 && (
@@ -409,8 +515,8 @@ export default function DashboardScreen() {
                 </View>
                 <Text style={s.aiCardTitle}>Posez une question{'\n'}à votre assistant</Text>
                 <Text style={s.aiCardDesc}>
-                  {pets.length > 0
-                    ? `Parlez de ${pets[0].name}, vaccination, symptômes…`
+                  {selectedPet
+                    ? `Parlez de ${selectedPet.name}, vaccination, symptômes…`
                     : 'Symptômes, vaccination, alimentation…'}
                 </Text>
               </View>
@@ -444,6 +550,25 @@ const s = StyleSheet.create({
   pressed: { opacity: 0.82, transform: [{ scale: 0.97 }] },
 
   // Greeting
+  hero:          { borderRadius: radius['3xl'], padding: 18, gap: 16 },
+  heroAvatar:    { width: 54, height: 54, borderRadius: 27, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  heroAvatarEmoji: { fontSize: 27 },
+  heroFooter:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  heroBadge:     { flexShrink: 1, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.full },
+  heroBadgeText: { fontSize: 12, fontWeight: '700', color: colors.white },
+
+  switchRow:   { gap: 8, paddingVertical: 2 },
+  switchChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderWidth: 1.5, borderColor: 'transparent',
+    maxWidth: 150,
+  },
+  switchEmoji: { fontSize: 16 },
+  switchName:  { fontSize: 13, fontWeight: '600', color: colors.gray[700], flexShrink: 1 },
+
   greeting:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   greetingLine:  { fontSize: 15, color: colors.gray[500], fontWeight: '600' },
   greetingName:  { fontSize: 28, fontWeight: '800', color: colors.dark, marginTop: 2 },
@@ -510,6 +635,16 @@ const s = StyleSheet.create({
   recoCategory:    { fontSize: 10, fontWeight: '700', color: colors.green, textTransform: 'uppercase', letterSpacing: 0.5 },
   recoTitle:       { fontSize: 14, fontWeight: '700', color: colors.dark, lineHeight: 18 },
   recoMeta:        { fontSize: 11, color: colors.gray[500], marginTop: 4 },
+
+  // Conseils par stade de vie (local, sans appel réseau)
+  stageBadge:     { paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full },
+  stageBadgeText: { fontSize: 11, fontWeight: '700' },
+  stageRow:       { gap: 12, paddingBottom: 4 },
+  stageCard:      { width: 250, backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 16, gap: 8, borderWidth: 1 },
+  stageIcon:      { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  stageEmoji:     { fontSize: 20 },
+  stageTitle:     { fontSize: 14, fontWeight: '800', color: colors.dark, lineHeight: 19 },
+  stageBody:      { fontSize: 12, color: colors.gray[600], lineHeight: 18 },
 
   // Monthly tips
   tipsRow:         { gap: 12, paddingBottom: 4 },

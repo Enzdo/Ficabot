@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { router, useLocalSearchParams } from 'expo-router'
+import { Redirect, router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -9,6 +9,7 @@ import { api } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/Button'
 import { colors, radius, shadow } from '@/constants/theme'
+import { PAYWALL_VISIBLE } from '@/constants/features'
 
 const PLANS: { id: 'monthly' | 'quarterly'; label: string; price: string; sub: string; badge?: string }[] = [
   { id: 'monthly',   label: 'Mensuel',     price: '4,99 €', sub: '/mois',       badge: undefined },
@@ -29,6 +30,12 @@ export default function PaywallScreen() {
   const { user, fetchMe } = useAuthStore()
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'quarterly'>('quarterly')
   const [activating, setActivating] = useState(false)
+
+  // Filet de sécurité : plus aucun écran ne mène ici quand le paywall est masqué,
+  // mais un lien profond ou un retour d'historique pourrait encore y aboutir.
+  // Placé après les hooks pour ne pas changer leur ordre d'appel.
+  if (!PAYWALL_VISIBLE) return <Redirect href="/(tabs)" />
+
 
   const handleActivate = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)

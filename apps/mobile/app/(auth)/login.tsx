@@ -21,7 +21,8 @@ export default function LoginScreen() {
     setLoading(true); setError('')
     const result = await login(email, password)
     setLoading(false)
-    if (result.success) router.replace('/(tabs)')
+    // Passe par la racine : elle oriente vers l'onboarding « premier animal » si besoin.
+    if (result.success) router.replace('/')
     else setError(result.message ?? 'Identifiants invalides')
   }
 

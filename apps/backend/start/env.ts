@@ -65,6 +65,15 @@ export default await Env.create(appRoot, {
 
   /*
   |--------------------------------------------------------------------------
+  | Paywall
+  |--------------------------------------------------------------------------
+  | Non défini ou false : toutes les fonctionnalités sont ouvertes aux comptes
+  | gratuits. Mettre à true pour réactiver la restriction Premium.
+  */
+  PREMIUM_ENFORCED: Env.schema.boolean.optional(),
+
+  /*
+  |--------------------------------------------------------------------------
   | Mail (SMTP)
   |--------------------------------------------------------------------------
   */

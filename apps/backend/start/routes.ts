@@ -87,6 +87,7 @@ router.group(() => {
     router.put('/password', [AuthController, 'updatePassword'])
     router.post('/logout', [AuthController, 'logout'])
     router.post('/resend-verification', [AuthController, 'resendVerification'])
+    router.delete('/account', [AuthController, 'deleteAccount'])
   }).use(middleware.auth())
 }).prefix('/auth')
 

@@ -14,6 +14,8 @@ export interface User {
   language?: string
   createdAt: string
   updatedAt: string
+  /** Faux pour les comptes Google, qui n'ont pas de mot de passe. */
+  hasPassword?: boolean
   isPremium?: boolean
   premiumPlan?: 'monthly' | 'quarterly' | null
   premiumExpiresAt?: string | null

@@ -16,7 +16,7 @@ export default class RequirePremiumMiddleware {
       })
     }
 
-    if (!(user as any).hasActivePremium) {
+    if (!(user as any).hasPremiumAccess) {
       return ctx.response.status(402).send({
         success: false,
         code: 'PREMIUM_REQUIRED',

@@ -1,13 +1,16 @@
-import { colors } from './theme'
+/**
+ * Helpers d'affichage d'un animal.
+ *
+ * L'apparence ne dépend plus seulement de l'espèce stockée en base (dog / cat / nac)
+ * mais du « kind » déduit de la race : un furet, un perroquet et un lapin sont tous
+ * des NAC et n'ont plus la même identité visuelle. Voir `petProfiles.ts`.
+ */
 
-export const SPECIES_EMOJI: Record<string, string> = {
-  dog: '🐕', cat: '🐱', nac: '🐰',
-}
+import { getPetProfile } from './petProfiles'
 
-export const SPECIES_BG: Record<string, string> = {
-  dog: colors.beigeLight, cat: colors.greenLight, nac: colors.greenLight,
-}
+type PetLike = { species: string; breed?: string | null }
 
-export const SPECIES_LABEL: Record<string, string> = {
-  dog: 'Chien', cat: 'Chat', nac: 'NAC',
-}
+export const petEmoji  = (pet: PetLike) => getPetProfile(pet).emoji
+export const petBg     = (pet: PetLike) => getPetProfile(pet).accentSoft
+export const petAccent = (pet: PetLike) => getPetProfile(pet).accent
+export const petLabel  = (pet: PetLike) => getPetProfile(pet).label

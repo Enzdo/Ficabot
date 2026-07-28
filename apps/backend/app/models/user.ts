@@ -8,6 +8,7 @@ import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Pet from '#models/pet'
 import ChatMessage from '#models/chat_message'
 import Veterinarian from '#models/veterinarian'
+import { isPremiumEnforced } from '#services/premium_service'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -79,12 +80,21 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare premiumSubscriptionId: string | null
 
   /**
-   * Computed property: premium is active if flag is true AND (no expiry OR expiry in future).
+   * État réel de l'abonnement : payé et non expiré.
+   * Sert à l'affichage de l'abonnement, pas au déblocage des fonctionnalités.
    */
   get hasActivePremium(): boolean {
     if (!this.isPremium) return false
     if (!this.premiumExpiresAt) return true
     return this.premiumExpiresAt > DateTime.now()
+  }
+
+  /**
+   * Droit d'accès aux fonctionnalités Premium.
+   * Tant que `PREMIUM_ENFORCED` n'est pas activé, tout le monde y a accès.
+   */
+  get hasPremiumAccess(): boolean {
+    return !isPremiumEnforced() || this.hasActivePremium
   }
 
   @column.dateTime({ autoCreate: true })
