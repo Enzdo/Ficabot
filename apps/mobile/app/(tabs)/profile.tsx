@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { BottomModal } from '@/components/ui/BottomModal'
 import { scheduleTestNotification } from '@/services/notifications'
+import { geocodeCity, type GeocodedCity } from '@/services/weather'
 import { colors, radius, shadow } from '@/constants/theme'
 import { PAYWALL_VISIBLE } from '@/constants/features'
 
@@ -46,9 +47,25 @@ export default function ProfileScreen() {
   const [form, setForm] = useState({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '', newEmail: '', emailPassword: '' })
   const [saving, setSaving] = useState(false)
 
+  // Ville : le libellé affiché, et les coordonnées qui l'accompagnent.
+  const [cityQuery, setCityQuery] = useState(user?.city ?? '')
+  const [cityCoords, setCityCoords] = useState<{ latitude: number; longitude: number } | null>(
+    user?.latitude != null && user?.longitude != null
+      ? { latitude: user.latitude, longitude: user.longitude }
+      : null
+  )
+  const [cityResults, setCityResults] = useState<GeocodedCity[]>([])
+
   useEffect(() => {
     if (!showEditModal) {
       setForm({ firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: user?.phone ?? '', newEmail: '', emailPassword: '' })
+      setCityQuery(user?.city ?? '')
+      setCityCoords(
+        user?.latitude != null && user?.longitude != null
+          ? { latitude: user.latitude, longitude: user.longitude }
+          : null
+      )
+      setCityResults([])
     }
   }, [user, showEditModal])
 
@@ -79,6 +96,19 @@ export default function ProfileScreen() {
     else Alert.alert('Notification envoyée', 'Vous allez recevoir une notification dans 3 secondes.')
   }
 
+  // Suggestions de villes pendant la frappe. Tant qu'aucune n'est choisie,
+  // les coordonnées restent nulles et la ville n'est pas enregistrée.
+  useEffect(() => {
+    if (!showEditModal) return
+    const q = cityQuery.trim()
+    if (q.length < 3 || q === user?.city) { setCityResults([]); return }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      geocodeCity(q).then((r) => { if (!cancelled) setCityResults(r) })
+    }, 350)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [cityQuery, showEditModal, user?.city])
+
   // Change password
   const [showPwdModal, setShowPwdModal] = useState(false)
   const [pwdForm, setPwdForm] = useState({ current: '', next: '', confirm: '' })
@@ -107,7 +137,22 @@ export default function ProfileScreen() {
       return
     }
     setSaving(true)
-    const profileR = await api.put('/auth/profile', { firstName: form.firstName, lastName: form.lastName, phone: form.phone })
+    const payload: Record<string, unknown> = {
+      firstName: form.firstName, lastName: form.lastName, phone: form.phone,
+    }
+    // La ville n'est transmise qu'avec ses coordonnées : sans elles, la météo
+    // serait introuvable et la valeur saisie ne servirait à rien.
+    if (cityCoords && cityQuery.trim()) {
+      payload.city = cityQuery.trim()
+      payload.latitude = cityCoords.latitude
+      payload.longitude = cityCoords.longitude
+    } else if (!cityQuery.trim() && user?.city) {
+      payload.city = null
+      payload.latitude = null
+      payload.longitude = null
+    }
+
+    const profileR = await api.put('/auth/profile', payload)
     if (!profileR.success) {
       setSaving(false)
       Alert.alert('Erreur', 'Impossible de mettre à jour le profil')
@@ -294,6 +339,47 @@ export default function ProfileScreen() {
           leftIcon={<Ionicons name="call-outline" size={18} color={colors.gray[400]} />}
         />
 
+        <View>
+          <Input
+            label="Ville"
+            value={cityQuery}
+            onChangeText={(v) => { setCityQuery(v); setCityCoords(null) }}
+            placeholder="Ex : Lyon"
+            autoCapitalize="words"
+            autoCorrect={false}
+            leftIcon={<Ionicons name="location-outline" size={18} color={colors.gray[400]} />}
+          />
+          <Text style={styles.cityHint}>
+            {cityCoords
+              ? 'Sert à adapter les conseils à la météo du jour.'
+              : 'Choisissez une ville dans la liste pour l\'enregistrer.'}
+          </Text>
+          {cityResults.length > 0 && (
+            <View style={styles.cityList}>
+              {cityResults.map((city) => (
+                <Pressable
+                  key={`${city.name}-${city.latitude}`}
+                  onPress={() => {
+                    Haptics.selectionAsync()
+                    setCityQuery(city.name)
+                    setCityCoords({ latitude: city.latitude, longitude: city.longitude })
+                    setCityResults([])
+                  }}
+                  style={({ pressed }) => [styles.cityRow, pressed && { opacity: 0.7 }]}
+                >
+                  <Ionicons name="location-outline" size={16} color={colors.green} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.cityName}>{city.name}</Text>
+                    <Text style={styles.cityMeta} numberOfLines={1}>
+                      {[city.admin, city.country].filter(Boolean).join(' · ')}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+
         <View style={styles.emailDivider}>
           <View style={styles.emailDividerLine} />
           <Text style={styles.emailDividerText}>Changer l'email</Text>
@@ -432,6 +518,12 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  cityHint: { fontSize: 11, color: colors.gray[500], marginTop: 6, marginLeft: 2 },
+  cityList: { marginTop: 8, backgroundColor: colors.white, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.gray[200], overflow: 'hidden' },
+  cityRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.gray[100] },
+  cityName: { fontSize: 14, fontWeight: '700', color: colors.dark },
+  cityMeta: { fontSize: 11, color: colors.gray[500], marginTop: 1 },
+
   deleteWarning: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: colors.redLight, borderRadius: radius.lg, padding: 14,

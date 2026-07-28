@@ -22,7 +22,10 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1A1614"
       },
-      "package": "com.ficabot.fr"
+      "package": "com.ficabot.fr",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +49,15 @@
         "expo-image-picker",
         {
           "photosPermission": "Ficabot accède à vos photos pour définir la photo de votre animal."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Ficabot utilise votre position pour adapter les conseils à la météo de l'endroit où vous êtes.",
+          "locationWhenInUsePermission": "Ficabot utilise votre position pour adapter les conseils à la météo de l'endroit où vous êtes.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ]
     ],

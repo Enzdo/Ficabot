@@ -15,6 +15,7 @@ import { describeStage, getEducationTopics, getLifeStage, getPetProfile, getStag
 import type { EducationTopic, Tip } from '@/constants/petProfiles'
 import { DetailSheet } from '@/components/ui/DetailSheet'
 import { describeWeather, fetchWeather, type Weather } from '@/services/weather'
+import { getCoordsIfAllowed } from '@/services/location'
 import { getWeatherAdvice } from '@/constants/weatherAdvice'
 import type { VetAppointment, Reminder } from '@/types'
 
@@ -130,11 +131,17 @@ export default function DashboardScreen() {
       })
   }, [selectedPet?.id, selectedPet?.species, selectedPet?.breed, selectedPet?.birthDate])
 
-  // Météo du lieu de vie : le backend détient la clé et mutualise le cache.
+  // Météo : position du téléphone si elle est autorisée — la section suit alors
+  // l'utilisateur en déplacement — sinon la ville enregistrée sur le profil.
   useEffect(() => {
-    if (!user?.city) { setWeather(null); return }
     let cancelled = false
-    fetchWeather().then((w) => { if (!cancelled) setWeather(w) })
+    ;(async () => {
+      const coords = await getCoordsIfAllowed()
+      if (cancelled) return
+      if (!coords && !user?.city) { setWeather(null); return }
+      const w = await fetchWeather(coords)
+      if (!cancelled) setWeather(w)
+    })()
     return () => { cancelled = true }
   }, [user?.city])
 
@@ -324,7 +331,7 @@ export default function DashboardScreen() {
           <View>
             <View style={s.sectionRow}>
               <Text style={s.sectionTitle} numberOfLines={1}>
-                Aujourd'hui{user?.city ? ` à ${user.city}` : ''}
+                Aujourd'hui{weather.city ? ` à ${weather.city}` : ''}
               </Text>
               <View style={s.weatherNow}>
                 <Text style={s.weatherEmoji}>{describeWeather(weather.code).emoji}</Text>

@@ -36,9 +36,14 @@ export async function geocodeCity(query: string): Promise<GeocodedCity[]> {
   return res.success && res.data ? res.data : []
 }
 
-/** Météo du lieu enregistré sur le compte. Null tant qu'aucune ville n'est connue. */
-export async function fetchWeather(): Promise<Weather | null> {
-  const res = await api.get<Weather | null>('/weather')
+/**
+ * Météo du lieu où se trouve l'utilisateur.
+ * Avec des coordonnées, elle suit ses déplacements ; sans, le backend retombe
+ * sur la ville enregistrée dans son profil.
+ */
+export async function fetchWeather(coords?: { latitude: number; longitude: number } | null): Promise<Weather | null> {
+  const query = coords ? `?latitude=${coords.latitude}&longitude=${coords.longitude}` : ''
+  const res = await api.get<Weather | null>(`/weather${query}`)
   return res.success && res.data ? res.data : null
 }
 

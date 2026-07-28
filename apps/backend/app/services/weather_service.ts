@@ -23,6 +23,8 @@ export interface WeatherPayload {
   tempMax: number
   tempMin: number
   isDay: boolean
+  /** Ville résolue à partir des coordonnées, quand la source la fournit. */
+  city?: string | null
 }
 
 export interface CitySuggestion {
@@ -40,8 +42,9 @@ const TTL = 60 * 60 * 1000
 const cache = new Map<string, { at: number; value: WeatherPayload }>()
 
 function cacheKey(lat: number, lon: number) {
-  // Deux décimales ≈ 1 km : deux voisins partagent le même relevé.
-  return `${lat.toFixed(2)},${lon.toFixed(2)}`
+  // Une décimale ≈ 11 km : toute une agglomération partage le même relevé,
+  // ce qui rend la consommation indépendante du nombre d'utilisateurs.
+  return `${lat.toFixed(1)},${lon.toFixed(1)}`
 }
 
 /** Conversion des codes WeatherAPI vers l'échelle WMO utilisée par l'app. */
@@ -80,6 +83,7 @@ async function fromWeatherApi(lat: number, lon: number, key: string): Promise<We
     tempMax: Math.round(day.maxtemp_c),
     tempMin: Math.round(day.mintemp_c),
     isDay: c.is_day === 1,
+    city: json?.location?.name ?? null,
   }
 }
 
@@ -109,6 +113,25 @@ async function fromOpenMeteo(lat: number, lon: number): Promise<WeatherPayload |
   }
 }
 
+/**
+ * Nom de la commune correspondant à des coordonnées.
+ *
+ * La Base Adresse Nationale passe avant le nom fourni par WeatherAPI, qui
+ * renvoie le quartier plutôt que la ville : « Canet » pour des coordonnées
+ * en plein Marseille. Hors de France elle ne répond rien, et le nom du
+ * fournisseur reprend la main.
+ */
+async function reverseCity(lat: number, lon: number): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}&limit=1`)
+    if (!res.ok) return null
+    const json: any = await res.json()
+    return json?.features?.[0]?.properties?.city ?? null
+  } catch {
+    return null
+  }
+}
+
 export async function getWeather(lat: number, lon: number): Promise<WeatherPayload | null> {
   const key = cacheKey(lat, lon)
   const hit = cache.get(key)
@@ -122,6 +145,7 @@ export async function getWeather(lat: number, lon: number): Promise<WeatherPaylo
       : await fromOpenMeteo(lat, lon)
 
     if (!value) return hit?.value ?? null
+    value.city = (await reverseCity(lat, lon)) ?? value.city ?? null
     cache.set(key, { at: Date.now(), value })
     return value
   } catch (error) {

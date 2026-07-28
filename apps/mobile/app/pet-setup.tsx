@@ -28,7 +28,8 @@ import * as Haptics from 'expo-haptics'
 import { useAuthStore } from '@/stores/auth'
 import { usePetsStore } from '@/stores/pets'
 import { api, secureStorage } from '@/services/api'
-import { geocodeCity, type GeocodedCity } from '@/services/weather'
+import { fetchWeather, geocodeCity, type GeocodedCity } from '@/services/weather'
+import { requestCoords } from '@/services/location'
 import { Button } from '@/components/ui/Button'
 import { DateInput } from '@/components/ui/DateInput'
 import { colors, radius, shadow } from '@/constants/theme'
@@ -147,6 +148,7 @@ export default function PetSetupScreen() {
   const [weight, setWeight] = useState<number | null>(null)
   const [createdPet, setCreatedPet] = useState<Pet | null>(null)
   const [cityResults, setCityResults] = useState<GeocodedCity[]>([])
+  const [manualCity, setManualCity] = useState(false)
 
   const [draft, setDraft] = useState('')
   const [dateMode, setDateMode] = useState(false)
@@ -262,7 +264,7 @@ export default function PetSetupScreen() {
     setStep(null)
     pushUser(value === null ? 'Je ne sais pas' : `${value} kg`)
     await pushBot([
-      'Dernière chose : dans quelle ville vivez-vous ?',
+      'Dernière chose : où vivez-vous ?',
       'Ça me permet d\'adapter les conseils à la météo du jour — canicule, gel, sol brûlant.',
     ])
     setStep('city')
@@ -277,6 +279,25 @@ export default function PetSetupScreen() {
     }, 350)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [draft, step])
+
+  // La permission est demandée ici, au moment où l'utilisateur comprend
+  // à quoi elle sert — jamais au lancement de l'app.
+  const handleUseLocation = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    const coords = await requestCoords()
+    if (!coords) {
+      // Refus : on bascule sur la saisie manuelle plutôt que d'insister.
+      setManualCity(true)
+      await pushBot(['Pas de souci. Dans quelle ville vivez-vous ?'])
+      return
+    }
+    const weather = await fetchWeather(coords)
+    submit(
+      weather?.city
+        ? { name: weather.city, latitude: coords.latitude, longitude: coords.longitude, admin: null, country: null }
+        : { name: 'Ma position', latitude: coords.latitude, longitude: coords.longitude, admin: null, country: null }
+    )
+  }, [pushBot])
 
   // ── Création ──
   const submit = useCallback(async (city: GeocodedCity | null) => {
@@ -588,7 +609,25 @@ export default function PetSetupScreen() {
 
             {step === 'city' && (
               <View style={s.breedWrap}>
-                {cityResults.length > 0 && (
+                {!manualCity && (
+                  <>
+                    <Pressable
+                      onPress={handleUseLocation}
+                      style={({ pressed }) => [s.locBtn, { backgroundColor: accent }, pressed && s.pressed]}
+                    >
+                      <Ionicons name="location" size={18} color={colors.white} />
+                      <Text style={s.locBtnText}>Utiliser ma position</Text>
+                    </Pressable>
+                    <Text style={s.locHint}>
+                      Position approximative uniquement, lue à chaque ouverture de l'app.
+                      Les conseils suivent alors vos déplacements.
+                    </Text>
+                    <Pressable onPress={() => setManualCity(true)} hitSlop={8}>
+                      <Text style={[s.linkBtn, { color: accent }]}>Saisir ma ville à la main</Text>
+                    </Pressable>
+                  </>
+                )}
+                {manualCity && cityResults.length > 0 && (
                   <View style={s.cityList}>
                     {cityResults.map((city) => (
                       <Pressable
@@ -607,17 +646,20 @@ export default function PetSetupScreen() {
                     ))}
                   </View>
                 )}
-                <View style={s.inputRow}>
-                  <TextInput
-                    style={s.textInput}
-                    value={draft}
-                    onChangeText={setDraft}
-                    placeholder="Ex : Lyon"
-                    placeholderTextColor={colors.gray[400]}
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                  />
-                </View>
+                {manualCity && (
+                  <View style={s.inputRow}>
+                    <TextInput
+                      style={s.textInput}
+                      value={draft}
+                      onChangeText={setDraft}
+                      placeholder="Ex : Lyon"
+                      placeholderTextColor={colors.gray[400]}
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      autoFocus
+                    />
+                  </View>
+                )}
                 <Pressable onPress={() => submit(null)} style={({ pressed }) => [s.chip, s.chipGhost, s.chipSolo, pressed && s.pressed]}>
                   <Text style={s.chipTextMuted}>Passer cette question</Text>
                 </Pressable>
@@ -743,6 +785,12 @@ const s = StyleSheet.create({
   cityMeta:  { fontSize: 12, color: colors.gray[500], marginTop: 1 },
   dateWrap: { gap: 10 },
   linkBtn: { fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  locBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    height: 52, borderRadius: radius.full,
+  },
+  locBtnText: { fontSize: 16, fontWeight: '800', color: colors.white },
+  locHint:    { fontSize: 12, color: colors.gray[600], textAlign: 'center', lineHeight: 17, paddingHorizontal: 8 },
 
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   textInput: {

@@ -154,6 +154,12 @@ export default class AuthController {
         city: user.city,
         latitude: user.latitude === null ? null : Number(user.latitude),
         longitude: user.longitude === null ? null : Number(user.longitude),
+        // Mêmes champs que /auth/me : le client remplace l'objet utilisateur
+        // en entier, une réponse partielle lui ferait perdre ces indicateurs.
+        hasPassword: !!user.password,
+        isPremium: (user as any).hasPremiumAccess,
+        premiumPlan: user.premiumPlan,
+        premiumExpiresAt: user.premiumExpiresAt,
       },
     })
   }
