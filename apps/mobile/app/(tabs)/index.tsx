@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import type { Href } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -21,6 +21,9 @@ import type { VetAppointment, Reminder } from '@/types'
 
 type MonthlyTip = { id: number; species: string; month: number; title: string; body: string; emoji: string | null }
 type RecommendedPost = { id: number; slug: string; title: string; excerpt: string; category: string; image?: string | null; readTime?: string | null; reason?: string | null }
+
+// La carte occupe l'écran moins les marges, moins un aperçu de la suivante.
+const WEATHER_CARD_WIDTH = Dimensions.get('window').width - 40 - 34
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,6 +66,7 @@ export default function DashboardScreen() {
   // Conseil ou sujet d'éducation ouvert en lecture.
   const [openDetail, setOpenDetail] = useState<(Tip | EducationTopic) | null>(null)
   const [weather, setWeather] = useState<Weather | null>(null)
+  const [weatherPage, setWeatherPage] = useState(0)
 
   const load = useCallback(async () => {
     setLoadingData(true)
@@ -347,7 +351,18 @@ export default function DashboardScreen() {
               </Text>
             </View>
 
-            <View style={s.eduList}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              // Défilement carte par carte, avec un aperçu de la suivante
+              // pour signaler qu'il y en a d'autres.
+              snapToInterval={WEATHER_CARD_WIDTH + 12}
+              decelerationRate="fast"
+              contentContainerStyle={s.weatherRow}
+              onMomentumScrollEnd={(e) => {
+                setWeatherPage(Math.round(e.nativeEvent.contentOffset.x / (WEATHER_CARD_WIDTH + 12)))
+              }}
+            >
               {weatherAdvice.map((advice) => (
                 <View
                   key={advice.title}
@@ -357,14 +372,33 @@ export default function DashboardScreen() {
                     advice.priority === 3 && { borderColor: colors.red, backgroundColor: colors.redLight },
                   ]}
                 >
-                  <Text style={s.weatherAdviceEmoji}>{advice.emoji}</Text>
-                  <View style={{ flex: 1 }}>
-                    <Text style={s.weatherAdviceTitle}>{advice.title}</Text>
-                    <Text style={s.weatherAdviceBody}>{advice.body}</Text>
+                  <View style={s.weatherCardHead}>
+                    <Text style={s.weatherAdviceEmoji}>{advice.emoji}</Text>
+                    {advice.priority === 3 && (
+                      <View style={s.weatherUrgent}>
+                        <Text style={s.weatherUrgentText}>À SURVEILLER</Text>
+                      </View>
+                    )}
                   </View>
+                  <Text style={s.weatherAdviceTitle}>{advice.title}</Text>
+                  <Text style={s.weatherAdviceBody}>{advice.body}</Text>
                 </View>
               ))}
-            </View>
+            </ScrollView>
+
+            {weatherAdvice.length > 1 && (
+              <View style={s.weatherDots}>
+                {weatherAdvice.map((advice, i) => (
+                  <View
+                    key={advice.title}
+                    style={[
+                      s.weatherDot,
+                      i === weatherPage && { backgroundColor: heroProfile.accent, width: 18 },
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -810,14 +844,20 @@ const s = StyleSheet.create({
   weatherTemp:     { fontSize: 18, fontWeight: '800', color: colors.dark },
   weatherMeta:     { marginTop: -6, marginBottom: 12 },
   weatherMetaText: { fontSize: 12, color: colors.gray[500], fontWeight: '600' },
+  weatherRow: { gap: 12, paddingBottom: 4, paddingRight: 20 },
   weatherCard: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 16,
+    width: WEATHER_CARD_WIDTH,
+    backgroundColor: colors.white, borderRadius: radius['2xl'], padding: 18,
     borderWidth: 1.5, borderColor: colors.gray[200],
   },
-  weatherAdviceEmoji: { fontSize: 24 },
-  weatherAdviceTitle: { fontSize: 14, fontWeight: '800', color: colors.dark, lineHeight: 19 },
-  weatherAdviceBody:  { fontSize: 13, color: colors.gray[700], lineHeight: 20, marginTop: 5 },
+  weatherCardHead:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  weatherUrgent:      { backgroundColor: colors.red, paddingHorizontal: 9, paddingVertical: 4, borderRadius: radius.full },
+  weatherUrgentText:  { fontSize: 9, fontWeight: '800', color: colors.white, letterSpacing: 0.6 },
+  weatherAdviceEmoji: { fontSize: 28 },
+  weatherAdviceTitle: { fontSize: 15, fontWeight: '800', color: colors.dark, lineHeight: 20 },
+  weatherAdviceBody:  { fontSize: 13, color: colors.gray[700], lineHeight: 20, marginTop: 6 },
+  weatherDots:        { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 12 },
+  weatherDot:         { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gray[300] },
 
   eduList:  { gap: 10 },
   eduCard: {

@@ -25,23 +25,50 @@ export async function getCoordsIfAllowed(): Promise<Coords | null> {
 }
 
 /** Affiche la demande de permission, puis renvoie la position si elle est accordée. */
-export async function requestCoords(): Promise<Coords | null> {
+export type LocationOutcome =
+  | { ok: true; coords: Coords }
+  | { ok: false; reason: 'denied' | 'unavailable' }
+
+export async function requestCoords(): Promise<LocationOutcome> {
   try {
     const { status } = await Location.requestForegroundPermissionsAsync()
-    if (status !== 'granted') return null
-    return await readPosition()
+    if (status !== 'granted') return { ok: false, reason: 'denied' }
+
+    const coords = await readPosition()
+    return coords ? { ok: true, coords } : { ok: false, reason: 'unavailable' }
   } catch {
-    return null
+    return { ok: false, reason: 'unavailable' }
   }
 }
 
+/**
+ * Une lecture GPS peut ne jamais aboutir : en intérieur, sur un simulateur,
+ * ou quand l'appareil n'a aucun point de départ. Sans limite de temps, l'écran
+ * reste bloqué sans rien dire à l'utilisateur.
+ */
+const POSITION_TIMEOUT = 8000
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ])
+}
+
 async function readPosition(): Promise<Coords | null> {
-  // La dernière position connue évite d'allumer le GPS et répond
-  // instantanément ; on ne sollicite le capteur que si elle manque.
-  const last = await Location.getLastKnownPositionAsync({ maxAge: 30 * 60 * 1000 })
+  // La dernière position connue répond instantanément et évite d'allumer le
+  // GPS ; on ne sollicite le capteur que si elle manque.
+  const last = await withTimeout(
+    Location.getLastKnownPositionAsync({ maxAge: 30 * 60 * 1000 }),
+    3000
+  )
+
   const position =
     last ??
-    (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }))
+    (await withTimeout(
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low }),
+      POSITION_TIMEOUT
+    ))
 
   if (!position) return null
   return {

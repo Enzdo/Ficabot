@@ -20,6 +20,9 @@ import { petEmoji, petBg, petLabel } from '@/constants/pets'
 import { today, fmtDate, getAge } from '@/utils/date'
 import { colors, radius, shadow } from '@/constants/theme'
 import { PAYWALL_VISIBLE } from '@/constants/features'
+import { getVaccineAlerts, STATE_LABELS, type VaccineStatus } from '@/constants/vaccineSchedule'
+import { getPetProfile } from '@/constants/petProfiles'
+import { DetailSheet } from '@/components/ui/DetailSheet'
 import type { MedicalRecordType, ActivityType, FoodType, VaccineEntry, AllergyEntry, ChronicConditionEntry } from '@/types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -472,7 +475,12 @@ export default function PetDetailScreen() {
 
   const pet = currentPet
   const ageText = pet.birthDate ? getAge(pet.birthDate) : null
+  const [openVaccine, setOpenVaccine] = useState<VaccineStatus | null>(null)
   const vaccines = (Array.isArray(healthBook?.vaccines) ? healthBook!.vaccines : []) as VaccineEntry[]
+
+  // Ce que le calendrier de l'espèce attend et qui manque au carnet.
+  const vaccineAlerts = pet ? getVaccineAlerts(pet, vaccines) : []
+  const vaccineProfile = pet ? getPetProfile(pet) : null
   const allergies = (Array.isArray(healthBook?.allergies) ? healthBook!.allergies : []) as AllergyEntry[]
   const conditions = (Array.isArray(healthBook?.chronicConditions) ? healthBook!.chronicConditions : []) as ChronicConditionEntry[]
 
@@ -696,6 +704,50 @@ export default function PetDetailScreen() {
         {/* ── CARNET TAB ───────────────────────────────────────────────────── */}
         {tab === 'carnet' && (
           <>
+            {/* Rappels du calendrier vaccinal de l'espèce */}
+            {vaccineAlerts.length > 0 && vaccineProfile && (
+              <>
+                <SectionHeader title="🗓️ À prévoir" count={vaccineAlerts.length} />
+                {vaccineAlerts.map((alert) => {
+                  const label = STATE_LABELS[alert.state]
+                  const urgent = alert.state === 'rappel_du'
+                  return (
+                    <Pressable
+                      key={alert.definition.id}
+                      onPress={() => { Haptics.selectionAsync(); setOpenVaccine(alert) }}
+                      style={({ pressed }) => [pressed && { opacity: 0.85 }]}
+                    >
+                      <Card>
+                        <View style={s.entryRow}>
+                          <View style={[s.entryIcon, { backgroundColor: urgent ? colors.redLight : vaccineProfile.accentSoft }]}>
+                            <Text>{label.emoji}</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <Text style={s.entryTitle}>{alert.definition.name}</Text>
+                            <Text style={[s.entrySub, urgent && { color: colors.red, fontWeight: '700' }]}>
+                              {label.label}
+                              {alert.daysLeft !== null && alert.daysLeft < 0
+                                ? ` depuis ${Math.abs(alert.daysLeft)} jours`
+                                : alert.daysLeft !== null
+                                ? ` dans ${alert.daysLeft} jours`
+                                : ''}
+                              {'  ·  '}{alert.definition.importance}
+                            </Text>
+                            <Text style={s.entryMeta} numberOfLines={2}>{alert.definition.protects}</Text>
+                          </View>
+                          <Ionicons name="chevron-forward" size={16} color={colors.gray[300]} />
+                        </View>
+                      </Card>
+                    </Pressable>
+                  )
+                })}
+                <Text style={s.vaccineDisclaimer}>
+                  Repères indicatifs, établis d'après l'espèce et l'âge de {pet.name}. Le protocole exact
+                  dépend du vaccin utilisé et de son mode de vie : à confirmer avec votre vétérinaire.
+                </Text>
+              </>
+            )}
+
             {/* Vaccines */}
             <SectionHeader title="💉 Vaccins" count={vaccines.length} onAdd={() => setShowVaccineModal(true)} />
             {hbLoading ? <MedicalRecordSkeleton /> : vaccines.length === 0 ? (
@@ -1108,6 +1160,21 @@ export default function PetDetailScreen() {
           )}
         </BottomModal>
       )}
+
+      {openVaccine && vaccineProfile && (
+        <DetailSheet
+          visible
+          onClose={() => setOpenVaccine(null)}
+          emoji={STATE_LABELS[openVaccine.state].emoji}
+          title={openVaccine.definition.name}
+          body={openVaccine.definition.protects}
+          why={openVaccine.definition.why}
+          steps={openVaccine.definition.note ? [openVaccine.definition.note] : undefined}
+          accent={vaccineProfile.accent}
+          accentSoft={vaccineProfile.accentSoft}
+          context={`${pet?.name ?? ''} · ${STATE_LABELS[openVaccine.state].label}`}
+        />
+      )}
     </SafeAreaView>
   )
 }
@@ -1132,13 +1199,15 @@ const BottomModal = memo(function BottomModal({ visible, title, onClose, onConfi
   )
 })
 
-const SectionHeader = memo(function SectionHeader({ title, count, onAdd }: { title: string; count: number; onAdd: () => void }) {
+const SectionHeader = memo(function SectionHeader({ title, count, onAdd }: { title: string; count: number; onAdd?: () => void }) {
   return (
     <View style={s.sectionHeader}>
       <Text style={s.sectionTitle}>{title}{count > 0 ? ` (${count})` : ''}</Text>
-      <Pressable onPress={onAdd} style={s.sectionAddBtn}>
-        <Ionicons name="add-circle" size={22} color={colors.green} />
-      </Pressable>
+      {onAdd && (
+        <Pressable onPress={onAdd} style={s.sectionAddBtn}>
+          <Ionicons name="add-circle" size={22} color={colors.green} />
+        </Pressable>
+      )}
     </View>
   )
 })
@@ -1381,6 +1450,7 @@ const s = StyleSheet.create({
   entryIcon:     { width: 40, height: 40, borderRadius: radius.lg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   entryTitle:    { fontSize: 14, fontWeight: '700', color: colors.dark },
   entrySub:      { fontSize: 12, color: colors.gray[500], marginTop: 2, lineHeight: 17 },
+  vaccineDisclaimer: { fontSize: 11, color: colors.gray[500], lineHeight: 16, paddingHorizontal: 4, marginTop: 6, marginBottom: 4, fontStyle: 'italic' },
   entryMeta:     { fontSize: 11, color: colors.gray[400], marginTop: 3 },
   deleteEntryBtn:{ width: 30, height: 30, borderRadius: 15, backgroundColor: colors.redLight, alignItems: 'center', justifyContent: 'center', alignSelf: 'center' },
 

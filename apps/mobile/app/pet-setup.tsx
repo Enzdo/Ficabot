@@ -149,6 +149,7 @@ export default function PetSetupScreen() {
   const [createdPet, setCreatedPet] = useState<Pet | null>(null)
   const [cityResults, setCityResults] = useState<GeocodedCity[]>([])
   const [manualCity, setManualCity] = useState(false)
+  const [locating, setLocating] = useState(false)
 
   const [draft, setDraft] = useState('')
   const [dateMode, setDateMode] = useState(false)
@@ -282,22 +283,6 @@ export default function PetSetupScreen() {
 
   // La permission est demandée ici, au moment où l'utilisateur comprend
   // à quoi elle sert — jamais au lancement de l'app.
-  const handleUseLocation = useCallback(async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-    const coords = await requestCoords()
-    if (!coords) {
-      // Refus : on bascule sur la saisie manuelle plutôt que d'insister.
-      setManualCity(true)
-      await pushBot(['Pas de souci. Dans quelle ville vivez-vous ?'])
-      return
-    }
-    const weather = await fetchWeather(coords)
-    submit(
-      weather?.city
-        ? { name: weather.city, latitude: coords.latitude, longitude: coords.longitude, admin: null, country: null }
-        : { name: 'Ma position', latitude: coords.latitude, longitude: coords.longitude, admin: null, country: null }
-    )
-  }, [pushBot])
 
   // ── Création ──
   const submit = useCallback(async (city: GeocodedCity | null) => {
@@ -343,6 +328,37 @@ export default function PetSetupScreen() {
     setPhase('done')
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
   }, [profile, name, breed, birthDate, weight, createPet, updateUser, pushUser])
+
+  const handleUseLocation = useCallback(async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    setLocating(true)
+    const outcome = await requestCoords()
+
+    if (!outcome.ok) {
+      setLocating(false)
+      // Refus comme échec de lecture mènent à la saisie manuelle : dans les
+      // deux cas insister ne servirait à rien, mais le message diffère.
+      setManualCity(true)
+      pushUser(outcome.reason === 'denied' ? 'Je préfère éviter' : 'Position introuvable')
+      await pushBot(
+        outcome.reason === 'denied'
+          ? ['Pas de souci. Dans quelle ville vivez-vous ?']
+          : ['Je n\'arrive pas à vous localiser — ça arrive en intérieur.', 'Dans quelle ville vivez-vous ?']
+      )
+      return
+    }
+
+    const { coords } = outcome
+    const weather = await fetchWeather(coords)
+    setLocating(false)
+    submit({
+      name: weather?.city ?? 'Ma position',
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      admin: null,
+      country: null,
+    })
+  }, [pushBot, pushUser, submit])
 
   // Défilement des messages de chargement
   useEffect(() => {
@@ -613,10 +629,15 @@ export default function PetSetupScreen() {
                   <>
                     <Pressable
                       onPress={handleUseLocation}
-                      style={({ pressed }) => [s.locBtn, { backgroundColor: accent }, pressed && s.pressed]}
+                      disabled={locating}
+                      style={({ pressed }) => [s.locBtn, { backgroundColor: accent }, pressed && s.pressed, locating && { opacity: 0.75 }]}
                     >
-                      <Ionicons name="location" size={18} color={colors.white} />
-                      <Text style={s.locBtnText}>Utiliser ma position</Text>
+                      {locating
+                        ? <ActivityIndicator color={colors.white} size="small" />
+                        : <Ionicons name="location" size={18} color={colors.white} />}
+                      <Text style={s.locBtnText}>
+                        {locating ? 'Localisation en cours…' : 'Utiliser ma position'}
+                      </Text>
                     </Pressable>
                     <Text style={s.locHint}>
                       Position approximative uniquement, lue à chaque ouverture de l'app.
