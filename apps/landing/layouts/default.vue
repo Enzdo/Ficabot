@@ -108,7 +108,7 @@
           <div>
             <h4 class="font-bold text-gray-900 mb-4">Légal</h4>
             <ul class="space-y-2 text-sm text-gray-600">
-              <li><NuxtLink to="/mentions-legales" class="hover:text-primary-600">Confidentialité</NuxtLink></li>
+              <li><NuxtLink to="/confidentialite" class="hover:text-primary-600">Confidentialité</NuxtLink></li>
               <li><NuxtLink to="/cgv" class="hover:text-primary-600">CGU & CGV</NuxtLink></li>
               <li><NuxtLink to="/mentions-legales" class="hover:text-primary-600">Mentions légales</NuxtLink></li>
             </ul>
