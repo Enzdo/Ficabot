@@ -154,11 +154,15 @@
           <h2>8. Supprimer votre compte et vos données</h2>
           <p>Vous pouvez supprimer votre compte à tout moment, de deux façons :</p>
           <ul>
-            <li><strong>Depuis l'application :</strong> Profil → Paramètres → Supprimer mon compte.</li>
+            <li><strong>Depuis l'application :</strong> onglet Profil → Supprimer mon compte, en bas du menu.</li>
             <li><strong>Par email :</strong> envoyez une demande à <a href="mailto:contact@ficana.com" class="text-primary-700 hover:underline">contact@ficana.com</a> depuis l'adresse associée à votre compte.</li>
           </ul>
           <p>
             La suppression du compte entraîne l'effacement définitif de votre profil, des fiches de vos animaux, de leurs photos, de leur carnet de santé et de l'historique de vos conversations. L'opération est irréversible et prend effet sous 30 jours au plus tard, sauf pour les données que la loi nous oblige à conserver (documents comptables). Les sauvegardes chiffrées sont purgées dans un délai maximal de [À COMPLÉTER : durée, ex. 30 jours].
+          </p>
+          <p>
+            Le détail de la procédure figure sur notre page dédiée :
+            <NuxtLink to="/suppression-compte" class="text-primary-700 hover:underline">supprimer votre compte et vos données</NuxtLink>.
           </p>
         </section>
 
