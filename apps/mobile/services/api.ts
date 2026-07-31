@@ -90,7 +90,7 @@ async function request<T>(
       return {
         success: false,
         message: data.message ?? 'Fonctionnalité Premium',
-        errors: { code: 'PREMIUM_REQUIRED' },
+        errors: { code: ['PREMIUM_REQUIRED'] },
       }
     }
 

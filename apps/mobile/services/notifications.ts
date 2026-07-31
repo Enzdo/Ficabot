@@ -3,7 +3,10 @@ import { Platform } from 'react-native'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // `shouldShowAlert` est remplacé depuis SDK 53 par la paire bannière /
+    // liste. L'omettre laissait le natif recevoir un objet incomplet.
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
