@@ -5,7 +5,9 @@ import vine from '@vinejs/vine'
 const createReminderValidator = vine.compile(
   vine.object({
     petId: vine.number().nullable().optional(),
-    type: vine.enum(['vaccine', 'antiparasitic', 'weighing', 'appointment', 'custom']),
+    // Le formulaire de rappel de l'app ne propose pas de type : un rappel saisi
+    // à la main est un rappel libre. L'exiger rendait la création impossible.
+    type: vine.enum(['vaccine', 'antiparasitic', 'weighing', 'appointment', 'custom']).optional(),
     title: vine.string().trim().minLength(1),
     description: vine.string().trim().optional(),
     dueDate: vine.string(),
@@ -44,6 +46,7 @@ export default class RemindersController {
     const reminder = await Reminder.create({
       userId: user.id,
       ...data,
+      type: data.type ?? 'custom',
     })
 
     return response.created({ success: true, data: reminder })

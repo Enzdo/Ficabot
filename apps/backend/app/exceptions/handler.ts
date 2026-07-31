@@ -13,6 +13,18 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    // Une erreur de validation ne renvoyait que `errors`, sans `message`.
+    // Les clients affichent `message` : l'utilisateur ne lisait donc qu'un
+    // « Une erreur est survenue » qui ne désignait aucun champ.
+    const err = error as { code?: string; messages?: { message?: string }[] }
+    if (err?.code === 'E_VALIDATION_ERROR' && Array.isArray(err.messages)) {
+      return ctx.response.status(422).send({
+        success: false,
+        message: err.messages[0]?.message ?? 'Données invalides',
+        errors: err.messages,
+      })
+    }
+
     return super.handle(error, ctx)
   }
 
