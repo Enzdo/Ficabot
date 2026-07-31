@@ -12,7 +12,7 @@ export default class SocialAuthController {
     try {
       return ally.use('google').redirect()
     } catch (error) {
-      logger.error('[GoogleAuth] Redirect error:', error)
+      logger.error({ err: error }, '[GoogleAuth] Redirect error')
       return response.internalServerError({ success: false, message: error.message })
     }
   }
@@ -81,7 +81,7 @@ export default class SocialAuthController {
         `${frontendUrl}/auth/callback?token=${tokenValue}&userId=${user.id}`
       )
     } catch (error) {
-      logger.error('[GoogleAuth] Callback error:', error)
+      logger.error({ err: error }, '[GoogleAuth] Callback error')
       return response.redirect(`${frontendUrl}/login?error=server_error`)
     }
   }

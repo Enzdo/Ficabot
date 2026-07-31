@@ -73,7 +73,7 @@ export default class VetAuthController {
 
     // Send welcome email (async, don't block response)
     mail.send(new WelcomeVetNotification(vet)).catch((error) => {
-      logger.error('Failed to send vet welcome email:', error)
+      logger.error({ err: error }, 'Failed to send vet welcome email')
     })
 
     return response.created({
@@ -201,7 +201,7 @@ export default class VetAuthController {
 
     // Send confirmation email (async)
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
-      logger.error('Failed to send vet password changed email:', error)
+      logger.error({ err: error }, 'Failed to send vet password changed email')
     })
 
     return response.ok({
@@ -231,7 +231,7 @@ export default class VetAuthController {
     const resetUrl = `${frontendUrl}/reset-password/${vet.resetToken}`
 
     mail.send(new PasswordResetVetNotification(vet, resetUrl)).catch((error) => {
-      logger.error('Failed to send vet password reset email:', error)
+      logger.error({ err: error }, 'Failed to send vet password reset email')
     })
 
     logger.info(`Vet password reset email requested for ${vet.email}`)
@@ -271,7 +271,7 @@ export default class VetAuthController {
     await vet.save()
 
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
-      logger.error('Failed to send vet password changed email:', error)
+      logger.error({ err: error }, 'Failed to send vet password changed email')
     })
 
     logger.info(`Vet password reset successfully for ${vet.email}`)

@@ -37,7 +37,7 @@ export default class AuthController {
 
     // Send verification email (async, don't block response)
     this.sendVerificationEmail(user).catch((error) => {
-      logger.error('Failed to send verification email:', error)
+      logger.error({ err: error }, 'Failed to send verification email')
     })
 
     return response.created({
@@ -216,7 +216,7 @@ export default class AuthController {
 
     // Send password changed confirmation email (async)
     mail.send(new PasswordChangedNotification(user)).catch((error) => {
-      logger.error('Failed to send password changed email:', error)
+      logger.error({ err: error }, 'Failed to send password changed email')
     })
 
     return response.ok({
@@ -251,7 +251,7 @@ export default class AuthController {
     const resetUrl = `${frontendUrl}/reset-password/${user.resetToken}`
 
     mail.send(new PasswordResetNotification(user, resetUrl)).catch((error) => {
-      logger.error('Failed to send password reset email:', error)
+      logger.error({ err: error }, 'Failed to send password reset email')
     })
 
     logger.info(`Password reset email requested for ${user.email}`)
@@ -296,7 +296,7 @@ export default class AuthController {
 
     // Send confirmation email (async)
     mail.send(new PasswordChangedNotification(user)).catch((error) => {
-      logger.error('Failed to send password changed email:', error)
+      logger.error({ err: error }, 'Failed to send password changed email')
     })
 
     logger.info(`Password reset successfully for ${user.email}`)
@@ -412,7 +412,7 @@ export default class AuthController {
 
     // Send welcome email (async, don't block response)
     mail.send(new WelcomeNotification(user)).catch((error) => {
-      logger.error('Failed to send welcome email:', error)
+      logger.error({ err: error }, 'Failed to send welcome email')
     })
 
     return response.ok({
@@ -450,7 +450,7 @@ export default class AuthController {
         message: 'Email de vérification renvoyé. Vérifiez votre boîte de réception.',
       })
     } catch (error) {
-      logger.error('Failed to resend verification email:', error)
+      logger.error({ err: error }, 'Failed to resend verification email')
 
       return response.internalServerError({
         success: false,
