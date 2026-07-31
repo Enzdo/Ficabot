@@ -10,6 +10,15 @@ function getApiBase(): string {
     }
     return base
   }
+  // Hors développement, `hostUri` est absent et le repli localhost pointerait
+  // sur le téléphone lui-même : toutes les requêtes échouent en silence. Mieux
+  // vaut échouer bruyamment que livrer un build qui ne joint aucun serveur.
+  if (!__DEV__) {
+    throw new Error(
+      'EXPO_PUBLIC_API_BASE est absent de ce build. Déclarez-le dans eas.json ' +
+        '(build.<profil>.env) : un fichier .env local n’est pas transmis à EAS Build.'
+    )
+  }
   const hostUri = Constants.expoConfig?.hostUri
   if (hostUri) {
     const host = hostUri.split(':')[0]
