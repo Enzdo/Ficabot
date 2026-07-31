@@ -381,11 +381,10 @@ export default function PetDetailScreen() {
   }
 
   const handlePickAvatar = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (!perm.granted) {
-      Alert.alert('Permission refusée', 'Autorisez l\'accès à vos photos dans les réglages.')
-      return
-    }
+    // Pas de demande de permission : le sélecteur système Android (PickVisualMedia)
+    // ne donne accès qu'à l'image choisie, sans accès à la photothèque. Les
+    // permissions READ_MEDIA_* sont d'ailleurs bloquées dans app.json, comme
+    // l'exige Google Play pour un accès ponctuel aux photos.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
