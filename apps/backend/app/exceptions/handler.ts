@@ -1,6 +1,19 @@
 import app from '@adonisjs/core/services/app'
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
 
+/**
+ * Codes d'erreur Postgres traduits pour l'utilisateur. Les autres restent
+ * gérés par Adonis (500), volontairement : on ne veut masquer que ce qu'on
+ * sait expliquer.
+ */
+const DB_ERROR_MESSAGES = {
+  '23503': "Cet animal n'existe plus. Rechargez la liste de vos animaux et réessayez.",
+  '23505': 'Cet élément existe déjà.',
+  '23502': 'Un champ obligatoire est manquant.',
+  '22007': 'Date invalide.',
+  '22008': 'Date invalide.',
+} as const
+
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
    * In debug mode, the exception handler will display verbose errors
@@ -16,12 +29,25 @@ export default class HttpExceptionHandler extends ExceptionHandler {
     // Une erreur de validation ne renvoyait que `errors`, sans `message`.
     // Les clients affichent `message` : l'utilisateur ne lisait donc qu'un
     // « Une erreur est survenue » qui ne désignait aucun champ.
-    const err = error as { code?: string; messages?: { message?: string }[] }
+    const err = error as { code?: string; messages?: { message?: string }[]; constraint?: string }
     if (err?.code === 'E_VALIDATION_ERROR' && Array.isArray(err.messages)) {
       return ctx.response.status(422).send({
         success: false,
         message: err.messages[0]?.message ?? 'Données invalides',
         errors: err.messages,
+      })
+    }
+
+    // Une contrainte Postgres violée remontait telle quelle : le client
+    // affichait la requête SQL à l'utilisateur, et le vrai problème (une
+    // référence qui n'existe plus côté serveur) restait indéchiffrable.
+    const dbMessage = DB_ERROR_MESSAGES[err?.code as keyof typeof DB_ERROR_MESSAGES]
+    if (dbMessage) {
+      ctx.logger.error({ err, constraint: err.constraint }, 'Requête refusée par la base')
+      return ctx.response.status(422).send({
+        success: false,
+        message: dbMessage,
+        errors: [{ rule: err.code, message: dbMessage, field: err.constraint }],
       })
     }
 
