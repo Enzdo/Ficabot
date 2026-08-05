@@ -77,7 +77,16 @@ async function request<T>(
     const response = await fetch(url, { ...options, headers, signal: controller.signal })
     clearTimeout(timeout)
 
-    const data = await response.json()
+    // Une page d'erreur HTML (502 Railway, proxy, portail wifi) faisait échouer
+    // `.json()` : l'utilisateur lisait « Erreur de connexion au serveur » alors
+    // que le serveur avait bien répondu. On garde le corps brut pour le dire.
+    const raw = await response.text()
+    let data: any = null
+    try {
+      data = raw ? JSON.parse(raw) : null
+    } catch {
+      data = null
+    }
 
     if (response.status === 401) {
       await secureStorage.clear()
@@ -89,17 +98,27 @@ async function request<T>(
     if (response.status === 402 || data?.code === 'PREMIUM_REQUIRED') {
       return {
         success: false,
-        message: data.message ?? 'Fonctionnalité Premium',
+        message: data?.message ?? 'Fonctionnalité Premium',
         errors: { code: ['PREMIUM_REQUIRED'] },
       }
     }
 
     if (!response.ok) {
+      // Le code HTTP fait partie du message : sans lui, un « Une erreur est
+      // survenue » remonté par un utilisateur ne dit pas si la requête a été
+      // refusée, mal validée, ou si le serveur a planté.
+      const detail = data?.message ?? data?.errors?.[0]?.message
       return {
         success: false,
-        message: data.message ?? 'Une erreur est survenue',
-        errors: data.errors,
+        message: detail ? String(detail) : `Une erreur est survenue (HTTP ${response.status})`,
+        errors: data?.errors,
       }
+    }
+
+    // Un 2xx au corps illisible n'est pas un succès : sans ce garde-fou,
+    // `data` valait `null` et l'écran affichait un état vide sans rien dire.
+    if (data === null) {
+      return { success: false, message: `Réponse illisible du serveur (HTTP ${response.status})` }
     }
 
     return data
