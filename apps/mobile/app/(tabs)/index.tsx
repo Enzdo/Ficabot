@@ -48,6 +48,15 @@ function friendlyDate(dateStr: string) {
   return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
+/**
+ * Identifiant d'animal ramené à une chaîne.
+ *
+ * `Pet.id` est typé `string` mais l'API renvoie un entier. La comparaison
+ * stricte avec la valeur relue du stockage, elle toujours textuelle, échouait
+ * donc systématiquement : l'animal mis en avant n'était jamais restauré.
+ */
+const petKey = (id: string | number) => String(id)
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function DashboardScreen() {
@@ -99,20 +108,23 @@ export default function DashboardScreen() {
     secureStorage.getHomePet(userId).then((saved) => {
       if (cancelled) return
       setSelectedPetId((current) => {
-        if (current && pets.some((p) => p.id === current)) return current
-        if (saved && pets.some((p) => p.id === saved)) return saved
-        return pets[0].id
+        if (current && pets.some((p) => petKey(p.id) === current)) return current
+        if (saved && pets.some((p) => petKey(p.id) === saved)) return saved
+        return petKey(pets[0].id)
       })
     })
     return () => { cancelled = true }
   }, [userId, pets])
 
-  const selectedPet = pets.find((p) => p.id === selectedPetId) ?? pets[0] ?? null
+  const selectedPet = pets.find((p) => petKey(p.id) === selectedPetId) ?? pets[0] ?? null
 
-  const selectPet = useCallback((petId: string) => {
+  const selectPet = useCallback((petId: string | number) => {
+    const key = petKey(petId)
     Haptics.selectionAsync()
-    setSelectedPetId(petId)
-    if (userId) secureStorage.setHomePet(userId, petId)
+    setSelectedPetId(key)
+    // SecureStore n'accepte que des chaînes et rejette tout le reste ; l'échec
+    // ne doit de toute façon jamais dépasser le choix de l'animal favori.
+    if (userId) secureStorage.setHomePet(userId, key).catch(() => {})
   }, [userId])
 
   // Conseils du mois et articles recommandés : cadrés sur l'animal sélectionné.
