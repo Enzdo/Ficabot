@@ -182,9 +182,11 @@ export default class AiActionsService {
         // Validate action
         const validation = this.validateAction(actionName, parameters)
         if (!validation.valid) {
+            // `validation.error` dit déjà quel paramètre pose problème, et
+            // c'est `message` que le client affiche.
             return {
                 success: false,
-                message: 'Validation échouée',
+                message: validation.error ?? 'Données invalides',
                 error: validation.error
             }
         }

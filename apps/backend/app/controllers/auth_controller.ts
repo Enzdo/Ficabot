@@ -79,10 +79,12 @@ export default class AuthController {
       // Log failed login attempt
       logger.warn(`Failed login attempt for email: ${request.input('email')}`)
 
+      // Le client affiche `message` : y laisser un libellé générique cachait
+      // le champ fautif, pourtant nommé dans `errors[0]`.
       if (error.messages) {
         return response.badRequest({
           success: false,
-          message: 'Validation échouée',
+          message: error.messages[0]?.message ?? 'Données invalides',
           errors: error.messages,
         })
       }

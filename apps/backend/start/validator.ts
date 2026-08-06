@@ -40,10 +40,10 @@ const messages = {
   notSameAs: 'Le champ {{ field }} doit être différent du champ {{ otherField }}',
   array: 'Le champ {{ field }} doit être une liste',
   object: 'Le champ {{ field }} est invalide',
-  database: {
-    unique: 'Cette valeur de {{ field }} est déjà utilisée',
-    exists: "Cette valeur de {{ field }} n'existe pas",
-  },
+  // `ValidationMessages` est un `Record<string, string>` plat : les règles
+  // de base se nomment avec un point, elles ne s'imbriquent pas.
+  'database.unique': 'Cette valeur de {{ field }} est déjà utilisée',
+  'database.exists': "Cette valeur de {{ field }} n'existe pas",
 }
 
 const fields = {
