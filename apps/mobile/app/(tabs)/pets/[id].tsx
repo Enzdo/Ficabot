@@ -552,6 +552,32 @@ export default function PetDetailScreen() {
         <Ionicons name="chevron-forward" size={18} color={colors.green} />
       </Pressable>
 
+      {/* Bilan d'éducation — chiens uniquement. Le questionnaire et les notes
+          sont gratuits, seul le plan détaillé passe par le paywall. */}
+      {pet.species === 'dog' && (
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync()
+            router.push({
+              pathname: '/training/[petId]',
+              params: { petId: String(id), petName: pet.name },
+            })
+          }}
+          style={({ pressed }) => [s.trainingCta, pressed && { opacity: 0.85 }]}
+        >
+          <View style={s.trainingCtaIcon}>
+            <Text style={{ fontSize: 18 }}>🎓</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.trainingCtaTitle}>Bilan d'éducation</Text>
+            <Text style={s.trainingCtaDesc}>
+              36 questions, 6 notes et un plan sur 4 semaines
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.greenDark} />
+        </Pressable>
+      )}
+
       {/* Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsScroll} contentContainerStyle={s.tabs}>
         {TABS.map((t) => (
@@ -1422,6 +1448,11 @@ const s = StyleSheet.create({
   aiCtaIcon: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(126,177,63,0.15)', alignItems: 'center', justifyContent: 'center' },
   aiCtaTitle: { fontSize: 14, fontWeight: '700', color: colors.white },
   aiCtaDesc:  { fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 1 },
+
+  trainingCta:      { marginHorizontal: 16, marginBottom: 10, backgroundColor: colors.greenLight, borderRadius: radius['2xl'], padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderColor: 'rgba(126,177,63,0.35)' },
+  trainingCtaIcon:  { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center' },
+  trainingCtaTitle: { fontSize: 14, fontWeight: '700', color: colors.dark },
+  trainingCtaDesc:  { fontSize: 12, color: colors.gray[600], marginTop: 1 },
 
   tabsScroll: { maxHeight: 46, marginBottom: 6 },
   tabs:       { flexDirection: 'row', paddingHorizontal: 16, gap: 8, paddingVertical: 2 },

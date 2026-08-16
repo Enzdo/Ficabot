@@ -84,6 +84,7 @@ export default function PaywallScreen() {
               {params.feature === 'chat' ? "L'assistant IA est une fonctionnalité Premium"
                : params.feature === 'prediag' ? 'Le pré-diagnostic est une fonctionnalité Premium'
                : params.feature === 'scan' ? "Le scan du carnet santé est une fonctionnalité Premium"
+               : params.feature === 'training' ? "Le bilan reste gratuit : c'est le plan d'éducation sur 4 semaines qui est Premium"
                : 'Cette fonctionnalité est réservée aux comptes Premium'}
             </Text>
           </View>

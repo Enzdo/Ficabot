@@ -310,6 +310,22 @@ router.group(() => {
   router.get('/:id', [PreDiagnosesController, 'show'])
 }).prefix('/pre-diagnosis').use(middleware.auth())
 
+// Bilan d'éducation canine
+// Le questionnaire et les notes sont gratuits ; seule la génération du plan
+// détaillé passe par le middleware premium.
+const TrainingController = () => import('#controllers/training_controller')
+router.group(() => {
+  router.get('/questionnaire', [TrainingController, 'questionnaire'])
+  router.get('/assessments/:id', [TrainingController, 'show'])
+  router.delete('/assessments/:id', [TrainingController, 'destroy'])
+  router.post('/assessments/:id/plan', [TrainingController, 'generatePlan']).use(middleware.premium())
+}).prefix('/training').use(middleware.auth())
+
+router.group(() => {
+  router.get('/:id/training/assessments', [TrainingController, 'index'])
+  router.post('/:id/training/assessments', [TrainingController, 'store'])
+}).prefix('/pets').use(middleware.auth())
+
 // Public Profiles
 const PublicProfilesController = () => import('#controllers/public_profiles_controller')
 router.group(() => {
