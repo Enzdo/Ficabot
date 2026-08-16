@@ -9,7 +9,10 @@ import * as Haptics from 'expo-haptics'
 import { useAuthStore } from '@/stores/auth'
 import { usePetsStore } from '@/stores/pets'
 import { useExpensesStore } from '@/stores/expenses'
+import { useTrainingStore } from '@/stores/training'
+import { TrainingFollowUp } from '@/components/TrainingFollowUp'
 import { api, secureStorage } from '@/services/api'
+import { trace } from '@/services/crashLog'
 import { colors, radius, shadow } from '@/constants/theme'
 import { describeStage, getEducationTopics, getLifeStage, getPetProfile, getStageTips, resolveKind } from '@/constants/petProfiles'
 import type { EducationTopic, Tip } from '@/constants/petProfiles'
@@ -64,6 +67,7 @@ export default function DashboardScreen() {
   const userId                        = useAuthStore((s) => s.user?.id)
   const { pets, loading, fetchPets }  = usePetsStore()
   const { expenses, fetchExpenses }   = useExpensesStore()
+  const fetchTraining                 = useTrainingStore((s) => s.fetchToday)
 
   const [nextAppt,    setNextAppt]    = useState<VetAppointment | null>(null)
   const [reminders,   setReminders]   = useState<Reminder[]>([])
@@ -82,6 +86,7 @@ export default function DashboardScreen() {
     await Promise.all([
       fetchPets(),
       fetchExpenses(),
+      fetchTraining(),
       (async () => {
         const r = await api.get<VetAppointment[]>('/appointments')
         if (r.success && r.data) {
@@ -99,7 +104,7 @@ export default function DashboardScreen() {
       })(),
     ])
     setLoadingData(false)
-  }, [fetchPets, fetchExpenses])
+  }, [fetchPets, fetchExpenses, fetchTraining])
 
   // Animal mis en avant : restauré depuis le stockage, sinon le plus récent.
   useEffect(() => {
@@ -120,11 +125,14 @@ export default function DashboardScreen() {
 
   const selectPet = useCallback((petId: string | number) => {
     const key = petKey(petId)
+    trace(`sélection animal ${key} — vibration`)
     Haptics.selectionAsync()
+    trace(`sélection animal ${key} — état`)
     setSelectedPetId(key)
     // SecureStore n'accepte que des chaînes et rejette tout le reste ; l'échec
     // ne doit de toute façon jamais dépasser le choix de l'animal favori.
     if (userId) secureStorage.setHomePet(userId, key).catch(() => {})
+    trace(`sélection animal ${key} — enregistré`)
   }, [userId])
 
   // Conseils du mois et articles recommandés : cadrés sur l'animal sélectionné.
@@ -225,7 +233,11 @@ export default function DashboardScreen() {
                 )}
               </View>
               <Pressable
-                onPress={() => { Haptics.selectionAsync(); router.push(`/(tabs)/pets/${selectedPet.id}`) }}
+                onPress={() => {
+                  trace(`ouverture fiche animal ${selectedPet.id}`)
+                  Haptics.selectionAsync()
+                  router.push(`/(tabs)/pets/${selectedPet.id}`)
+                }}
                 style={({ pressed }) => [s.heroAvatar, shadow.sm, pressed && s.pressed]}
               >
                 <Text style={s.heroAvatarEmoji}>{heroProfile.emoji}</Text>
@@ -413,6 +425,9 @@ export default function DashboardScreen() {
             )}
           </View>
         )}
+
+        {/* ── Suivi du plan d'éducation en cours (chiens avec un plan généré) ── */}
+        <TrainingFollowUp />
 
         {/* ── Éducation, selon l'espèce et le stade de vie ── */}
         {selectedPet && heroProfile && education.length > 0 && (

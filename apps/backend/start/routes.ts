@@ -314,11 +314,23 @@ router.group(() => {
 // Le questionnaire et les notes sont gratuits ; seule la génération du plan
 // détaillé passe par le middleware premium.
 const TrainingController = () => import('#controllers/training_controller')
+const TrainingProgramsController = () => import('#controllers/training_programs_controller')
 router.group(() => {
   router.get('/questionnaire', [TrainingController, 'questionnaire'])
   router.get('/assessments/:id', [TrainingController, 'show'])
   router.delete('/assessments/:id', [TrainingController, 'destroy'])
   router.post('/assessments/:id/plan', [TrainingController, 'generatePlan']).use(middleware.premium())
+
+  // Suivi : exercices du jour, bilan de fin de semaine, cycle suivant.
+  router.get('/today', [TrainingProgramsController, 'today'])
+  router.get('/programs/:id', [TrainingProgramsController, 'show'])
+  router.delete('/programs/:id', [TrainingProgramsController, 'destroy'])
+  router.post('/programs/:id/tasks', [TrainingProgramsController, 'toggleTask'])
+  router.get('/programs/:id/checkin', [TrainingProgramsController, 'checkinQuestions'])
+  router.post('/programs/:id/checkin', [TrainingProgramsController, 'submitCheckin'])
+  router
+    .post('/programs/:id/next-cycle', [TrainingProgramsController, 'nextCycle'])
+    .use(middleware.premium())
 }).prefix('/training').use(middleware.auth())
 
 router.group(() => {

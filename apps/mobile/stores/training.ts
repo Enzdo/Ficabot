@@ -90,10 +90,61 @@ export interface TrainingAssessmentSummary {
   createdAt: string
 }
 
+// ─── Suivi ───────────────────────────────────────────────────────────────────
+
+export interface DailyTask {
+  key: string
+  title: string
+  axis: TrainingAxis
+  axisLabel: string
+  duration: string
+  steps: string[]
+  tip: string
+  done: boolean
+}
+
+export interface ProgramSummary {
+  id: number
+  petId: number
+  assessmentId: number
+  petName?: string | null
+  petBreed?: string | null
+  petAvatarUrl?: string | null
+  cycle: number
+  week: number
+  totalWeeks: number
+  theme: string
+  goal: string
+  sessions: string
+  successCriteria: string
+  status: 'active' | 'completed'
+  /** Vrai à J+7 : la semaine suivante reste verrouillée tant que c'est vrai. */
+  checkinDue: boolean
+  daysUntilCheckin: number
+  scores: Record<TrainingAxis, number>
+  overallScore: number
+  level: string
+  tasks: DailyTask[]
+  doneCount: number
+  totalCount: number
+  startedAt: string
+  weekStartedAt: string
+}
+
 interface State {
   questionnaire: Questionnaire | null
   current: TrainingAssessment | null
   history: TrainingAssessmentSummary[]
+  /** Programmes actifs, un par chien. Alimente l'accueil et la fiche animal. */
+  programs: ProgramSummary[]
+  programsLoaded: boolean
+  /**
+   * Dernier bilan connu par animal. Sert de repli à la fiche : un bilan existe
+   * dès qu'il a été passé, même si le service de suivi ne répond pas. Sans ce
+   * repli, la fiche reproposait le questionnaire à quelqu'un qui l'avait déjà
+   * fait — c'est-à-dire lui faisait perdre son plan.
+   */
+  lastAssessments: Record<string, TrainingAssessmentSummary | null>
   loading: boolean
   submitting: boolean
   generatingPlan: boolean
@@ -101,6 +152,11 @@ interface State {
   error: string | null
   /** Vrai quand l'échec vient du paywall, pour rediriger au lieu d'alerter. */
   premiumRequired: boolean
+
+  fetchToday: () => Promise<void>
+  fetchLastAssessment: (petId: string | number) => Promise<void>
+  toggleTask: (programId: number, taskKey: string, done: boolean) => Promise<void>
+  programForPet: (petId: string | number) => ProgramSummary | undefined
 
   fetchQuestionnaire: () => Promise<Questionnaire | null>
   submit: (
@@ -120,11 +176,70 @@ export const useTrainingStore = create<State>((set, get) => ({
   questionnaire: null,
   current: null,
   history: [],
+  programs: [],
+  programsLoaded: false,
+  lastAssessments: {},
   loading: false,
   submitting: false,
   generatingPlan: false,
   error: null,
   premiumRequired: false,
+
+  fetchToday: async () => {
+    // Le jour vient du téléphone : le serveur ne connaît pas le fuseau de
+    // l'utilisateur, et cocher un exercice à 23 h ne doit pas basculer sur
+    // le lendemain.
+    const day = new Date().toISOString().slice(0, 10)
+    const res = await api.get<ProgramSummary[]>(`/training/today?day=${day}`)
+    set({
+      programs: res.success && res.data ? res.data : [],
+      programsLoaded: true,
+    })
+  },
+
+  fetchLastAssessment: async (petId) => {
+    const res = await api.get<TrainingAssessmentSummary[]>(`/pets/${petId}/training/assessments`)
+    // On ne retient qu'un bilan effectivement abouti : un bilan sans plan ne
+    // donne rien à revoir, autant reproposer le questionnaire.
+    const latest = res.success && res.data ? (res.data.find((a) => a.hasPlan) ?? null) : null
+    set((s) => ({ lastAssessments: { ...s.lastAssessments, [String(petId)]: latest } }))
+  },
+
+  toggleTask: async (programId, taskKey, done) => {
+    const day = new Date().toISOString().slice(0, 10)
+
+    // Bascule optimiste : attendre l'aller-retour rendrait la case molle.
+    set((s) => ({
+      programs: s.programs.map((p) =>
+        p.id === programId
+          ? {
+              ...p,
+              tasks: p.tasks.map((t) => (t.key === taskKey ? { ...t, done } : t)),
+              doneCount: p.tasks.filter((t) => (t.key === taskKey ? done : t.done)).length,
+            }
+          : p
+      ),
+    }))
+
+    const res = await api.post<ProgramSummary>(`/training/programs/${programId}/tasks`, {
+      taskKey,
+      done,
+      day,
+    })
+
+    // Le serveur fait autorité : en cas de refus (semaine verrouillée), on
+    // reprend son état plutôt que de laisser une case cochée à tort.
+    if (res.success && res.data) {
+      set((s) => ({
+        programs: s.programs.map((p) => (p.id === programId ? { ...p, ...res.data! } : p)),
+      }))
+    } else {
+      set({ error: res.message ?? "L'exercice n'a pas pu être enregistré" })
+      await get().fetchToday()
+    }
+  },
+
+  programForPet: (petId) => get().programs.find((p) => String(p.petId) === String(petId)),
 
   fetchQuestionnaire: async () => {
     // Le catalogue ne change pas d'une session à l'autre : inutile de le
@@ -176,6 +291,9 @@ export const useTrainingStore = create<State>((set, get) => ({
     const res = await api.post<TrainingAssessment>(`/training/assessments/${id}/plan`)
     if (res.success && res.data) {
       set({ current: res.data, generatingPlan: false })
+      // Le programme naît avec le plan : on recharge pour que la section
+      // « Éducation » de l'accueil apparaisse sans attendre un redémarrage.
+      await get().fetchToday()
       return true
     }
     const isPremium = res.errors?.code?.includes('PREMIUM_REQUIRED')
@@ -203,5 +321,14 @@ export const useTrainingStore = create<State>((set, get) => ({
   clearError: () => set({ error: null, premiumRequired: false }),
 
   reset: () =>
-    set({ current: null, history: [], error: null, premiumRequired: false, generatingPlan: false }),
+    set({
+      current: null,
+      history: [],
+      programs: [],
+      programsLoaded: false,
+      lastAssessments: {},
+      error: null,
+      premiumRequired: false,
+      generatingPlan: false,
+    }),
 }))

@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Pet from '#models/pet'
 import TrainingAssessment from '#models/training_assessment'
+import TrainingProgram from '#models/training_program'
 import TrainingService from '#services/training_service'
 import { createTrainingAssessmentValidator } from '#validators/training'
 import {
@@ -166,7 +167,11 @@ export default class TrainingController {
     // au modèle pour un résultat équivalent, et le propriétaire perdrait le
     // plan qu'il a commencé à suivre.
     if (assessment.planStatus === 'completed' && assessment.plan) {
-      return response.ok({ success: true, data: this.serialize(assessment, assessment.pet) })
+      const program = await this.ensureProgram(assessment)
+      return response.ok({
+        success: true,
+        data: this.serialize(assessment, assessment.pet, program?.id ?? null),
+      })
     }
 
     assessment.planStatus = 'processing'
@@ -187,7 +192,12 @@ export default class TrainingController {
       assessment.planGeneratedAt = DateTime.now()
       await assessment.save()
 
-      return response.ok({ success: true, data: this.serialize(assessment, assessment.pet) })
+      const program = await this.ensureProgram(assessment)
+
+      return response.ok({
+        success: true,
+        data: this.serialize(assessment, assessment.pet, program?.id ?? null),
+      })
     } catch (error) {
       logger.error({ err: error }, `[Training] Plan ${assessment.id} en échec`)
       assessment.planStatus = 'failed'
@@ -220,7 +230,51 @@ export default class TrainingController {
     return response.ok({ success: true, message: 'Bilan supprimé' })
   }
 
-  private serialize(assessment: TrainingAssessment, pet: Pet) {
+  /**
+   * Le programme naît avec le plan : sans lui, l'utilisateur repartirait avec
+   * un document à lire au lieu d'un suivi. Un seul programme par animal —
+   * relancer un bilan remplace l'ancien plutôt que d'empiler deux suivis
+   * contradictoires sur le même chien.
+   */
+  private async ensureProgram(assessment: TrainingAssessment): Promise<TrainingProgram | null> {
+    if (!assessment.plan) return null
+
+    const existing = await TrainingProgram.query()
+      .where('assessmentId', assessment.id)
+      .first()
+    if (existing) return existing
+
+    await TrainingProgram.query().where('petId', assessment.petId).delete()
+
+    const now = DateTime.now()
+    return TrainingProgram.create({
+      petId: assessment.petId,
+      userId: assessment.userId,
+      assessmentId: assessment.id,
+      plan: assessment.plan,
+      scores: assessment.scores,
+      scoresHistory: [
+        {
+          at: now.toISO()!,
+          cycle: 1,
+          week: 0,
+          scores: assessment.scores,
+          overallScore: assessment.overallScore,
+          source: 'initial',
+        },
+      ],
+      overallScore: assessment.overallScore,
+      level: assessment.level,
+      cycle: 1,
+      currentWeek: 1,
+      weekStartedAt: now,
+      status: 'active',
+      planFromAi: assessment.planFromAi,
+      startedAt: now,
+    })
+  }
+
+  private serialize(assessment: TrainingAssessment, pet: Pet, programId: number | null = null) {
     const level = LEVEL_LABELS[assessment.level] ?? LEVEL_LABELS.apprenti
     const weakest = [...TRAINING_AXES]
       .map((a) => a.key)
@@ -242,6 +296,7 @@ export default class TrainingController {
       planStatus: assessment.planStatus,
       planFromAi: assessment.planFromAi,
       planError: assessment.planError,
+      programId,
       createdAt: assessment.createdAt,
     }
   }

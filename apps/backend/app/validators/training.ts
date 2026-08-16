@@ -11,3 +11,20 @@ export const createTrainingAssessmentValidator = vine.compile(
     context: vine.record(vine.string().maxLength(40)),
   })
 )
+
+export const toggleTrainingTaskValidator = vine.compile(
+  vine.object({
+    taskKey: vine.string().maxLength(80),
+    done: vine.boolean(),
+    // Le jour vient du téléphone : le serveur ne peut pas deviner le fuseau de
+    // l'utilisateur, et cocher à 23h ne doit pas atterrir sur le lendemain.
+    day: vine.string().fixedLength(10).optional(),
+  })
+)
+
+export const trainingCheckinValidator = vine.compile(
+  vine.object({
+    answers: vine.record(vine.string().maxLength(40)),
+    adherence: vine.record(vine.string().maxLength(40)),
+  })
+)

@@ -10,6 +10,7 @@ import { api } from '@/services/api'
 import { usePetsStore } from '@/stores/pets'
 import { useHealthBookStore } from '@/stores/healthBook'
 import { useAuthStore } from '@/stores/auth'
+import { useTrainingStore } from '@/stores/training'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -84,6 +85,18 @@ export default function PetDetailScreen() {
 
   const { healthBook, loading: hbLoading, fetchHealthBook, addVaccine, removeVaccine, addAllergy, removeAllergy, addChronicCondition, removeChronicCondition, updateHealthBook } = useHealthBookStore()
   const isPremium = useAuthStore((s) => !!s.user?.isPremium)
+
+  // Éducation : le programme donne le suivi détaillé, le dernier bilan sert de
+  // repli. Les deux sources sont interrogées car un bilan peut exister sans que
+  // le service de suivi réponde — et dans ce cas reproposer le questionnaire
+  // ferait perdre son plan au propriétaire.
+  const fetchTrainingToday = useTrainingStore((s) => s.fetchToday)
+  const fetchLastAssessment = useTrainingStore((s) => s.fetchLastAssessment)
+  const trainingPrograms = useTrainingStore((s) => s.programs)
+  const lastAssessment = useTrainingStore((s) => s.lastAssessments[String(id)])
+  const trainingProgram = trainingPrograms.find((p) => String(p.petId) === String(id))
+  const hasTraining = !!trainingProgram || !!lastAssessment
+  const trainingScore = trainingProgram?.overallScore ?? lastAssessment?.overallScore ?? 0
   // Paywall masqué : les fonctions IA sont présentées comme ouvertes.
   const aiUnlocked = !PAYWALL_VISIBLE || isPremium
 
@@ -153,6 +166,12 @@ export default function PetDetailScreen() {
     behavioralDangerLevel: '' as '' | '1' | '2' | '3' | '4',
   })
 
+  // Doit rester au-dessus des `return` de chargement : déclaré plus bas, ce
+  // hook n'existait pas au premier rendu (animal pas encore chargé) puis
+  // apparaissait une fois les données arrivées, ce qui faisait planter React
+  // sur « Rendered more hooks than during the previous render ».
+  const [openVaccine, setOpenVaccine] = useState<VaccineStatus | null>(null)
+
   const [aiStatus, setAiStatus] = useState<AiStatus>('idle')
   const [aiDiagnosisId, setAiDiagnosisId] = useState<string | null>(null)
   const [aiSynthesis, setAiSynthesis] = useState<AiSynthesis | null>(null)
@@ -168,8 +187,10 @@ export default function PetDetailScreen() {
       fetchActivities(id),
       fetchFeedingLogs(id),
       fetchHealthBook(id),
+      fetchTrainingToday(),
+      fetchLastAssessment(id),
     ])
-  }, [id, fetchPet, fetchMedicalRecords, fetchWeightHistory, fetchSymptomLogs, fetchActivities, fetchFeedingLogs, fetchHealthBook])
+  }, [id, fetchPet, fetchMedicalRecords, fetchWeightHistory, fetchSymptomLogs, fetchActivities, fetchFeedingLogs, fetchHealthBook, fetchTrainingToday, fetchLastAssessment])
 
   useEffect(() => { if (id) refreshAll() }, [id, refreshAll])
 
@@ -474,7 +495,6 @@ export default function PetDetailScreen() {
 
   const pet = currentPet
   const ageText = pet.birthDate ? getAge(pet.birthDate) : null
-  const [openVaccine, setOpenVaccine] = useState<VaccineStatus | null>(null)
   const vaccines = (Array.isArray(healthBook?.vaccines) ? healthBook!.vaccines : []) as VaccineEntry[]
 
   // Ce que le calendrier de l'espèce attend et qui manque au carnet.
@@ -552,26 +572,41 @@ export default function PetDetailScreen() {
         <Ionicons name="chevron-forward" size={18} color={colors.green} />
       </Pressable>
 
-      {/* Bilan d'éducation — chiens uniquement. Le questionnaire et les notes
-          sont gratuits, seul le plan détaillé passe par le paywall. */}
+      {/* Éducation — chiens uniquement. Tant qu'aucun plan n'existe, la carte
+          propose le bilan ; une fois le plan généré elle devient l'accès au
+          bilan et au plan, et ne repropose plus de tout recommencer. */}
       {pet.species === 'dog' && (
         <Pressable
           onPress={() => {
             Haptics.selectionAsync()
-            router.push({
-              pathname: '/training/[petId]',
-              params: { petId: String(id), petName: pet.name },
-            })
+            const assessmentId = trainingProgram?.assessmentId ?? lastAssessment?.id
+            if (assessmentId) {
+              router.push({
+                pathname: '/training/result/[id]',
+                params: { id: String(assessmentId) },
+              })
+            } else {
+              router.push({
+                pathname: '/training/[petId]',
+                params: { petId: String(id), petName: pet.name },
+              })
+            }
           }}
           style={({ pressed }) => [s.trainingCta, pressed && { opacity: 0.85 }]}
         >
           <View style={s.trainingCtaIcon}>
-            <Text style={{ fontSize: 18 }}>🎓</Text>
+            <Text style={{ fontSize: 18 }}>{hasTraining ? '📗' : '🎓'}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.trainingCtaTitle}>Bilan d'éducation</Text>
+            <Text style={s.trainingCtaTitle}>
+              {hasTraining ? 'Mon bilan' : "Bilan d'éducation"}
+            </Text>
             <Text style={s.trainingCtaDesc}>
-              36 questions, 6 notes et un plan sur 4 semaines
+              {trainingProgram
+                ? `Note ${trainingScore}/100 · semaine ${trainingProgram.week}/${trainingProgram.totalWeeks} du plan`
+                : hasTraining
+                  ? `Note ${trainingScore}/100 · revoir le plan`
+                  : '36 questions, 6 notes et un plan sur 4 semaines'}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.greenDark} />

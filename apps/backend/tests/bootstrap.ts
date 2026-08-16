@@ -22,8 +22,30 @@ export const plugins: Config['plugins'] = [assert(), apiClient(), pluginAdonisJS
  * The setup functions are executed before all the tests
  * The teardown functions are executed after all the tests
  */
+/**
+ * Garde-fou : plusieurs suites appellent `testUtils.db().truncate()`. Avec un
+ * `.env` qui pointe sur la base hébergée, lancer les tests vide la production —
+ * c'est arrivé. On refuse de démarrer tant que la base n'est pas locale, ou que
+ * `ALLOW_DESTRUCTIVE_TESTS=true` n'est pas explicitement posé.
+ */
+function assertDatabaseIsDisposable() {
+  if (process.env.ALLOW_DESTRUCTIVE_TESTS === 'true') return
+
+  const url = process.env.DATABASE_URL ?? ''
+  const host = url ? new URL(url).hostname : (process.env.DB_HOST ?? '')
+  const isLocal = ['localhost', '127.0.0.1', '::1', 'db', 'postgres'].includes(host) || host === ''
+
+  if (!isLocal) {
+    throw new Error(
+      `Les tests effacent la base (TRUNCATE). Celle configurée est distante : ${host}.\n` +
+        `Pointez DB_HOST/DATABASE_URL sur une base locale jetable, ou posez ` +
+        `ALLOW_DESTRUCTIVE_TESTS=true si vous voulez vraiment l'effacer.`
+    )
+  }
+}
+
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
+  setup: [() => assertDatabaseIsDisposable()],
   teardown: [],
 }
 

@@ -27,6 +27,20 @@ export default class TrainingAssessment extends BaseModel {
   @column()
   declare userId: number
 
+  /** 'initial' = les 36 questions, 'weekly' = le point de fin de semaine. */
+  @column()
+  declare kind: 'initial' | 'weekly'
+
+  @column()
+  declare programId: number | null
+
+  /** Semaine que ce point clôture (nul pour un bilan initial). */
+  @column()
+  declare week: number | null
+
+  @column()
+  declare cycle: number | null
+
   @column(jsonColumn)
   declare answers: Record<string, string>
 

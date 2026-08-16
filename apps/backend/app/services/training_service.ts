@@ -158,8 +158,15 @@ export default class TrainingService {
     pet: Pet
     scoring: ScoringResult
     context: Record<string, string>
+    /** Présent à partir du deuxième cycle : ce qui a été fait et ce qui a bougé. */
+    progress?: {
+      cycle: number
+      previousScores: Record<TrainingAxis, number>
+      adherence: string
+      goalProgress: string
+    }
   }): Promise<{ plan: TrainingPlan; fromAi: boolean }> {
-    const { pet, scoring, context } = params
+    const { pet, scoring, context, progress } = params
     const sessions = SESSIONS_BY_TIME[context.ctx_time] ?? SESSIONS_BY_TIME.medium
 
     const fallback = () =>
@@ -187,7 +194,7 @@ export default class TrainingService {
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: this.buildSystemPrompt() },
-          { role: 'user', content: this.buildUserPrompt(pet, scoring, context, sessions) },
+          { role: 'user', content: this.buildUserPrompt(pet, scoring, context, sessions, progress) },
         ],
       })
 
@@ -247,7 +254,13 @@ Contraintes de format : exactement 4 semaines numérotées de 1 à 4, 2 ou 3 exe
     pet: Pet,
     scoring: ScoringResult,
     context: Record<string, string>,
-    sessions: string
+    sessions: string,
+    progress?: {
+      cycle: number
+      previousScores: Record<TrainingAxis, number>
+      adherence: string
+      goalProgress: string
+    }
   ): string {
     const age = pet.birthDate
       ? `${Math.floor(Math.abs(pet.birthDate.diffNow('months').months) / 12)} an(s) et ${
@@ -281,8 +294,33 @@ SITUATION DU PROPRIÉTAIRE
 ${contextLines}
 
 Rythme réaliste à respecter dans le champ "sessions" : ${sessions}
-
+${this.progressBlock(progress)}
 Construis le plan en attaquant en priorité les deux axes les plus faibles, sans abandonner les autres.`
+  }
+
+  /** Bloc ajouté à partir du deuxième cycle. Vide sur un premier plan. */
+  private progressBlock(progress?: {
+    cycle: number
+    previousScores: Record<TrainingAxis, number>
+    adherence: string
+    goalProgress: string
+  }): string {
+    if (!progress) return ''
+
+    return `
+CYCLE PRÉCÉDENT (on démarre le cycle ${progress.cycle})
+Notes de départ du cycle écoulé :
+${TRAINING_AXES.map((a) => `- ${a.label} : ${progress.previousScores[a.key] ?? 0}/100`).join('\n')}
+
+Assiduité déclarée : ${progress.adherence}
+Ressenti sur les objectifs : ${progress.goalProgress}
+
+Tiens-en compte : si l'assiduité a été faible, allège le volume et rends les
+exercices plus courts plutôt que d'ajouter de la difficulté. Si les objectifs
+sont atteints, monte d'un cran (distraction, distance, durée) au lieu de
+répéter le même contenu. Ne réutilise pas mot pour mot les exercices du cycle
+précédent.
+`
   }
 
   /**

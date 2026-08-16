@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -8,6 +8,8 @@ import * as Haptics from 'expo-haptics'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { ScoreRing, scoreColor } from '@/components/ui/ScoreRing'
+import { PlanGenerationOverlay } from '@/components/ui/PlanGenerationOverlay'
 import { useTrainingStore, type TrainingAxis } from '@/stores/training'
 import { useAuthStore } from '@/stores/auth'
 import { colors, radius, shadow } from '@/constants/theme'
@@ -24,11 +26,37 @@ const AXIS_META: Record<TrainingAxis, { label: string; emoji: string }> = {
 
 const AXIS_ORDER: TrainingAxis[] = ['obedience', 'recall', 'leash', 'social', 'calm', 'daily']
 
-/** Vert au-dessus de 65, orange entre 40 et 65, rouge en dessous. */
-function scoreColor(score: number): string {
-  if (score >= 65) return colors.green
-  if (score >= 40) return colors.orange
-  return colors.red
+/** Barre qui se remplit à l'affichage, à la couleur de sa note. */
+function AxisBar({ score, delay }: { score: number; delay: number }) {
+  const grow = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    Animated.timing(grow, {
+      toValue: 1,
+      duration: 900,
+      delay,
+      easing: Easing.out(Easing.cubic),
+      // La largeur n'est pas animable par le driver natif.
+      useNativeDriver: false,
+    }).start()
+  }, [grow, delay])
+
+  return (
+    <View style={s.barTrack}>
+      <Animated.View
+        style={[
+          s.barFill,
+          {
+            backgroundColor: scoreColor(score),
+            width: grow.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0%', `${Math.max(score, 2)}%`],
+            }),
+          },
+        ]}
+      />
+    </View>
+  )
 }
 
 export default function TrainingResultScreen() {
@@ -41,6 +69,12 @@ export default function TrainingResultScreen() {
   const planUnlocked = !PAYWALL_VISIBLE || isPremium
 
   const [openWeek, setOpenWeek] = useState<number | null>(1)
+  const [overlay, setOverlay] = useState<null | 'loading' | 'done' | 'error'>(null)
+
+  const scrollRef = useRef<ScrollView>(null)
+  // Position de la section « plan » dans le scroll, pour y amener l'utilisateur
+  // après la révélation plutôt que de le laisser chercher.
+  const planOffset = useRef(0)
 
   useEffect(() => {
     // Le bilan tout juste soumis est déjà en mémoire ; on ne recharge que si on
@@ -49,12 +83,15 @@ export default function TrainingResultScreen() {
   }, [id, current, fetchAssessment])
 
   useEffect(() => {
-    if (error) Alert.alert("Plan d'éducation", error, [{ text: 'OK', onPress: clearError }])
-  }, [error, clearError])
+    // Pendant la génération, l'erreur est déjà portée par l'overlay : une
+    // alerte par-dessus ferait doublon.
+    if (error && !overlay) Alert.alert("Plan d'éducation", error, [{ text: 'OK', onPress: clearError }])
+  }, [error, overlay, clearError])
 
   useEffect(() => {
     if (premiumRequired) {
       clearError()
+      setOverlay(null)
       router.push({ pathname: '/paywall', params: { feature: 'training' } })
     }
   }, [premiumRequired, clearError])
@@ -68,7 +105,6 @@ export default function TrainingResultScreen() {
   }
 
   const plan = current.plan
-  const globalColor = scoreColor(current.overallScore)
 
   async function handleGeneratePlan() {
     if (!planUnlocked) {
@@ -76,8 +112,15 @@ export default function TrainingResultScreen() {
       return
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+    setOverlay('loading')
     const ok = await generatePlan(id)
-    if (ok) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+    setOverlay(ok ? 'done' : 'error')
+  }
+
+  function revealPlan() {
+    setOverlay(null)
+    // Un cran au-dessus de la section pour que le titre reste visible.
+    scrollRef.current?.scrollTo({ y: Math.max(0, planOffset.current - 12), animated: true })
   }
 
   return (
@@ -98,7 +141,12 @@ export default function TrainingResultScreen() {
         <View style={{ width: 36 }} />
       </View>
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* ── Score global ────────────────────────────────────────────────── */}
         <LinearGradient
           colors={['#FFFFFF', colors.beigeLight]}
@@ -106,10 +154,7 @@ export default function TrainingResultScreen() {
           end={{ x: 1, y: 1 }}
           style={[s.hero, shadow.md]}
         >
-          <View style={[s.scoreRing, { borderColor: globalColor }]}>
-            <Text style={[s.scoreValue, { color: globalColor }]}>{current.overallScore}</Text>
-            <Text style={s.scoreOutOf}>/ 100</Text>
-          </View>
+          <ScoreRing score={current.overallScore} size={132} stroke={10} />
           <Text style={s.levelLabel}>{current.levelLabel}</Text>
           <Text style={s.levelMessage}>{current.levelMessage}</Text>
         </LinearGradient>
@@ -117,21 +162,19 @@ export default function TrainingResultScreen() {
         {/* ── Notes par domaine ───────────────────────────────────────────── */}
         <Text style={s.sectionTitle}>Vos notes par domaine</Text>
         <Card style={{ gap: 16 }}>
-          {AXIS_ORDER.map((axis) => {
+          {AXIS_ORDER.map((axis, i) => {
             const score = current.scores?.[axis] ?? 0
             const meta = AXIS_META[axis]
-            const color = scoreColor(score)
             return (
               <View key={axis}>
                 <View style={s.axisRow}>
                   <Text style={s.axisLabel}>
                     {meta.emoji} {meta.label}
                   </Text>
-                  <Text style={[s.axisScore, { color }]}>{score}</Text>
+                  <Text style={[s.axisScore, { color: scoreColor(score) }]}>{score}</Text>
                 </View>
-                <View style={s.barTrack}>
-                  <View style={[s.barFill, { width: `${Math.max(score, 2)}%`, backgroundColor: color }]} />
-                </View>
+                {/* Le décalage fait descendre le remplissage barre par barre. */}
+                <AxisBar score={score} delay={200 + i * 90} />
               </View>
             )
           })}
@@ -182,7 +225,12 @@ export default function TrainingResultScreen() {
           </View>
         ) : (
           <>
-            <Text style={s.sectionTitle}>Votre plan sur 4 semaines</Text>
+            <Text
+              style={s.sectionTitle}
+              onLayout={(e) => { planOffset.current = e.nativeEvent.layout.y }}
+            >
+              Votre plan sur {plan.weeks.length} semaines
+            </Text>
 
             <Card style={{ gap: 12 }}>
               <Text style={s.planSummary}>{plan.summary}</Text>
@@ -333,12 +381,29 @@ export default function TrainingResultScreen() {
           comportementaliste ou votre vétérinaire.
         </Text>
 
+        {/* Seule porte de sortie pour tout reprendre à zéro : la fiche animal
+            renvoie désormais ici au lieu de reproposer le questionnaire. Un
+            nouveau bilan efface le suivi en cours, d'où la confirmation. */}
         <Pressable
           onPress={() =>
-            router.replace({
-              pathname: '/training/[petId]',
-              params: { petId: String(current.petId), petName: current.petName ?? '' },
-            })
+            Alert.alert(
+              'Refaire le bilan ?',
+              plan
+                ? 'Le plan actuel et la progression du suivi seront remplacés par un nouveau bilan.'
+                : 'Vous allez répondre à nouveau aux 36 questions.',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                  text: 'Recommencer',
+                  style: 'destructive',
+                  onPress: () =>
+                    router.replace({
+                      pathname: '/training/[petId]',
+                      params: { petId: String(current.petId), petName: current.petName ?? '' },
+                    }),
+                },
+              ]
+            )
           }
           style={s.redoLink}
         >
@@ -346,6 +411,20 @@ export default function TrainingResultScreen() {
           <Text style={s.redoText}>Refaire le bilan</Text>
         </Pressable>
       </ScrollView>
+
+      <PlanGenerationOverlay
+        visible={overlay !== null}
+        phase={overlay ?? 'loading'}
+        petName={current.petName}
+        breed={current.petBreed}
+        weekCount={plan?.weeks.length ?? 4}
+        summary={plan?.summary}
+        priorities={plan?.priorities.map((p) => p.title) ?? []}
+        errorMessage={error}
+        onReveal={revealPlan}
+        onRetry={() => { clearError(); handleGeneratePlan() }}
+        onDismiss={() => { clearError(); setOverlay(null) }}
+      />
     </SafeAreaView>
   )
 }
@@ -382,17 +461,6 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.gray[200],
   },
-  scoreRing: {
-    width: 116,
-    height: 116,
-    borderRadius: radius.full,
-    borderWidth: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-  },
-  scoreValue: { fontSize: 38, fontWeight: '900', lineHeight: 42 },
-  scoreOutOf: { fontSize: 12, color: colors.gray[500], marginTop: -2 },
   levelLabel: { fontSize: 20, fontWeight: '800', color: colors.dark, marginTop: 16 },
   levelMessage: {
     fontSize: 14,
