@@ -28,6 +28,7 @@ import * as Haptics from 'expo-haptics'
 import { useAuthStore } from '@/stores/auth'
 import { usePetsStore } from '@/stores/pets'
 import { api, secureStorage } from '@/services/api'
+import { trace } from '@/services/crashLog'
 import { fetchWeather, geocodeCity, type GeocodedCity } from '@/services/weather'
 import { requestCoords } from '@/services/location'
 import { Button } from '@/components/ui/Button'
@@ -193,13 +194,17 @@ export default function PetSetupScreen() {
 
   // ── Réponses ──
   const answerKind = useCallback(async (picked: PetKindProfile) => {
+    trace(`onboarding — choix ${picked.kind} : vibration`)
     Haptics.selectionAsync()
     setKind(picked.kind)
     setStep(null)
     pushUser(`${picked.answerLabel} ${picked.emoji}`)
+    trace(`onboarding — choix ${picked.kind} : animation`)
     Animated.timing(bgAnim, { toValue: 1, duration: 700, useNativeDriver: true, easing: Easing.out(Easing.quad) }).start()
+    trace(`onboarding — choix ${picked.kind} : réponse`)
     await pushBot([picked.intro, 'Comment s\'appelle-t-il ?'])
     setStep('name')
+    trace(`onboarding — choix ${picked.kind} : terminé`)
   }, [pushBot, pushUser, bgAnim])
 
   const answerName = useCallback(async (value: string) => {

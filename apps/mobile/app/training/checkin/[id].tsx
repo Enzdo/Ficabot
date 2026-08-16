@@ -33,6 +33,8 @@ interface CheckinPayload {
   petName: string | null
   currentScores: Record<TrainingAxis, number>
   activeDays: number
+  totalChecks: number
+  weekNotes: { day: string; week: number; exercise: string; done: boolean; note: string }[]
   due: boolean
   daysUntilCheckin: number
 }
@@ -222,10 +224,13 @@ export default function TrainingCheckinScreen() {
           </View>
 
           <Button
-            title="Retour à l'accueil"
-            onPress={() => router.replace('/(tabs)')}
+            title="Voir ma progression"
+            onPress={() => router.replace({ pathname: '/training/program/[id]', params: { id: String(id) } })}
             style={{ alignSelf: 'stretch', marginTop: 24 }}
           />
+          <Pressable onPress={() => router.replace('/(tabs)')} style={s.homeLink}>
+            <Text style={s.homeLinkText}>Retour à l'accueil</Text>
+          </Pressable>
         </ScrollView>
       </SafeAreaView>
     )
@@ -266,6 +271,32 @@ export default function TrainingCheckinScreen() {
       </View>
 
       <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Rappel de la semaine écoulée : on ne note pas de mémoire ce qu'on a
+            écrit jour après jour. Affiché sur la première question seulement,
+            pour ne pas encombrer les suivantes. */}
+        {index === 0 && (
+          <View style={s.recapCard}>
+            <Text style={s.recapTitle}>Votre semaine</Text>
+            <Text style={s.recapStat}>
+              {payload.totalChecks} exercice{payload.totalChecks > 1 ? 's' : ''} coché
+              {payload.totalChecks > 1 ? 's' : ''} sur {payload.activeDays} jour
+              {payload.activeDays > 1 ? 's' : ''}.
+            </Text>
+            {payload.weekNotes?.length > 0 && (
+              <View style={s.recapNotes}>
+                {payload.weekNotes.slice(-4).map((n, i) => (
+                  <View key={`${n.day}-${i}`} style={s.recapNote}>
+                    <Text style={s.recapNoteHead}>
+                      {n.day.slice(8, 10)}/{n.day.slice(5, 7)} · {n.exercise}
+                    </Text>
+                    <Text style={s.recapNoteText}>{n.note}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         <View style={s.chip}>
           <Text style={s.chipText}>
             {step.kind === 'scored'
@@ -375,6 +406,22 @@ const s = StyleSheet.create({
   optionLabel: { flex: 1, fontSize: 14.5, color: colors.gray[800], lineHeight: 20 },
   optionLabelActive: { color: colors.dark, fontWeight: '600' },
 
+  recapCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius['2xl'],
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    padding: 14,
+    marginTop: 12,
+    gap: 8,
+  },
+  recapTitle: { fontSize: 12, fontWeight: '800', color: colors.gray[600], textTransform: 'uppercase' },
+  recapStat: { fontSize: 13.5, color: colors.gray[800], lineHeight: 19 },
+  recapNotes: { gap: 8, borderTopWidth: 1, borderTopColor: colors.gray[100], paddingTop: 8 },
+  recapNote: { gap: 2 },
+  recapNoteHead: { fontSize: 11.5, fontWeight: '700', color: colors.greenDark },
+  recapNoteText: { fontSize: 12.5, color: colors.gray[700], lineHeight: 18 },
+
   resultContent: { padding: 24, paddingBottom: 48, alignItems: 'center' },
   resultEmoji: { fontSize: 54, marginTop: 24 },
   resultTitle: { fontSize: 24, fontWeight: '900', color: colors.dark, marginTop: 14, textAlign: 'center' },
@@ -413,4 +460,6 @@ const s = StyleSheet.create({
   },
   overallLabel: { fontSize: 14, fontWeight: '700', color: colors.dark },
   overallValue: { fontSize: 18, fontWeight: '900' },
+  homeLink: { paddingVertical: 14 },
+  homeLinkText: { fontSize: 13.5, fontWeight: '600', color: colors.gray[600] },
 })

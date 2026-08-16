@@ -113,16 +113,16 @@ function ProgramCard({ program }: { program: ProgramSummary }) {
   const [openTask, setOpenTask] = useState<DailyTask | null>(null)
   const restartWeek = useTrainingStore((st) => st.restartWeek)
 
-  const openPlan = () =>
-    router.push({
-      pathname: '/training/result/[id]',
-      params: { id: String(program.assessmentId) },
-    })
+  // La carte de suivi mène à la progression, qui donne accès au plan. Envoyer
+  // directement sur le plan enterrait l'évolution des notes, qui est la
+  // contrepartie du bilan hebdomadaire.
+  const openProgram = () =>
+    router.push({ pathname: '/training/program/[id]', params: { id: String(program.id) } })
 
   // Cycle terminé : on propose d'enchaîner plutôt que de laisser le suivi mort.
   if (program.status === 'completed') {
     return (
-      <Pressable onPress={openPlan} style={({ pressed }) => [s.card, shadow.sm, pressed && s.pressed]}>
+      <Pressable onPress={openProgram} style={({ pressed }) => [s.card, shadow.sm, pressed && s.pressed]}>
         <View style={s.headRow}>
           <Text style={s.headEmoji}>🏆</Text>
           <View style={{ flex: 1 }}>
@@ -134,7 +134,7 @@ function ProgramCard({ program }: { program: ProgramSummary }) {
           <Ionicons name="chevron-forward" size={18} color={colors.gray[300]} />
         </View>
         <View style={s.ctaBanner}>
-          <Text style={s.ctaBannerText}>Voir le bilan et lancer le cycle suivant</Text>
+          <Text style={s.ctaBannerText}>Voir la progression et lancer le cycle suivant</Text>
         </View>
       </Pressable>
     )
@@ -211,7 +211,7 @@ function ProgramCard({ program }: { program: ProgramSummary }) {
 
   return (
     <View style={[s.card, shadow.sm]}>
-      <Pressable onPress={openPlan} style={s.headRow}>
+      <Pressable onPress={openProgram} style={s.headRow}>
         <View style={[s.weekBadge, { backgroundColor: scoreColor(program.overallScore) + '22' }]}>
           <Text style={[s.weekBadgeText, { color: scoreColor(program.overallScore) }]}>
             S{program.week}

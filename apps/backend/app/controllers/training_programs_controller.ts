@@ -219,6 +219,12 @@ export default class TrainingProgramsController {
 
     const adherence = await this.programs.weekAdherence(program)
 
+    // Les observations de la semaine sont renvoyées avec les questions :
+    // répondre « où en êtes-vous ? » de mémoire donne le ressenti du dernier
+    // jour, pas celui de la semaine.
+    const journal = await this.programs.collectJournal(program)
+    const weekNotes = journal.notes.filter((n) => n.week === program.currentWeek)
+
     return response.ok({
       success: true,
       data: {
@@ -226,6 +232,8 @@ export default class TrainingProgramsController {
         petName: program.pet?.name ?? null,
         currentScores: program.scores,
         activeDays: adherence.activeDays,
+        totalChecks: adherence.totalChecks,
+        weekNotes,
         due: program.checkinDue,
         daysUntilCheckin: program.daysUntilCheckin,
       },

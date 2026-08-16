@@ -105,6 +105,35 @@ export interface DailyTask {
   note: string | null
 }
 
+export interface ScoreSnapshot {
+  at: string
+  cycle: number
+  /** 0 pour le bilan de départ, 1→4 pour la semaine que le point clôture. */
+  week: number
+  scores: Record<TrainingAxis, number>
+  overallScore: number
+  source: 'initial' | 'weekly'
+}
+
+export interface CycleJournal {
+  activeDays: number
+  totalChecks: number
+  missedChecks: number
+  byWeek: { week: number; done: number; planned: number; activeDays: number }[]
+  notes: { day: string; week: number; exercise: string; done: boolean; note: string }[]
+}
+
+/** Détail complet d'un programme : le résumé, plus le plan et l'historique. */
+export interface ProgramDetail extends ProgramSummary {
+  petBreed: string | null
+  plan: TrainingPlan
+  planFromAi: boolean
+  scoresHistory: ScoreSnapshot[]
+  adherence: { activeDays: number; totalChecks: number }
+  journal: CycleJournal
+  axes: TrainingAxisInfo[]
+}
+
 /** Fond documentaire d'un axe, chargé à la demande et mis en cache. */
 export interface AxisReference {
   axis: TrainingAxis
@@ -179,6 +208,7 @@ interface State {
   setTaskNote: (programId: number, taskKey: string, note: string | null) => Promise<void>
   fetchReference: (axis: TrainingAxis) => Promise<AxisReference | null>
   restartWeek: (programId: number) => Promise<boolean>
+  fetchProgram: (programId: string | number) => Promise<ProgramDetail | null>
   programForPet: (petId: string | number) => ProgramSummary | undefined
 
   fetchQuestionnaire: () => Promise<Questionnaire | null>
@@ -301,6 +331,14 @@ export const useTrainingStore = create<State>((set, get) => ({
       set((s) => ({ references: { ...s.references, [axis]: res.data! } }))
       return res.data
     }
+    return null
+  },
+
+  fetchProgram: async (programId) => {
+    const day = new Date().toISOString().slice(0, 10)
+    const res = await api.get<ProgramDetail>(`/training/programs/${programId}?day=${day}`)
+    if (res.success && res.data) return res.data
+    set({ error: res.message ?? 'Programme introuvable' })
     return null
   },
 

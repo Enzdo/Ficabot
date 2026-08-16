@@ -1,13 +1,21 @@
 import { useEffect } from 'react'
-import { Stack } from 'expo-router'
+import { Stack, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import * as SplashScreen from 'expo-splash-screen'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAuthStore } from '@/stores/auth'
 import { requestNotificationPermission } from '@/services/notifications'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { trace } from '@/services/crashLog'
 
 SplashScreen.preventAutoHideAsync()
+
+/** Note chaque écran traversé, pour situer un plantage qui n'a rien dit. */
+function RouteTrail() {
+  const pathname = usePathname()
+  useEffect(() => { trace(`écran ${pathname}`) }, [pathname])
+  return null
+}
 
 export default function RootLayout() {
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage)
@@ -29,6 +37,7 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <SafeAreaProvider>
+        <RouteTrail />
         <Stack screenOptions={{ headerShown: false }} />
         <StatusBar style="auto" />
       </SafeAreaProvider>

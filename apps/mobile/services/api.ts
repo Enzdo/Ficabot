@@ -46,6 +46,14 @@ export const secureStorage = {
   getHomePet: (userId: string | number) => SecureStore.getItemAsync(`home_pet_${userId}`),
   setHomePet: (userId: string | number, petId: string) =>
     SecureStore.setItemAsync(`home_pet_${userId}`, petId),
+  // Bilan d'éducation en cours : 36 questions, ça ne se refait pas parce qu'un
+  // appel est arrivé au milieu. Conservé par animal, effacé à l'envoi.
+  getTrainingDraft: (petId: string | number) =>
+    SecureStore.getItemAsync(`training_draft_${petId}`),
+  setTrainingDraft: (petId: string | number, json: string) =>
+    SecureStore.setItemAsync(`training_draft_${petId}`, json),
+  clearTrainingDraft: (petId: string | number) =>
+    SecureStore.deleteItemAsync(`training_draft_${petId}`),
   clear: () => Promise.all([
     SecureStore.deleteItemAsync('auth_token'),
     SecureStore.deleteItemAsync('auth_user'),
