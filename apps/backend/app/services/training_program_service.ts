@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import TrainingProgram from '#models/training_program'
+import TrainingAssessment from '#models/training_assessment'
 import TrainingTaskLog from '#models/training_task_log'
 import type { TrainingPlan, TrainingPlanWeek } from '#services/training_service'
 import { TRAINING_AXES, type TrainingAxis } from '#services/training/questionnaire'
@@ -128,6 +129,78 @@ export default class TrainingProgramService {
     program.currentWeek += 1
     program.weekStartedAt = DateTime.now()
     return { finished: false }
+  }
+
+  /**
+   * Crée le suivi attaché à un bilan, s'il n'existe pas déjà.
+   *
+   * Un seul programme par animal : relancer un bilan remplace l'ancien plutôt
+   * que d'empiler deux suivis contradictoires sur le même chien.
+   */
+  async ensureProgram(assessment: TrainingAssessment): Promise<TrainingProgram | null> {
+    if (!assessment.plan || assessment.planStatus !== 'completed') return null
+
+    const existing = await TrainingProgram.query().where('assessmentId', assessment.id).first()
+    if (existing) return existing
+
+    await TrainingProgram.query().where('petId', assessment.petId).delete()
+
+    const now = DateTime.now()
+    return TrainingProgram.create({
+      petId: assessment.petId,
+      userId: assessment.userId,
+      assessmentId: assessment.id,
+      plan: assessment.plan,
+      scores: assessment.scores,
+      scoresHistory: [
+        {
+          at: now.toISO()!,
+          cycle: 1,
+          week: 0,
+          scores: assessment.scores,
+          overallScore: assessment.overallScore,
+          source: 'initial',
+        },
+      ],
+      overallScore: assessment.overallScore,
+      level: assessment.level,
+      cycle: 1,
+      currentWeek: 1,
+      weekStartedAt: now,
+      status: 'active',
+      planFromAi: assessment.planFromAi,
+      startedAt: now,
+    })
+  }
+
+  /**
+   * Rattrape les plans générés avant l'existence des programmes : sans ça, un
+   * propriétaire qui a déjà son plan ne verrait jamais le suivi apparaître, et
+   * devrait refaire tout le questionnaire pour rien.
+   *
+   * Idempotent : ne crée un programme que pour les animaux qui n'en ont pas.
+   */
+  async backfillMissingPrograms(userId: number): Promise<number> {
+    const orphans = await TrainingAssessment.query()
+      .where('userId', userId)
+      .where('kind', 'initial')
+      .where('planStatus', 'completed')
+      .whereNotExists((sub) => {
+        sub
+          .from('training_programs')
+          .whereRaw('training_programs.pet_id = training_assessments.pet_id')
+      })
+      .orderBy('createdAt', 'desc')
+
+    // Un seul bilan par animal : le plus récent fait foi.
+    const seen = new Set<number>()
+    let created = 0
+    for (const assessment of orphans) {
+      if (seen.has(assessment.petId)) continue
+      seen.add(assessment.petId)
+      if (await this.ensureProgram(assessment)) created++
+    }
+    return created
   }
 
   /** Vue compacte pour l'accueil : rien de ce qui n'est pas affiché n'est calculé. */

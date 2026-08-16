@@ -2,8 +2,8 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import Pet from '#models/pet'
 import TrainingAssessment from '#models/training_assessment'
-import TrainingProgram from '#models/training_program'
 import TrainingService from '#services/training_service'
+import TrainingProgramService from '#services/training_program_service'
 import { createTrainingAssessmentValidator } from '#validators/training'
 import {
   CONTEXT_QUESTIONS,
@@ -33,6 +33,7 @@ const LEVEL_LABELS: Record<string, { label: string; message: string }> = {
 
 export default class TrainingController {
   private training = new TrainingService()
+  private programs = new TrainingProgramService()
 
   /**
    * Catalogue de questions.
@@ -232,46 +233,10 @@ export default class TrainingController {
 
   /**
    * Le programme naît avec le plan : sans lui, l'utilisateur repartirait avec
-   * un document à lire au lieu d'un suivi. Un seul programme par animal —
-   * relancer un bilan remplace l'ancien plutôt que d'empiler deux suivis
-   * contradictoires sur le même chien.
+   * un document à lire au lieu d'un suivi.
    */
-  private async ensureProgram(assessment: TrainingAssessment): Promise<TrainingProgram | null> {
-    if (!assessment.plan) return null
-
-    const existing = await TrainingProgram.query()
-      .where('assessmentId', assessment.id)
-      .first()
-    if (existing) return existing
-
-    await TrainingProgram.query().where('petId', assessment.petId).delete()
-
-    const now = DateTime.now()
-    return TrainingProgram.create({
-      petId: assessment.petId,
-      userId: assessment.userId,
-      assessmentId: assessment.id,
-      plan: assessment.plan,
-      scores: assessment.scores,
-      scoresHistory: [
-        {
-          at: now.toISO()!,
-          cycle: 1,
-          week: 0,
-          scores: assessment.scores,
-          overallScore: assessment.overallScore,
-          source: 'initial',
-        },
-      ],
-      overallScore: assessment.overallScore,
-      level: assessment.level,
-      cycle: 1,
-      currentWeek: 1,
-      weekStartedAt: now,
-      status: 'active',
-      planFromAi: assessment.planFromAi,
-      startedAt: now,
-    })
+  private ensureProgram(assessment: TrainingAssessment) {
+    return this.programs.ensureProgram(assessment)
   }
 
   private serialize(assessment: TrainingAssessment, pet: Pet, programId: number | null = null) {

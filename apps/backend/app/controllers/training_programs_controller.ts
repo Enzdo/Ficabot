@@ -40,6 +40,9 @@ export default class TrainingProgramsController {
     const user = auth.user!
     const day = this.dayFrom(request.input('day'))
 
+    // Rattrapage des plans antérieurs aux programmes, avant de lire la liste.
+    await this.programs.backfillMissingPrograms(user.id)
+
     const programs = await TrainingProgram.query()
       .where('userId', user.id)
       .whereIn('status', ['active', 'completed'])
