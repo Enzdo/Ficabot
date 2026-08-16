@@ -14,6 +14,16 @@ export interface DailyTask {
   steps: string[]
   tip: string
   done: boolean
+  note: string | null
+}
+
+/** Digest du cycle écoulé, relu par le modèle pour construire le suivant. */
+export interface CycleJournal {
+  activeDays: number
+  totalChecks: number
+  missedChecks: number
+  byWeek: { week: number; done: number; planned: number; activeDays: number }[]
+  notes: { day: string; week: number; exercise: string; done: boolean; note: string }[]
 }
 
 const AXIS_LABEL = new Map(TRAINING_AXES.map((a) => [a.key, a.label]))
@@ -43,10 +53,11 @@ export default class TrainingProgramService {
       .where('programId', program.id)
       .where('day', iso)
 
-    const done = new Set(logs.map((l) => l.taskKey))
+    const byKey = new Map(logs.map((l) => [l.taskKey, l]))
 
     return week.exercises.map((exercise, index) => {
       const key = this.taskKey(program.cycle, program.currentWeek, index)
+      const log = byKey.get(key)
       return {
         key,
         title: exercise.title,
@@ -55,8 +66,51 @@ export default class TrainingProgramService {
         duration: exercise.duration,
         steps: exercise.steps,
         tip: exercise.tip,
-        done: done.has(key),
+        done: log?.done ?? false,
+        note: log?.note ?? null,
       }
+    })
+  }
+
+  /**
+   * Enregistre une observation sur un exercice. La ligne est créée si besoin
+   * sans marquer l'exercice fait : « pas réussi aujourd'hui » est une note
+   * légitime sur un exercice non coché.
+   */
+  async setTaskNote(params: {
+    program: TrainingProgram
+    userId: number
+    day: DateTime
+    taskKey: string
+    note: string | null
+  }): Promise<void> {
+    const { program, userId, day, taskKey, note } = params
+    const iso = day.toISODate()!
+    const clean = note?.trim() ? note.trim() : null
+
+    const existing = await TrainingTaskLog.query()
+      .where('programId', program.id)
+      .where('day', iso)
+      .where('taskKey', taskKey)
+      .first()
+
+    if (existing) {
+      existing.note = clean
+      // Une ligne qui ne porte plus rien n'a pas de raison d'exister.
+      if (!clean && !existing.done) await existing.delete()
+      else await existing.save()
+      return
+    }
+
+    if (!clean) return
+
+    await TrainingTaskLog.create({
+      programId: program.id,
+      userId,
+      day,
+      taskKey,
+      done: false,
+      note: clean,
     })
   }
 
@@ -74,28 +128,30 @@ export default class TrainingProgramService {
     const { program, userId, day, taskKey, done } = params
     const iso = day.toISODate()!
 
-    if (done) {
-      const existing = await TrainingTaskLog.query()
-        .where('programId', program.id)
-        .where('day', iso)
-        .where('taskKey', taskKey)
-        .first()
-      if (!existing) {
-        await TrainingTaskLog.create({
-          programId: program.id,
-          userId,
-          day,
-          taskKey,
-        })
-      }
-      return
-    }
-
-    await TrainingTaskLog.query()
+    const existing = await TrainingTaskLog.query()
       .where('programId', program.id)
       .where('day', iso)
       .where('taskKey', taskKey)
-      .delete()
+      .first()
+
+    if (existing) {
+      existing.done = done
+      // Décocher n'efface pas l'observation : seule une ligne vide disparaît.
+      if (!done && !existing.note) await existing.delete()
+      else await existing.save()
+      return
+    }
+
+    if (!done) return
+
+    await TrainingTaskLog.create({
+      programId: program.id,
+      userId,
+      day,
+      taskKey,
+      done: true,
+      note: null,
+    })
   }
 
   /**
@@ -106,10 +162,70 @@ export default class TrainingProgramService {
   async weekAdherence(program: TrainingProgram): Promise<{ activeDays: number; totalChecks: number }> {
     const logs = await TrainingTaskLog.query()
       .where('programId', program.id)
+      .where('done', true)
       .where('day', '>=', program.weekStartedAt.toISODate()!)
 
     const days = new Set(logs.map((l) => l.day.toISODate()))
     return { activeDays: days.size, totalChecks: logs.length }
+  }
+
+  /**
+   * Ce qui s'est réellement passé pendant le cycle, mis en forme pour le
+   * modèle : volume fait semaine par semaine, et surtout les observations
+   * écrites par le propriétaire. C'est là que se trouve l'information qu'aucune
+   * case à cocher ne porte — « il tire encore dès qu'il voit un chien ».
+   */
+  async collectJournal(program: TrainingProgram): Promise<CycleJournal> {
+    const logs = await TrainingTaskLog.query()
+      .where('programId', program.id)
+      .where('taskKey', 'like', `c${program.cycle}-%`)
+      .orderBy('day', 'asc')
+
+    const planned = new Map<number, number>()
+    for (const week of program.plan.weeks) planned.set(week.week, week.exercises.length * 7)
+
+    const byWeek = program.plan.weeks.map((week) => {
+      const weekLogs = logs.filter((l) => l.taskKey.startsWith(`c${program.cycle}-w${week.week}-`))
+      const doneLogs = weekLogs.filter((l) => l.done)
+      return {
+        week: week.week,
+        done: doneLogs.length,
+        planned: planned.get(week.week) ?? 0,
+        activeDays: new Set(doneLogs.map((l) => l.day.toISODate())).size,
+      }
+    })
+
+    const titleOf = (taskKey: string): string => {
+      const match = /^c\d+-w(\d+)-e(\d+)$/.exec(taskKey)
+      if (!match) return taskKey
+      const week = this.weekOf(program.plan, Number(match[1]))
+      return week?.exercises[Number(match[2])]?.title ?? taskKey
+    }
+    const weekOfKey = (taskKey: string): number => Number(/-w(\d+)-/.exec(taskKey)?.[1] ?? 0)
+
+    // Les notes les plus récentes d'abord, plafonnées : au-delà, le prompt
+    // gonfle sans rien apporter, et les dernières semaines sont les plus
+    // représentatives de l'état actuel du chien.
+    const notes = logs
+      .filter((l) => !!l.note)
+      .slice(-40)
+      .map((l) => ({
+        day: l.day.toISODate()!,
+        week: weekOfKey(l.taskKey),
+        exercise: titleOf(l.taskKey),
+        done: l.done,
+        note: l.note!.slice(0, 400),
+      }))
+
+    const doneLogs = logs.filter((l) => l.done)
+
+    return {
+      activeDays: new Set(doneLogs.map((l) => l.day.toISODate())).size,
+      totalChecks: doneLogs.length,
+      missedChecks: byWeek.reduce((acc, w) => acc + Math.max(0, w.planned - w.done), 0),
+      byWeek,
+      notes,
+    }
   }
 
   /**
@@ -228,6 +344,10 @@ export default class TrainingProgramService {
       status: program.status,
       checkinDue,
       daysUntilCheckin: program.daysUntilCheckin,
+      // Décroché depuis trop longtemps : l'app propose de repartir sur la
+      // semaine plutôt que d'exiger un bilan sur une période non travaillée.
+      isStale: program.isStale,
+      daysSinceWeekStart: program.daysSinceWeekStart,
       scores: program.scores,
       overallScore: program.overallScore,
       level: program.level,

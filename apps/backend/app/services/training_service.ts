@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
 import type Pet from '#models/pet'
+import type HealthBook from '#models/health_book'
 import type { TrainingLevel } from '#models/training_assessment'
 import {
   AXIS_LABEL,
@@ -13,6 +14,7 @@ import {
   type TrainingAxis,
 } from '#services/training/questionnaire'
 import { buildFallbackPlan } from '#services/training/exercises'
+import type { CycleJournal } from '#services/training_program_service'
 
 export interface TrainingPlanExercise {
   title: string
@@ -158,15 +160,18 @@ export default class TrainingService {
     pet: Pet
     scoring: ScoringResult
     context: Record<string, string>
+    /** Carnet de santé de l'animal, s'il est renseigné. */
+    healthBook?: HealthBook | null
     /** Présent à partir du deuxième cycle : ce qui a été fait et ce qui a bougé. */
     progress?: {
       cycle: number
       previousScores: Record<TrainingAxis, number>
       adherence: string
       goalProgress: string
+      journal?: CycleJournal
     }
   }): Promise<{ plan: TrainingPlan; fromAi: boolean }> {
-    const { pet, scoring, context, progress } = params
+    const { pet, scoring, context, progress, healthBook = null } = params
     const sessions = SESSIONS_BY_TIME[context.ctx_time] ?? SESSIONS_BY_TIME.medium
 
     const fallback = () =>
@@ -194,7 +199,7 @@ export default class TrainingService {
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: this.buildSystemPrompt() },
-          { role: 'user', content: this.buildUserPrompt(pet, scoring, context, sessions, progress) },
+          { role: 'user', content: this.buildUserPrompt(pet, scoring, context, sessions, progress, healthBook) },
         ],
       })
 
@@ -260,7 +265,9 @@ Contraintes de format : exactement 4 semaines numérotées de 1 à 4, 2 ou 3 exe
       previousScores: Record<TrainingAxis, number>
       adherence: string
       goalProgress: string
-    }
+      journal?: CycleJournal
+    },
+    healthBook?: HealthBook | null
   ): string {
     const age = pet.birthDate
       ? `${Math.floor(Math.abs(pet.birthDate.diffNow('months').months) / 12)} an(s) et ${
@@ -293,9 +300,104 @@ Axes du plus faible au plus fort : ${scoring.weakest.map((a) => AXIS_LABEL[a]).j
 SITUATION DU PROPRIÉTAIRE
 ${contextLines}
 
+${this.healthBlock(healthBook)}
 Rythme réaliste à respecter dans le champ "sessions" : ${sessions}
 ${this.progressBlock(progress)}
 Construis le plan en attaquant en priorité les deux axes les plus faibles, sans abandonner les autres.`
+  }
+
+  /**
+   * Contexte médical passé au modèle.
+   *
+   * Sans lui, un chien arthrosique pouvait se voir proposer des exercices de
+   * saut, et un chien à l'alimentation restreinte des séances entières basées
+   * sur la friandise. Les colonnes du carnet sont du JSON stocké en texte : on
+   * parse en tolérant l'absence et le mal formé, un carnet illisible ne doit
+   * pas faire échouer la génération du plan.
+   */
+  private healthBlock(healthBook?: HealthBook | null): string {
+    if (!healthBook) return ''
+
+    const parse = <T,>(raw: string | null): T[] => {
+      if (!raw) return []
+      try {
+        const value = typeof raw === 'string' ? JSON.parse(raw) : raw
+        return Array.isArray(value) ? value : []
+      } catch {
+        return []
+      }
+    }
+
+    const conditions = parse<{ condition?: string; treatment?: string }>(healthBook.chronicConditions)
+    const allergies = parse<{ allergen?: string; severity?: string }>(healthBook.allergies)
+    const medications = parse<{ name?: string; dosage?: string; frequency?: string }>(
+      healthBook.medications
+    )
+    const surgeries = parse<{ type?: string; date?: string }>(healthBook.surgeries)
+
+    const lines: string[] = []
+
+    if (healthBook.isSterilized) lines.push('- Stérilisé(e)')
+    if (healthBook.sex) lines.push(`- Sexe : ${healthBook.sex === 'male' ? 'mâle' : 'femelle'}`)
+
+    if (conditions.length) {
+      lines.push(
+        `- Maladies chroniques : ${conditions
+          .map((c) => `${c.condition ?? 'non précisée'}${c.treatment ? ` (traitée par ${c.treatment})` : ''}`)
+          .join(' ; ')}`
+      )
+    }
+    if (allergies.length) {
+      lines.push(
+        `- Allergies : ${allergies
+          .map((a) => `${a.allergen ?? 'non précisée'}${a.severity ? ` (${a.severity})` : ''}`)
+          .join(' ; ')}`
+      )
+    }
+    if (medications.length) {
+      lines.push(
+        `- Traitements en cours : ${medications
+          .map((m) => `${m.name ?? 'non précisé'}${m.dosage ? ` ${m.dosage}` : ''}`)
+          .join(' ; ')}`
+      )
+    }
+    if (surgeries.length) {
+      lines.push(
+        `- Antécédents chirurgicaux : ${surgeries
+          .map((s) => `${s.type ?? 'intervention'}${s.date ? ` (${s.date})` : ''}`)
+          .join(' ; ')}`
+      )
+    }
+
+    // Chiens de catégorie 1 et 2 : muselière et laisse obligatoires sur la voie
+    // publique en France. Un plan qui propose du travail détaché serait
+    // illégal à appliquer.
+    if (healthBook.dogCategory === 1 || healthBook.dogCategory === 2) {
+      lines.push(
+        `- Chien de catégorie ${healthBook.dogCategory} (législation française) : muselière et laisse obligatoires sur la voie publique`
+      )
+    }
+
+    if (lines.length === 0) return ''
+
+    return `
+SANTÉ (carnet de l'animal)
+${lines.join('\n')}
+
+Consignes impératives liées à ces éléments :
+- Écarte ou adapte tout exercice contre-indiqué. Problème articulaire ou
+  antécédent orthopédique : pas de saut, pas d'impact répété, pas d'assis-debout
+  en série. Problème cardiaque ou respiratoire, ou race brachycéphale : séances
+  courtes, pas d'effort soutenu.
+- En cas d'allergie alimentaire, ne suppose pas quelles friandises sont
+  utilisables : propose la récompense au jeu ou à la voix en alternative.
+- Si un traitement en cours peut modifier le comportement ou la vigilance,
+  invite à valider le programme avec le vétérinaire, sans alarmer.
+- Pour un chien catégorisé, tous les exercices en extérieur doivent rester
+  compatibles avec le port de la muselière et le maintien en laisse.
+- N'invente aucun diagnostic et ne donne aucun conseil médical : tu adaptes
+  l'éducation, tu ne soignes pas.
+`
   }
 
   /** Bloc ajouté à partir du deuxième cycle. Vide sur un premier plan. */
@@ -304,6 +406,7 @@ Construis le plan en attaquant en priorité les deux axes les plus faibles, sans
     previousScores: Record<TrainingAxis, number>
     adherence: string
     goalProgress: string
+    journal?: CycleJournal
   }): string {
     if (!progress) return ''
 
@@ -314,12 +417,51 @@ ${TRAINING_AXES.map((a) => `- ${a.label} : ${progress.previousScores[a.key] ?? 0
 
 Assiduité déclarée : ${progress.adherence}
 Ressenti sur les objectifs : ${progress.goalProgress}
-
+${this.journalBlock(progress.journal)}
 Tiens-en compte : si l'assiduité a été faible, allège le volume et rends les
 exercices plus courts plutôt que d'ajouter de la difficulté. Si les objectifs
 sont atteints, monte d'un cran (distraction, distance, durée) au lieu de
 répéter le même contenu. Ne réutilise pas mot pour mot les exercices du cycle
 précédent.
+`
+  }
+
+  /**
+   * Journal de bord du cycle écoulé. C'est la partie la plus utile du prompt :
+   * les notes du propriétaire disent pourquoi un exercice a calé, ce qu'aucun
+   * taux de complétion ne raconte.
+   */
+  private journalBlock(journal?: CycleJournal): string {
+    if (!journal) return ''
+
+    const weeks = journal.byWeek
+      .map(
+        (w) =>
+          `- Semaine ${w.week} : ${w.done}/${w.planned} exercices faits, sur ${w.activeDays} jours actifs`
+      )
+      .join('\n')
+
+    const notes = journal.notes.length
+      ? journal.notes
+          .map(
+            (n) =>
+              `- S${n.week} ${n.day} · « ${n.exercise} »${n.done ? '' : ' (non fait)'} : ${n.note}`
+          )
+          .join('\n')
+      : '(aucune observation écrite)'
+
+    return `
+CE QUI A ÉTÉ FAIT
+${weeks}
+Total : ${journal.totalChecks} exercices validés sur ${journal.activeDays} jours actifs.
+
+OBSERVATIONS DU PROPRIÉTAIRE
+${notes}
+
+Ces observations priment sur les notes chiffrées quand les deux se contredisent :
+elles décrivent des situations réelles. Reprends explicitement les difficultés
+qui y reviennent, et ne repropose pas à l'identique un exercice décrit comme
+raté ou impraticable — modifie-le ou remplace-le.
 `
   }
 

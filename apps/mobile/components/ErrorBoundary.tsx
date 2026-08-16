@@ -1,6 +1,12 @@
 import { Component, type ReactNode } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { colors } from '@/constants/theme'
+import {
+  consumePreviousReport,
+  installCrashTrap,
+  trace,
+  type CrashReport,
+} from '@/services/crashLog'
 
 /**
  * Filet de sécurité global.
@@ -9,70 +15,108 @@ import { colors } from '@/constants/theme'
  * l'utilisateur voit l'app disparaître, et si l'erreur se reproduit au
  * démarrage il ne peut plus jamais l'ouvrir. On préfère afficher l'erreur,
  * quitte à ce qu'elle soit technique, et laisser une porte de sortie.
+ *
+ * Le composant ne couvre toutefois que le rendu : une exception dans un
+ * `onPress` ou un plantage natif passent à côté. Ils arrivent ici par la boîte
+ * noire (`services/crashLog`), qui les rattrape en vol ou les restitue au
+ * démarrage suivant quand l'application n'a pas survécu.
  */
 interface Props {
   children: ReactNode
 }
 
 interface State {
-  error: Error | null
-  stack: string | null
+  report: CrashReport | null
+  componentStack: string | null
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { error: null, stack: null }
+  state: State
+
+  // Le piège est posé dans le constructeur, et non au montage : les effets des
+  // composants enfants s'exécutent avant `componentDidMount` du parent, et les
+  // étapes qu'ils tracent seraient effacées par la lecture du rapport.
+  constructor(props: Props) {
+    super(props)
+    installCrashTrap((report) => this.setState({ report }))
+    this.state = { report: consumePreviousReport(), componentStack: null }
+    trace('démarrage')
+  }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    return { error }
+    return {
+      report: {
+        kind: 'js',
+        message: error?.message || String(error),
+        stack: error?.stack ?? null,
+        at: new Date().toISOString(),
+        trail: [],
+      },
+    }
   }
 
   componentDidCatch(error: Error, info: { componentStack?: string | null }) {
-    this.setState({ error, stack: info.componentStack ?? null })
+    this.setState({ componentStack: info.componentStack ?? null })
     console.error('[ErrorBoundary]', error?.message, error?.stack, info.componentStack)
   }
 
-  reset = () => this.setState({ error: null, stack: null })
+  reset = () => this.setState({ report: null, componentStack: null })
 
   render() {
-    const { error, stack } = this.state
-    if (!error) return this.props.children
+    const { report, componentStack } = this.state
+    if (!report) return this.props.children
+
+    const native = report.kind === 'native'
 
     return (
       <View style={s.root}>
         <ScrollView contentContainerStyle={s.content}>
           <Text style={s.emoji}>🐾</Text>
-          <Text style={s.title}>Quelque chose s'est mal passé</Text>
+          <Text style={s.title}>
+            {native ? 'L’application s’est fermée' : "Quelque chose s'est mal passé"}
+          </Text>
           <Text style={s.intro}>
-            L'application a rencontré une erreur inattendue. Le détail ci-dessous nous aide à la corriger.
+            {native
+              ? 'Voici ce qui s’est passé juste avant. Ce détail nous permet de corriger.'
+              : 'L’application a rencontré une erreur inattendue. Le détail ci-dessous nous aide à la corriger.'}
           </Text>
 
           <View style={s.card}>
             <Text style={s.label}>Erreur</Text>
             <Text style={s.mono} selectable>
-              {error.message || String(error)}
+              {report.message}
             </Text>
           </View>
 
-          {error.stack ? (
+          {report.stack ? (
             <View style={s.card}>
               <Text style={s.label}>Pile d'appels</Text>
               <Text style={s.monoSmall} selectable>
-                {error.stack.split('\n').slice(0, 12).join('\n')}
+                {report.stack.split('\n').slice(0, 12).join('\n')}
               </Text>
             </View>
           ) : null}
 
-          {stack ? (
+          {report.trail.length > 0 ? (
+            <View style={s.card}>
+              <Text style={s.label}>Dernières étapes</Text>
+              <Text style={s.monoSmall} selectable>
+                {report.trail.slice(-20).join('\n')}
+              </Text>
+            </View>
+          ) : null}
+
+          {componentStack ? (
             <View style={s.card}>
               <Text style={s.label}>Composants</Text>
               <Text style={s.monoSmall} selectable>
-                {stack.split('\n').filter(Boolean).slice(0, 10).join('\n')}
+                {componentStack.split('\n').filter(Boolean).slice(0, 10).join('\n')}
               </Text>
             </View>
           ) : null}
 
           <Pressable style={({ pressed }) => [s.btn, pressed && s.pressed]} onPress={this.reset}>
-            <Text style={s.btnText}>Réessayer</Text>
+            <Text style={s.btnText}>{native ? 'Continuer' : 'Réessayer'}</Text>
           </Pressable>
         </ScrollView>
       </View>

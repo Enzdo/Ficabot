@@ -105,4 +105,19 @@ export default class TrainingProgram extends BaseModel {
     const days = Math.ceil(this.weekStartedAt.plus({ days: 7 }).diffNow('days').days)
     return Math.max(0, days)
   }
+
+  /** Jours écoulés depuis le début de la semaine en cours. */
+  get daysSinceWeekStart(): number {
+    return Math.floor(Math.abs(this.weekStartedAt.diffNow('days').days))
+  }
+
+  /**
+   * Au-delà de deux semaines sans bilan, le suivi est décroché : répondre à des
+   * questions sur « la semaine écoulée » n'a plus de sens, et laisser la
+   * semaine verrouillée indéfiniment condamne le programme. On propose alors de
+   * reprendre la semaine à zéro.
+   */
+  get isStale(): boolean {
+    return this.status === 'active' && this.daysSinceWeekStart >= 14
+  }
 }

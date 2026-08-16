@@ -5,11 +5,15 @@ import TrainingAssessment from '#models/training_assessment'
 import TrainingService from '#services/training_service'
 import TrainingProgramService from '#services/training_program_service'
 import { createTrainingAssessmentValidator } from '#validators/training'
+import BlogPost from '#models/blog_post'
 import {
+  AXIS_LABEL,
   CONTEXT_QUESTIONS,
   TRAINING_AXES,
   TRAINING_QUESTIONS,
+  type TrainingAxis,
 } from '#services/training/questionnaire'
+import { AXIS_REFERENCES, videoSearchUrl } from '#services/training/references'
 import logger from '@adonisjs/core/services/logger'
 
 const LEVEL_LABELS: Record<string, { label: string; message: string }> = {
@@ -46,6 +50,57 @@ export default class TrainingController {
         axes: TRAINING_AXES,
         questions: TRAINING_QUESTIONS,
         contextQuestions: CONTEXT_QUESTIONS,
+      },
+    })
+  }
+
+  /**
+   * Fond documentaire d'un axe : le pourquoi de l'exercice, les erreurs
+   * fréquentes, les repères de progression, plus des articles du blog et des
+   * recherches vidéo.
+   * GET /training/references/:axis
+   */
+  async references({ params, response }: HttpContext) {
+    const axis = params.axis as TrainingAxis
+    const reference = AXIS_REFERENCES[axis]
+    if (!reference) {
+      return response.notFound({ success: false, message: 'Domaine inconnu' })
+    }
+
+    // Les articles viennent du blog existant : rien n'est inventé, et la liste
+    // se remplit d'elle-même à mesure que des articles sont publiés.
+    const articles = await BlogPost.query()
+      .where('target', 'owner')
+      .where('category', reference.blogCategory)
+      .where((q) => {
+        q.orWhereRaw(`',' || species || ',' LIKE ?`, ['%,dog,%']).orWhereNull('species')
+      })
+      .orderBy('featured', 'desc')
+      .limit(4)
+
+    return response.ok({
+      success: true,
+      data: {
+        axis,
+        label: AXIS_LABEL[axis],
+        why: reference.why,
+        mechanism: reference.mechanism,
+        mistakes: reference.mistakes,
+        milestones: reference.milestones,
+        articles: articles.map((a) => ({
+          slug: a.slug,
+          title: a.title,
+          excerpt: a.excerpt,
+          readTime: a.readTime,
+          image: a.imageUrl,
+        })),
+        videos: reference.curatedVideos,
+        // Des recherches, pas des vidéos précises : un lien inventé qui tombe
+        // en 404 décrédibilise tout le reste de l'écran.
+        videoSearches: reference.searchTerms.map((term) => ({
+          label: term,
+          url: videoSearchUrl(term),
+        })),
       },
     })
   }
@@ -157,7 +212,7 @@ export default class TrainingController {
     const assessment = await TrainingAssessment.query()
       .where('id', params.id)
       .where('userId', user.id)
-      .preload('pet')
+      .preload('pet', (query) => query.preload('healthBook'))
       .first()
 
     if (!assessment) {
@@ -185,6 +240,7 @@ export default class TrainingController {
         pet: assessment.pet,
         scoring,
         context: assessment.context,
+        healthBook: assessment.pet.healthBook ?? null,
       })
 
       assessment.plan = plan

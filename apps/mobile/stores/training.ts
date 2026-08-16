@@ -101,6 +101,21 @@ export interface DailyTask {
   steps: string[]
   tip: string
   done: boolean
+  /** Observation du propriétaire, relue par l'IA en fin de cycle. */
+  note: string | null
+}
+
+/** Fond documentaire d'un axe, chargé à la demande et mis en cache. */
+export interface AxisReference {
+  axis: TrainingAxis
+  label: string
+  why: string
+  mechanism: string
+  mistakes: string[]
+  milestones: string[]
+  articles: { slug: string; title: string; excerpt: string; readTime?: string | null; image?: string | null }[]
+  videos: { title: string; url: string; source: string }[]
+  videoSearches: { label: string; url: string }[]
 }
 
 export interface ProgramSummary {
@@ -121,6 +136,9 @@ export interface ProgramSummary {
   /** Vrai à J+7 : la semaine suivante reste verrouillée tant que c'est vrai. */
   checkinDue: boolean
   daysUntilCheckin: number
+  /** Deux semaines sans bilan : le suivi est décroché, on propose de repartir. */
+  isStale: boolean
+  daysSinceWeekStart: number
   scores: Record<TrainingAxis, number>
   overallScore: number
   level: string
@@ -145,6 +163,8 @@ interface State {
    * fait — c'est-à-dire lui faisait perdre son plan.
    */
   lastAssessments: Record<string, TrainingAssessmentSummary | null>
+  /** Fond documentaire par axe. Il ne change jamais : chargé une seule fois. */
+  references: Partial<Record<TrainingAxis, AxisReference>>
   loading: boolean
   submitting: boolean
   generatingPlan: boolean
@@ -156,6 +176,9 @@ interface State {
   fetchToday: () => Promise<void>
   fetchLastAssessment: (petId: string | number) => Promise<void>
   toggleTask: (programId: number, taskKey: string, done: boolean) => Promise<void>
+  setTaskNote: (programId: number, taskKey: string, note: string | null) => Promise<void>
+  fetchReference: (axis: TrainingAxis) => Promise<AxisReference | null>
+  restartWeek: (programId: number) => Promise<boolean>
   programForPet: (petId: string | number) => ProgramSummary | undefined
 
   fetchQuestionnaire: () => Promise<Questionnaire | null>
@@ -179,6 +202,7 @@ export const useTrainingStore = create<State>((set, get) => ({
   programs: [],
   programsLoaded: false,
   lastAssessments: {},
+  references: {},
   loading: false,
   submitting: false,
   generatingPlan: false,
@@ -237,6 +261,57 @@ export const useTrainingStore = create<State>((set, get) => ({
       set({ error: res.message ?? "L'exercice n'a pas pu être enregistré" })
       await get().fetchToday()
     }
+  },
+
+  setTaskNote: async (programId, taskKey, note) => {
+    const day = new Date().toISOString().slice(0, 10)
+    const clean = note?.trim() ? note.trim() : null
+
+    // Affichage immédiat : la note est déjà à l'écran quand la requête part.
+    set((s) => ({
+      programs: s.programs.map((p) =>
+        p.id === programId
+          ? { ...p, tasks: p.tasks.map((t) => (t.key === taskKey ? { ...t, note: clean } : t)) }
+          : p
+      ),
+    }))
+
+    const res = await api.post<ProgramSummary>(`/training/programs/${programId}/tasks`, {
+      taskKey,
+      note: clean,
+      day,
+    })
+
+    if (res.success && res.data) {
+      set((s) => ({
+        programs: s.programs.map((p) => (p.id === programId ? { ...p, ...res.data! } : p)),
+      }))
+    } else {
+      set({ error: res.message ?? "La note n'a pas pu être enregistrée" })
+      await get().fetchToday()
+    }
+  },
+
+  fetchReference: async (axis) => {
+    const cached = get().references[axis]
+    if (cached) return cached
+
+    const res = await api.get<AxisReference>(`/training/references/${axis}`)
+    if (res.success && res.data) {
+      set((s) => ({ references: { ...s.references, [axis]: res.data! } }))
+      return res.data
+    }
+    return null
+  },
+
+  restartWeek: async (programId) => {
+    const res = await api.post(`/training/programs/${programId}/restart-week`)
+    if (res.success) {
+      await get().fetchToday()
+      return true
+    }
+    set({ error: res.message ?? "La semaine n'a pas pu être relancée" })
+    return false
   },
 
   programForPet: (petId) => get().programs.find((p) => String(p.petId) === String(petId)),

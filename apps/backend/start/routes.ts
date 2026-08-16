@@ -317,6 +317,7 @@ const TrainingController = () => import('#controllers/training_controller')
 const TrainingProgramsController = () => import('#controllers/training_programs_controller')
 router.group(() => {
   router.get('/questionnaire', [TrainingController, 'questionnaire'])
+  router.get('/references/:axis', [TrainingController, 'references'])
   router.get('/assessments/:id', [TrainingController, 'show'])
   router.delete('/assessments/:id', [TrainingController, 'destroy'])
   router.post('/assessments/:id/plan', [TrainingController, 'generatePlan']).use(middleware.premium())
@@ -328,6 +329,7 @@ router.group(() => {
   router.post('/programs/:id/tasks', [TrainingProgramsController, 'toggleTask'])
   router.get('/programs/:id/checkin', [TrainingProgramsController, 'checkinQuestions'])
   router.post('/programs/:id/checkin', [TrainingProgramsController, 'submitCheckin'])
+  router.post('/programs/:id/restart-week', [TrainingProgramsController, 'restartWeek'])
   router
     .post('/programs/:id/next-cycle', [TrainingProgramsController, 'nextCycle'])
     .use(middleware.premium())

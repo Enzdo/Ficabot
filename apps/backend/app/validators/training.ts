@@ -15,7 +15,10 @@ export const createTrainingAssessmentValidator = vine.compile(
 export const toggleTrainingTaskValidator = vine.compile(
   vine.object({
     taskKey: vine.string().maxLength(80),
-    done: vine.boolean(),
+    // Optionnel : on écrit parfois une note sans toucher à la coche.
+    done: vine.boolean().optional(),
+    // `null` efface l'observation ; absent la laisse telle quelle.
+    note: vine.string().maxLength(1000).nullable().optional(),
     // Le jour vient du téléphone : le serveur ne peut pas deviner le fuseau de
     // l'utilisateur, et cocher à 23h ne doit pas atterrir sur le lendemain.
     day: vine.string().fixedLength(10).optional(),

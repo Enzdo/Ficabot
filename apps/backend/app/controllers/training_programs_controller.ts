@@ -28,7 +28,11 @@ export default class TrainingProgramsController {
   }
 
   private async findOwned(id: string, userId: number) {
-    return TrainingProgram.query().where('id', id).where('userId', userId).preload('pet').first()
+    return TrainingProgram.query()
+      .where('id', id)
+      .where('userId', userId)
+      .preload('pet', (query) => query.preload('healthBook'))
+      .first()
   }
 
   /**
@@ -97,6 +101,7 @@ export default class TrainingProgramsController {
         planFromAi: program.planFromAi,
         scoresHistory: program.scoresHistory,
         adherence,
+        journal: await this.programs.collectJournal(program),
         axes: TRAINING_AXES,
       },
     })
@@ -136,16 +141,62 @@ export default class TrainingProgramsController {
       return response.badRequest({ success: false, message: 'Exercice inconnu pour cette semaine' })
     }
 
-    await this.programs.toggleTask({
-      program,
-      userId: user.id,
-      day,
-      taskKey: payload.taskKey,
-      done: payload.done,
-    })
+    if (payload.done !== undefined) {
+      await this.programs.toggleTask({
+        program,
+        userId: user.id,
+        day,
+        taskKey: payload.taskKey,
+        done: payload.done,
+      })
+    }
+
+    if (payload.note !== undefined) {
+      await this.programs.setTaskNote({
+        program,
+        userId: user.id,
+        day,
+        taskKey: payload.taskKey,
+        note: payload.note,
+      })
+    }
 
     const summary = await this.programs.summarize(program, day)
     return response.ok({ success: true, data: summary })
+  }
+
+  /**
+   * Repart sur la semaine en cours sans passer par le bilan.
+   *
+   * Réservé aux programmes décrochés depuis deux semaines : au-delà, le bilan
+   * porterait sur une période où rien n'a été travaillé, et le refuser
+   * bloquerait le suivi pour toujours. Les notes ne bougent pas — rien ne
+   * permet de dire qu'elles ont changé.
+   * POST /training/programs/:id/restart-week
+   */
+  async restartWeek({ params, auth, response }: HttpContext) {
+    const user = auth.user!
+    const program = await this.findOwned(params.id, user.id)
+    if (!program) {
+      return response.notFound({ success: false, message: 'Programme introuvable' })
+    }
+    if (program.status !== 'active') {
+      return response.badRequest({ success: false, message: 'Ce programme est terminé' })
+    }
+    if (!program.isStale) {
+      return response.badRequest({
+        success: false,
+        message: 'Faites le bilan de la semaine pour continuer',
+      })
+    }
+
+    program.weekStartedAt = DateTime.now()
+    await program.save()
+
+    return response.ok({
+      success: true,
+      data: { id: program.id, week: program.currentWeek, cycle: program.cycle },
+    })
   }
 
   /**
@@ -330,6 +381,10 @@ export default class TrainingProgramsController {
       .map((a) => a.key)
       .sort((a, b) => program.scores[a] - program.scores[b])
 
+    // Tout ce qui a été coché et écrit pendant le cycle : c'est la matière que
+    // le modèle relit pour ajuster la suite.
+    const journal = await this.programs.collectJournal(program)
+
     try {
       const { plan, fromAi } = await this.training.generatePlan({
         pet: program.pet,
@@ -340,11 +395,13 @@ export default class TrainingProgramsController {
           weakest,
         },
         context,
+        healthBook: program.pet.healthBook ?? null,
         progress: {
           cycle: program.cycle + 1,
           previousScores: program.scoresHistory[0]?.scores ?? program.scores,
           adherence: adherenceLabel('chk_sessions'),
           goalProgress: adherenceLabel('chk_goal'),
+          journal,
         },
       })
 
