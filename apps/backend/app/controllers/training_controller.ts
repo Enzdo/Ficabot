@@ -67,16 +67,28 @@ export default class TrainingController {
       return response.notFound({ success: false, message: 'Domaine inconnu' })
     }
 
-    // Les articles viennent du blog existant : rien n'est inventé, et la liste
-    // se remplit d'elle-même à mesure que des articles sont publiés.
-    const articles = await BlogPost.query()
-      .where('target', 'owner')
-      .where('category', reference.blogCategory)
-      .where((q) => {
-        q.orWhereRaw(`',' || species || ',' LIKE ?`, ['%,dog,%']).orWhereNull('species')
-      })
-      .orderBy('featured', 'desc')
-      .limit(4)
+    // Les articles viennent du blog existant : rien n'est inventé. On sert
+    // d'abord la sélection explicite de l'axe, dans son ordre de pertinence,
+    // et on complète par la catégorie si ces articles n'existent pas encore.
+    const picked = reference.blogSlugs.length
+      ? await BlogPost.query().whereIn('slug', reference.blogSlugs)
+      : []
+
+    const ordered = reference.blogSlugs
+      .map((slug) => picked.find((a) => a.slug === slug))
+      .filter((a): a is BlogPost => !!a)
+
+    const articles =
+      ordered.length > 0
+        ? ordered
+        : await BlogPost.query()
+            .where('target', 'owner')
+            .where('category', reference.blogCategory)
+            .where((q) => {
+              q.orWhereRaw(`',' || species || ',' LIKE ?`, ['%,dog,%']).orWhereNull('species')
+            })
+            .orderBy('featured', 'desc')
+            .limit(4)
 
     return response.ok({
       success: true,

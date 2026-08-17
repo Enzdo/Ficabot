@@ -2,11 +2,13 @@
  * Fond documentaire par axe : le « pourquoi » derrière les exercices, les
  * erreurs qui font échouer le travail, et des pistes pour aller plus loin.
  *
- * Note sur les vidéos : aucune URL de vidéo précise n'est codée en dur ici.
- * Une référence inventée ou un lien mort valent moins que rien — ils font
- * perdre confiance dans tout le reste. On fournit donc des recherches
- * préremplies, qui restent valides dans le temps. Le jour où vous disposez
- * d'une liste de vidéos validées, elle a sa place dans `curatedVideos`.
+ * Les vidéos de `curatedVideos` ont été vérifiées une à une via l'API oEmbed
+ * de YouTube, qui renvoie une erreur pour toute vidéo supprimée ou privée :
+ * titre et chaîne ci-dessous sont ceux réellement retournés, pas une
+ * reconstitution. Une référence inventée ou morte vaut moins que rien.
+ *
+ * Elles restent doublées d'une recherche préremplie : une vidéo peut être
+ * retirée par son auteur, une recherche non.
  */
 
 import type { TrainingAxis } from './questionnaire.js'
@@ -20,11 +22,18 @@ export interface AxisReference {
   mistakes: string[]
   /** Repères de progression, pour savoir si on avance. */
   milestones: string[]
-  /** Catégorie d'articles du blog à proposer sur cet axe. */
+  /**
+   * Articles du blog à proposer, par slug et dans l'ordre de pertinence.
+   * Sélection explicite plutôt que filtre par catégorie : « Comportement »
+   * mélange le rappel, le marquage urinaire du chat et la cage de transport,
+   * dont deux n'ont rien à faire sur un exercice de rappel.
+   */
+  blogSlugs: string[]
+  /** Filet de sécurité si aucun des slugs n'existe encore en base. */
   blogCategory: string
   /** Requêtes de recherche vidéo, en français. */
   searchTerms: string[]
-  /** Vidéos validées à la main. Vide tant que personne ne les a vérifiées. */
+  /** Vidéos vérifiées via l'API oEmbed de YouTube : elles existent et sont publiques. */
   curatedVideos: { title: string; url: string; source: string }[]
 }
 
@@ -45,9 +54,13 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       'Il tient en extérieur calme, sans friandise visible dans la main.',
       "Il tient avec un passant ou un chien à vingt mètres.",
     ],
-    blogCategory: 'education',
+    blogSlugs: ['rappel-apprendre-chien-revenir', 'marche-en-laisse-poser-bases-chiot'],
+    blogCategory: 'Comportement',
     searchTerms: ['apprendre assis couché chien méthode positive', 'proofing ordres de base chien'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: 'Assis, couché, pas bougé, stop… les ordres à apprendre en premier', url: 'https://www.youtube.com/watch?v=xh6xXC73nNE', source: 'EDUC DOG' },
+      { title: '[Tuto véto] Apprendre le assis et le pas bouger', url: 'https://www.youtube.com/watch?v=pVGfVrm5Q6g', source: 'Catedog — Conseils Vétérinaires' },
+    ]
   },
 
   recall: {
@@ -66,9 +79,14 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       "Il coupe une activité modérée (reniflage) pour revenir.",
       "Il revient alors qu'un autre chien joue à distance.",
     ],
-    blogCategory: 'education',
+    blogSlugs: ['rappel-apprendre-chien-revenir'],
+    blogCategory: 'Comportement',
     searchTerms: ['apprendre le rappel chien longe', 'rappel chien renforcement positif'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: 'Comment apprendre le RAPPEL de A à Z (guide complet)', url: 'https://www.youtube.com/watch?v=p1QtVfkYbDo', source: 'EDUC DOG' },
+      { title: 'Apprendre le rappel facilement et rapidement', url: 'https://www.youtube.com/watch?v=P_-7HG_bEpc', source: 'EDUC DOG' },
+      { title: 'Apprendre le rappel au pied à son chien', url: 'https://www.youtube.com/watch?v=ZK8NmJ7QtrE', source: 'Peps et Scot Passion Chiens' },
+    ]
   },
 
   leash: {
@@ -87,9 +105,13 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       'Une rue calme se fait sans tension permanente.',
       'Un croisement de chien à dix mètres se passe sans se cabrer.',
     ],
-    blogCategory: 'education',
+    blogSlugs: ['marche-en-laisse-poser-bases-chiot'],
+    blogCategory: 'Comportement',
     searchTerms: ['chien qui tire en laisse solution positive', 'marche en laisse détendue apprentissage'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: 'Petite astuce pour l\'apprentissage de la marche en laisse', url: 'https://www.youtube.com/watch?v=jyTl8bZsJVM', source: 'Esprit Dog' },
+      { title: 'Apprendre le rappel et la marche en laisse à son chiot', url: 'https://www.youtube.com/watch?v=y2rVk2W17TA', source: 'EDUC DOG' },
+    ]
   },
 
   social: {
@@ -108,9 +130,14 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       'Il salue brièvement puis se détourne de lui-même.',
       'Il croise sans réaction en ville, laisse détendue.',
     ],
-    blogCategory: 'comportement',
+    blogSlugs: ['sociabiliser-chiot-fenetre-3-12-semaines', 'chien-aboie-trop-comprendre'],
+    blogCategory: 'Comportement',
     searchTerms: ['socialisation chien adulte désensibilisation', 'réactivité en laisse chien distance seuil'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: 'Chien réactif, l\'erreur à ne pas faire', url: 'https://www.youtube.com/watch?v=LrYz0ReVkMo', source: 'Esprit Dog' },
+      { title: 'Chien réactif aux voitures — désensibilisation étape par étape', url: 'https://www.youtube.com/watch?v=2bVZKUIzuk8', source: 'Sentier Canin' },
+      { title: 'Chien peureux : le désensibiliser étape par étape', url: 'https://www.youtube.com/watch?v=J1QrcoyoDkM', source: 'Esprit Dog' },
+    ]
   },
 
   calm: {
@@ -129,9 +156,13 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       'Il reste seul dix minutes sans signe de détresse.',
       'Il reste seul deux heures, confirmé par une vidéo.',
     ],
-    blogCategory: 'comportement',
+    blogSlugs: ['anxiete-separation-chien-pistes', 'chien-aboie-trop-comprendre'],
+    blogCategory: 'Comportement',
     searchTerms: ['anxiété de séparation chien protocole', 'apprendre le calme chien tapis'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: '3 étapes pour apprendre à votre chien à rester seul', url: 'https://www.youtube.com/watch?v=q4a7B4O9qpo', source: 'EDUC DOG' },
+      { title: 'Laisser son chiot seul à la maison sans stress', url: 'https://www.youtube.com/watch?v=ZQl0LdtyzJc', source: 'EDUC DOG' },
+    ]
   },
 
   daily: {
@@ -150,9 +181,14 @@ export const AXIS_REFERENCES: Record<TrainingAxis, AxisReference> = {
       'Il garde les quatre pattes au sol à votre arrivée.',
       'La table peut rester desservie quelques minutes sans incident.',
     ],
-    blogCategory: 'education',
+    blogSlugs: ['eduquer-chiot-proprete-2-semaines', 'soins-griffes-quand-comment-couper-chien-chat', 'brossage-pelage-demeler-lustrer-detecter-parasites', 'nettoyer-oreilles-chien-frequence-technique'],
+    blogCategory: 'Hygiène',
     searchTerms: ['propreté chiot apprentissage', 'manipulation soins coopératifs chien'],
-    curatedVideos: [],
+    curatedVideos: [
+      { title: 'Comment apprendre la propreté à son chien (guide complet)', url: 'https://www.youtube.com/watch?v=b1pScgeb1u4', source: 'EDUC DOG' },
+      { title: '3 méthodes faciles pour apprendre la propreté', url: 'https://www.youtube.com/watch?v=h2g0VlA5GnI', source: 'EDUC DOG' },
+      { title: 'La propreté du chiot — tutoriel complet', url: 'https://www.youtube.com/watch?v=Bg_jrIGmE5A', source: 'Peps et Scot Passion Chiens' },
+    ]
   },
 }
 
