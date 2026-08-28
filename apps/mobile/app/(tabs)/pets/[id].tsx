@@ -407,7 +407,7 @@ export default function PetDetailScreen() {
     // permissions READ_MEDIA_* sont d'ailleurs bloquées dans app.json, comme
     // l'exige Google Play pour un accès ponctuel aux photos.
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
