@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nuxt dev --port 3001",
     "start": "node .output/server/index.mjs",
-    "build": "pnpm --filter @ficabot/shared build && nuxt build",
+    "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -14,7 +14,6 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@ficabot/shared": "workspace:*",
     "@nuxtjs/i18n": "^10.2.1",
     "@pinia/nuxt": "^0.5.1",
     "@vueuse/core": "^10.9.0",

@@ -422,6 +422,9 @@ router.group(() => {
 }).prefix('/notifications').use(middleware.vetAuth())
 
 // Vet Patients Management
+const VetConsultationsController = () => import('#controllers/vet_consultations_controller')
+const VetOnboardingController = () => import('#controllers/vet_onboarding_controller')
+const VetAssistantController = () => import('#controllers/vet_assistant_controller')
 router.group(() => {
   router.get('/', [VetPatientsController, 'index'])
   router.get('/search', [VetPatientsController, 'search'])
@@ -429,7 +432,22 @@ router.group(() => {
   router.get('/:token/health-book', [VetPatientsController, 'healthBook'])
   router.post('/:token/notes', [VetPatientsController, 'addNote'])
   router.put('/:token/diet/vet-notes', [WeightGoalsController, 'updateVetNotes'])
+  router.post('/:token/assistant', [VetAssistantController, 'ask'])
 }).prefix('/vet/patients').use(middleware.vetAuth())
+
+// Vet Consultations (dictée → compte rendu structuré)
+router.group(() => {
+  router.get('/options', [VetConsultationsController, 'options'])
+  router.post('/transcribe', [VetConsultationsController, 'transcribe'])
+  router.post('/', [VetConsultationsController, 'store'])
+}).prefix('/vet/consultations').use(middleware.vetAuth())
+
+// Parcours d'inscription (profil d'exercice)
+router.group(() => {
+  router.get('/options', [VetOnboardingController, 'options'])
+  router.get('/', [VetOnboardingController, 'show'])
+  router.post('/', [VetOnboardingController, 'update'])
+}).prefix('/vet/onboarding').use(middleware.vetAuth())
 
 // Vet Clients Management (User-Veterinarian links)
 const VetClientsController = () => import('#controllers/vet_clients_controller')

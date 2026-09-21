@@ -6,8 +6,7 @@
         <div class="flex items-center justify-between">
           <!-- Logo -->
           <NuxtLink to="/" class="flex items-center gap-2.5 group z-50 relative">
-            <img :src="logoSrc" alt="Ficana" class="h-10 w-10 group-hover:scale-110 transition-transform duration-300" />
-            <span class="text-xl font-bold text-gray-900 tracking-tight">Ficana</span>
+            <img src="/brand/ficana-wordmark.png" alt="Ficana" class="h-7 w-auto" />
           </NuxtLink>
 
           <!-- Mobile Menu Button -->
@@ -84,8 +83,7 @@
         <div class="grid md:grid-cols-4 gap-8 mb-8">
           <div class="col-span-1 md:col-span-2">
             <div class="flex items-center gap-2 mb-4">
-              <img :src="logoSrc" alt="Ficana" class="h-8 w-8" />
-              <span class="text-xl font-bold text-gray-900">Ficana</span>
+              <img src="/brand/ficana-logo.png" alt="Ficana" class="h-20 w-auto" />
             </div>
             <p class="text-gray-500 text-sm max-w-xs mb-5">
               Le carnet de santé numérique de vos animaux, simple et rassurant.
@@ -125,7 +123,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import logoSrc from '~/assets/images/logo.png'
 
 const scrolled = ref(false)
 const mobileMenuOpen = ref(false)
