@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* [DA-MOBILE] Synchronisé avec apps/mobile/constants/theme.ts (Ficana) */
+/* Charte Ficana (apps/mobile/constants/theme.ts) — structure à plat inspirée de vetally.fr */
 @layer base {
   :root {
     --color-bg: #FAF7F2;          /* beige pâle — fond global */
@@ -11,6 +11,7 @@
 
     --color-primary: #7EB13F;     /* vert Ficana */
     --color-primary-dark: #5C8A2A;
+    --color-primary-deep: #476A21; /* vert lisible en blanc (AA) */
     --color-primary-light: #EBF3DE;
 
     --color-ink: #1A1614;         /* texte principal */
@@ -31,9 +32,10 @@
     color: var(--color-ink);
   }
 
+  /* Titres serrés : signature de la charte */
   h1, h2, h3, h4 {
     color: var(--color-ink);
-    letter-spacing: -0.01em;
+    @apply tracking-tighter;
   }
 
   p {
@@ -43,30 +45,55 @@
 }
 
 @layer components {
-  /* [DA-MOBILE] Boutons — gradient vert 3-stops + shadow verte douce, radius 20px */
+  /* ---------- Typographie ---------- */
+
+  /* Sur-titre de section : 11px / 700 / uppercase très espacé */
+  .eyebrow {
+    @apply block text-[11px] font-bold uppercase tracking-eyebrow mb-4;
+    color: var(--color-primary-deep);
+  }
+
+  /* Mot d'accent en serif italique vert, au milieu d'un titre */
+  .display-accent {
+    @apply font-display italic font-normal;
+    color: var(--color-primary-dark);
+  }
+
+  /* Titre de section */
+  .section-title {
+    @apply text-4xl sm:text-5xl font-semibold tracking-tightest leading-[1.1];
+    color: var(--color-ink);
+  }
+
+  .section-lead {
+    @apply mt-5 text-lg max-w-prose;
+    color: var(--color-ink-soft);
+  }
+
+  /* ---------- Boutons : aplats, sans ombre ni dégradé ---------- */
+
   .btn {
-    @apply inline-flex items-center justify-center px-5 py-[14px] text-[15px] font-bold transition-all duration-200;
-    border-radius: 20px;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 text-[15px] font-semibold transition-colors duration-200;
+    border-radius: 8px;
   }
 
   .btn-primary {
     @apply btn text-white;
-    background-image: linear-gradient(135deg, #8EC347 0%, #7EB13F 50%, #5C8A2A 100%);
-    box-shadow: 0 4px 10px rgba(126, 177, 63, 0.28);
+    background: var(--color-primary-deep);
+    border: 1px solid var(--color-primary-deep);
   }
   .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(126, 177, 63, 0.35);
+    background: #36511b;
+    border-color: #36511b;
   }
   .btn-primary:active {
-    transform: scale(0.98);
+    transform: scale(0.99);
   }
 
   .btn-secondary {
-    @apply btn bg-white;
+    @apply btn bg-transparent;
     color: var(--color-ink);
-    border: 1.5px solid var(--color-border);
-    box-shadow: 0 1px 3px rgba(26, 22, 20, 0.04);
+    border: 1px solid var(--color-border);
   }
   .btn-secondary:hover {
     border-color: var(--color-border-strong);
@@ -75,76 +102,90 @@
 
   .btn-ghost {
     @apply btn;
-    color: var(--color-primary-dark);
+    color: var(--color-primary-deep);
     background: transparent;
+    border: 1px solid transparent;
   }
   .btn-ghost:hover {
     background: var(--color-primary-light);
   }
 
   .btn-white {
-    @apply btn-secondary;
+    @apply btn bg-white;
+    color: var(--color-ink);
+    border: 1px solid var(--color-border);
+  }
+  .btn-white:hover {
+    background: var(--color-bg-soft);
   }
 
   .btn-lg {
-    @apply px-7 py-4 text-base;
+    @apply px-7 py-3.5 text-base;
   }
 
-  /* [DA-MOBILE] Layout — rythme aéré mais sobre */
+  /* ---------- Rythme ---------- */
+
   .section {
-    @apply py-20 lg:py-28;
+    @apply py-24 lg:py-32;
   }
 
   .container-custom {
     @apply max-w-6xl mx-auto px-5 sm:px-6 lg:px-8;
   }
 
-  /* [DA-MOBILE] Texte accentué — vert plein, pas de gradient flashy */
+  /* Texte accentué — vert plein */
   .gradient-text {
     color: var(--color-primary-dark);
   }
 
-  /* [DA-MOBILE] Cards — blanc, border douce, shadow minimaliste (cf. mobile Card) */
+  /* ---------- Surfaces : hairline plutôt qu'ombre ---------- */
+
   .card {
     background: #FFFFFF;
     border: 1px solid var(--color-border);
-    border-radius: 24px;
-    box-shadow: 0 3px 8px -2px rgba(26, 22, 20, 0.06);
+    border-radius: 14px;
     @apply p-6 lg:p-8;
   }
 
   .card-hover {
-    @apply card transition-all duration-300;
+    @apply card transition-colors duration-200;
   }
   .card-hover:hover {
     border-color: var(--color-primary);
-    transform: translateY(-5px);
-    box-shadow: 0 16px 32px -8px rgba(26,22,20,0.13), 0 0 0 1.5px rgba(126,177,63,0.18);
+    background: #FFFFFF;
   }
-  .card-hover:hover .card-icon {
-    transform: scale(1.15) rotate(-8deg);
-  }
+  /* Plus d'animation d'icône : le survol se signale par la bordure */
   .card-icon {
-    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    transition: none;
   }
 
-  /* [DA-MOBILE] Navbar — fond beige translucide, border discret */
+  /* Panneau beige, pour les zones mises en avant */
+  .card-muted {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+    @apply p-6 lg:p-8;
+  }
+
+  /* ---------- Navigation ---------- */
+
   .nav-glass {
-    background: rgba(250, 247, 242, 0.85);
+    background: rgba(250, 247, 242, 0.88);
     backdrop-filter: blur(12px) saturate(140%);
     -webkit-backdrop-filter: blur(12px) saturate(140%);
     border-bottom: 1px solid var(--color-border);
   }
 
-  /* [DA-MOBILE] Hero background — beige doux avec halo vert très discret */
+  /* ---------- Fond de hero : voile vert très dilué ---------- */
+
   .bg-hero {
     background:
-      radial-gradient(ellipse at top right, rgba(126, 177, 63, 0.08) 0%, transparent 55%),
-      radial-gradient(ellipse at bottom left, rgba(212, 188, 159, 0.18) 0%, transparent 60%),
-      #FAF7F2;
+      radial-gradient(60% 50% at 50% 12%, rgba(126, 177, 63, 0.13) 0%, transparent 70%),
+      var(--color-bg);
   }
 
-  /* [DA-MOBILE] Chip / badge — sobre, border discret */
+  /* ---------- Chips ---------- */
+
   .chip {
     @apply inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold;
     border-radius: 9999px;
@@ -156,7 +197,21 @@
   .chip-primary {
     @apply chip;
     background: var(--color-primary-light);
-    color: var(--color-primary-dark);
-    border-color: rgba(126, 177, 63, 0.25);
+    color: var(--color-primary-deep);
+    border-color: rgba(126, 177, 63, 0.3);
+  }
+
+  /* ---------- Étapes numérotées ---------- */
+
+  .step-num {
+    @apply inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full
+           text-xs font-semibold bg-white;
+    color: var(--color-primary-deep);
+    border: 1px solid var(--color-border-strong);
+  }
+
+  .step-rule {
+    @apply h-px flex-1 ml-3;
+    background: var(--color-border);
   }
 }

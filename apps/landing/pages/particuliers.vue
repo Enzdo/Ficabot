@@ -2,46 +2,41 @@
   <div class="font-sans">
 
     <!-- ─── HERO ─── -->
-    <section class="bg-hero pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-44 lg:pb-32 relative overflow-hidden">
-      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <svg class="hidden sm:block absolute -top-8 -right-12 w-72 h-72 text-primary-600 opacity-[0.10] rotate-12 animate-float-slow" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <svg class="hidden sm:block absolute -bottom-6 -left-8 w-64 h-64 text-secondary-500 opacity-[0.12] -rotate-10 animate-float-slow-alt" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-      </div>
-      <div class="container-custom relative z-10">
+    <section class="bg-hero pt-28 pb-20 sm:pt-36 sm:pb-24 lg:pt-44 lg:pb-32">
+      <div class="container-custom">
         <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div class="text-center lg:text-left">
-            <div v-reveal="{ from: 'bottom', delay: 0 }" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-semibold mb-6 border border-primary-100">
-              🐾 Pour les propriétaires
+            <div v-reveal="{ from: 'bottom', delay: 0 }" class="mb-6">
+              <span class="chip-primary">🐾 Pour les propriétaires</span>
             </div>
-            <h1 v-reveal="{ from: 'bottom', delay: 100 }" class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6 leading-tight">
-              La santé de vos animaux,<br>
-              <span class="gradient-text">sans prise de tête.</span>
+            <h1 v-reveal="{ from: 'bottom', delay: 100 }" class="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tightest leading-[1.05]">
+              La <span class="display-accent">santé</span> de vos animaux,<br>
+              sans prise de tête.
             </h1>
-            <p v-reveal="{ from: 'bottom', delay: 200 }" class="text-base sm:text-lg text-gray-600 mb-8 max-w-xl mx-auto lg:mx-0">
+            <p v-reveal="{ from: 'bottom', delay: 200 }" class="section-lead mx-auto lg:mx-0 mb-8">
               Ficana centralise vaccins, traitements, poids et rendez-vous de tous vos compagnons. Une app simple, des rappels intelligents, un dossier PDF exportable en deux secondes.
             </p>
-            <div v-reveal="{ from: 'bottom', delay: 300 }" class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-8">
+            <div v-reveal="{ from: 'bottom', delay: 300 }" class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 mb-10">
               <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto">Commencer gratuitement</NuxtLink>
               <a href="#fonctionnalites" class="btn-secondary btn-lg w-full sm:w-auto">Voir les fonctionnalités</a>
             </div>
             <div v-reveal="{ from: 'bottom', delay: 400 }" class="flex flex-col items-center lg:items-start gap-3">
-              <p class="text-xs uppercase tracking-wide font-semibold text-gray-500">Disponible sur</p>
+              <p class="text-[11px] font-bold uppercase tracking-eyebrow text-gray-400">Disponible sur</p>
               <StoreBadges size="md" />
             </div>
           </div>
 
           <div v-reveal="{ from: 'right', delay: 200 }" class="relative">
-            <div class="group relative aspect-[4/5] max-w-md mx-auto lg:ml-auto rounded-m2xl overflow-hidden border border-gray-200 shadow-card hover:shadow-cta-lg transition-shadow duration-500">
+            <div class="relative aspect-[4/5] max-w-md mx-auto lg:ml-auto rounded-xl overflow-hidden border border-gray-200">
               <img
                 src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=900&q=85"
                 alt="Golden retriever heureux"
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                class="w-full h-full object-cover"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-primary-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div v-reveal="{ from: 'bottom', delay: 600 }" class="absolute bottom-5 left-5 right-5 sm:bottom-6 sm:left-6 sm:right-6 bg-white/95 backdrop-blur-sm rounded-mxl border border-gray-200 p-4 shadow-soft">
+              <div v-reveal="{ from: 'bottom', delay: 600 }" class="absolute bottom-5 left-5 right-5 sm:bottom-6 sm:left-6 sm:right-6 bg-white rounded-xl border border-gray-200 p-4">
                 <div class="flex items-center gap-3">
                   <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <svg class="w-5 h-5 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   </div>
                   <div>
                     <p class="text-sm font-semibold text-gray-900">Tous les rappels à jour</p>
@@ -56,23 +51,23 @@
     </section>
 
     <!-- ─── STATS ─── -->
-    <section class="bg-white border-y border-gray-100 py-10">
+    <section class="bg-white border-y border-gray-200 py-12">
       <div class="container-custom">
-        <div v-reveal-group class="stats-stagger grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+        <div v-reveal-group class="stats-stagger grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
           <div>
-            <p class="text-3xl sm:text-4xl font-bold text-primary-600 mb-1" v-count="{ to: 100, suffix: '%' }">0%</p>
+            <p class="text-3xl sm:text-4xl font-semibold tracking-tightest text-primary-700 mb-1" v-count="{ to: 100, suffix: '%' }">0%</p>
             <p class="text-sm text-gray-500">Gratuit pour démarrer</p>
           </div>
           <div>
-            <p class="text-3xl sm:text-4xl font-bold text-primary-600 mb-1" v-count="{ to: 5, prefix: '+' }">0</p>
+            <p class="text-3xl sm:text-4xl font-semibold tracking-tightest text-primary-700 mb-1" v-count="{ to: 5, prefix: '+' }">0</p>
             <p class="text-sm text-gray-500">Types d'animaux gérés</p>
           </div>
           <div>
-            <p class="text-3xl sm:text-4xl font-bold text-primary-600 mb-1">1 tap</p>
+            <p class="text-3xl sm:text-4xl font-semibold tracking-tightest text-primary-700 mb-1">1 tap</p>
             <p class="text-sm text-gray-500">Export PDF complet</p>
           </div>
           <div>
-            <p class="text-3xl sm:text-4xl font-bold text-primary-600 mb-1" v-count="{ to: 0 }">0</p>
+            <p class="text-3xl sm:text-4xl font-semibold tracking-tightest text-primary-700 mb-1" v-count="{ to: 0 }">0</p>
             <p class="text-sm text-gray-500">Oubli de vaccin</p>
           </div>
         </div>
@@ -80,14 +75,14 @@
     </section>
 
     <!-- ─── FONCTIONNALITÉS ─── -->
-    <section id="fonctionnalites" class="section bg-secondary-50 relative overflow-hidden">
+    <section id="fonctionnalites" class="section bg-secondary-50">
       <div class="container-custom">
-        <div class="max-w-2xl mx-auto text-center mb-14 lg:mb-20">
-          <p v-reveal="{ from: 'bottom' }" class="text-sm font-semibold text-primary-600 mb-3">Fonctionnalités</p>
-          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+        <div class="max-w-2xl mb-14 lg:mb-20">
+          <span v-reveal="{ from: 'bottom' }" class="eyebrow">Fonctionnalités</span>
+          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="section-title">
             Tout ce dont vous avez besoin, rien de plus.
           </h2>
-          <p v-reveal="{ from: 'bottom', delay: 200 }" class="text-base sm:text-lg text-gray-600">
+          <p v-reveal="{ from: 'bottom', delay: 200 }" class="section-lead">
             Ficana a été pensé pour être simple à utiliser au quotidien, pas pour impressionner sur une fiche produit.
           </p>
         </div>
@@ -97,10 +92,10 @@
           <!-- Feature 1 : Rappels -->
           <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
             <div v-reveal="{ from: 'left' }">
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold mb-5">
-                🔔 Rappels intelligents
+              <div class="mb-5">
+                <span class="chip-primary">🔔 Rappels intelligents</span>
               </div>
-              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+              <h3 class="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 tracking-tightest leading-[1.15]">
                 Plus jamais un vaccin ou un traitement oublié.
               </h3>
               <p class="text-base text-gray-600 mb-6 leading-relaxed">
@@ -108,18 +103,18 @@
               </p>
               <ul v-reveal-group class="list-stagger space-y-3">
                 <li v-for="item in rappelsFeatures" :key="item" class="flex items-start gap-3 text-sm text-gray-700">
-                  <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg class="w-5 h-5 text-primary-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   {{ item }}
                 </li>
               </ul>
             </div>
-            <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="bg-white rounded-m2xl border border-gray-200 shadow-card p-6 sm:p-8">
+            <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="card">
               <div class="flex items-center justify-between mb-4">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Prochains rappels — Max</p>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-eyebrow">Prochains rappels — Max</p>
                 <button
                   v-if="rappelsDone"
                   @click="resetRappels"
-                  class="flex items-center gap-1 text-[10px] font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                  class="flex items-center gap-1 text-[10px] font-semibold text-primary-700 hover:text-primary-800 transition-colors"
                 >
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                   Réinitialiser
@@ -141,16 +136,16 @@
                   @click="confirmRappel(r.id)"
                   @mouseenter="hoveredRappelId = r.id"
                   @mouseleave="hoveredRappelId = null"
-                  class="w-full flex items-center gap-4 p-4 rounded-mxl border cursor-pointer select-none transition-all duration-200 hover:-translate-y-px hover:shadow-sm text-left"
+                  class="w-full flex items-center gap-4 p-4 rounded-xl border cursor-pointer select-none transition-colors duration-200 text-left"
                   :class="{
                     'bg-red-50 border-red-100 hover:border-red-300': r.color === 'red',
                     'bg-amber-50 border-amber-100 hover:border-amber-300': r.color === 'amber',
-                    'bg-gray-50 border-gray-100 hover:border-gray-300': r.color === 'gray',
+                    'bg-gray-50 border-gray-200 hover:border-gray-300': r.color === 'gray',
                   }"
                 >
                   <div class="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-200"
                     :class="{
-                      'bg-red-500 animate-pulse': r.color === 'red' && hoveredRappelId !== r.id,
+                      'bg-red-500': r.color === 'red' && hoveredRappelId !== r.id,
                       'bg-primary-500': hoveredRappelId === r.id,
                       'bg-amber-500': r.color === 'amber' && hoveredRappelId !== r.id,
                       'bg-gray-300': r.color === 'gray' && hoveredRappelId !== r.id,
@@ -163,7 +158,7 @@
                     </p>
                     <p class="text-xs text-gray-500">{{ r.sub }}</p>
                   </div>
-                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 transition-all duration-200"
+                  <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full flex-shrink-0 transition-colors duration-200"
                     :class="hoveredRappelId === r.id
                       ? 'bg-primary-100 text-primary-700'
                       : r.color === 'red' ? 'bg-red-100 text-red-600'
@@ -178,33 +173,33 @@
 
           <!-- Feature 2 : Carnet de santé -->
           <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
-            <div v-reveal-group v-reveal="{ from: 'left', delay: 150 }" class="order-2 lg:order-1 bg-white rounded-m2xl border border-gray-200 shadow-card overflow-hidden">
-              <div class="flex items-center gap-4 p-5 sm:p-6 border-b border-gray-100">
+            <div v-reveal-group v-reveal="{ from: 'left', delay: 150 }" class="order-2 lg:order-1 bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div class="flex items-center gap-4 p-5 sm:p-6 border-b border-gray-200">
                 <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Max" class="w-14 h-14 rounded-full object-cover flex-shrink-0" />
                 <div class="flex-1 min-w-0">
-                  <p class="font-bold text-gray-900">Max</p>
+                  <p class="font-semibold text-gray-900">Max</p>
                   <p class="text-sm text-gray-500">Golden Retriever · 3 ans · 32,5 kg</p>
                 </div>
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold">
+                <span class="chip-primary">
                   <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   À jour
                 </span>
               </div>
               <div class="p-5 sm:p-6 text-sm">
                 <div class="mockup-stagger space-y-0">
-                  <div class="flex justify-between py-2.5 border-b border-gray-50">
+                  <div class="flex justify-between py-2.5 border-b border-gray-100">
                     <span class="text-gray-500">N° puce I-CAD</span>
                     <span class="font-mono text-gray-800">250 268 712 001 XX</span>
                   </div>
-                  <div class="flex justify-between py-2.5 border-b border-gray-50">
+                  <div class="flex justify-between py-2.5 border-b border-gray-100">
                     <span class="text-gray-500">Dernière vaccination</span>
                     <span class="font-medium text-gray-800">15 jan. 2025 — CHPPiL</span>
                   </div>
-                  <div class="flex justify-between py-2.5 border-b border-gray-50">
+                  <div class="flex justify-between py-2.5 border-b border-gray-100">
                     <span class="text-gray-500">Prochain rappel</span>
                     <span class="font-medium text-primary-700">15 jan. 2026</span>
                   </div>
-                  <div class="flex justify-between py-2.5 border-b border-gray-50">
+                  <div class="flex justify-between py-2.5 border-b border-gray-100">
                     <span class="text-gray-500">Allergies connues</span>
                     <span class="font-medium text-gray-800">Amoxicilline</span>
                   </div>
@@ -218,11 +213,11 @@
                 <button
                   @click="triggerPdfExport"
                   :disabled="pdfState !== 'idle'"
-                  class="w-full text-sm py-3 flex items-center justify-center gap-2 transition-all duration-300 rounded-xl border font-medium"
+                  class="w-full text-sm py-3 flex items-center justify-center gap-2 transition-colors duration-200 rounded-xl border font-semibold"
                   :class="{
-                    'btn-secondary hover:scale-[1.02]': pdfState === 'idle',
+                    'btn-secondary': pdfState === 'idle',
                     'bg-gray-50 border-gray-200 text-gray-400 cursor-wait': pdfState === 'loading',
-                    'bg-primary-50 border-primary-300 text-primary-700 scale-[1.02]': pdfState === 'done',
+                    'bg-primary-50 border-primary-300 text-primary-700': pdfState === 'done',
                   }"
                 >
                   <!-- Idle -->
@@ -232,25 +227,22 @@
                   </template>
                   <!-- Loading -->
                   <template v-else-if="pdfState === 'loading'">
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2.5 2.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Génération en cours…
                   </template>
                   <!-- Done -->
                   <template v-else>
-                    <svg class="w-4 h-4 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <svg class="w-4 h-4 text-primary-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     PDF prêt — Max.pdf
                   </template>
                 </button>
               </div>
             </div>
             <div v-reveal="{ from: 'right' }" class="order-1 lg:order-2">
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary-100 text-secondary-800 rounded-full text-xs font-semibold mb-5">
-                📋 Carnet de santé complet
+              <div class="mb-5">
+                <span class="chip">📋 Carnet de santé complet</span>
               </div>
-              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+              <h3 class="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 tracking-tightest leading-[1.15]">
                 Toute l'histoire médicale de votre animal, en un endroit.
               </h3>
               <p class="text-base text-gray-600 mb-6 leading-relaxed">
@@ -258,7 +250,7 @@
               </p>
               <ul v-reveal-group class="list-stagger space-y-3">
                 <li v-for="item in carnetFeatures" :key="item" class="flex items-start gap-3 text-sm text-gray-700">
-                  <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg class="w-5 h-5 text-primary-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   {{ item }}
                 </li>
               </ul>
@@ -268,10 +260,10 @@
           <!-- Feature 3 : Multi-animaux -->
           <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
             <div v-reveal="{ from: 'left' }">
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold mb-5">
-                🐕🐈🐰 Multi-animaux
+              <div class="mb-5">
+                <span class="chip-primary">🐕🐈🐰 Multi-animaux</span>
               </div>
-              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+              <h3 class="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 tracking-tightest leading-[1.15]">
                 Un profil par animal, une seule app.
               </h3>
               <p class="text-base text-gray-600 mb-6 leading-relaxed">
@@ -279,15 +271,15 @@
               </p>
               <ul v-reveal-group class="list-stagger space-y-3">
                 <li v-for="item in multiFeatures" :key="item" class="flex items-start gap-3 text-sm text-gray-700">
-                  <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg class="w-5 h-5 text-primary-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   {{ item }}
                 </li>
               </ul>
             </div>
-            <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="bg-white rounded-m2xl border border-gray-200 shadow-card p-6 sm:p-8">
+            <div v-reveal-group v-reveal="{ from: 'right', delay: 150 }" class="card">
               <div class="flex items-center justify-between mb-4">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mes animaux</p>
-                <span class="text-xs font-medium text-primary-600">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-eyebrow">Mes animaux</p>
+                <span class="text-xs font-semibold text-primary-700">
                   Sélectionné : {{ pets.find(p => p.active)?.name }}
                 </span>
               </div>
@@ -296,29 +288,29 @@
                   v-for="(pet, i) in pets"
                   :key="pet.name"
                   @click="selectPet(i)"
-                  class="w-full flex items-center gap-4 p-3.5 rounded-mxl border transition-all duration-200 cursor-pointer text-left"
+                  class="w-full flex items-center gap-4 p-3.5 rounded-xl border transition-colors duration-200 cursor-pointer text-left"
                   :class="pet.active
-                    ? 'border-primary-200 bg-primary-50 shadow-sm scale-[1.01]'
-                    : 'border-gray-100 bg-gray-50 hover:border-primary-200 hover:bg-primary-50/40 hover:scale-[1.005]'"
+                    ? 'border-primary-300 bg-primary-50'
+                    : 'border-gray-200 bg-gray-50 hover:border-primary-200 hover:bg-primary-50/40'"
                 >
                   <div class="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                    <img :src="pet.img" :alt="pet.name" class="w-full h-full object-cover transition-transform duration-300" :class="pet.active ? 'scale-110' : ''" />
+                    <img :src="pet.img" :alt="pet.name" class="w-full h-full object-cover" />
                     <!-- Checkmark overlay if active -->
-                    <div v-if="pet.active" class="absolute inset-0 bg-primary-600/30 flex items-center justify-center">
-                      <svg class="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <div v-if="pet.active" class="absolute inset-0 bg-primary-700/40 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     </div>
                   </div>
                   <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold transition-colors duration-200" :class="pet.active ? 'text-primary-700' : 'text-gray-900'">{{ pet.name }}</p>
                     <p class="text-xs text-gray-500">{{ pet.desc }}</p>
                   </div>
-                  <span class="text-xs font-medium px-2 py-0.5 rounded-full transition-all duration-200"
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full transition-colors duration-200"
                     :class="pet.status === 'À jour' ? 'bg-primary-100 text-primary-700' : 'bg-amber-100 text-amber-700'">
                     {{ pet.status }}
                   </span>
                 </button>
               </div>
-              <button class="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-mxl border-2 border-dashed border-gray-200 text-sm text-gray-400 hover:border-primary-300 hover:text-primary-600 transition-all duration-200 hover:scale-[1.01]">
+              <button class="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-gray-300 text-sm font-semibold text-gray-400 hover:border-primary-500 hover:text-primary-700 transition-colors duration-200">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
                 Ajouter un animal
               </button>
@@ -327,14 +319,14 @@
 
           <!-- Feature 4 : Export PDF -->
           <div class="grid lg:grid-cols-2 items-center gap-12 lg:gap-16">
-            <div v-reveal-group v-reveal="{ from: 'left', delay: 150 }" class="order-2 lg:order-1 bg-white rounded-m2xl border border-gray-200 shadow-card overflow-hidden">
-              <div class="bg-primary-600 p-5 sm:p-6">
+            <div v-reveal-group v-reveal="{ from: 'left', delay: 150 }" class="order-2 lg:order-1 bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div class="bg-primary-700 p-5 sm:p-6">
                 <div class="flex items-center justify-between mb-4">
                   <div>
-                    <p class="text-primary-100 text-xs font-medium">Dossier médical</p>
-                    <p class="text-white font-bold text-lg">Max — Golden Retriever</p>
+                    <p class="text-primary-100 text-xs font-semibold">Dossier médical</p>
+                    <p class="text-white font-semibold text-lg tracking-tightest">Max — Golden Retriever</p>
                   </div>
-                  <div class="w-10 h-10 bg-white/20 rounded-mmd flex items-center justify-center">
+                  <div class="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                   </div>
                 </div>
@@ -346,17 +338,17 @@
               <div class="p-5 sm:p-6">
                 <div class="mockup-stagger space-y-0">
                   <div v-for="line in pdfLines" :key="line" class="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
-                    <svg class="w-4 h-4 text-primary-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <svg class="w-4 h-4 text-primary-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                     <span class="text-sm text-gray-700">{{ line }}</span>
                   </div>
                 </div>
               </div>
             </div>
             <div v-reveal="{ from: 'right' }" class="order-1 lg:order-2">
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary-100 text-secondary-800 rounded-full text-xs font-semibold mb-5">
-                📄 Export PDF
+              <div class="mb-5">
+                <span class="chip">📄 Export PDF</span>
               </div>
-              <h3 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 tracking-tight">
+              <h3 class="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 tracking-tightest leading-[1.15]">
                 Un PDF complet en un tap pour le véto, la pension ou le voyage.
               </h3>
               <p class="text-base text-gray-600 mb-6 leading-relaxed">
@@ -364,7 +356,7 @@
               </p>
               <ul v-reveal-group class="list-stagger space-y-3">
                 <li v-for="item in pdfFeatures" :key="item" class="flex items-start gap-3 text-sm text-gray-700">
-                  <svg class="w-5 h-5 text-primary-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg class="w-5 h-5 text-primary-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                   {{ item }}
                 </li>
               </ul>
@@ -376,16 +368,16 @@
     </section>
 
     <!-- ─── POUR QUI ? ─── -->
-    <section class="section bg-white relative overflow-hidden">
+    <section class="section bg-white">
       <div class="container-custom">
-        <div class="max-w-2xl mx-auto text-center mb-12 lg:mb-16">
-          <p v-reveal="{ from: 'bottom' }" class="text-sm font-semibold text-primary-600 mb-3">Adapté à votre situation</p>
-          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="text-3xl sm:text-4xl font-bold tracking-tight">Ficana s'adapte à votre tribu.</h2>
+        <div class="max-w-2xl mb-12 lg:mb-16">
+          <span v-reveal="{ from: 'bottom' }" class="eyebrow">Adapté à votre situation</span>
+          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="section-title">Ficana s'adapte à votre <span class="display-accent">tribu.</span></h2>
         </div>
         <div v-reveal-group class="profiles-stagger grid sm:grid-cols-3 gap-5 sm:gap-6">
-          <div v-for="profile in profiles" :key="profile.title" class="card-hover text-center group">
-            <div class="text-4xl mb-4 transition-transform duration-300 group-hover:scale-110">{{ profile.emoji }}</div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ profile.title }}</h3>
+          <div v-for="profile in profiles" :key="profile.title" class="card-hover">
+            <div class="text-4xl mb-4">{{ profile.emoji }}</div>
+            <h3 class="text-lg font-semibold tracking-tightest text-gray-900 mb-2">{{ profile.title }}</h3>
             <p class="text-sm text-gray-600">{{ profile.desc }}</p>
           </div>
         </div>
@@ -395,12 +387,12 @@
     <!-- ─── FAQ ─── -->
     <section class="section bg-secondary-50">
       <div class="container-custom max-w-3xl">
-        <div class="text-center mb-10 lg:mb-12">
-          <p v-reveal="{ from: 'bottom' }" class="text-sm font-semibold text-primary-600 mb-3">FAQ</p>
-          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="text-3xl sm:text-4xl font-bold tracking-tight">Questions fréquentes</h2>
+        <div class="mb-10 lg:mb-12">
+          <span v-reveal="{ from: 'bottom' }" class="eyebrow">FAQ</span>
+          <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="section-title">Questions fréquentes</h2>
         </div>
         <div v-reveal-group class="faq-stagger space-y-3">
-          <div v-for="(faq, i) in faqs" :key="i" class="bg-white rounded-mxl border border-gray-200 overflow-hidden">
+          <div v-for="(faq, i) in faqs" :key="i" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <button
               class="w-full flex items-center justify-between gap-4 p-5 sm:p-6 text-left hover:bg-gray-50 transition-colors"
               @click="openFaq = openFaq === i ? null : i"
@@ -423,22 +415,17 @@
     </section>
 
     <!-- ─── CTA FINAL ─── -->
-    <section class="relative overflow-hidden py-24 lg:py-32" style="background:linear-gradient(135deg,#8EC347 0%,#7EB13F 50%,#5C8A2A 100%)">
-      <div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
-        <svg class="hidden sm:block absolute -top-8 -right-12 w-72 h-72 text-white opacity-[0.07] rotate-[18deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <svg class="hidden sm:block absolute -bottom-6 -left-10 w-64 h-64 text-white opacity-[0.06] -rotate-[10deg]" viewBox="0 0 32 32" fill="currentColor"><ellipse cx="7.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="13.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="18.5" cy="7.5" rx="3.5" ry="3"/><ellipse cx="24.5" cy="11.5" rx="3.5" ry="3"/><ellipse cx="16" cy="21.5" rx="8" ry="7"/></svg>
-        <div class="absolute inset-0 opacity-[0.04]" style="background:radial-gradient(ellipse at top left,#FFFFFF 0%,transparent 60%)"></div>
-      </div>
-      <div class="container-custom relative z-10 text-center">
-        <p v-reveal="{ from: 'bottom' }" class="text-white/80 text-sm font-semibold uppercase tracking-widest mb-4">Gratuit pour démarrer</p>
-        <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-5 leading-tight">
+    <section class="py-24 lg:py-32 bg-primary-700">
+      <div class="container-custom text-center">
+        <span v-reveal="{ from: 'bottom' }" class="eyebrow text-white/70">Gratuit pour démarrer</span>
+        <h2 v-reveal="{ from: 'bottom', delay: 100 }" class="section-title text-white">
           Prêt à simplifier la santé<br class="hidden sm:block"> de votre animal ?
         </h2>
-        <p v-reveal="{ from: 'bottom', delay: 200 }" class="text-white/75 text-base sm:text-lg mb-10 max-w-xl mx-auto">
+        <p v-reveal="{ from: 'bottom', delay: 200 }" class="section-lead text-white/80 mx-auto mb-10">
           Téléchargez Ficana, ajoutez votre animal, c'est parti. Aucune carte bancaire requise.
         </p>
         <div v-reveal="{ from: 'bottom', delay: 300 }" class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
-          <NuxtLink to="/contact" class="inline-flex items-center justify-center px-7 py-4 text-base font-bold bg-white text-primary-700 rounded-[20px] shadow-[0_4px_14px_rgba(0,0,0,0.15)] hover:bg-primary-50 hover:-translate-y-0.5 transition-all duration-200 w-full sm:w-auto">
+          <NuxtLink to="/contact" class="btn-white btn-lg w-full sm:w-auto">
             Commencer gratuitement
           </NuxtLink>
         </div>

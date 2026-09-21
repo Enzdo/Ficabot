@@ -15,6 +15,17 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        // Serif d'accent — uniquement en italique, sur un mot de titre
+        display: ['Instrument Serif', 'ui-serif', 'Georgia', 'serif'],
+      },
+      letterSpacing: {
+        // Titres serrés
+        tighter: '-0.025em',
+        tightest: '-0.04em',
+        eyebrow: '0.14em',
+      },
+      maxWidth: {
+        prose: '62ch',
       },
       colors: {
         // [DA-MOBILE] Vert Ficana — primary
@@ -105,12 +116,18 @@ export default {
         },
       },
       boxShadow: {
-        // [DA-MOBILE] Shadows colorées + douces (cf. mobile theme.ts)
-        'soft':   '0 1px 3px rgba(26,22,20,0.07)',
-        'card':   '0 3px 8px -2px rgba(26,22,20,0.08)',
-        'cta':    '0 6px 14px -4px rgba(126,177,63,0.4)',
-        'cta-lg': '0 10px 24px -6px rgba(126,177,63,0.45)',
-        'dark':   '0 6px 14px -4px rgba(26,22,20,0.18)',
+        // Ombres quasi absentes : la profondeur vient des bordures fines
+        'soft':   '0 1px 2px rgba(26,22,20,0.04)',
+        'card':   '0 1px 3px rgba(26,22,20,0.05)',
+        'cta':    'none',
+        'cta-lg': 'none',
+        'dark':   '0 6px 20px -8px rgba(26,22,20,0.12)',
+        sm: '0 1px 2px 0 rgb(26 22 20 / 0.04)',
+        DEFAULT: '0 1px 3px 0 rgb(26 22 20 / 0.05)',
+        md: '0 2px 8px -2px rgb(26 22 20 / 0.06)',
+        lg: '0 6px 20px -8px rgb(26 22 20 / 0.10)',
+        xl: '0 12px 32px -12px rgb(26 22 20 / 0.12)',
+        '2xl': '0 24px 56px -24px rgb(26 22 20 / 0.16)',
       },
       backgroundImage: {
         // [DA-MOBILE] CTA gradient — clair → foncé (mêmes stops que mobile Button.tsx)

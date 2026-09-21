@@ -9,13 +9,13 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Votre Assistant Virtuel - Le compagnon santé de vos animaux',
+      title: 'Ficana - Le compagnon santé de vos animaux',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Votre Assistant Virtuel - Application de suivi santé pour vos animaux de compagnie. Carnet de santé numérique, rappels vaccins, connexion vétérinaire.' },
+        { name: 'description', content: 'Ficana - Application de suivi santé pour vos animaux de compagnie. Carnet de santé numérique, rappels vaccins, connexion vétérinaire.' },
         { name: 'keywords', content: 'animaux, santé, vétérinaire, carnet de santé, vaccins, chien, chat, NAC' },
-        { property: 'og:title', content: 'Votre Assistant Virtuel - Le compagnon santé de vos animaux' },
+        { property: 'og:title', content: 'Ficana - Le compagnon santé de vos animaux' },
         { property: 'og:description', content: 'Application de suivi santé pour vos animaux de compagnie' },
         { property: 'og:type', content: 'website' },
       ],
@@ -24,7 +24,7 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         // [DA-MOBILE] Inter — clean, neutre, cohérent avec l'app mobile
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap' },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap' },
       ],
     },
   },
