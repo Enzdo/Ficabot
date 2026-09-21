@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises'
 import Pet from '#models/pet'
 import MedicalRecord from '#models/medical_record'
 import ConsultationService, { DICTATION_LANGUAGES } from '#services/consultation_service'
-import { CONSULTATION_TEMPLATES } from '#services/consultation_templates'
+import { CONSULTATION_TEMPLATES, templateCategory } from '#services/consultation_templates'
 
 /**
  * Dictée de consultation : l'audio est transcrit puis mis en forme en
@@ -25,6 +25,7 @@ export default class VetConsultationsController {
         templates: CONSULTATION_TEMPLATES.map((t) => ({
           id: t.id,
           label: t.label,
+          category: templateCategory(t.id),
           sections: t.sections.map((s) => ({ key: s.key, label: s.label })),
         })),
         languages: DICTATION_LANGUAGES,

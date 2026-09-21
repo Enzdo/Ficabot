@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl">
+  <div>
     <!-- ══════════ Zone 1 — En-tête ══════════ -->
     <header class="mb-6">
       <h1 class="page-title">Bonjour, {{ greetingName }}</h1>
@@ -7,21 +7,88 @@
     </header>
 
     <!-- ══════════ Zone 2 — Modèles de compte rendu ══════════ -->
-    <div v-if="step === 'record'" class="overflow-x-auto pb-2 mb-5">
-      <div class="flex items-center gap-1 min-w-max">
+    <!--
+      La bibliothèque compte une vingtaine de modèles : les aligner tous
+      donnerait une rangée à faire défiler. On garde en vue les plus courants
+      — plus celui qui est sélectionné, où qu'il soit dans la liste — et le
+      reste passe derrière un sélecteur avec recherche.
+    -->
+    <div v-if="step === 'record'" class="mb-5 flex items-center gap-1 flex-wrap">
+      <button
+        v-for="template in visibleTemplates"
+        :key="template.id"
+        type="button"
+        class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors"
+        :class="template.id === selectedTemplateId
+          ? 'bg-surface-100 text-primary-700 font-semibold dark:bg-surface-800 dark:text-surface-50'
+          : 'text-surface-500 hover:text-primary-700 dark:text-surface-400 dark:hover:text-surface-100'"
+        :aria-pressed="template.id === selectedTemplateId"
+        @click="selectedTemplateId = template.id"
+      >
+        {{ template.label }}
+      </button>
+
+      <div v-if="templates.length > visibleTemplates.length" ref="pickerRef" class="relative">
         <button
-          v-for="template in templates"
-          :key="template.id"
           type="button"
-          class="shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors"
-          :class="template.id === selectedTemplateId
-            ? 'bg-surface-100 text-primary-700 font-semibold dark:bg-surface-800 dark:text-surface-50'
-            : 'text-surface-500 hover:text-primary-700 dark:text-surface-400 dark:hover:text-surface-100'"
-          :aria-pressed="template.id === selectedTemplateId"
-          @click="selectedTemplateId = template.id"
+          class="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm text-surface-500 transition-colors hover:text-primary-700 dark:text-surface-400 dark:hover:text-surface-100"
+          :aria-expanded="pickerOpen"
+          aria-haspopup="listbox"
+          @click="togglePicker"
         >
-          {{ template.label }}
+          Tous les modèles
+          <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="pickerOpen && 'rotate-180'" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
         </button>
+
+        <Transition name="ql">
+          <div
+            v-if="pickerOpen"
+            class="absolute left-0 z-40 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900"
+          >
+            <div class="flex items-center gap-2 border-b border-surface-200 px-3 dark:border-surface-800">
+              <svg class="w-4 h-4 shrink-0 text-surface-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                ref="pickerInputRef"
+                v-model="templateSearch"
+                type="text"
+                placeholder="Rechercher un modèle…"
+                class="flex-1 bg-transparent py-3 text-sm text-surface-900 placeholder:text-surface-400 outline-none dark:text-surface-100"
+                @keydown.esc="closePicker"
+              >
+            </div>
+
+            <div class="max-h-72 overflow-y-auto py-1.5" role="listbox">
+              <template v-for="group in groupedTemplates" :key="group.label">
+                <p class="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-eyebrow text-surface-400">
+                  {{ group.label }}
+                </p>
+                <button
+                  v-for="template in group.items"
+                  :key="template.id"
+                  type="button"
+                  role="option"
+                  :aria-selected="template.id === selectedTemplateId"
+                  class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-surface-50 dark:hover:bg-surface-800/60"
+                  :class="template.id === selectedTemplateId
+                    ? 'font-semibold text-primary-700 dark:text-surface-50'
+                    : 'text-surface-600 dark:text-surface-300'"
+                  @click="pickTemplate(template.id)"
+                >
+                  <span class="flex-1 truncate">{{ template.label }}</span>
+                  <span class="shrink-0 text-[11px] text-surface-400">{{ template.sections.length }} rubriques</span>
+                </button>
+              </template>
+
+              <p v-if="!groupedTemplates.length" class="px-3 py-6 text-center text-sm text-surface-500">
+                Aucun modèle ne correspond.
+              </p>
+            </div>
+          </div>
+        </Transition>
       </div>
     </div>
 
@@ -40,10 +107,12 @@
     </div>
 
     <!-- ══════════ Étape 1 — Scène centrale + panneau de contexte ══════════ -->
-    <div v-if="step === 'record'" class="flex flex-col lg:flex-row lg:items-start gap-6">
+    <!-- L'enregistrement est le geste central : il prend toute la hauteur utile.
+         Le calcul retire la barre du haut (4rem) et le rembourrage du gabarit (3rem). -->
+    <div v-if="step === 'record'" class="flex flex-col lg:flex-row gap-6 lg:min-h-[calc(100vh-13rem)]">
       <!-- ---------- Scène centrale ---------- -->
       <div class="flex-1 min-w-0">
-        <div class="card flex flex-col items-center py-12 px-6">
+        <div class="card flex h-full flex-col items-center justify-center py-16 px-6">
           <!-- État courant -->
           <p class="text-sm font-semibold text-surface-900 dark:text-surface-100">{{ stageLabel }}</p>
 
@@ -88,9 +157,9 @@
           </div>
 
           <!-- Deux boutons ronds : dicter, ou importer une dictée -->
-          <div class="mt-8 flex items-center justify-center gap-6">
+          <div class="mt-10 flex items-center justify-center gap-7">
             <!-- Micro / arrêt -->
-            <div class="relative w-[88px] h-[88px]">
+            <div class="relative w-[116px] h-[116px]">
               <span
                 v-if="recording"
                 class="absolute inset-0 rounded-full bg-danger-500/20 transition-transform duration-100 dark:bg-danger-500/25"
@@ -154,7 +223,8 @@
           <!-- Explication -->
           <p class="mt-6 text-xs text-surface-400 text-center max-w-sm leading-relaxed dark:text-surface-500">
             <template v-if="!selectedPatient">
-              Choisissez d'abord le patient concerné, à droite&nbsp;: le compte rendu doit rejoindre un dossier.
+              Vous pouvez dicter sans patient&nbsp;: le compte rendu sera copiable, mais ne rejoindra aucun
+              dossier. Rattachez un patient à droite pour pouvoir l'enregistrer.
             </template>
             <template v-else-if="recording">
               Parlez normalement, la dictée continue en arrière-plan. Rien ne part tant que vous n'avez pas
@@ -210,8 +280,8 @@
       </div>
 
       <!-- ---------- Panneau de contexte ---------- -->
-      <aside class="w-full lg:w-80 shrink-0">
-        <div class="card p-0 divide-y divide-surface-200 dark:divide-surface-800">
+      <aside class="w-full lg:w-80 xl:w-96 shrink-0 lg:self-stretch">
+        <div class="card flex h-full flex-col p-0 divide-y divide-surface-200 dark:divide-surface-800">
           <!-- Patient -->
           <section class="p-5">
             <div class="flex items-center justify-between">
@@ -381,15 +451,66 @@
 
     <!-- ══════════ Étape 3 — Relecture ══════════ -->
     <template v-else-if="step === 'review'">
-      <div class="max-w-3xl">
+      <div class="max-w-5xl">
         <!-- Rappel : rien n'est encore au dossier -->
         <div class="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 mb-4 flex items-start gap-3 dark:border-warning-800 dark:bg-warning-900/30">
           <span class="badge-warning shrink-0 mt-0.5">Brouillon</span>
-          <p class="text-sm text-warning-700 dark:text-warning-200">
+          <p v-if="selectedPatient" class="text-sm text-warning-700 dark:text-warning-200">
             Ce compte rendu <strong>n'est pas encore enregistré</strong> dans le dossier de
-            {{ selectedPatient?.name || 'ce patient' }}. Relisez-le, corrigez ce qui doit l'être, puis
+            {{ selectedPatient.name }}. Relisez-le, corrigez ce qui doit l'être, puis
             cliquez sur «&nbsp;Enregistrer dans le dossier&nbsp;».
           </p>
+          <div v-else class="min-w-0 flex-1">
+            <p class="text-sm text-warning-700 dark:text-warning-200">
+              Dictée libre, <strong>sans patient rattaché</strong>. Copiez le compte rendu avant de
+              quitter la page, ou rattachez un patient ci-dessous pour pouvoir l'enregistrer.
+            </p>
+
+            <!-- Rattachement après coup : la dictée est faite, on classe ensuite -->
+            <div class="mt-3">
+              <button
+                v-if="!attaching"
+                type="button"
+                class="btn-secondary text-sm py-2"
+                @click="openAttach"
+              >
+                Rattacher un patient
+              </button>
+
+              <div v-else class="max-w-sm">
+                <input
+                  ref="attachInputRef"
+                  v-model="patientSearch"
+                  type="text"
+                  class="input"
+                  placeholder="Nom, race ou propriétaire…"
+                >
+                <ul
+                  v-if="filteredPatients.length"
+                  class="mt-2 max-h-48 overflow-y-auto rounded-lg border border-surface-200 bg-white divide-y divide-surface-200 dark:border-surface-800 dark:bg-surface-900 dark:divide-surface-800"
+                >
+                  <li v-for="patient in filteredPatients" :key="patient.id">
+                    <button
+                      type="button"
+                      class="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+                      @click="attachPatient(patient)"
+                    >
+                      <span class="font-medium text-surface-900 dark:text-surface-100">{{ patient.name }}</span>
+                      <span class="text-surface-500 dark:text-surface-400">
+                        — {{ patient.breed || speciesLabel(patient.species) }}
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+                <p v-else class="mt-2 text-sm text-surface-500 dark:text-surface-400">
+                  Aucun patient ne correspond.
+                </p>
+                <button type="button" class="btn-ghost text-sm mt-2" @click="attaching = false">
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="card mb-4">
@@ -459,6 +580,7 @@
 
         <div class="flex flex-wrap items-center gap-3">
           <button
+            v-if="selectedPatient"
             type="button"
             class="btn-primary"
             :disabled="saving"
@@ -470,6 +592,19 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             {{ saving ? 'Enregistrement…' : 'Enregistrer dans le dossier' }}
+          </button>
+
+          <!-- Dictée libre : le compte rendu ne peut que sortir par le presse-papier -->
+          <button
+            type="button"
+            :class="selectedPatient ? 'btn-secondary' : 'btn-primary'"
+            :disabled="saving"
+            @click="copyReport"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            {{ copied ? 'Copié' : 'Copier le compte rendu' }}
           </button>
           <button type="button" class="btn-secondary" :disabled="saving" @click="backToRecording">
             Reprendre la dictée
@@ -533,6 +668,7 @@ interface TemplateSectionOption {
 interface TemplateOption {
   id: string
   label: string
+  category?: string
   sections: TemplateSectionOption[]
 }
 
@@ -628,6 +764,69 @@ const selectedTemplate = computed(
 
 const selectedTemplateSections = computed(() => selectedTemplate.value?.sections || [])
 
+/* ---------- Sélecteur de modèle ---------- */
+
+// Nombre de modèles laissés en accès direct. Au-delà, la rangée déborde et
+// n'aide plus : le reste vit dans le sélecteur.
+const PINNED_TEMPLATES = 5
+
+const pickerOpen = ref(false)
+const templateSearch = ref('')
+const pickerRef = ref<HTMLElement>()
+const pickerInputRef = ref<HTMLInputElement>()
+
+/**
+ * Les premiers modèles renvoyés par le serveur, plus le modèle courant s'il
+ * n'en fait pas partie : on ne veut jamais que la sélection active soit
+ * invisible, sinon l'écran semble n'avoir aucun modèle choisi.
+ */
+const visibleTemplates = computed(() => {
+  const head = templates.value.slice(0, PINNED_TEMPLATES)
+  if (head.some((t) => t.id === selectedTemplateId.value)) return head
+  const current = templates.value.find((t) => t.id === selectedTemplateId.value)
+  return current ? [...head, current] : head
+})
+
+const groupedTemplates = computed(() => {
+  const q = templateSearch.value.trim().toLowerCase()
+  const matching = q
+    ? templates.value.filter(
+        (t) => t.label.toLowerCase().includes(q) || (t.category ?? '').toLowerCase().includes(q)
+      )
+    : templates.value
+
+  const groups: Array<{ label: string; items: TemplateOption[] }> = []
+  for (const template of matching) {
+    const label = template.category || 'Autres'
+    const group = groups.find((g) => g.label === label)
+    if (group) group.items.push(template)
+    else groups.push({ label, items: [template] })
+  }
+  return groups
+})
+
+const closePicker = () => {
+  pickerOpen.value = false
+  templateSearch.value = ''
+}
+
+const togglePicker = () => {
+  pickerOpen.value = !pickerOpen.value
+  if (pickerOpen.value) nextTick(() => pickerInputRef.value?.focus())
+  else templateSearch.value = ''
+}
+
+const pickTemplate = (id: string) => {
+  selectedTemplateId.value = id
+  closePicker()
+}
+
+const onPickerOutside = (event: MouseEvent) => {
+  if (!pickerOpen.value) return
+  if (pickerRef.value?.contains(event.target as Node)) return
+  closePicker()
+}
+
 // Les options ne sont pas indispensables : sans elles, la dictée reste possible
 // avec le modèle par défaut du serveur et le français.
 const applyOptionsFallback = () => {
@@ -644,6 +843,7 @@ const loadOptions = async () => {
       templates.value = response.data.templates.map((t) => ({
         id: t.id,
         label: t.label,
+        category: t.category || 'Autres',
         sections: Array.isArray(t.sections) ? t.sections : [],
       }))
       languages.value = response.data.languages?.length ? response.data.languages : FALLBACK_LANGUAGES
@@ -663,6 +863,51 @@ const loadOptions = async () => {
 }
 
 /* ---------- Patients ---------- */
+
+const copied = ref(false)
+
+// Rattachement depuis la relecture : la dictée peut être faite avant de savoir
+// dans quel dossier elle ira.
+const attaching = ref(false)
+const attachInputRef = ref<HTMLInputElement>()
+
+const openAttach = async () => {
+  attaching.value = true
+  if (!patients.value.length) await loadPatients()
+  await nextTick()
+  attachInputRef.value?.focus()
+}
+
+const attachPatient = (patient: PatientSummary) => {
+  selectedToken.value = patient.vetToken
+  attaching.value = false
+  patientSearch.value = ''
+}
+
+/** Rendu texte du brouillon, identique à ce que le serveur écrirait au dossier. */
+const draftAsText = () => {
+  const title = draft.value?.title?.trim()
+  const body = (draft.value?.sections ?? [])
+    .filter((sec) => sec.value.trim())
+    .map((sec) => `${sec.label}\n${sec.value.trim()}`)
+    .join('\n\n')
+  return [title, body].filter(Boolean).join('\n\n')
+}
+
+const copyReport = async () => {
+  const text = draftAsText()
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.value = true
+    setTimeout(() => (copied.value = false), 2000)
+  } catch {
+    // Presse-papier refusé (contexte non sécurisé, permission) : on sélectionne
+    // le texte pour que le praticien puisse copier lui-même.
+    saveError.value =
+      "Le presse-papier est inaccessible depuis ce navigateur. Sélectionnez le texte des rubriques pour le copier."
+  }
+}
 
 const patients = ref<PatientSummary[]>([])
 const patientsLoading = ref(true)
@@ -784,10 +1029,10 @@ const audioLabel = computed(() =>
 )
 
 const micButtonDisabled = computed(
-  () => !recording.value && (!selectedPatient.value || micSupport.value !== 'ok')
+  () => !recording.value && micSupport.value !== 'ok'
 )
 
-const importDisabled = computed(() => recording.value || !selectedPatient.value)
+const importDisabled = computed(() => recording.value)
 
 const micButtonClass = computed(() => {
   if (recording.value) {
@@ -1327,12 +1572,14 @@ onMounted(() => {
   }
 
   window.addEventListener('beforeunload', onBeforeUnload)
+  window.addEventListener('mousedown', onPickerOutside)
   loadOptions()
   loadPatients()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', onBeforeUnload)
+  window.removeEventListener('mousedown', onPickerOutside)
   if (recorder && recorder.state !== 'inactive') {
     recorder.onstop = null
     recorder.stop()

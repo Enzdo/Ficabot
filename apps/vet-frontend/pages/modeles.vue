@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-6xl">
+  <div>
     <!-- ══════════ En-tête ══════════ -->
     <header class="flex flex-wrap items-start justify-between gap-4 mb-8">
       <div>
@@ -95,7 +95,7 @@
     </div>
 
     <!-- ══════════ Grille ══════════ -->
-    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
       <div
         v-for="(template, index) in templates"
         :key="template.id"

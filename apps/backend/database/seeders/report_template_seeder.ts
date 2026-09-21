@@ -1,6 +1,6 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import ReportTemplate from '#models/report_template'
-import { CONSULTATION_TEMPLATES } from '#services/consultation_templates'
+import { CONSULTATION_TEMPLATES, templateCategory } from '#services/consultation_templates'
 
 /**
  * Bascule les modèles jusqu'ici codés en dur vers la base.
@@ -13,7 +13,7 @@ export default class extends BaseSeeder {
       const payload = {
         slug: t.id,
         name: t.label,
-        category: t.id === 'generale' ? 'general' : t.id,
+        category: templateCategory(t.id),
         description: `Modèle fourni — ${t.sections.length} rubriques`,
         sections: JSON.stringify(t.sections),
         isBuiltin: true,
