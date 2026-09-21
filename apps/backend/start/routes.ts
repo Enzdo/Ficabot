@@ -424,6 +424,7 @@ router.group(() => {
 // Vet Patients Management
 const VetConsultationsController = () => import('#controllers/vet_consultations_controller')
 const VetOnboardingController = () => import('#controllers/vet_onboarding_controller')
+const ReportTemplatesController = () => import('#controllers/report_templates_controller')
 const VetAssistantConversationsController = () => import('#controllers/vet_assistant_conversations_controller')
 const VetAssistantController = () => import('#controllers/vet_assistant_controller')
 router.group(() => {
@@ -460,6 +461,19 @@ router.group(() => {
   router.delete('/conversations/:id', [VetAssistantConversationsController, 'destroy'])
   router.post('/conversations/:id/messages', [VetAssistantConversationsController, 'message'])
 }).prefix('/vet/assistant').use(middleware.vetAuth())
+
+// Bibliothèque de modèles de compte rendu.
+// Préfixe distinct de /vet/templates, déjà pris par les modèles de
+// rendez-vous (durée, prestations) utilisés par l'écran Paramètres.
+router.group(() => {
+  router.get('/', [ReportTemplatesController, 'index'])
+  router.post('/', [ReportTemplatesController, 'store'])
+  router.get('/:id', [ReportTemplatesController, 'show'])
+  router.put('/:id', [ReportTemplatesController, 'update'])
+  router.delete('/:id', [ReportTemplatesController, 'destroy'])
+  router.post('/:id/duplicate', [ReportTemplatesController, 'duplicate'])
+  router.post('/:id/favorite', [ReportTemplatesController, 'toggleFavorite'])
+}).prefix('/vet/report-templates').use(middleware.vetAuth())
 
 // Vet Clients Management (User-Veterinarian links)
 const VetClientsController = () => import('#controllers/vet_clients_controller')
