@@ -291,7 +291,7 @@
             </div>
 
             <!-- Messages -->
-            <div v-else class="space-y-5">
+            <TransitionGroup v-else name="msg" tag="div" class="space-y-5">
               <div v-for="message in messages" :key="message.key">
                 <!-- Tour du praticien -->
                 <div v-if="message.role === 'user'" class="flex justify-end">
@@ -340,14 +340,19 @@
                 </div>
               </div>
 
-              <!-- Attente de la réponse -->
-              <div v-if="sending" class="flex justify-start">
-                <div class="inline-flex items-center gap-2 rounded-2xl rounded-bl-md border border-surface-200 bg-white px-4 py-3 text-sm text-surface-500 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-400">
-                  <span class="animate-spin w-3.5 h-3.5 rounded-full border-2 border-primary-600 border-t-transparent dark:border-accent-500 dark:border-t-transparent"></span>
-                  L'assistant consulte le dossier…
+              <!-- Attente de la réponse : trois points qui respirent.
+                   Plus proche d'une personne qui réfléchit qu'un rouage qui tourne. -->
+              <div v-if="sending" key="typing" class="flex justify-start">
+                <div class="inline-flex items-center gap-2.5 rounded-2xl rounded-bl-md border border-surface-200 bg-white px-4 py-3 text-sm text-surface-500 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-400">
+                  <span class="flex items-center gap-1" aria-hidden="true">
+                    <span class="typing-dot" />
+                    <span class="typing-dot" />
+                    <span class="typing-dot" />
+                  </span>
+                  <span>{{ waitingLabel }}</span>
                 </div>
               </div>
-            </div>
+            </TransitionGroup>
           </div>
         </div>
 
@@ -601,6 +606,28 @@ const messagesLoading = ref(false)
 const messagesError = ref('')
 const actionError = ref('')
 const sending = ref(false)
+
+// L'attente dure 5 à 15 s. Un libellé figé donne l'impression que ça a planté,
+// alors on dit où on en est.
+const waitingLabel = ref('L\'assistant lit le dossier…')
+let waitingTimers: ReturnType<typeof setTimeout>[] = []
+
+const startWaitingLabels = () => {
+  stopWaitingLabels()
+  waitingLabel.value = 'L\'assistant lit le dossier…'
+  waitingTimers = [
+    setTimeout(() => (waitingLabel.value = 'Il rassemble les éléments…'), 3500),
+    setTimeout(() => (waitingLabel.value = 'Il rédige sa réponse…'), 8000),
+  ]
+}
+
+const stopWaitingLabels = () => {
+  waitingTimers.forEach(clearTimeout)
+  waitingTimers = []
+}
+
+// Quitter la page en pleine requête ne doit pas laisser de minuteur actif
+onBeforeUnmount(stopWaitingLabels)
 const question = ref('')
 
 // Patient retenu pour une discussion pas encore créée côté serveur.
@@ -775,6 +802,7 @@ const deliver = async (message: ThreadMessage) => {
   if (sending.value) return
 
   sending.value = true
+  startWaitingLabels()
   message.status = 'sending'
   message.error = ''
   actionError.value = ''
@@ -850,6 +878,7 @@ const deliver = async (message: ThreadMessage) => {
     markFailed(message, NETWORK_ERROR)
   } finally {
     sending.value = false
+  stopWaitingLabels()
     scrollToBottom()
   }
 }

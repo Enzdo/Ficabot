@@ -384,3 +384,50 @@
     transition: none;
   }
 }
+
+/* Discussion avec l'assistant.
+   Hors @layer : ces classes sont posées par <TransitionGroup>, pas par le
+   balisage, donc Tailwind ne les verrait pas au scan. */
+
+/* Chaque message arrive depuis son côté, légèrement plus bas */
+.msg-enter-active {
+  transition: opacity 260ms var(--ease-out), transform 260ms var(--ease-out);
+}
+.msg-enter-from {
+  opacity: 0;
+  transform: translateY(10px) scale(0.985);
+}
+/* Le déplacement des messages déjà présents, quand un nouveau s'insère */
+.msg-move {
+  transition: transform 260ms var(--ease-out);
+}
+.msg-leave-active {
+  transition: opacity 120ms ease-out;
+  position: absolute;
+}
+.msg-leave-to {
+  opacity: 0;
+}
+
+/* Trois points qui respirent pendant l'attente */
+.typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: currentColor;
+  animation: typing 1.25s var(--ease) infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.16s; }
+.typing-dot:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30%           { opacity: 1;    transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .msg-enter-active,
+  .msg-move,
+  .msg-leave-active { transition: none; }
+  .typing-dot { animation: none; opacity: 0.6; }
+}
