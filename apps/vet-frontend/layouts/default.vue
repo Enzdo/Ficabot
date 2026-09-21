@@ -22,11 +22,30 @@
 
       <!-- Logo -->
       <div class="h-16 shrink-0 flex items-center px-5 border-b border-surface-200 dark:border-surface-800">
-        <div class="flex items-center gap-3">
-          <AppLogo class="w-9 h-9 rounded-lg shrink-0" />
-          <div class="sidebar-label">
-            <h1 class="text-[15px] font-semibold tracking-tighter text-primary-600 dark:text-surface-50">Ficana</h1>
-            <p class="text-[11px] text-surface-500 dark:text-surface-400">Espace Vétérinaire</p>
+        <!--
+          Barre dépliée : le mot-symbole, seule déclinaison du logo qui reste
+          lisible à cette hauteur. Barre repliée : le blason, faute de place
+          pour le mot — il y perd du détail, mais c'est bien la marque.
+        -->
+        <div class="flex items-center gap-3 min-w-0">
+          <img
+            v-if="sidebarCollapsed"
+            src="/brand/ficana-mark.png"
+            alt="Ficana"
+            class="w-9 h-9 shrink-0 object-contain"
+          >
+          <div v-else class="sidebar-label min-w-0">
+            <img
+              src="/brand/ficana-wordmark.png"
+              alt="Ficana"
+              class="h-[18px] w-auto dark:hidden"
+            >
+            <img
+              src="/brand/ficana-wordmark-dark.png"
+              alt="Ficana"
+              class="h-[18px] w-auto hidden dark:block"
+            >
+            <p class="mt-1 text-[11px] text-surface-500 dark:text-surface-400">Espace Vétérinaire</p>
           </div>
         </div>
       </div>

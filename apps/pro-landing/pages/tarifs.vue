@@ -24,22 +24,23 @@
     </section>
 
     <!-- ─────────── Les trois offres ─────────── -->
-    <section class="pb-24 lg:pb-32">
+    <section id="offres" class="pb-24 lg:pb-32 scroll-mt-28">
       <div class="container-pro">
         <div class="grid lg:grid-cols-3 gap-5">
           <article
             v-for="plan in plans"
             :key="plan.name"
-            class="card relative flex flex-col"
-            :class="plan.featured ? 'border-2 border-ink-900' : ''"
+            class="card pricing-card relative flex flex-col"
+            :class="plan.featured ? 'is-featured' : ''"
           >
             <span
               v-if="plan.featured"
-              class="absolute -top-3 left-6 bg-ink-900 text-white text-[11px] font-bold uppercase tracking-eyebrow px-3 py-1 rounded-full"
+              class="pricing-badge"
             >
-              Le plus choisi
+              Pour votre équipe
             </span>
 
+            <PricingPlanIcon :name="plan.name" />
             <h2 class="text-lg font-semibold tracking-tighter text-ink-900">{{ plan.name }}</h2>
             <div class="mt-3 flex items-baseline gap-1">
               <span class="text-4xl font-semibold tracking-tightest text-ink-900">{{ plan.price }}</span>
@@ -64,7 +65,7 @@
               v-if="plan.internal"
               to="/contact"
               class="w-full mt-8"
-              :class="plan.featured ? 'btn-primary' : 'btn-secondary'"
+              :class="plan.featured ? 'btn-accent' : 'btn-secondary'"
             >
               {{ plan.cta }}
             </NuxtLink>
@@ -73,7 +74,7 @@
               :href="checkoutHref(plan)"
               :rel="stripeLinks[plan.key] ? 'noopener' : undefined"
               class="w-full mt-8"
-              :class="plan.featured ? 'btn-primary' : 'btn-secondary'"
+              :class="plan.featured ? 'btn-accent' : 'btn-secondary'"
             >
               {{ plan.cta }}
             </a>
@@ -88,7 +89,7 @@
     </section>
 
     <!-- ─────────── Comparatif détaillé ─────────── -->
-    <section class="section border-t border-surface-200 bg-surface-50">
+    <section id="comparatif" class="section border-t border-surface-200 bg-surface-50 scroll-mt-20">
       <div class="container-pro">
         <div class="max-w-2xl mb-14 lg:mb-16">
           <span class="eyebrow">Comparatif</span>
@@ -99,7 +100,8 @@
           </p>
         </div>
 
-        <div class="overflow-x-auto">
+        <p class="mb-3 text-xs text-surface-500 md:hidden">Faites glisser le tableau pour comparer les trois offres.</p>
+        <div class="comparison-scroll overflow-x-auto" tabindex="0" role="region" aria-label="Comparatif des abonnements, défilement horizontal">
           <table class="w-full min-w-[720px] text-left">
             <thead>
               <tr class="border-b border-surface-300">

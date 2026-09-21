@@ -2,9 +2,9 @@
   <div class="min-h-screen flex flex-col">
     <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:bg-white focus:p-3 focus:rounded-lg">Aller au contenu</a>
     <!-- ─── Navigation ─── -->
-    <header
+    <header @keydown.esc="menuOpen = false"
       class="fixed top-0 inset-x-0 z-50 transition-all duration-200"
-      :class="scrolled || menuOpen ? 'nav-glass py-3' : 'bg-transparent py-5'"
+      :class="[scrolled || menuOpen ? 'nav-glass py-3' : 'bg-transparent py-5', { 'header-enter': route.path === '/' }]"
     >
       <div class="container-pro">
         <div class="flex items-center justify-between gap-6">
@@ -14,7 +14,7 @@
           </NuxtLink>
 
           <!-- Desktop -->
-          <nav class="hidden lg:flex items-center gap-8">
+          <nav class="hidden xl:flex items-center gap-8">
             <NuxtLink to="/fonctionnalites" class="nav-link">Fonctionnalités</NuxtLink>
             <NuxtLink to="/assistant" class="nav-link inline-flex items-center gap-2">
               Assistant
@@ -25,7 +25,7 @@
             <a :href="consumerUrl" class="nav-link">Site particuliers</a>
           </nav>
 
-          <div class="hidden lg:flex items-center gap-3">
+          <div class="hidden xl:flex items-center gap-3">
             <a :href="`${appUrl}/login`" class="nav-link">Se connecter</a>
             <NuxtLink to="/contact" class="btn-primary text-sm py-2.5 px-4">
               Réserver une démo
@@ -34,7 +34,7 @@
 
           <!-- Mobile -->
           <button
-            class="lg:hidden p-2 -mr-2 text-surface-600"
+            class="xl:hidden p-2 -mr-2 text-surface-600"
             :aria-expanded="menuOpen"
             aria-label="Menu"
             aria-controls="mobile-navigation"
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Panneau mobile -->
-        <div id="mobile-navigation" v-if="menuOpen" class="lg:hidden mt-4 pb-4 border-t border-surface-200 pt-4 space-y-1">
+        <div id="mobile-navigation" v-if="menuOpen" class="xl:hidden mt-4 pb-4 border-t border-surface-200 pt-4 space-y-1">
           <NuxtLink to="/fonctionnalites" class="block py-2 nav-link" @click="menuOpen = false">Fonctionnalités</NuxtLink>
           <NuxtLink to="/assistant" class="block py-2 nav-link" @click="menuOpen = false">Assistant · Bientôt</NuxtLink>
           <NuxtLink to="/tarifs" class="block py-2 nav-link" @click="menuOpen = false">Tarifs</NuxtLink>

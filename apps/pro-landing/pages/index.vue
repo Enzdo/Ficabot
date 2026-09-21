@@ -1,10 +1,11 @@
 <template>
   <div>
     <!-- ─────────── Hero ─────────── -->
-    <section class="bg-hero pt-32 pb-16 sm:pt-40 lg:pt-44">
-      <div class="container-pro">
+    <section class="bg-hero relative isolate pt-32 pb-16 sm:pt-40 lg:pt-44">
+      <HeroFoliage />
+      <div class="container-pro relative z-10">
         <!-- Texte centré : la démonstration prend toute la largeur en dessous -->
-        <div class="max-w-3xl mx-auto text-center">
+        <div class="hero-intro max-w-3xl mx-auto text-center">
           <span class="eyebrow">Logiciel de clinique vétérinaire</span>
 
           <h1 class="hero-title">
@@ -32,10 +33,10 @@
           </p>
         </div>
 
-        <a href="#parcours" class="mt-6 flex justify-center gap-2 text-sm font-medium text-brand-700 hover:underline">Découvrir le parcours d’une consultation <span aria-hidden="true">↓</span></a>
+        <a href="#parcours" class="hero-discover-enter mt-6 flex justify-center gap-2 text-sm font-medium text-brand-700 hover:underline">Découvrir le parcours d’une consultation <span aria-hidden="true">↓</span></a>
         <!-- Démonstration en pleine largeur, sous le texte -->
         <div class="mt-16 lg:mt-20 max-w-5xl mx-auto">
-          <div class="product-preview overflow-hidden bg-white">
+          <div class="hero-preview-enter product-preview overflow-hidden bg-white">
             <!--
               La vidéo ne s'affiche que si NUXT_PUBLIC_HERO_VIDEO est renseignée.
               Sans elle, la maquette du produit tient la place : la page n'est
@@ -239,14 +240,13 @@
     </section>
 
     <!-- ─────────── Tarifs (aperçu) ─────────── -->
-    <section class="section">
+    <section id="tarifs" class="section pricing-section scroll-mt-20">
       <div class="container-pro">
-        <div class="max-w-2xl mb-14 lg:mb-16">
+        <div class="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
           <span class="eyebrow">Tarifs</span>
-          <h2 class="section-title">Un prix par praticien, c'est tout.</h2>
-          <p class="section-lead">
-            Pas de frais d'installation, pas de module à débloquer.
-            Vous changez d'offre quand votre équipe change.
+          <h2 class="section-title">Plus de temps pour soigner.<br><span class="display-accent">Une offre pour votre pratique.</span></h2>
+          <p class="section-lead mx-auto">
+            En solo, en clinique ou sur plusieurs sites : choisissez l’espace qui accompagne votre quotidien.
           </p>
         </div>
 
@@ -254,24 +254,25 @@
           <article
             v-for="plan in plans"
             :key="plan.name"
-            class="card relative"
-            :class="plan.featured ? 'border-2 border-ink-900' : ''"
+            class="card pricing-card relative flex flex-col"
+            :class="plan.featured ? 'is-featured' : ''"
           >
             <span
               v-if="plan.featured"
-              class="absolute -top-3 left-6 bg-ink-900 text-white text-[11px] font-bold uppercase tracking-eyebrow px-3 py-1 rounded-full"
+              class="pricing-badge"
             >
-              Le plus choisi
+              Pour votre équipe
             </span>
 
+            <PricingPlanIcon :name="plan.name" />
             <h3 class="text-lg font-semibold tracking-tighter text-ink-900">{{ plan.name }}</h3>
             <div class="mt-3 flex items-baseline gap-1">
-              <span class="text-4xl font-semibold tracking-tightest text-ink-900">{{ plan.price }}</span>
+              <span class="pricing-price font-semibold tracking-tightest text-ink-900">{{ plan.price }}</span>
               <span class="text-sm text-surface-500">{{ plan.period }}</span>
             </div>
             <p class="mt-3 text-sm text-surface-500 pb-6 border-b border-surface-200">{{ plan.pitch }}</p>
 
-            <ul class="mt-6 space-y-3">
+            <ul class="mt-6 space-y-4 flex-1">
               <li v-for="line in plan.lines" :key="line" class="flex gap-3 text-sm text-surface-600">
                 <svg class="w-4 h-4 text-brand-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
@@ -281,13 +282,17 @@
             </ul>
 
             <NuxtLink
-              to="/tarifs"
+              :to="plan.name === 'Réseau' ? '/contact' : '/tarifs#offres'"
               class="w-full mt-8"
-              :class="plan.featured ? 'btn-primary' : 'btn-secondary'"
+              :class="plan.featured ? 'btn-accent' : 'btn-secondary'"
             >
               {{ plan.cta }}
             </NuxtLink>
           </article>
+        </div>
+        <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-surface-500">
+          <span>Sans frais d’installation</span><span>Une offre qui évolue avec votre équipe</span>
+          <NuxtLink to="/tarifs#comparatif" class="font-semibold text-brand-700 underline underline-offset-4">Comparer les fonctionnalités <span aria-hidden="true">→</span></NuxtLink>
         </div>
       </div>
     </section>
