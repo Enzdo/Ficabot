@@ -424,6 +424,7 @@ router.group(() => {
 // Vet Patients Management
 const VetConsultationsController = () => import('#controllers/vet_consultations_controller')
 const VetOnboardingController = () => import('#controllers/vet_onboarding_controller')
+const VetAssistantConversationsController = () => import('#controllers/vet_assistant_conversations_controller')
 const VetAssistantController = () => import('#controllers/vet_assistant_controller')
 router.group(() => {
   router.get('/', [VetPatientsController, 'index'])
@@ -448,6 +449,17 @@ router.group(() => {
   router.get('/', [VetOnboardingController, 'show'])
   router.post('/', [VetOnboardingController, 'update'])
 }).prefix('/vet/onboarding').use(middleware.vetAuth())
+
+// Discussions avec l'assistant
+router.group(() => {
+  router.get('/suggestions', [VetAssistantConversationsController, 'suggestions'])
+  router.get('/conversations', [VetAssistantConversationsController, 'index'])
+  router.post('/conversations', [VetAssistantConversationsController, 'store'])
+  router.get('/conversations/:id', [VetAssistantConversationsController, 'show'])
+  router.patch('/conversations/:id', [VetAssistantConversationsController, 'update'])
+  router.delete('/conversations/:id', [VetAssistantConversationsController, 'destroy'])
+  router.post('/conversations/:id/messages', [VetAssistantConversationsController, 'message'])
+}).prefix('/vet/assistant').use(middleware.vetAuth())
 
 // Vet Clients Management (User-Veterinarian links)
 const VetClientsController = () => import('#controllers/vet_clients_controller')

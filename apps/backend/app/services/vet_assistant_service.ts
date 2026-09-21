@@ -81,19 +81,26 @@ export default class VetAssistantService {
 
   async ask(params: {
     question: string
-    pet: Pet
+    pet: Pet | null
     records: MedicalRecord[]
     history?: AssistantTurn[]
   }): Promise<AssistantAnswer> {
     const { question, pet, records, history = [] } = params
 
+    const aDossier = Boolean(pet)
+
     const systemPrompt = [
-      "Tu assistes un vétérinaire praticien sur le dossier d'un patient.",
+      aDossier
+        ? "Tu assistes un vétérinaire praticien sur le dossier d'un patient."
+        : "Tu assistes un vétérinaire praticien dans son exercice quotidien.",
       '',
       'Règles absolues :',
-      "- Réponds UNIQUEMENT à partir du dossier fourni ci-dessous. N'invente rien.",
-      "- Si l'information ne figure pas au dossier, dis-le franchement :",
-      '  « Cette information ne figure pas au dossier. » Ne comble jamais un trou.',
+      aDossier
+        ? "- Réponds UNIQUEMENT à partir du dossier fourni ci-dessous. N'invente rien."
+        : "- Aucun dossier patient n'est joint : ne fais référence à aucun cas précis.",
+      aDossier
+        ? "- Si l'information ne figure pas au dossier, dis-le franchement : « Cette information ne figure pas au dossier. » Ne comble jamais un trou."
+        : "- Si une question suppose un dossier, demande au praticien de rattacher la discussion à un patient.",
       '- Cite la date de la consultation ou de l’entrée sur laquelle tu t’appuies.',
       "- Tu ne poses pas de diagnostic et tu ne prescris pas. Tu peux lister des",
       '  pistes à envisager, en précisant que la décision revient au praticien.',
@@ -101,10 +108,12 @@ export default class VetAssistantService {
       '  à chaque réponse.',
       '- Réponds en français.',
       '',
-      '--- DOSSIER ---',
-      this.buildContext(pet, records),
-      '--- FIN DU DOSSIER ---',
-    ].join('\n')
+      aDossier ? '--- DOSSIER ---' : '',
+      aDossier ? this.buildContext(pet as Pet, records) : '',
+      aDossier ? '--- FIN DU DOSSIER ---' : '',
+    ]
+      .filter(Boolean)
+      .join('\n')
 
     const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
