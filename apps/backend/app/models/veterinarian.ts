@@ -41,6 +41,23 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare specialization: string | null
 
+  // ─── Profil d'exercice (parcours d'inscription) ───
+
+  @column()
+  declare practiceType: string | null
+
+  @column()
+  declare specialties: string | null
+
+  @column()
+  declare teamSize: string | null
+
+  @column()
+  declare defaultTemplate: string | null
+
+  @column.dateTime()
+  declare onboardingCompletedAt: DateTime | null
+
   @column({ serializeAs: null })
   declare password: string
 
