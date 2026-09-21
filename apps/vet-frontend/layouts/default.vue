@@ -119,7 +119,24 @@
         <div>
           <h2 class="text-base font-semibold tracking-tighter text-primary-600 dark:text-surface-50">{{ pageTitle }}</h2>
         </div>
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Le raccourci doit être visible : un raccourci qu'on ne voit pas n'existe pas -->
+          <button
+            type="button"
+            class="hidden sm:flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg border border-surface-200
+                   text-sm text-surface-500 transition-colors duration-150
+                   hover:border-surface-300 hover:text-surface-700
+                   dark:border-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+            @click="quickLaunch?.openPalette()"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Rechercher</span>
+            <kbd class="ql-kbd ml-1">{{ metaKey }}</kbd>
+            <kbd class="ql-kbd">K</kbd>
+          </button>
+
           <!-- Dark mode toggle -->
           <button
             @click="toggleDarkMode"
@@ -190,10 +207,18 @@
         <slot />
       </div>
     </main>
+
+    <!-- Lanceur rapide, disponible partout via ⌘K -->
+    <QuickLaunch ref="quickLaunch" :nav-groups="navGroups" />
   </div>
 </template>
 
 <script setup lang="ts">
+const quickLaunch = ref<{ openPalette: () => void } | null>(null)
+
+// ⌘ sur Mac, Ctrl ailleurs : afficher la mauvaise touche décrédibilise tout
+const metaKey = ref('Ctrl')
+
 const authStore = useVetAuthStore()
 
 // Barre latérale repliable — l'état est conservé entre les sessions.
@@ -204,6 +229,7 @@ const navGroups = [
     label: null,
     items: [
       { to: '/dashboard', label: 'Tableau de bord', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+      { to: '/assistant', label: 'Assistant', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z' },
       { to: '/consultation', label: 'Dictée', icon: 'M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0-4a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z' },
     ],
   },
@@ -336,6 +362,7 @@ onUnmounted(() => {
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     '/dashboard': 'Tableau de bord',
+    '/assistant': 'Assistant',
     '/patients': 'Patients',
     '/appointments': 'Planning',
     '/records': 'Dossiers médicaux',
@@ -370,6 +397,9 @@ const handleLogout = () => {
 }
 
 onMounted(() => {
+  if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
+    metaKey.value = '⌘'
+  }
   sidebarCollapsed.value = localStorage.getItem(SIDEBAR_KEY) === 'true'
   try {
     const saved = JSON.parse(localStorage.getItem(GROUPS_KEY) || '[]')

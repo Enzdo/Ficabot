@@ -29,6 +29,8 @@ export default defineNuxtConfig({
   },
 
   app: {
+    // Transitions de page : discrètes, jamais spectaculaires.
+    pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       title: 'Ficana Vétérinaire - Espace Professionnel',
       meta: [
