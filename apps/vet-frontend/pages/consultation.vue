@@ -42,7 +42,7 @@
           </svg>
         </button>
 
-        <Transition name="ql">
+        <Transition name="popover">
           <div
             v-if="pickerOpen"
             class="absolute left-0 z-40 mt-2 w-80 overflow-hidden rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900"

@@ -385,6 +385,30 @@
   }
 }
 
+/* Panneau ancré à son bouton (sélecteur de modèle) : il se déploie depuis son
+   coin haut-gauche, d'où l'origine de transformation. Le lanceur ⌘K, lui,
+   flotte au centre de l'écran : sa transition ne convient pas ici.
+   Hors @layer, pour la même raison que ci-dessus. */
+.popover-enter-active {
+  transition: opacity 140ms var(--ease-out), transform 200ms var(--ease-out);
+}
+.popover-leave-active {
+  transition: opacity 120ms var(--ease-out), transform 140ms var(--ease-out);
+}
+.popover-enter-from,
+.popover-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+  transform-origin: top left;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popover-enter-active,
+  .popover-leave-active {
+    transition: none;
+  }
+}
+
 /* Discussion avec l'assistant.
    Hors @layer : ces classes sont posées par <TransitionGroup>, pas par le
    balisage, donc Tailwind ne les verrait pas au scan. */
