@@ -53,6 +53,9 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   declare teamSize: string | null
 
   @column()
+  declare onboardingProfile: string | null
+
+  @column()
   declare defaultTemplate: string | null
 
   @column.dateTime()

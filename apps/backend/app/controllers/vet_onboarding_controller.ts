@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { cleanOnboardingProfile, parseOnboardingProfile } from '#services/onboarding_profile'
 import { DateTime } from 'luxon'
 import { CONSULTATION_TEMPLATES } from '#services/consultation_templates'
 
@@ -71,6 +72,7 @@ export default class VetOnboardingController {
     return response.ok({
       success: true,
       data: {
+        profile: parseOnboardingProfile(vet?.onboardingProfile),
         completed: Boolean(vet?.onboardingCompletedAt),
         practiceType: vet?.practiceType ?? null,
         specialties: this.parseSpecialties(vet?.specialties),
@@ -94,11 +96,12 @@ export default class VetOnboardingController {
       return response.unauthorized({ success: false, message: 'Session expirée' })
     }
 
-    const { practiceType, specialties, teamSize, completed } = request.only([
+    const { practiceType, specialties, teamSize, completed, profile } = request.only([
       'practiceType',
       'specialties',
       'teamSize',
       'completed',
+      'profile',
     ])
 
     if (practiceType !== undefined) {
@@ -120,6 +123,17 @@ export default class VetOnboardingController {
 
     if (teamSize !== undefined) {
       vet.teamSize = TEAM_SIZES.some((t) => t.id === teamSize) ? teamSize : null
+    }
+
+    if (profile !== undefined) {
+      vet.onboardingProfile = JSON.stringify({ ...parseOnboardingProfile(vet.onboardingProfile), ...cleanOnboardingProfile(profile) })
+    }
+
+    // Recompute the template when a previous specialty is removed.
+    if (practiceType !== undefined || specialties !== undefined) {
+      const selected = this.parseSpecialties(vet.specialties)
+      vet.defaultTemplate = selected.map((s) => SPECIALTY_TEMPLATE[s]).find(Boolean)
+        || PRACTICE_TYPES.find((p) => p.id === vet.practiceType)?.template || 'generale'
     }
 
     if (completed === true) {

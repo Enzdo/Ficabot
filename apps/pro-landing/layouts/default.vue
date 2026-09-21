@@ -1,9 +1,10 @@
 <template>
   <div class="min-h-screen flex flex-col">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:bg-white focus:p-3 focus:rounded-lg">Aller au contenu</a>
     <!-- ─── Navigation ─── -->
     <header
       class="fixed top-0 inset-x-0 z-50 transition-all duration-200"
-      :class="scrolled ? 'nav-glass py-3' : 'bg-transparent py-5'"
+      :class="scrolled || menuOpen ? 'nav-glass py-3' : 'bg-transparent py-5'"
     >
       <div class="container-pro">
         <div class="flex items-center justify-between gap-6">
@@ -36,6 +37,7 @@
             class="lg:hidden p-2 -mr-2 text-surface-600"
             :aria-expanded="menuOpen"
             aria-label="Menu"
+            aria-controls="mobile-navigation"
             @click="menuOpen = !menuOpen"
           >
             <svg v-if="!menuOpen" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -48,7 +50,7 @@
         </div>
 
         <!-- Panneau mobile -->
-        <div v-if="menuOpen" class="lg:hidden mt-4 pb-4 border-t border-surface-200 pt-4 space-y-1">
+        <div id="mobile-navigation" v-if="menuOpen" class="lg:hidden mt-4 pb-4 border-t border-surface-200 pt-4 space-y-1">
           <NuxtLink to="/fonctionnalites" class="block py-2 nav-link" @click="menuOpen = false">Fonctionnalités</NuxtLink>
           <NuxtLink to="/assistant" class="block py-2 nav-link" @click="menuOpen = false">Assistant · Bientôt</NuxtLink>
           <NuxtLink to="/tarifs" class="block py-2 nav-link" @click="menuOpen = false">Tarifs</NuxtLink>
@@ -62,7 +64,7 @@
       </div>
     </header>
 
-    <main class="flex-1">
+    <main id="main-content" class="flex-1">
       <slot />
     </main>
 
@@ -123,6 +125,9 @@ const year = new Date().getFullYear()
 
 const scrolled = ref(false)
 const menuOpen = ref(false)
+
+const route = useRoute()
+watch(() => route.fullPath, () => { menuOpen.value = false })
 
 const onScroll = () => {
   scrolled.value = window.scrollY > 24

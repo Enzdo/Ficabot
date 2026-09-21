@@ -22,7 +22,7 @@
 
         <div class="flex-1"></div>
 
-        <button type="button" class="btn-ghost px-2" @click="skipStep">
+        <button type="button" class="btn-ghost px-2" :disabled="initializing || finishing" @click="skipStep">
           <span class="sm:hidden">Passer</span>
           <span class="hidden sm:inline">Passer cette étape</span>
         </button>
@@ -30,7 +30,7 @@
         <span class="w-px h-5 bg-surface-200 dark:bg-surface-800"></span>
 
         <!-- Sortie immédiate : deux clics suffisent pour rejoindre l'application -->
-        <button type="button" class="btn-ghost px-2 text-xs" @click="finish">
+        <button type="button" class="btn-ghost px-2 text-xs" :disabled="initializing || finishing" @click="finish">
           Tout passer
         </button>
       </div>
@@ -45,8 +45,19 @@
     </header>
 
     <!-- ══════════ Contenu ══════════ -->
-    <main class="flex-1 px-4 sm:px-5 py-10 sm:py-14">
-      <div class="mx-auto max-w-2xl">
+    <main class="flex-1 px-4 sm:px-5 py-8 sm:py-12 onboarding-main" :aria-busy="initializing">
+      <div class="mx-auto max-w-2xl mb-8">
+        <img src="/brand/ficana-wordmark.png" alt="Ficana" class="h-7 w-auto mb-5" />
+        <p class="text-xs text-surface-500 mb-3">Votre espace, à votre façon · environ 3 minutes, hors essai</p>
+        <ol class="flex gap-1.5" aria-label="Votre parcours">
+          <li v-for="(label, index) in stepLabels" :key="label" class="flex-1 min-w-0" :aria-current="step === index + 1 ? 'step' : undefined">
+            <span class="block h-1 rounded-full mb-2" :class="step >= index + 1 ? 'bg-accent-500' : 'bg-surface-200 dark:bg-surface-700'"></span>
+            <span class="hidden sm:block text-[11px]" :class="step === index + 1 ? 'font-semibold text-primary-700 dark:text-accent-400' : 'text-surface-500'">{{ label }}</span>
+          </li>
+        </ol>
+      </div>
+      <div v-if="initializing" class="mx-auto max-w-2xl py-12 text-surface-500" role="status">Chargement de votre parcours…</div>
+      <div v-else class="mx-auto max-w-2xl onboarding-content">
         <!-- Enregistrement des réponses en échec : on le dit, on ne bloque pas -->
         <div
           v-if="saveNotice"
@@ -144,10 +155,14 @@
           <span class="eyebrow">Votre équipe</span>
           <h1 class="page-title">Vous travaillez…</h1>
           <p class="page-subtitle">
-            Cela nous sert à régler le partage des dossiers et des rappels. Rien n'est figé.
+            Décrivez votre organisation. Cette réponse ne crée pas d’équipe et ne modifie aucun accès aux dossiers.
           </p>
 
-          <div class="space-y-3 mt-8">
+          <div class="mt-6">
+            <label for="onboarding-role" class="label">Votre rôle dans la structure <span class="normal-case font-normal">· facultatif</span></label>
+            <select id="onboarding-role" v-model="profile.role" class="input" @change="persistProfile"><option value="">Choisir mon rôle</option><option v-for="option in roles" :key="option.id" :value="option.id">{{ option.label }}</option></select>
+          </div>
+          <div class="space-y-3 mt-6">
             <button
               v-for="size in teamSizes"
               :key="size.id"
@@ -191,9 +206,48 @@
           </div>
         </section>
 
+        <section v-else-if="step === 4">
+          <span class="eyebrow">Vos habitudes</span>
+          <h1 class="page-title">À quoi ressemble votre quotidien ?</h1>
+          <p class="page-subtitle">Quelques repères pour comprendre vos outils et votre rythme. Toutes ces informations sont facultatives.</p>
+          <fieldset class="mt-8"><legend class="font-medium text-sm mb-3">Combien de consultations réalisez-vous par jour ?</legend>
+            <div class="grid sm:grid-cols-3 gap-3"><button v-for="option in volumes" :key="option.id" type="button" class="choice-card" :aria-pressed="profile.consultationVolume === option.id" @click="profile.consultationVolume = option.id; persistProfile()">{{ option.label }}</button></div>
+          </fieldset>
+          <fieldset class="mt-7"><legend class="font-medium text-sm mb-3">Comment rédigez-vous vos comptes rendus aujourd’hui ?</legend>
+            <div class="grid grid-cols-2 gap-3"><button v-for="option in methods" :key="option.id" type="button" class="choice-card" :aria-pressed="profile.reportMethod === option.id" @click="profile.reportMethod = option.id; persistProfile()">{{ option.label }}</button></div>
+          </fieldset>
+          <div v-if="profile.reportMethod === 'software' || profile.reportMethod === 'mixed'" class="mt-6">
+            <label for="current-software" class="label">Votre logiciel actuel · facultatif</label>
+            <input id="current-software" v-model="profile.currentSoftware" class="input" maxlength="80" placeholder="Nom de votre logiciel" @change="persistProfile" />
+            <p class="text-xs text-surface-500 mt-2">Pour connaître votre environnement de travail. Aucune connexion ni import automatique.</p>
+          </div>
+          <button type="button" class="btn-primary mt-8" @click="advanceProfile(5)">Continuer</button>
+        </section>
+
+        <section v-else-if="step === 5">
+          <span class="eyebrow">Vos priorités</span>
+          <h1 class="page-title">Par quoi souhaitez-vous commencer ?</h1>
+          <p class="page-subtitle">Choisissez jusqu’à trois objectifs. Nous vous proposerons un premier pas adapté à votre priorité principale.</p>
+          <div class="grid sm:grid-cols-2 gap-3 mt-8">
+            <button v-for="option in goals" :key="option.id" type="button" class="choice-card text-left" :aria-pressed="profile.priorities.includes(option.id)" :disabled="profile.priorities.length >= 3 && !profile.priorities.includes(option.id)" @click="toggleGoal(option.id)">
+              <span class="block text-xs text-primary-600 dark:text-accent-400 mb-3">{{ profile.priorities.includes(option.id) ? '0' + (profile.priorities.indexOf(option.id) + 1) + ' · Sélectionné' : 'À découvrir' }}</span>
+              <span class="block font-semibold">{{ option.label }}</span><span class="block text-xs text-surface-500 mt-2 leading-relaxed">{{ option.description }}</span>
+            </button>
+          </div>
+          <p class="text-xs text-surface-500 mt-4" aria-live="polite">{{ profile.priorities.length }} / 3 objectifs sélectionnés</p>
+          <button type="button" class="btn-primary mt-7" @click="advanceProfile(6)">Voir mon démarrage</button>
+        </section>
+
         <!-- ────────── Étape 4 — Premier essai de dictée ────────── -->
         <section v-else>
-          <span class="eyebrow">Premier essai</span>
+          <div class="rounded-2xl border border-accent-200 bg-accent-50 dark:bg-surface-900 dark:border-surface-700 p-5 mb-8">
+            <span class="eyebrow">Votre démarrage personnalisé</span>
+            <h2 class="text-lg font-semibold text-surface-900 dark:text-white">{{ recommendedStart.title }}</h2>
+            <p class="text-sm text-surface-600 dark:text-surface-300 mt-2">{{ recommendedStart.description }}</p>
+            <dl class="grid sm:grid-cols-2 gap-3 mt-5 text-sm"><div><dt class="text-xs text-surface-500">Exercice</dt><dd>{{ practiceTypes.find(p => p.id === practiceType)?.label || 'À préciser plus tard' }}</dd></div><div><dt class="text-xs text-surface-500">Équipe</dt><dd>{{ teamSizes.find(p => p.id === teamSize)?.label || 'À préciser plus tard' }}</dd></div></dl>
+            <button type="button" class="btn-ghost mt-3 text-xs" @click="step = 1">Ajuster mes réponses</button>
+          </div>
+          <span class="eyebrow">Premier essai · facultatif</span>
           <h1 class="page-title">Essayons tout de suite</h1>
           <p class="page-subtitle">
             Lisez ce court compte rendu à voix haute. Vous verrez ce que Ficana en fait, et nous
@@ -387,6 +441,7 @@ interface LabelledOption {
 }
 
 interface OnboardingState {
+  profile?: Record<string, any>
   completed: boolean
   practiceType: string | null
   specialties: string[]
@@ -404,9 +459,37 @@ const api = useVetApi()
 const authStore = useVetAuthStore()
 const runtimeConfig = useRuntimeConfig()
 
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 6
 
 const step = ref(1)
+const initializing = ref(true)
+const stepLabels = ['Exercice', 'Spécialités', 'Équipe', 'Habitudes', 'Priorités', 'Premier pas']
+const profile = reactive({ role: '', consultationVolume: '', reportMethod: '', currentSoftware: '', priorities: [] as string[] })
+const roles = [{ id: 'owner', label: 'Titulaire / associé' }, { id: 'employee', label: 'Vétérinaire salarié' }, { id: 'locum', label: 'Remplaçant / indépendant' }, { id: 'other', label: 'Autre rôle' }]
+const volumes = [{ id: 'under10', label: 'Moins de 10' }, { id: '10to20', label: '10 à 20' }, { id: 'over20', label: 'Plus de 20' }]
+const methods = [{ id: 'software', label: 'Dans un logiciel' }, { id: 'paper', label: 'Sur papier' }, { id: 'dictation', label: 'Par dictée vocale' }, { id: 'mixed', label: 'Un peu de tout' }]
+const goals = [
+  { id: 'reports', label: 'Rédiger plus facilement', description: 'Découvrir la dictée et les comptes rendus structurés.' },
+  { id: 'followup', label: 'Mieux suivre mes patients', description: 'Retrouver les dossiers et préparer les prochains soins.' },
+  { id: 'organisation', label: 'Organiser ma journée', description: 'Prendre en main l’agenda de la clinique.' },
+  { id: 'team', label: 'Préparer le travail en équipe', description: 'Vérifier le profil de la clinique et ses réglages.' },
+]
+const recommendedStart = computed(() => {
+  const starts: Record<string, { title: string; description: string; path: string }> = {
+    reports: { title: 'Votre premier compte rendu commence ici.', description: 'Essayez le micro ci-dessous, puis retrouvez vos consultations dans votre espace.', path: '/dashboard' },
+    followup: { title: 'Commençons par vos patients.', description: 'Après cet essai facultatif, ouvrez votre liste de patients pour prendre vos repères.', path: '/patients' },
+    organisation: { title: 'Votre agenda est le point de départ.', description: 'Après cet essai facultatif, découvrez votre planning et préparez votre journée.', path: '/calendar' },
+    team: { title: 'Préparons votre espace professionnel.', description: 'Vérifiez les informations de votre profil avant d’organiser le travail de votre clinique.', path: '/settings' },
+  }
+  return starts[profile.priorities[0] || 'reports'] || starts.reports
+})
+const profileSnapshot = () => ({ ...profile, priorities: [...profile.priorities], currentStep: step.value })
+const persistProfile = () => { void savePartial({ profile: profileSnapshot() }) }
+const advanceProfile = (next: number) => { step.value = next; persistProfile() }
+const toggleGoal = (id: string) => {
+  profile.priorities = profile.priorities.includes(id) ? profile.priorities.filter(p => p !== id) : [...profile.priorities, id].slice(0, 3)
+  persistProfile()
+}
 const progress = computed(() => (step.value / TOTAL_STEPS) * 100)
 
 /* ---------- Options : repli local si le serveur ne répond pas ---------- */
@@ -483,7 +566,13 @@ const defaultTemplate = ref('')
 const pending = reactive<Record<string, unknown>>({})
 const saveNotice = ref('')
 
-const savePartial = async (payload: Record<string, unknown>) => {
+let saveQueue: Promise<unknown> = Promise.resolve()
+const savePartial = (payload: Record<string, unknown>) => {
+  const operation = saveQueue.then(() => sendPartial(payload))
+  saveQueue = operation.catch(() => false)
+  return operation
+}
+const sendPartial = async (payload: Record<string, unknown>) => {
   try {
     const response = await api.post<{ completed: boolean; defaultTemplate: string | null }>(
       '/vet/onboarding',
@@ -502,13 +591,13 @@ const savePartial = async (payload: Record<string, unknown>) => {
     // refus. On lui ajoute juste le point qui lui manque souvent.
     const reason = (response.message || '').trim()
     saveNotice.value = reason
-      ? `${/[.!?…]$/.test(reason) ? reason : `${reason}.`} Vos réponses sont conservées et seront renvoyées à la dernière étape : continuez normalement.`
+      ? `${/[.!?…]$/.test(reason) ? reason : `${reason}.`} Gardez cet onglet ouvert : vos réponses seront renvoyées à la dernière étape.`
       : "Vos réponses n'ont pas pu être enregistrées à l'instant. Elles sont conservées et seront renvoyées à la dernière étape : continuez normalement."
     return false
   } catch {
     Object.assign(pending, payload)
     saveNotice.value =
-      "Le serveur est momentanément injoignable. Vos réponses sont conservées et seront renvoyées à la dernière étape : continuez normalement."
+      "Le serveur est momentanément injoignable. Gardez cet onglet ouvert : vos réponses seront renvoyées à la dernière étape."
     return false
   }
 }
@@ -525,6 +614,12 @@ const loadState = async () => {
       : []
     teamSize.value = response.data.teamSize
     defaultTemplate.value = response.data.defaultTemplate || ''
+    const saved = response.data.profile
+    if (saved) {
+      for (const key of ['role', 'consultationVolume', 'reportMethod', 'currentSoftware'] as const) profile[key] = typeof saved[key] === 'string' ? saved[key] : ''
+      profile.priorities = Array.isArray(saved.priorities) ? saved.priorities.filter((id: string) => goals.some(g => g.id === id)) : []
+      step.value = Number.isInteger(saved.currentStep) ? Math.min(6, Math.max(1, saved.currentStep)) : 1
+    }
   } catch {
     // L'état antérieur n'est qu'un confort : son absence ne change rien au parcours.
   }
@@ -549,7 +644,7 @@ const choosePracticeType = (id: string) => {
   // On avance sans attendre le serveur : l'échec éventuel s'affiche à l'étape
   // suivante sans jamais retenir le praticien.
   step.value = 2
-  void savePartial({ practiceType: id })
+  void savePartial({ practiceType: id, profile: profileSnapshot() })
 }
 
 const toggleSpecialty = (specialty: string) => {
@@ -563,12 +658,12 @@ const toggleSpecialty = (specialty: string) => {
 
 const confirmSpecialties = () => {
   step.value = 3
-  void savePartial({ specialties: [...selectedSpecialties.value] })
+  void savePartial({ specialties: [...selectedSpecialties.value], profile: profileSnapshot() })
 }
 
 const confirmTeamSize = () => {
   step.value = 4
-  if (teamSize.value) void savePartial({ teamSize: teamSize.value })
+  void savePartial({ teamSize: teamSize.value, profile: profileSnapshot() })
 }
 
 /* ---------- Icônes des types d'exercice ---------- */
@@ -604,10 +699,10 @@ const FALLBACK_ICON = ['M12 3.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17z', 'M12 11v5',
 const practiceIcon = (id: string) => PRACTICE_ICONS[id] || FALLBACK_ICON
 
 const TEAM_HINTS: Record<string, string> = {
-  solo: 'Vos dossiers et vos rappels ne concernent que vous.',
-  petite_equipe: 'Les dossiers circulent entre vous, chacun garde ses dictées.',
-  clinique: 'Plusieurs praticiens sur un même fichier patients.',
-  groupe: 'Plusieurs sites, des dossiers partagés entre confrères.',
+  solo: 'Vous assurez seul le suivi de vos patients.',
+  petite_equipe: 'Une petite équipe au quotidien.',
+  clinique: 'Une clinique avec plusieurs praticiens.',
+  groupe: 'Une grande équipe ou plusieurs établissements.',
 }
 
 const teamHint = (id: string) => TEAM_HINTS[id] || ''
@@ -1003,31 +1098,33 @@ const finish = async () => {
   if (finishing.value) return
   finishing.value = true
 
-  // Dernière chance pour les réponses restées en attente : on les renvoie
-  // avec la clôture. Deux tentatives, puis on ouvre l'application quoi qu'il
-  // arrive — un contrôle d'état raté ne doit jamais enfermer quelqu'un dehors.
-  const payload = { ...pending, completed: true }
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const response = await api.post('/vet/onboarding', payload)
-      if (response.success) break
-    } catch {
-      // On retente une fois, puis on passe.
-    }
-  }
-
+  await saveQueue
+  const saved = await savePartial({ ...pending, practiceType: practiceType.value, specialties: [...selectedSpecialties.value], teamSize: teamSize.value, profile: profileSnapshot(), completed: true })
   finishing.value = false
-  await navigateTo('/dashboard')
+  if (!saved) return
+  await navigateTo(recommendedStart.value.path)
+
 }
 
 /* ---------- Cycle de vie ---------- */
 
-watch(step, (value) => {
+watch(step, async (value) => {
+  if (!initializing.value) persistProfile()
+  if (value !== TOTAL_STEPS && recordState.value === 'recording') {
+    if (recorder && recorder.state !== 'inactive') { recorder.onstop = null; recorder.stop() }
+    stopTimer()
+    stopMeter()
+    releaseStream()
+    resetTrial()
+  }
+  await nextTick()
+  const heading = document.querySelector<HTMLElement>('.onboarding-content h1')
+  if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }) }
+  window.scrollTo({ top: 0, behavior: 'instant' })
   if (value === TOTAL_STEPS) loadDictationOptions()
 })
 
-onMounted(() => {
+onMounted(async () => {
   const secure = window.isSecureContext || ['localhost', '127.0.0.1'].includes(location.hostname)
   if (!secure) {
     micSupport.value = 'insecure'
@@ -1041,8 +1138,8 @@ onMounted(() => {
     micSupport.value = 'ok'
   }
 
-  loadOptions()
-  loadState()
+  await Promise.all([loadOptions(), loadState()])
+  initializing.value = false
 })
 
 onBeforeUnmount(() => {
@@ -1056,3 +1153,15 @@ onBeforeUnmount(() => {
   if (transcribeTick !== null) clearInterval(transcribeTick)
 })
 </script>
+
+<style scoped>
+.onboarding-main { background-image: radial-gradient(ellipse at top left, rgb(126 177 63 / .06), transparent 60%); }
+.choice-card { padding: 1.15rem; border: 1px solid #dfe4e6; border-radius: 14px; background: white; font-size: .875rem; transition: border-color .15s, background-color .15s; }
+.choice-card:hover { border-color: #7eb13f; }
+.choice-card[aria-pressed="true"] { border-color: #659532; background: #f2f7eb; box-shadow: inset 0 0 0 1px #659532; }
+.choice-card:disabled { opacity: .45; cursor: not-allowed; }
+.choice-card:focus-visible { outline: 3px solid #7eb13f; outline-offset: 3px; }
+:global(.dark) .choice-card { background: #18232b; border-color: #43515b; }
+:global(.dark) .choice-card[aria-pressed="true"] { background: #273921; border-color: #7eb13f; }
+.onboarding-content h1:focus { outline: none; }
+</style>

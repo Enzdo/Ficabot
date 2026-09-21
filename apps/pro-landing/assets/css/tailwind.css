@@ -164,3 +164,12 @@
     @apply bg-ink-900 text-surface-200;
   }
 }
+
+/* Original Ficana paper artwork: restrained texture, readable content. */
+.bg-hero { background: linear-gradient(rgb(255 255 255 / .48), rgb(255 255 255 / .8)), url('/media/ficana-paper.jpg') center top / cover; }
+.paper-panel { background: linear-gradient(rgb(255 255 255 / .45), rgb(255 255 255 / .7)), url('/media/ficana-paper.jpg') center / cover; }
+.product-preview { box-shadow: 0 24px 65px -38px rgb(40 60 35 / .35); border: 1px solid #d9dfd3; border-radius: 20px; }
+.care-illustration { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 16px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid #7eb13f; outline-offset: 4px; }
+.nav-link.router-link-active { color: #3e651e; text-decoration: underline; text-underline-offset: 7px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }

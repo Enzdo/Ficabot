@@ -7,6 +7,8 @@
       </h1>
     </div>
 
+        <p class="text-sm text-surface-500 mb-5">Créez votre accès, puis personnalisez votre espace selon votre pratique et vos priorités.</p>
+        <p class="text-xs font-medium text-primary-700 mb-3" aria-live="polite">{{ ['1 · Votre compte', '2 · Votre profil professionnel', '3 · Votre clinique'][step - 1] }}</p>
         <!-- Étapes -->
         <div class="flex items-center mb-9">
           <div
@@ -28,16 +30,15 @@
           </div>
         </div>
 
-        <form @submit.prevent="handleSubmit">
+        <form ref="registrationForm" @submit.prevent="submitStep">
           <!-- Step 1: Personal Info -->
           <div v-if="step === 1" class="space-y-5">
             <h2 class="text-lg font-semibold text-surface-900 mb-4">Informations personnelles</h2>
             
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="label">Prénom *</label>
-                <input 
-                  v-model="form.firstName"
+                <label class="label" for="register-firstName">Prénom *</label>
+                <input id="register-firstName" v-model="form.firstName"
                   type="text" 
                   class="input"
                   placeholder="Jean"
@@ -45,9 +46,8 @@
                 />
               </div>
               <div>
-                <label class="label">Nom *</label>
-                <input 
-                  v-model="form.lastName"
+                <label class="label" for="register-lastName">Nom *</label>
+                <input id="register-lastName" v-model="form.lastName"
                   type="text" 
                   class="input"
                   placeholder="Dupont"
@@ -57,9 +57,8 @@
             </div>
 
             <div>
-              <label class="label">Email professionnel *</label>
-              <input 
-                v-model="form.email"
+              <label class="label" for="register-email">Email professionnel *</label>
+                <input id="register-email" v-model="form.email"
                 type="email" 
                 class="input"
                 placeholder="dr.dupont@clinique.fr"
@@ -69,9 +68,8 @@
             </div>
 
             <div>
-              <label class="label">Mot de passe *</label>
-              <input 
-                v-model="form.password"
+              <label class="label" for="register-password">Mot de passe *</label>
+                <input id="register-password" v-model="form.password"
                 type="password" 
                 class="input"
                 placeholder="••••••••"
@@ -83,9 +81,8 @@
             </div>
 
             <div>
-              <label class="label">Téléphone</label>
-              <input 
-                v-model="form.phone"
+              <label class="label" for="register-phone">Téléphone</label>
+                <input id="register-phone" v-model="form.phone"
                 type="tel" 
                 class="input"
                 placeholder="01 23 45 67 89"
@@ -98,9 +95,8 @@
             <h2 class="text-lg font-semibold text-surface-900 mb-4">Informations professionnelles</h2>
 
             <div>
-              <label class="label">Numéro ordinal *</label>
-              <input 
-                v-model="form.licenseNumber"
+              <label class="label" for="register-licenseNumber">Numéro ordinal *</label>
+                <input id="register-licenseNumber" v-model="form.licenseNumber"
                 type="text" 
                 class="input"
                 placeholder="12345"
@@ -110,8 +106,8 @@
             </div>
 
             <div>
-              <label class="label">Spécialisation</label>
-              <select v-model="form.specialization" class="input">
+              <label class="label" for="register-specialization">Spécialisation</label>
+                <select id="register-specialization" v-model="form.specialization" class="input">
                 <option value="">Généraliste</option>
                 <option value="canine">Médecine canine</option>
                 <option value="feline">Médecine féline</option>
@@ -223,7 +219,7 @@
             <button 
               v-if="step < 3"
               type="button"
-              @click="nextStep"
+              @click="nextRegistrationStep"
               class="flex-1 btn-primary"
             >
               Suivant
@@ -252,6 +248,12 @@
 </template>
 
 <script setup lang="ts">
+const registrationForm = ref<HTMLFormElement | null>(null)
+const nextRegistrationStep = () => {
+  if (registrationForm.value?.reportValidity()) nextStep()
+}
+const submitStep = () => { if (step.value < 3) nextRegistrationStep(); else handleSubmit() }
+
 definePageMeta({
   layout: 'auth',
 })

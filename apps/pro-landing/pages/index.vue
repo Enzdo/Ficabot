@@ -32,9 +32,10 @@
           </p>
         </div>
 
+        <a href="#parcours" class="mt-6 flex justify-center gap-2 text-sm font-medium text-brand-700 hover:underline">Découvrir le parcours d’une consultation <span aria-hidden="true">↓</span></a>
         <!-- Démonstration en pleine largeur, sous le texte -->
         <div class="mt-16 lg:mt-20 max-w-5xl mx-auto">
-          <div class="rounded-2xl border border-surface-200 overflow-hidden bg-white">
+          <div class="product-preview overflow-hidden bg-white">
             <!--
               La vidéo ne s'affiche que si NUXT_PUBLIC_HERO_VIDEO est renseignée.
               Sans elle, la maquette du produit tient la place : la page n'est
@@ -61,7 +62,7 @@
                   <span class="w-2.5 h-2.5 rounded-full bg-surface-300" />
                 </div>
                 <div class="flex-1 text-center text-[11px] font-mono text-surface-400 truncate">
-                  pro.ficana.fr
+                  Aperçu illustratif · Ficana Pro
                 </div>
               </div>
 
@@ -119,7 +120,7 @@
     </section>
 
     <!-- ─────────── Déroulé d'une journée ─────────── -->
-    <section class="section">
+    <section id="parcours" class="section scroll-mt-20">
       <div class="container-pro">
         <div class="max-w-2xl mb-14 lg:mb-16">
           <span class="eyebrow">Dans le fil de votre journée</span>
@@ -133,7 +134,7 @@
           </p>
         </div>
 
-        <div class="grid lg:grid-cols-3 gap-10 lg:gap-8">
+        <div class="grid lg:grid-cols-3 gap-10 lg:gap-8 paper-panel rounded-3xl p-6 sm:p-9 border border-surface-200">
           <div v-for="(step, i) in steps" :key="step.title">
             <div class="flex items-center mb-5">
               <span class="step-num">{{ i + 1 }}</span>
@@ -209,7 +210,9 @@
           </div>
 
           <!-- Maquette du lien -->
-          <div class="card-dark">
+          <div class="space-y-5">
+            <img src="/media/ficana-care.jpg" alt="Un vétérinaire et une propriétaire réunis autour d’un chien et d’un chat" class="care-illustration" width="1536" height="1024" loading="lazy" decoding="async" />
+            <div class="card-dark">
             <p class="text-[11px] font-bold uppercase tracking-eyebrow text-surface-500 mb-5">
               Consultation du 14 mars
             </p>
@@ -229,6 +232,7 @@
               <p class="text-sm font-semibold text-white mb-1">Carnet de Max</p>
               <p class="text-xs text-surface-400">Rage à jour · Prochain rappel : 14 mars 2027</p>
             </div>
+          </div>
           </div>
         </div>
       </div>
