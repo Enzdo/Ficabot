@@ -1,5 +1,5 @@
 <template>
-  <div class="relative min-h-screen bg-surface-50 dark:bg-surface-950 lg:overflow-hidden">
+  <div class="auth-layer-root relative min-h-screen bg-surface-50 dark:bg-surface-950 lg:overflow-hidden">
     <!-- ─── Panneau visuel ─── -->
     <!--
       Les deux panneaux occupent la moitié gauche et se déplacent par translation.
@@ -11,7 +11,7 @@
       donne l'impression que le formulaire traverse la photo.
     -->
     <aside
-      class="hidden lg:block absolute inset-y-0 left-0 w-1/2 p-3 auth-panel z-20"
+      class="hidden lg:block absolute inset-y-0 left-0 w-1/2 p-3 auth-panel auth-photo-panel z-20"
       :class="formOnLeft ? 'translate-x-full' : 'translate-x-0'"
       aria-hidden="true"
     >
@@ -30,15 +30,16 @@
             :loading="i === 0 ? 'eager' : 'lazy'"
           >
           <!-- Voile sombre : garantit la lisibilité du texte quelle que soit la photo -->
-          <div class="absolute inset-0 bg-gradient-to-t from-primary-900/90 via-primary-900/40 to-primary-900/10" />
+          <div class="absolute inset-0 bg-gradient-to-t from-primary-900/90 via-primary-900/35 to-primary-900/70" />
         </div>
 
-        <!-- Marque : le blason a ici la place de s'exprimer -->
+        <!-- Marque : le mot-symbole, seul lisible posé sur une photo.
+             Le blason, trop détaillé, devient une tache à cette taille. -->
         <div class="absolute top-8 left-8">
           <img
-            src="/brand/ficana-logo-dark.png"
+            src="/brand/ficana-wordmark-dark.png"
             alt="Ficana"
-            class="h-24 w-auto"
+            class="h-7 w-auto"
           >
         </div>
 
@@ -77,15 +78,15 @@
 
     <!-- ─── Panneau formulaire ─── -->
     <main
-      class="relative lg:absolute inset-y-0 left-0 w-full lg:w-1/2 auth-panel z-10
+      class="relative lg:absolute inset-y-0 left-0 w-full lg:w-1/2 auth-panel auth-form-panel z-10
              flex items-center justify-center p-5 sm:p-8 lg:p-10"
-      :class="formOnLeft ? 'lg:translate-x-0' : 'lg:translate-x-full'"
+      :class="[formOnLeft ? 'lg:translate-x-0' : 'lg:translate-x-full', { 'is-switching': switching }]"
     >
       <div class="w-full" :class="formOnLeft ? 'max-w-lg' : 'max-w-md'">
         <!-- Marque, visible seulement quand le panneau visuel est masqué -->
         <div class="lg:hidden mb-10">
-          <img src="/brand/ficana-logo.png" alt="Ficana" class="h-20 w-auto dark:hidden">
-          <img src="/brand/ficana-logo-dark.png" alt="Ficana" class="h-20 w-auto hidden dark:block">
+          <img src="/brand/ficana-wordmark.png" alt="Ficana" class="h-8 w-auto dark:hidden">
+          <img src="/brand/ficana-wordmark-dark.png" alt="Ficana" class="h-8 w-auto hidden dark:block">
         </div>
 
         <slot />
@@ -100,25 +101,36 @@ const route = useRoute()
 /** Inscription : formulaire à gauche. Connexion : formulaire à droite. */
 const formOnLeft = computed(() => route.path.startsWith('/register'))
 
+// Keep page content hidden during the crossing; the opaque photo stays above it.
+const switching = ref(false)
+let switchTimer: ReturnType<typeof setTimeout> | null = null
+watch(formOnLeft, () => {
+  if (switchTimer) clearTimeout(switchTimer)
+  if (import.meta.client && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  switching.value = true
+  switchTimer = setTimeout(() => { switching.value = false }, 600)
+})
+onBeforeUnmount(() => { if (switchTimer) clearTimeout(switchTimer) })
+
 const slides = [
   {
     image:
-      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+      '/images/auth/patient-v1.jpg',
     text: 'Le dossier de chaque patient, déjà rempli par son propriétaire, ouvert avant la consultation.',
   },
   {
     image:
-      'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+      '/images/auth/consultation-v1.jpg',
     text: 'Dictez votre consultation. Le compte rendu se structure, vous le relisez, il rejoint le dossier.',
   },
   {
     image:
-      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+      '/images/auth/reminders-v1.jpg',
     text: 'Vaccins, traitements, contrôles : les rappels partent sans que personne ait à y penser.',
   },
   {
     image:
-      'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+      '/images/auth/cat-v1.jpg',
     text: 'Vos comptes rendus arrivent dans l’application du propriétaire, sans pièce jointe à chercher.',
   },
 ]
@@ -154,3 +166,17 @@ onMounted(() => {
 
 onBeforeUnmount(stop)
 </script>
+
+<style scoped>
+.auth-layer-root { isolation: isolate; }
+.auth-photo-panel { z-index: 30; isolation: isolate; }
+.auth-form-panel { z-index: 0; }
+@media (min-width: 1024px) {
+  .auth-form-panel { overflow-y: auto; }
+  .auth-form-panel > div { margin-block: auto; flex-shrink: 0; transition: opacity 140ms ease; }
+  .auth-form-panel.is-switching > div { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-form-panel > div { transition: none; }
+}
+</style>
