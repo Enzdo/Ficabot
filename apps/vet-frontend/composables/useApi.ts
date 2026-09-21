@@ -1,4 +1,4 @@
-import type { ApiResponse } from '@ficabot/shared'
+import type { ApiResponse } from '~/types/api'
 
 export const useVetApi = () => {
   const config = useRuntimeConfig()
