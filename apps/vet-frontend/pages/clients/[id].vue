@@ -36,7 +36,7 @@
             </span>
           </div>
           <div class="flex-1">
-            <h1 class="text-2xl font-bold text-surface-900">
+            <h1 class="page-title">
               {{ client.user.firstName }} {{ client.user.lastName }}
             </h1>
             <div class="flex items-center gap-4 mt-2 text-sm text-surface-500">
@@ -90,7 +90,7 @@
           >
             <div class="flex items-center gap-4">
               <div class="w-14 h-14 rounded-full flex items-center justify-center text-2xl"
-                :class="pet.species === 'dog' ? 'bg-amber-100' : pet.species === 'cat' ? 'bg-purple-100' : 'bg-surface-100'"
+                :class="pet.species === 'dog' ? 'bg-warning-100' : pet.species === 'cat' ? 'bg-primary-100' : 'bg-surface-100'"
               >
                 {{ pet.species === 'dog' ? '🐕' : pet.species === 'cat' ? '🐈' : '🐾' }}
               </div>

@@ -1,5 +1,3 @@
-import { fileURLToPath } from 'node:url'
-
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
@@ -32,7 +30,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Ficabot Vétérinaire - Espace Professionnel',
+      title: 'Ficana Vétérinaire - Espace Professionnel',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -40,6 +38,12 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap',
+        },
       ],
     },
   },
@@ -51,14 +55,6 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
-  },
-
-  alias: {
-    '@ficabot/shared': fileURLToPath(new URL('../../packages/shared/src/index.ts', import.meta.url)),
-  },
-
-  build: {
-    transpile: ['@ficabot/shared'],
   },
 
   compatibilityDate: '2024-01-01',

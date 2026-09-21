@@ -2,8 +2,8 @@
   <div>
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Calendrier</h1>
-        <p class="text-surface-500 mt-1">Vue planning de vos rendez-vous</p>
+        <h1 class="page-title">Calendrier</h1>
+        <p class="page-subtitle">Vue planning de vos rendez-vous</p>
       </div>
       <div class="flex items-center gap-2">
         <button @click="goToToday" class="btn-secondary flex items-center gap-2 !py-2 !px-4 text-sm">
@@ -479,7 +479,7 @@ const getAppointmentClasses = (type: string): string => {
   const map: Record<string, string> = {
     consultation: 'bg-primary-100 border-primary-300 text-primary-800',
     surgery: 'bg-danger-50 border-danger-300 text-danger-800',
-    vaccination: 'bg-blue-50 border-blue-300 text-blue-800',
+    vaccination: 'bg-primary-50 border-primary-300 text-primary-800',
     checkup: 'bg-accent-100 border-accent-300 text-accent-800',
     other: 'bg-surface-100 border-surface-300 text-surface-700',
   }
@@ -490,7 +490,7 @@ const getTypeBadgeClasses = (type: string): string => {
   const map: Record<string, string> = {
     consultation: 'badge bg-primary-100 text-primary-700',
     surgery: 'badge bg-danger-50 text-danger-700',
-    vaccination: 'badge bg-blue-50 text-blue-700',
+    vaccination: 'badge bg-primary-50 text-primary-700',
     checkup: 'badge bg-accent-100 text-accent-700',
     other: 'badge bg-surface-100 text-surface-600',
   }

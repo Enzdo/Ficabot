@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Clients</h1>
-        <p class="text-surface-500 mt-1">Gérez vos clients et leurs demandes</p>
+        <h1 class="page-title">Clients</h1>
+        <p class="page-subtitle">Gérez vos clients et leurs demandes</p>
       </div>
       <div class="flex gap-2">
         <button @click="exportClients" class="btn-secondary flex items-center gap-2">
@@ -261,7 +261,7 @@
               <h3 class="font-semibold text-surface-900">
                 {{ client.user.firstName }} {{ client.user.lastName }}
               </h3>
-              <span class="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full">Utilisateur Ficabot</span>
+              <span class="text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full">Utilisateur Ficana</span>
             </div>
             <p class="text-sm text-surface-500">{{ client.user.email }}</p>
           </div>
@@ -319,8 +319,8 @@
     </div>
 
     <!-- Invite Modal -->
-    <div v-if="showInviteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div v-if="showInviteModal" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Inviter un client</h2>
           <button @click="closeInviteModal" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -574,8 +574,8 @@ const inviteClient = async () => {
       inviteResult.value = {
         type: response.type,
         message: isApp
-          ? 'Utilisateur Ficabot trouvé — une invitation lui a été envoyée dans l\'application.'
-          : 'Cet email n\'a pas de compte Ficabot — un email d\'invitation lui a été envoyé.',
+          ? 'Utilisateur Ficana trouvé — une invitation lui a été envoyée dans l\'application.'
+          : 'Cet email n\'a pas de compte Ficana — un email d\'invitation lui a été envoyé.',
       }
       inviteForm.value = { email: '', firstName: '', lastName: '', note: '' }
       await loadAll()

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Paramètres</h1>
-        <p class="text-surface-500 mt-1">Configurez votre clinique et votre compte</p>
+        <h1 class="page-title">Paramètres</h1>
+        <p class="page-subtitle">Configurez votre clinique et votre compte</p>
       </div>
     </div>
 
@@ -404,8 +404,8 @@
     </div>
 
     <!-- Add Service Modal -->
-    <div v-if="showAddService" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div v-if="showAddService" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">{{ editingService ? 'Modifier' : 'Ajouter' }} un service</h2>
           <button @click="closeServiceModal" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -454,8 +454,8 @@
       </div>
     </div>
     <!-- Add/Edit Template Modal -->
-    <div v-if="showAddTemplate" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div v-if="showAddTemplate" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">{{ editingTemplate ? 'Modifier' : 'Nouveau' }} template</h2>
           <button @click="closeTemplateModal" class="p-2 hover:bg-surface-100 rounded-lg">

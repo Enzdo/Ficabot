@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Ordonnances</h1>
-        <p class="text-surface-500 mt-1">Gestion des prescriptions</p>
+        <h1 class="page-title">Ordonnances</h1>
+        <p class="page-subtitle">Gestion des prescriptions</p>
       </div>
       <button @click="showNewPrescription = true" class="btn-primary flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,8 +74,8 @@
     </div>
 
     <!-- View Prescription Modal -->
-    <div v-if="selectedPrescription" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div v-if="selectedPrescription" class="modal-overlay">
+      <div class="modal-panel max-w-2xl">
         <div class="p-6">
           <div class="flex items-center justify-between mb-6">
             <h2 class="text-xl font-bold text-surface-900">Ordonnance</h2>
@@ -155,8 +155,8 @@
     </div>
 
     <!-- New Prescription Modal -->
-    <div v-if="showNewPrescription" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+    <div v-if="showNewPrescription" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Nouvelle ordonnance</h2>
           <button @click="showNewPrescription = false" class="p-2 hover:bg-surface-100 rounded-lg">

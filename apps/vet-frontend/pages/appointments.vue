@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Planning</h1>
-        <p class="text-surface-500 mt-1">Gérez vos rendez-vous et votre équipe</p>
+        <h1 class="page-title">Planning</h1>
+        <p class="page-subtitle">Gérez vos rendez-vous et votre équipe</p>
       </div>
       <div class="flex gap-2">
         <button @click="showEmployeeModal = true" class="btn-secondary flex items-center gap-2">
@@ -204,8 +204,8 @@
     </div>
 
     <!-- New Appointment Modal -->
-    <div v-if="showNewAppointment" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showNewAppointment" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Nouveau rendez-vous</h2>
           <button @click="showNewAppointment = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -318,8 +318,8 @@
     </div>
 
     <!-- Appointment Detail Modal -->
-    <div v-if="selectedAppointment" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div v-if="selectedAppointment" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Détails du RDV</h2>
           <button @click="selectedAppointment = null" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -390,8 +390,8 @@
     </div>
 
     <!-- Employee Management Modal -->
-    <div v-if="showEmployeeModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showEmployeeModal" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Gestion de l'équipe</h2>
           <button @click="showEmployeeModal = false; resetEmployeeForm()" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -542,7 +542,7 @@ const newEmployee = ref({
   phone: '',
   role: 'assistant',
   specializations: [] as string[],
-  color: '#0d9488',
+  color: '#16ca9e',
 })
 
 const editingEmployee = ref<any>(null)
@@ -808,7 +808,7 @@ const resetEmployeeForm = () => {
     phone: '',
     role: 'assistant',
     specializations: [],
-    color: '#0d9488',
+    color: '#16ca9e',
   }
 }
 

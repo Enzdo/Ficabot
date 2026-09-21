@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Patients</h1>
-        <p class="text-surface-500 mt-1">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} avec accès partagé</p>
+        <h1 class="page-title">Patients</h1>
+        <p class="page-subtitle">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} avec accès partagé</p>
       </div>
     </div>
 

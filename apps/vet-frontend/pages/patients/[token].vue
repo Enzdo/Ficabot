@@ -40,8 +40,8 @@
             <span v-else class="text-5xl">{{ patient.species === 'dog' ? '🐕' : '🐱' }}</span>
           </div>
           <div class="flex-1">
-            <h1 class="text-2xl font-bold text-surface-900">{{ patient.name }}</h1>
-            <p class="text-surface-500 mt-1">{{ patient.breed || getSpeciesLabel(patient.species) }}</p>
+            <h1 class="page-title">{{ patient.name }}</h1>
+            <p class="page-subtitle">{{ patient.breed || getSpeciesLabel(patient.species) }}</p>
             
             <div class="flex flex-wrap gap-3 mt-4">
               <div class="flex items-center gap-2 text-sm text-surface-600">
@@ -105,6 +105,137 @@
           </div>
         </div>
       </div>
+
+      <!-- Assistant du dossier -->
+      <section class="card mb-6 p-5">
+        <button
+          type="button"
+          class="w-full flex items-start justify-between gap-4 text-left"
+          :aria-expanded="assistantOpen"
+          @click="assistantOpen = !assistantOpen"
+        >
+          <span class="min-w-0 block">
+            <span class="eyebrow mb-1.5">Assistant du dossier</span>
+            <span class="block text-sm text-surface-600 dark:text-surface-300">
+              Interroge le dossier de {{ patient.name }}, et rien d'autre.
+            </span>
+            <span class="block text-xs text-surface-400 mt-1 dark:text-surface-500">
+              Aucune source extérieure, aucun diagnostic : la lecture clinique et la décision vous reviennent.
+            </span>
+          </span>
+          <span class="btn-ghost flex-shrink-0">
+            {{ assistantOpen ? 'Réduire' : 'Ouvrir' }}
+            <svg
+              class="w-4 h-4 transition-transform"
+              :class="assistantOpen ? 'rotate-180' : ''"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </span>
+        </button>
+
+        <div v-show="assistantOpen" class="mt-5 pt-5 border-t border-surface-200 dark:border-surface-800">
+          <div ref="assistantScroll" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <!-- Etat vide : suggestions cliquables -->
+            <div v-if="assistantMessages.length === 0" class="card-muted p-4">
+              <p class="text-sm text-surface-600 mb-3 dark:text-surface-300">Par exemple :</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="(suggestion, i) in assistantSuggestions"
+                  :key="i"
+                  type="button"
+                  :disabled="assistantLoading"
+                  class="text-left text-sm px-3 py-1.5 rounded-lg border border-surface-200 bg-white text-surface-700 transition-colors hover:border-accent-400 hover:text-primary-700 disabled:opacity-50 dark:bg-surface-900 dark:border-surface-700 dark:text-surface-200 dark:hover:border-accent-400 dark:hover:text-surface-50"
+                  @click="askAssistant(suggestion)"
+                >
+                  {{ suggestion }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Conversation -->
+            <div
+              v-for="(message, i) in assistantMessages"
+              :key="i"
+              class="flex"
+              :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
+            >
+              <div
+                class="max-w-[85%] rounded-xl border px-3 py-2"
+                :class="message.role === 'user'
+                  ? 'bg-surface-100 border-surface-200 text-surface-900 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100'
+                  : 'bg-white border-surface-200 text-surface-800 dark:bg-surface-900 dark:border-surface-700 dark:text-surface-200'"
+              >
+                <p class="text-sm whitespace-pre-wrap">{{ message.content }}</p>
+                <div
+                  v-if="message.role === 'assistant' && message.sources?.length"
+                  class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-surface-200 dark:border-surface-800"
+                >
+                  <span
+                    v-for="(source, j) in message.sources"
+                    :key="j"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-surface-200 bg-surface-50 text-[11px] text-surface-500 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-400"
+                  >
+                    {{ source.label }}
+                    <span v-if="source.date" class="text-surface-400 dark:text-surface-500">· {{ source.date }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Requete en cours -->
+            <div v-if="assistantLoading" class="flex justify-start">
+              <p class="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-sm text-surface-500 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-400">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent-500 animate-pulse mr-2 align-middle"></span>
+                L'assistant consulte le dossier…
+              </p>
+            </div>
+
+            <!-- Echec -->
+            <div v-if="assistantError" class="flex justify-start">
+              <div class="max-w-[85%] rounded-xl border border-danger-200 bg-danger-50 px-3 py-2 dark:bg-danger-900/30 dark:border-danger-800">
+                <p class="text-sm text-danger-700 dark:text-danger-200">{{ assistantError }}</p>
+                <button
+                  v-if="assistantCanRetry"
+                  type="button"
+                  class="btn-ghost mt-1 px-0 py-0 text-xs"
+                  @click="retryAssistant"
+                >
+                  Reposer la question
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saisie -->
+          <div class="flex items-end gap-2 mt-4">
+            <label class="sr-only" for="assistant-question">Votre question</label>
+            <textarea
+              id="assistant-question"
+              v-model="assistantQuestion"
+              class="input resize-none"
+              rows="2"
+              :disabled="assistantLoading"
+              placeholder="Posez votre question sur ce dossier…"
+              @keydown.enter.exact.prevent="askAssistant()"
+            ></textarea>
+            <button
+              type="button"
+              class="btn-primary flex-shrink-0"
+              :disabled="assistantLoading || !assistantQuestion.trim()"
+              @click="askAssistant()"
+            >
+              {{ assistantLoading ? 'En cours…' : 'Envoyer' }}
+            </button>
+          </div>
+          <p class="text-xs text-surface-400 mt-2 dark:text-surface-500">
+            Entrée pour envoyer, Maj + Entrée pour un retour à la ligne.
+          </p>
+        </div>
+      </section>
 
       <!-- Tabs -->
       <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -393,6 +524,105 @@ const weightForm = ref({ weight: 0, date: new Date().toISOString().split('T')[0]
 const attachments = ref<any[]>([])
 const uploadCategory = ref('other')
 
+// ---------- Assistant du dossier ----------
+// Panneau additif : il lit le dossier via l'API, il n'ecrit rien.
+interface AssistantSource {
+  label: string
+  date: string | null
+}
+interface AssistantMessage {
+  role: 'user' | 'assistant'
+  content: string
+  sources?: AssistantSource[]
+}
+
+// Nombre de tours renvoyes au backend comme contexte conversationnel.
+const ASSISTANT_HISTORY_LIMIT = 8
+
+const assistantOpen = ref(false)
+const assistantQuestion = ref('')
+const assistantMessages = ref<AssistantMessage[]>([])
+const assistantLoading = ref(false)
+const assistantError = ref('')
+const assistantScroll = ref<HTMLElement | null>(null)
+
+const assistantSuggestions = [
+  'Quand a-t-il été vacciné pour la dernière fois ?',
+  'Quels traitements sont en cours ?',
+  'Comment son poids a-t-il évolué ?',
+]
+
+// Le dernier tour est une question restée sans réponse : on peut la rejouer.
+const assistantCanRetry = computed(() => {
+  const last = assistantMessages.value[assistantMessages.value.length - 1]
+  return !!last && last.role === 'user' && !assistantLoading.value
+})
+
+const scrollAssistantToBottom = async () => {
+  await nextTick()
+  const el = assistantScroll.value
+  if (el) el.scrollTop = el.scrollHeight
+}
+
+const askAssistant = async (preset?: string) => {
+  if (assistantLoading.value) return
+
+  const question = (typeof preset === 'string' ? preset : assistantQuestion.value).trim()
+  if (!question) return
+
+  // L'historique est calcule avant d'empiler la question courante :
+  // le backend recoit les tours precedents, pas la question qu'il traite.
+  const history = assistantMessages.value
+    .slice(-ASSISTANT_HISTORY_LIMIT)
+    .map((m) => ({ role: m.role, content: m.content }))
+
+  assistantError.value = ''
+  assistantMessages.value.push({ role: 'user', content: question })
+  assistantQuestion.value = ''
+  assistantLoading.value = true
+  scrollAssistantToBottom()
+
+  try {
+    const response = await api.post<{ answer: string; sources: AssistantSource[] }>(
+      `/vet/patients/${route.params.token}/assistant`,
+      { question, history }
+    )
+
+    if (!response.success) {
+      assistantError.value =
+        response.message ||
+        "L'assistant n'a pas pu traiter cette question. Réessayez dans un instant."
+      return
+    }
+
+    const answer = (response.data?.answer || '').trim()
+    if (!answer) {
+      assistantError.value =
+        "L'assistant n'a rien trouvé dans ce dossier pour répondre à cette question. Reformulez-la, ou vérifiez directement les onglets ci-dessous."
+      return
+    }
+
+    assistantMessages.value.push({
+      role: 'assistant',
+      content: answer,
+      sources: Array.isArray(response.data?.sources) ? response.data.sources : [],
+    })
+  } catch (e) {
+    assistantError.value =
+      "La question n'a pas pu être transmise : connexion au serveur interrompue. Vérifiez votre réseau, puis réessayez."
+  } finally {
+    assistantLoading.value = false
+    scrollAssistantToBottom()
+  }
+}
+
+const retryAssistant = () => {
+  const last = assistantMessages.value[assistantMessages.value.length - 1]
+  if (!last || last.role !== 'user' || assistantLoading.value) return
+  assistantMessages.value.pop()
+  askAssistant(last.content)
+}
+
 const healthBookData = computed(() => {
   if (!patient.value?.healthBook) return {}
   const hb = patient.value.healthBook
@@ -557,8 +787,8 @@ const getFileTypeIcon = (type: string) => {
 }
 
 const getFileTypeColor = (type: string) => {
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) return 'bg-blue-100'
-  if (type === 'pdf') return 'bg-danger-50'
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(type)) return 'bg-primary-100'
+  if (type === 'pdf') return 'bg-danger-100'
   return 'bg-surface-100'
 }
 

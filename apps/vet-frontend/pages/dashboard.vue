@@ -2,10 +2,10 @@
   <div>
     <!-- Welcome Section -->
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-surface-900">
+      <h1 class="page-title">
         Bonjour, Dr. {{ authStore.vet?.lastName || 'Vétérinaire' }} 👋
       </h1>
-      <p class="text-surface-500 mt-1">Voici un aperçu de vos patients</p>
+      <p class="page-subtitle">Voici un aperçu de vos patients</p>
     </div>
 
     <!-- Stats Cards -->

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Dossiers médicaux</h1>
-        <p class="text-surface-500 mt-1">Historique complet des consultations</p>
+        <h1 class="page-title">Dossiers médicaux</h1>
+        <p class="page-subtitle">Historique complet des consultations</p>
       </div>
     </div>
 
@@ -99,8 +99,8 @@
     </div>
 
     <!-- Record Detail Modal -->
-    <div v-if="selectedRecord" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="selectedRecord" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Dossier médical</h2>
           <button @click="selectedRecord = null" class="p-2 hover:bg-surface-100 rounded-lg">

@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Rappels</h1>
-        <p class="text-surface-500 mt-1">Vaccins, vermifuges et traitements a renouveler</p>
+        <h1 class="page-title">Rappels</h1>
+        <p class="page-subtitle">Vaccins, vermifuges et traitements a renouveler</p>
       </div>
       <button @click="showNewReminder = true" class="btn-primary flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,8 +118,8 @@
     </div>
 
     <!-- New Reminder Modal -->
-    <div v-if="showNewReminder" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <div v-if="showNewReminder" class="modal-overlay">
+      <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Nouveau rappel</h2>
           <button @click="showNewReminder = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -249,5 +249,5 @@ const deleteReminder = async (id: number) => {
 const isOverdue = (d: string) => new Date(d) < new Date(new Date().toISOString().split('T')[0])
 const formatDate = (d: string) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 const getTypeIcon = (t: string) => ({ vaccine: '💉', deworming: '💊', treatment: '🩺', checkup: '📋', other: '🔔' }[t] || '🔔')
-const getTypeColor = (t: string) => ({ vaccine: 'bg-blue-100', deworming: 'bg-purple-100', treatment: 'bg-primary-100', checkup: 'bg-accent-100', other: 'bg-surface-100' }[t] || 'bg-surface-100')
+const getTypeColor = (t: string) => ({ vaccine: 'bg-primary-100', deworming: 'bg-secondary-100', treatment: 'bg-accent-100', checkup: 'bg-success-100', other: 'bg-surface-100' }[t] || 'bg-surface-100')
 </script>

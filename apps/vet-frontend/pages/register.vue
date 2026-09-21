@@ -1,42 +1,30 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 py-8 px-4">
-    <div class="max-w-4xl mx-auto">
-      <!-- Back button -->
-      <NuxtLink to="/" class="inline-flex items-center gap-2 text-primary-200 hover:text-white mb-6 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        <span>Retour</span>
-      </NuxtLink>
+  <div>
+    <div class="mb-8">
+      <span class="eyebrow">Espace vétérinaire professionnel</span>
+      <h1 class="text-3xl font-semibold tracking-tightest text-primary-700 dark:text-surface-50">
+        Créer votre <span class="display-accent">compte.</span>
+      </h1>
+    </div>
 
-      <!-- Card -->
-      <div class="bg-white rounded-3xl shadow-2xl p-8">
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-4">
-            <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-          </div>
-          <h1 class="text-2xl font-bold text-surface-900">Créer un compte</h1>
-          <p class="text-surface-500 mt-1">Espace Vétérinaire Professionnel</p>
-        </div>
-
-        <!-- Steps indicator -->
-        <div class="flex items-center justify-center gap-4 mb-8">
-          <div 
-            v-for="s in 3" 
+        <!-- Étapes -->
+        <div class="flex items-center mb-9">
+          <div
+            v-for="s in 3"
             :key="s"
-            class="flex items-center"
+            :class="['flex items-center', s < 3 ? 'flex-1' : '']"
           >
-            <div 
+            <div
               :class="[
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                step >= s ? 'bg-primary-600 text-white' : 'bg-surface-200 text-surface-500'
+                'w-7 h-7 shrink-0 rounded-full border flex items-center justify-center text-xs font-semibold transition-colors',
+                step > s ? 'bg-accent-500 border-accent-500 text-primary-900'
+                : step === s ? 'bg-primary-600 border-primary-600 text-white'
+                : 'bg-white border-surface-300 text-surface-400'
               ]"
             >
               {{ s }}
             </div>
-            <div v-if="s < 3" :class="['w-12 h-1 mx-2', step > s ? 'bg-primary-600' : 'bg-surface-200']"></div>
+            <div v-if="s < 3" :class="['h-px flex-1 mx-3', step > s ? 'bg-accent-500' : 'bg-surface-200']" />
           </div>
         </div>
 
@@ -76,6 +64,7 @@
                 class="input"
                 placeholder="dr.dupont@clinique.fr"
                 required
+                autocomplete="email"
               />
             </div>
 
@@ -88,6 +77,7 @@
                 placeholder="••••••••"
                 required
                 minlength="8"
+                autocomplete="new-password"
               />
               <p class="text-xs text-surface-400 mt-1">Minimum 8 caractères</p>
             </div>
@@ -179,7 +169,7 @@
                   <h3 class="font-semibold text-surface-900">{{ selectedClinic.name }}</h3>
                   <p class="text-sm text-surface-500">{{ selectedClinic.address }}</p>
                   <div v-if="selectedClinic.rating" class="flex items-center gap-1 mt-1">
-                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                    <svg class="w-4 h-4 text-warning-500" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                     <span class="text-sm text-surface-600">{{ selectedClinic.rating }} ({{ selectedClinic.userRatingsTotal }} avis)</span>
@@ -252,20 +242,18 @@
 
         <div class="mt-6 text-center">
           <p class="text-surface-500 text-sm">
-            Déjà un compte ?
-            <NuxtLink to="/login" class="text-primary-600 font-medium hover:underline">
-              Se connecter
-            </NuxtLink>
-          </p>
-        </div>
-      </div>
+        Déjà un compte ?
+        <NuxtLink to="/login" class="text-primary-700 font-semibold hover:underline dark:text-accent-400">
+          Se connecter
+        </NuxtLink>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  layout: false,
+  layout: 'auth',
 })
 
 const router = useRouter()
@@ -432,7 +420,7 @@ const displayResults = (results: any[]) => {
 
   // Custom vet icon
   const vetIcon = L.divIcon({
-    html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#0d9488">
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#16ca9e">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
     </svg>`,
     className: 'vet-marker',
@@ -505,7 +493,13 @@ const handleSubmit = async () => {
     
     if (response.success && response.data) {
       authStore.setAuth(response.data.vet, response.data.token.token)
-      router.push('/dashboard')
+      // Compte tout juste créé : le parcours d'accueil n'est pas terminé. On
+      // vérifie tout de même l'état, et on ouvre l'application si le contrôle
+      // échoue plutôt que de laisser quelqu'un à la porte.
+      const onboarding = await api.get<{ completed: boolean }>('/vet/onboarding')
+      await navigateTo(
+        onboarding.success && onboarding.data?.completed === false ? '/bienvenue' : '/dashboard'
+      )
     } else {
       error.value = response.message || 'Erreur lors de l\'inscription'
     }

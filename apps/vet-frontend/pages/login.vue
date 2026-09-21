@@ -1,27 +1,13 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 flex items-center justify-center p-6">
-    <div class="max-w-md w-full">
-      <!-- Back button -->
-      <NuxtLink to="/" class="inline-flex items-center gap-2 text-primary-200 hover:text-white mb-8 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-        <span>Retour</span>
-      </NuxtLink>
+  <div>
+    <div class="mb-8">
+      <span class="eyebrow">Espace vétérinaire</span>
+      <h1 class="text-3xl font-semibold tracking-tightest text-primary-700 dark:text-surface-50">
+        Content de vous <span class="display-accent">revoir.</span>
+      </h1>
+    </div>
 
-      <!-- Card -->
-      <div class="bg-white rounded-3xl shadow-2xl p-8">
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-2xl mb-4">
-            <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
-          <h1 class="text-2xl font-bold text-surface-900">Connexion</h1>
-          <p class="text-surface-500 mt-1">Espace Vétérinaire</p>
-        </div>
-
-        <form @submit.prevent="handleLogin" class="space-y-5">
+    <form @submit.prevent="handleLogin" class="space-y-5">
           <div>
             <label class="label">Email professionnel</label>
             <input 
@@ -29,6 +15,7 @@
               type="email" 
               class="input"
               placeholder="dr.dupont@clinique.fr"
+              autocomplete="email"
               required
             />
           </div>
@@ -40,11 +27,12 @@
               type="password" 
               class="input"
               placeholder="••••••••"
+              autocomplete="current-password"
               required
             />
           </div>
 
-          <div v-if="error" class="bg-danger-50 text-danger-600 px-4 py-3 rounded-xl text-sm">
+          <div v-if="error" class="bg-danger-50 text-danger-700 border border-danger-200 px-4 py-3 rounded-lg text-sm">
             {{ error }}
           </div>
 
@@ -56,30 +44,28 @@
             <span v-if="loading">Connexion en cours...</span>
             <span v-else>Se connecter</span>
           </button>
-        </form>
+    </form>
 
-        <div class="mt-4 text-center">
-          <NuxtLink to="/forgot-password" class="text-sm text-surface-400 hover:text-primary-600 transition-colors">
-            Mot de passe oublié ?
-          </NuxtLink>
-        </div>
+    <div class="mt-5 text-center">
+      <NuxtLink to="/forgot-password" class="text-sm text-surface-400 hover:text-primary-600 transition-colors">
+        Mot de passe oublié ?
+      </NuxtLink>
+    </div>
 
-        <div class="mt-4 text-center">
-          <p class="text-surface-500 text-sm">
-            Pas encore de compte ?
-            <NuxtLink to="/register" class="text-primary-600 font-medium hover:underline">
-              Créer un compte
-            </NuxtLink>
-          </p>
-        </div>
-      </div>
+    <div class="mt-6 text-center">
+      <p class="text-surface-500 text-sm">
+        Pas encore de compte ?
+        <NuxtLink to="/register" class="text-primary-700 font-semibold hover:underline dark:text-accent-400">
+          Créer un compte
+        </NuxtLink>
+      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({
-  layout: false,
+  layout: 'auth',
 })
 
 const router = useRouter()
@@ -103,7 +89,13 @@ const handleLogin = async () => {
     
     if (response.success && response.data) {
       authStore.setAuth(response.data.vet, response.data.token.token)
-      router.push('/dashboard')
+      // Le parcours d'accueil n'est proposé qu'à qui ne l'a pas terminé. Si l'état
+      // est illisible, on ouvre l'application : un contrôle raté ne doit jamais
+      // laisser quelqu'un à la porte de son outil.
+      const onboarding = await api.get<{ completed: boolean }>('/vet/onboarding')
+      await navigateTo(
+        onboarding.success && onboarding.data?.completed === false ? '/bienvenue' : '/dashboard'
+      )
     } else {
       error.value = response.message || 'Identifiants incorrects'
     }

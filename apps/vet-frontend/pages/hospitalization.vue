@@ -2,8 +2,8 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Hospitalisations</h1>
-        <p class="text-surface-500 mt-1">Suivi des animaux hospitalisés</p>
+        <h1 class="page-title">Hospitalisations</h1>
+        <p class="page-subtitle">Suivi des animaux hospitalisés</p>
       </div>
       <button @click="openCreateModal()" class="btn-primary flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,8 +112,8 @@
       </div>
     </div>
 
-    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showCreateModal" class="modal-overlay">
+      <div class="modal-panel max-w-lg p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Nouvelle hospitalisation</h2>
           <button @click="showCreateModal = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -199,8 +199,8 @@
       </div>
     </div>
 
-    <div v-if="selectedHospitalization" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="selectedHospitalization" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Suivi hospitalisation</h2>
           <button @click="selectedHospitalization = null" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -336,8 +336,8 @@
       </div>
     </div>
 
-    <div v-if="showDischargeConfirm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-      <div class="bg-white rounded-2xl max-w-sm w-full p-6">
+    <div v-if="showDischargeConfirm" class="modal-overlay z-[60]">
+      <div class="modal-panel max-w-sm p-6">
         <h3 class="text-lg font-bold text-surface-900 mb-2">Confirmer la sortie</h3>
         <p class="text-sm text-surface-500 mb-4">L'animal sera marque comme sorti de l'hospitalisation.</p>
         <div class="mb-4">
@@ -546,10 +546,10 @@ const getLogTypeLabel = (type: string) => {
 const getLogTypeColor = (type: string) => {
   const colors: Record<string, string> = {
     note: 'bg-surface-100',
-    medication: 'bg-purple-100',
+    medication: 'bg-primary-100',
     feeding: 'bg-accent-100',
     vitals: 'bg-danger-100',
-    observation: 'bg-primary-100',
+    observation: 'bg-secondary-100',
   }
   return colors[type] || 'bg-surface-100'
 }
@@ -557,10 +557,10 @@ const getLogTypeColor = (type: string) => {
 const getLogTypeLabelColor = (type: string) => {
   const colors: Record<string, string> = {
     note: 'text-surface-600',
-    medication: 'text-purple-600',
+    medication: 'text-primary-600',
     feeding: 'text-accent-600',
     vitals: 'text-danger-600',
-    observation: 'text-primary-600',
+    observation: 'text-secondary-600',
   }
   return colors[type] || 'text-surface-600'
 }

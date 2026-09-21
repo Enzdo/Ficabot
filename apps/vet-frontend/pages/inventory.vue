@@ -2,8 +2,8 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Inventaire</h1>
-        <p class="text-surface-500 mt-1">Gestion du stock et des fournitures</p>
+        <h1 class="page-title">Inventaire</h1>
+        <p class="page-subtitle">Gestion du stock et des fournitures</p>
       </div>
       <div class="flex gap-2">
         <button @click="exportCsv" class="btn-secondary flex items-center gap-2">
@@ -184,8 +184,8 @@
       </table>
     </div>
 
-    <div v-if="showItemModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showItemModal" class="modal-overlay">
+      <div class="modal-panel max-w-lg p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">{{ editingItem ? 'Modifier l\'article' : 'Nouvel article' }}</h2>
           <button @click="showItemModal = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -253,8 +253,8 @@
       </div>
     </div>
 
-    <div v-if="showDetailModal && selectedItem" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showDetailModal && selectedItem" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">{{ selectedItem.name }}</h2>
           <button @click="showDetailModal = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -605,8 +605,8 @@ const getCategoryLabel = (cat: string) => {
 
 const getCategoryBadge = (cat: string) => {
   const classes: Record<string, string> = {
-    medication: 'px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700',
-    consumable: 'px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700',
+    medication: 'px-2 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700',
+    consumable: 'px-2 py-1 text-xs font-medium rounded-full bg-secondary-100 text-secondary-700',
     equipment: 'px-2 py-1 text-xs font-medium rounded-full bg-accent-100 text-accent-700',
     other: 'px-2 py-1 text-xs font-medium rounded-full bg-surface-100 text-surface-600',
   }

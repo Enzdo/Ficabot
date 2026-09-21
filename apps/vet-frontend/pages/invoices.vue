@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-surface-900">Facturation</h1>
-        <p class="text-surface-500 mt-1">Gérez vos factures et devis</p>
+        <h1 class="page-title">Facturation</h1>
+        <p class="page-subtitle">Gérez vos factures et devis</p>
       </div>
       <div class="flex gap-2">
         <button @click="exportInvoices" class="btn-secondary flex items-center gap-2">
@@ -120,7 +120,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
-                <button @click="sendReminder(invoice)" class="p-2 text-surface-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="Envoyer rappel">
+                <button @click="sendReminder(invoice)" class="p-2 text-surface-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Envoyer rappel">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -140,8 +140,8 @@
     </div>
 
     <!-- New Invoice Modal -->
-    <div v-if="showNewInvoice" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="showNewInvoice" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Nouvelle facture</h2>
           <button @click="showNewInvoice = false" class="p-2 hover:bg-surface-100 rounded-lg">
@@ -243,8 +243,8 @@
     </div>
 
     <!-- View Invoice Modal -->
-    <div v-if="selectedInvoice" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div v-if="selectedInvoice" class="modal-overlay">
+      <div class="modal-panel max-w-2xl p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Facture {{ selectedInvoice.number }}</h2>
           <button @click="selectedInvoice = null" class="p-2 hover:bg-surface-100 rounded-lg">
