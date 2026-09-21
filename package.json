@@ -2,14 +2,14 @@
   "name": "votre-assistant-virtuel-by-ficana",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@8.15.0",
+  "packageManager": "pnpm@8.15.9",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "dev:frontend": "pnpm --filter @votre-assistant-virtuel/frontend dev",
     "dev:backend": "pnpm --filter @ficabot/backend dev",
     "dev:vet": "pnpm --filter @ficabot/vet-frontend dev",
     "dev:landing": "pnpm --filter @votre-assistant-virtuel/landing dev",
-    "dev:all": "pnpm --filter @ficabot/backend --filter @votre-assistant-virtuel/frontend --filter @ficabot/vet-frontend --filter @votre-assistant-virtuel/landing --parallel dev",
+    "dev:all": "pnpm --filter @ficabot/backend --filter @votre-assistant-virtuel/frontend --filter @ficabot/vet-frontend --filter @votre-assistant-virtuel/landing --filter @ficana/pro-landing --parallel dev",
     "dev:mobile": "pnpm --filter @ficabot/mobile start",
     "mobile:ios": "pnpm --filter @ficabot/mobile ios",
     "mobile:android": "pnpm --filter @ficabot/mobile android",
@@ -18,7 +18,9 @@
     "build:backend": "pnpm --filter @ficabot/backend build",
     "build:vet": "pnpm --filter @ficabot/vet-frontend build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "dev:pro": "pnpm --filter @ficana/pro-landing dev",
+    "build:pro": "pnpm --filter @ficana/pro-landing build"
   },
   "devDependencies": {
     "typescript": "^5.3.3"

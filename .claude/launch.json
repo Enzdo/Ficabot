@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vet-frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:vet"],
+      "port": 3001
+    },
+    {
+      "name": "landing",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:landing"],
+      "port": 3002
+    },
+    {
+      "name": "pro-landing",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:pro"],
+      "port": 3003
+    }
+  ]
+}
