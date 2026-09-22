@@ -37,13 +37,13 @@
 
     <div class="card !p-4">
       <div class="flex items-center justify-between mb-4">
-        <button @click="navigatePrev" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+        <button aria-label="Période précédente" @click="navigatePrev" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
           <svg class="w-5 h-5 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <h2 class="font-semibold text-surface-900 text-lg">{{ headerLabel }}</h2>
-        <button @click="navigateNext" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+        <button aria-label="Période suivante" @click="navigateNext" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
           <svg class="w-5 h-5 text-surface-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -54,6 +54,7 @@
         <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
       </div>
 
+      <div v-else-if="loadError" class="workspace-error" role="alert">{{ loadError }} <button @click="loadAppointments">Réessayer</button></div>
       <div v-else-if="viewMode === 'week'" class="overflow-x-auto">
         <div class="min-w-[800px]">
           <div class="grid" :style="{ gridTemplateColumns: '60px repeat(7, 1fr)' }">
@@ -99,7 +100,7 @@
                   'absolute rounded-lg px-1.5 py-1 cursor-pointer overflow-hidden border text-xs leading-tight transition-shadow hover:shadow-md z-10',
                   getAppointmentClasses(apt.type)
                 ]"
-                @click.stop="togglePopover(apt, $event)"
+                role="button" tabindex="0" :aria-label="`Ouvrir le rendez-vous de ${apt.petName} à ${apt.startTime}`" @keydown.enter.prevent="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt" @click.stop="selectedAppointment = apt"
               >
                 <p class="font-semibold truncate">{{ apt.startTime }} {{ apt.petName }}</p>
                 <p v-if="apt.duration >= 30" class="truncate opacity-80">{{ apt.clientName }}</p>
@@ -147,7 +148,7 @@
                 'absolute rounded-lg px-3 py-2 cursor-pointer overflow-hidden border transition-shadow hover:shadow-md z-10',
                 getAppointmentClasses(apt.type)
               ]"
-              @click.stop="togglePopover(apt, $event)"
+              role="button" tabindex="0" :aria-label="`Ouvrir le rendez-vous de ${apt.petName} à ${apt.startTime}`" @keydown.enter.prevent="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt" @click.stop="selectedAppointment = apt"
             >
               <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -176,73 +177,7 @@
       </div>
     </div>
 
-    <Teleport to="body">
-      <div
-        v-if="popover.visible && popover.appointment"
-        class="fixed z-50"
-        :style="{ top: popover.y + 'px', left: popover.x + 'px' }"
-      >
-        <div
-          ref="popoverRef"
-          class="bg-white rounded-xl shadow-xl border border-surface-200 p-4 w-72"
-          @click.stop
-        >
-          <div class="flex items-start justify-between mb-3">
-            <div>
-              <h4 class="font-semibold text-surface-900">{{ popover.appointment.petName }}</h4>
-              <p class="text-sm text-surface-500">{{ popover.appointment.clientName }}</p>
-            </div>
-            <button @click="closePopover" class="p-1 hover:bg-surface-100 rounded-lg transition-colors -mr-1 -mt-1">
-              <svg class="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{{ formatPopoverDate(popover.appointment.date) }}</span>
-            </div>
-            <div class="flex items-center gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{{ popover.appointment.startTime }} - {{ getEndTime(popover.appointment) }} ({{ popover.appointment.duration }} min)</span>
-            </div>
-            <div class="flex items-center gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-              </svg>
-              <span :class="getTypeBadgeClasses(popover.appointment.type)">
-                {{ getTypeLabel(popover.appointment.type) }}
-              </span>
-            </div>
-            <div class="flex items-center gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span :class="getStatusBadgeClasses(popover.appointment.status)">
-                {{ getStatusLabel(popover.appointment.status) }}
-              </span>
-            </div>
-            <div v-if="popover.appointment.employeeName" class="flex items-center gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span>{{ popover.appointment.employeeName }}</span>
-            </div>
-            <div v-if="popover.appointment.reason" class="flex items-start gap-2 text-surface-600">
-              <svg class="w-4 h-4 text-surface-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>{{ popover.appointment.reason }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <AppointmentDetails :appointment="selectedAppointment" @close="selectedAppointment = null" />
   </div>
 </template>
 
@@ -270,19 +205,9 @@ const viewMode = ref<'week' | 'day'>('week')
 const currentDate = ref(new Date())
 const loading = ref(true)
 const appointments = ref<Appointment[]>([])
-const popoverRef = ref<HTMLElement | null>(null)
-
-const popover = ref<{
-  visible: boolean
-  appointment: Appointment | null
-  x: number
-  y: number
-}>({
-  visible: false,
-  appointment: null,
-  x: 0,
-  y: 0,
-})
+const selectedAppointment = ref<Appointment | null>(null)
+const closePopover = () => { selectedAppointment.value = null }
+const loadError = ref('')
 
 const hours = Array.from({ length: 12 }, (_, i) => i + 8)
 
@@ -517,61 +442,16 @@ const formatPopoverDate = (dateStr: string): string => {
   })
 }
 
-const togglePopover = (apt: Appointment, event: MouseEvent) => {
-  if (popover.value.visible && popover.value.appointment?.id === apt.id) {
-    closePopover()
-    return
-  }
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  let x = rect.right + 8
-  let y = rect.top
-
-  if (x + 300 > window.innerWidth) {
-    x = rect.left - 300
-  }
-  if (x < 8) {
-    x = 8
-  }
-  if (y + 280 > window.innerHeight) {
-    y = window.innerHeight - 280
-  }
-  if (y < 8) {
-    y = 8
-  }
-
-  popover.value = {
-    visible: true,
-    appointment: apt,
-    x,
-    y,
-  }
-}
-
-const closePopover = () => {
-  popover.value = {
-    visible: false,
-    appointment: null,
-    x: 0,
-    y: 0,
-  }
-}
-
-const onClickOutside = (e: MouseEvent) => {
-  if (!popover.value.visible) return
-  const target = e.target as HTMLElement
-  if (popoverRef.value && popoverRef.value.contains(target)) return
-  closePopover()
-}
-
 const loadAppointments = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const response = await api.get<Appointment[]>('/vet/appointments')
     if (response.success && response.data) {
-      appointments.value = response.data
-    }
+      appointments.value = response.data.map(item => ({ ...item, ...normalizeVetAppointment(item), employeeName: (item as any).employeeName || [(item as any).employee?.firstName, (item as any).employee?.lastName].filter(Boolean).join(' ') }))
+    } else { loadError.value = 'Impossible de charger les rendez-vous.' }
   } catch (e) {
-    console.error(e)
+    loadError.value = 'Impossible de charger les rendez-vous.'
   } finally {
     loading.value = false
   }
@@ -583,12 +463,10 @@ onMounted(() => {
   loadAppointments()
   updateCurrentTime()
   timeInterval = setInterval(updateCurrentTime, 60000)
-  document.addEventListener('click', onClickOutside)
 })
 
 onUnmounted(() => {
   if (timeInterval) clearInterval(timeInterval)
-  document.removeEventListener('click', onClickOutside)
 })
 
 watch(viewMode, () => {

@@ -14,6 +14,13 @@
       <button type="button" :disabled="loading" @click="loadDashboard">Réessayer</button>
     </div>
 
+    <section v-if="nextAppointment && !loading" class="dashboard-next card mb-6">
+      <div><p class="workspace-eyebrow mb-2">Prochain rendez-vous</p><h2 class="text-xl font-semibold">{{ nextAppointment.time }} · {{ nextAppointment.petName }}</h2><p class="text-sm text-surface-500 mt-1">{{ nextAppointment.reason || 'Consultation' }} · {{ nextAppointment.clientName }}</p></div>
+      <div class="flex flex-wrap gap-2">
+        <NuxtLink :to="appointmentConsultationLink(nextAppointment, patients)" class="btn-primary">{{ appointmentPatient(nextAppointment, patients) ? 'Commencer la consultation' : 'Préparer la consultation' }}</NuxtLink>
+        <NuxtLink v-if="appointmentPatient(nextAppointment, patients)" :to="`/patients/${appointmentPatient(nextAppointment, patients)?.vetToken}`" class="btn-secondary">Ouvrir le dossier</NuxtLink>
+      </div>
+    </section>
     <section aria-label="Vue d’ensemble" class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8" :aria-busy="loading">
       <NuxtLink v-for="metric in metrics" :key="metric.label" :to="metric.to" class="card dashboard-metric">
         <div class="flex items-center justify-between gap-2">
@@ -42,11 +49,13 @@
           <NuxtLink to="/appointments" class="btn-secondary mt-5">Gérer les rendez-vous</NuxtLink>
         </div>
         <div v-else class="space-y-2">
-          <NuxtLink v-for="appointment in todayAppointments.slice(0,6)" :key="appointment.id" to="/appointments" class="dashboard-appointment">
+          <div v-for="appointment in todayAppointments.slice(0,6)" :key="appointment.id" class="dashboard-appointment">
             <div class="dashboard-time"><strong>{{ appointment.time || appointment.startTime?.slice(0,5) || '—' }}</strong><small>{{ appointment.duration || 30 }} min</small></div>
             <div class="flex-1 min-w-0"><p class="font-semibold text-sm truncate">{{ appointment.petName }}</p><p class="text-xs text-surface-500 mt-1 truncate">{{ appointment.reason || 'Consultation' }} · {{ appointment.clientName }}</p></div>
             <span class="badge" :class="appointment.status === 'completed' ? 'badge-success' : 'badge-primary'">{{ statusLabel(appointment.status) }}</span>
-          </NuxtLink>
+            <NuxtLink :to="appointmentConsultationLink(appointment, patients)" class="dashboard-row-action" :aria-label="`Préparer la consultation de ${appointment.petName}`">Consulter →</NuxtLink>
+            <NuxtLink v-if="appointmentPatient(appointment, patients)" :to="`/patients/${appointmentPatient(appointment, patients)?.vetToken}`" class="dashboard-row-action" :aria-label="`Ouvrir le dossier de ${appointment.petName}`">Dossier</NuxtLink>
+          </div>
           <NuxtLink v-if="todayAppointments.length > 6" to="/appointments" class="block text-sm text-accent-700 pt-3">Voir les {{ todayAppointments.length }} rendez-vous →</NuxtLink>
         </div>
       </section>
@@ -59,7 +68,7 @@
             <NuxtLink v-for="item in priorities" :key="item.label" :to="item.to" class="dashboard-priority">
               <span class="dashboard-priority-dot" :class="{ 'has-alert': item.alert }" aria-hidden="true" />
               <div class="flex-1"><p class="text-sm font-semibold">{{ item.label }}</p><p class="text-xs text-surface-500 dark:text-surface-400 mt-1">{{ item.detail }}</p></div>
-              <span class="text-surface-400" aria-hidden="true">→</span>
+              <span class="dashboard-row-action">{{ item.action }} →</span>
             </NuxtLink>
           </template>
         </section>
@@ -102,6 +111,12 @@ const failures = reactive({ patients: false, appointments: false, reminders: fal
 const labels = { patients: 'patients', appointments: 'planning', reminders: 'rappels', hospital: 'hospitalisations', inventory: 'stocks' }
 const failedSections = computed(() => (Object.keys(failures) as (keyof typeof failures)[]).filter(key => failures[key]).map(key => labels[key]))
 const today = ref('')
+const clockTime = ref('')
+let clockTimer: ReturnType<typeof setInterval> | undefined
+const refreshClock = () => { const now = new Date(); clockTime.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}` }
+onMounted(() => { refreshClock(); clockTimer = setInterval(refreshClock, 60000) })
+onBeforeUnmount(() => clearInterval(clockTimer))
+const nextAppointment = computed(() => todayAppointments.value.find(a => !['completed','no_show'].includes(a.status) && a.time >= clockTime.value))
 const todayAppointments = computed(() => appointments.value.filter(a => a.date?.slice(0,10) === today.value && a.status !== 'cancelled').sort((a,b) => (a.time || a.startTime || '').localeCompare(b.time || b.startTime || '')))
 const metrics = computed(() => [
   { label: 'Rendez-vous', value: failures.appointments ? null : todayAppointments.value.length, hint: 'Aujourd’hui, hors annulations', to: '/appointments' },
@@ -110,9 +125,9 @@ const metrics = computed(() => [
   { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization' },
 ])
 const priorities = computed(() => [
-  { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders' },
-  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory' },
-  { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization' },
+  { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders', action: 'Voir les rappels' },
+  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' },
+  { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization', action: 'Voir les suivis' },
 ])
 const statusLabel = (status: string) => (({ confirmed: 'Confirmé', pending: 'À confirmer', completed: 'Terminé', scheduled: 'Planifié' } as Record<string,string>)[status] || 'Planifié')
 const speciesLabel = (species: string) => (({ dog: 'Chien', cat: 'Chat', bird: 'Oiseau', rabbit: 'Lapin' } as Record<string,string>)[species] || 'Autre espèce')
@@ -138,6 +153,10 @@ onMounted(loadDashboard)
 </script>
 
 <style scoped>
+.dashboard-next { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; background:#f1f7e9; border-color:#d6e5c4; }
+.dashboard-row-action { font-size:12px; font-weight:600; color:#476a21; white-space:nowrap; padding:8px 0; }
+:global(.dark .dashboard-next) { background:#23321d; }
+:global(.dark .dashboard-row-action) { color:#b4d589; }
 .dashboard-welcome { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; padding:12px 0 32px; }
 .dashboard-metric { display:block; transition:border-color .2s; }
 .dashboard-metric:hover { border-color:#9bc657; }
@@ -158,10 +177,10 @@ onMounted(loadDashboard)
 .dashboard-patient { display:flex; align-items:center; gap:12px; border:1px solid #e3e8ec; padding:14px; border-radius:12px; transition:background .2s; }
 .dashboard-avatar,.dashboard-empty-icon { display:flex; align-items:center; justify-content:center; width:44px; height:44px; background:#edf4e4; color:#608139; border-radius:12px; flex-shrink:0; font-family:'Instrument Serif',serif; font-size:24px; }
 .dashboard-empty-icon { margin:0 auto 16px; }
-:global(.dark) .dashboard-metric-label { color:#9aa6b1; }
-:global(.dark) .dashboard-shortcuts { background:#1b2719; border-color:#34422c; }
-:global(.dark) .dashboard-patient,:global(.dark) .dashboard-appointment,:global(.dark) .dashboard-priority,:global(.dark) .dashboard-shortcuts a { border-color:#2c353d; }
-:global(.dark) .dashboard-patient:hover,:global(.dark) .dashboard-appointment:hover { background:#283c15; }
+:global(.dark .dashboard-workspace .text-surface-500), :global(.dark .dashboard-metric-label) { color:#9aa6b1; }
+:global(.dark .dashboard-shortcuts) { background:#1b2719; border-color:#34422c; }
+:global(.dark .dashboard-patient) ,:global(.dark .dashboard-appointment) ,:global(.dark .dashboard-priority) ,:global(.dark .dashboard-shortcuts a) { border-color:#2c353d; }
+:global(.dark .dashboard-patient:hover) ,:global(.dark .dashboard-appointment:hover) { background:#283c15; }
 @media(max-width:639px) { .dashboard-welcome { padding-top:4px; } .dashboard-appointment { gap:10px; flex-wrap:wrap; } .dashboard-appointment .badge { margin-left:65px; } .dashboard-metric-value { font-size:30px; } }
 @media(prefers-reduced-motion:reduce) { .dashboard-metric,.dashboard-appointment,.dashboard-patient { transition:none; } }
 </style>

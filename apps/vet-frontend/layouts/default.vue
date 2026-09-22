@@ -434,6 +434,7 @@ const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     '/dashboard': 'Tableau de bord',
     '/assistant': 'Assistant',
+    '/consultation': 'Consultation',
     '/modeles': 'Modèles de compte rendu',
     '/patients': 'Patients',
     '/appointments': 'Planning',

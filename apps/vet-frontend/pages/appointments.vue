@@ -22,71 +22,17 @@
       </div>
     </div>
 
-    <!-- Employee filter -->
-    <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
-      <button 
-        @click="selectedEmployeeId = null" :aria-pressed="selectedEmployeeId === null"
-        :class="[
-          'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2',
-          selectedEmployeeId === null ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
-        ]"
-      >
-        <span class="w-3 h-3 rounded-full bg-primary-500"></span>
-        Tous
-      </button>
-      <button 
-        v-for="emp in employees" 
-        :key="emp.id"
-        @click="selectedEmployeeId = emp.id" :aria-pressed="selectedEmployeeId === emp.id"
-        :class="[
-          'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2',
-          selectedEmployeeId === emp.id ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
-        ]"
-      >
-        <span class="w-3 h-3 rounded-full" :style="{ backgroundColor: emp.color }"></span>
-        {{ emp.firstName }} {{ emp.lastName }}
-      </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.id"
-        @click="activeTab = tab.id; viewMode = 'list'" :aria-pressed="activeTab === tab.id"
-        :class="[
-          'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
-          activeTab === tab.id ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50'
-        ]"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
-    <!-- Calendar View Toggle -->
-    <div class="flex gap-2 mb-6">
-      <button 
-        @click="viewMode = 'list'" aria-label="Vue liste" :aria-pressed="viewMode === 'list'"
-        :class="[
-          'px-3 py-2 rounded-lg text-sm transition-colors',
-          viewMode === 'list' ? 'bg-surface-200 text-surface-900' : 'text-surface-500 hover:bg-surface-100'
-        ]"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-        </svg>
-      </button>
-      <button 
-        @click="viewMode = 'calendar'" aria-label="Vue semaine" :aria-pressed="viewMode === 'calendar'"
-        :class="[
-          'px-3 py-2 rounded-lg text-sm transition-colors',
-          viewMode === 'calendar' ? 'bg-surface-200 text-surface-900' : 'text-surface-500 hover:bg-surface-100'
-        ]"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      </button>
+    <div class="planning-toolbar">
+      <div class="planning-period" aria-label="Période">
+        <button v-for="tab in tabs" :key="tab.id" type="button" :aria-pressed="activeTab === tab.id && viewMode === 'list'" @click="activeTab = tab.id; viewMode = 'list'">{{ tab.label }}</button>
+      </div>
+      <select v-model="selectedEmployeeId" class="input planning-practitioner" aria-label="Filtrer par praticien">
+        <option :value="null">Tous les praticiens</option><option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.firstName }} {{ emp.lastName }}</option>
+      </select>
+      <div class="planning-period" aria-label="Affichage">
+        <button type="button" :aria-pressed="viewMode === 'list'" @click="viewMode = 'list'">Liste</button>
+        <button type="button" :aria-pressed="viewMode === 'calendar'" @click="viewMode = 'calendar'">Semaine</button>
+      </div>
     </div>
 
     <div v-if="loading" class="card mb-6" role="status"><div class="h-20 rounded-xl bg-surface-100 dark:bg-surface-800 animate-pulse" /><p class="text-sm text-surface-500 mt-3">Chargement des rendez-vous…</p></div>
@@ -117,7 +63,7 @@
               <p class="text-xs text-surface-400">{{ apt.duration }} min</p>
             </div>
             <div class="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center">
-              <span class="text-xl">{{ apt.petSpecies === 'dog' ? '🐕' : '🐱' }}</span>
+              <PatientSymbol :species="apt.petSpecies" />
             </div>
             <div class="flex-1">
               <p class="font-medium text-surface-900">{{ apt.petName }}</p>
@@ -154,7 +100,7 @@
               <p class="text-lg font-bold text-primary-600">{{ apt.time }}</p>
             </div>
             <div class="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center">
-              <span class="text-xl">{{ apt.petSpecies === 'dog' ? '🐕' : '🐱' }}</span>
+              <PatientSymbol :species="apt.petSpecies" />
             </div>
             <div class="flex-1">
               <p class="font-medium text-surface-900">{{ apt.petName }}</p>
@@ -331,11 +277,11 @@
     </div>
 
     <!-- Appointment Detail Modal -->
-    <div v-if="selectedAppointment" class="modal-overlay">
+    <div v-if="selectedAppointment" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Détails du rendez-vous" @keydown.esc="selectedAppointment = null">
       <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-xl font-bold text-surface-900">Détails du RDV</h2>
-          <button @click="selectedAppointment = null" class="p-2 hover:bg-surface-100 rounded-lg">
+          <button aria-label="Fermer les détails" @click="selectedAppointment = null" class="p-2 hover:bg-surface-100 rounded-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -345,7 +291,7 @@
         <div class="space-y-4">
           <div class="flex items-center gap-4">
             <div class="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center">
-              <span class="text-3xl">{{ getPetEmoji(selectedAppointment.pet?.species || selectedAppointment.petSpecies) }}</span>
+              <PatientSymbol :species="selectedAppointment.petSpecies" />
             </div>
             <div>
               <h3 class="font-semibold text-surface-900">{{ selectedAppointment.pet?.name || selectedAppointment.petName }}</h3>
@@ -390,6 +336,11 @@
             <p class="text-sm text-surface-700">{{ selectedAppointment.notes }}</p>
           </div>
 
+          <div class="flex flex-wrap gap-3 pt-4 border-t border-surface-200">
+            <NuxtLink :to="appointmentConsultationLink(selectedAppointment, sharedPatients)" class="btn-primary">{{ appointmentPatient(selectedAppointment, sharedPatients) ? 'Commencer la consultation' : 'Préparer une consultation' }}</NuxtLink>
+            <NuxtLink v-if="appointmentPatient(selectedAppointment, sharedPatients)" :to="`/patients/${appointmentPatient(selectedAppointment, sharedPatients)?.vetToken}`" class="btn-secondary">Ouvrir le dossier</NuxtLink>
+            <p v-else class="text-sm text-surface-500 w-full">Aucun dossier partagé associé. Vous pourrez choisir le patient dans la consultation.</p>
+          </div>
           <div class="flex gap-3 pt-4">
             <button @click="cancelAppointment(selectedAppointment.id)" class="flex-1 btn-secondary text-danger-600">
               Annuler
@@ -524,6 +475,10 @@ const viewMode = ref<'list' | 'calendar'>('list')
 const showNewAppointment = ref(false)
 const showEmployeeModal = ref(false)
 const selectedAppointment = ref<any>(null)
+const sharedPatients = ref<any[]>([])
+const loadSharedPatients = async () => {
+  try { const response = await api.get<any[]>('/vet/patients'); if (response.success && Array.isArray(response.data)) sharedPatients.value = response.data } catch { /* Direct links remain unavailable without verified access. */ }
+}
 const selectedEmployeeId = ref<number | null>(null)
 const currentWeekStart = ref(new Date())
 const loading = ref(true)
@@ -563,7 +518,7 @@ const editingEmployee = ref<any>(null)
 
 // Load data on mount
 onMounted(async () => {
-  await Promise.all([loadAppointments(), loadEmployees(), loadClients()])
+  await Promise.all([loadAppointments(), loadEmployees(), loadClients(), loadSharedPatients()])
 })
 
 const loadAppointments = async () => {
@@ -860,4 +815,16 @@ const getPetEmoji = (species: string) => {
   .appointment-row { flex-wrap:wrap; gap:12px; }
   .appointment-row > .flex-1 { min-width:120px; }
 }
+</style>
+
+<style scoped>
+.planning-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:24px; padding:12px; background:white; border:1px solid #dfe5e1; border-radius:14px; }
+.planning-period { display:flex; gap:4px; }
+.planning-period button { padding:10px 12px; border-radius:9px; font-size:13px; white-space:nowrap; color:#50605b; }
+.planning-period button[aria-pressed=true] { background:#eaf2df; color:#3f6026; font-weight:600; }
+.planning-practitioner { width:auto; min-width:180px; margin-left:auto; }
+:global(.dark .planning-toolbar) { background:#1b2229; border-color:#344037; }
+:global(.dark .planning-period button) { color:#c7d2c1; }
+:global(.dark .planning-period button[aria-pressed=true]) { background:#304226; }
+@media(max-width:639px) { .planning-toolbar { gap:8px; } .planning-period:first-child { width:100%; overflow-x:auto; } .planning-practitioner { flex:1; min-width:0; width:130px; } .planning-period button { padding:10px 8px; } }
 </style>
