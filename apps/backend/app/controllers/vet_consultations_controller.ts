@@ -1,10 +1,26 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
 import { readFile } from 'node:fs/promises'
+import { cuid } from '@adonisjs/core/helpers'
+import app from '@adonisjs/core/services/app'
 import Pet from '#models/pet'
 import MedicalRecord from '#models/medical_record'
+import VetDictation from '#models/vet_dictation'
 import ConsultationService, { DICTATION_LANGUAGES } from '#services/consultation_service'
 import { CONSULTATION_TEMPLATES, templateCategory } from '#services/consultation_templates'
+import DictationRunner from '#services/dictation_runner'
+
+/** Forme unique envoyée au navigateur, que la dictée soit consultée seule ou en liste. */
+const serializeDictation = (dictation: VetDictation) => ({
+  id: dictation.id,
+  status: dictation.status,
+  transcript: dictation.transcript,
+  draft: dictation.draft,
+  message: dictation.errorMessage,
+  templateId: dictation.templateId,
+  petToken: dictation.petToken,
+  createdAt: dictation.createdAt?.toISO() ?? null,
+})
 
 /**
  * Dictée de consultation : l'audio est transcrit puis mis en forme en
@@ -97,6 +113,95 @@ export default class VetConsultationsController {
         message: "La transcription a échoué. L'enregistrement n'a pas été conservé.",
       })
     }
+  }
+
+  /**
+   * POST /vet/consultations/dictations
+   * multipart : audio (fichier), token, template, language, instruction
+   *
+   * Dépose la dictée et rend la main aussitôt. Le traitement se poursuit en
+   * arrière-plan ; le navigateur suit son avancement par l'identifiant renvoyé.
+   */
+  async startDictation({ request, response, auth }: HttpContext) {
+    const audio = request.file('audio', {
+      size: '18mb',
+      extnames: ['webm', 'ogg', 'mp3', 'mp4', 'm4a', 'wav'],
+    })
+
+    if (!audio) {
+      return response.badRequest({ success: false, message: 'Aucun enregistrement reçu' })
+    }
+
+    if (!audio.isValid) {
+      return response.badRequest({
+        success: false,
+        message: audio.errors[0]?.message ?? 'Enregistrement invalide',
+      })
+    }
+
+    const vet = auth.user as any
+
+    // Sorti du dossier temporaire du parseur, que la fin de requête nettoie :
+    // le traitement lui survit, le fichier doit donc lui survivre aussi.
+    const extname = audio.extname || 'webm'
+    const filename = `${cuid()}.${extname}`
+    await audio.move(app.tmpPath('dictations'), { name: filename })
+    const audioPath = app.tmpPath('dictations', filename)
+
+    const dictation = await VetDictation.create({
+      veterinarianId: vet.id,
+      status: 'pending',
+      language: request.input('language', 'fr'),
+      templateId: request.input('template') || null,
+      instruction: request.input('instruction') || null,
+      petToken: request.input('token') || null,
+    })
+
+    DictationRunner.launch(dictation.id, audioPath, `consultation.${extname}`)
+
+    return response.accepted({
+      success: true,
+      data: { id: dictation.id, status: dictation.status },
+    })
+  }
+
+  /**
+   * GET /vet/consultations/dictations/:id
+   * Avancement et résultat d'une dictée.
+   */
+  async showDictation({ params, response, auth }: HttpContext) {
+    const vet = auth.user as any
+
+    // Filtré sur le praticien : un identifiant deviné ne doit ouvrir la dictée
+    // de personne d'autre.
+    const dictation = await VetDictation.query()
+      .where('id', params.id)
+      .where('veterinarianId', vet.id)
+      .first()
+
+    if (!dictation) {
+      return response.notFound({ success: false, message: 'Dictée introuvable' })
+    }
+
+    return response.ok({ success: true, data: serializeDictation(dictation) })
+  }
+
+  /**
+   * GET /vet/consultations/dictations
+   * Dictées récentes du praticien, pour se raccrocher après une coupure.
+   */
+  async listDictations({ response, auth }: HttpContext) {
+    const vet = auth.user as any
+
+    const dictations = await VetDictation.query()
+      .where('veterinarianId', vet.id)
+      .orderBy('createdAt', 'desc')
+      .limit(20)
+
+    return response.ok({
+      success: true,
+      data: { dictations: dictations.map(serializeDictation) },
+    })
   }
 
   /**

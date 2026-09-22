@@ -440,6 +440,11 @@ router.group(() => {
 // Vet Consultations (dictée → compte rendu structuré)
 router.group(() => {
   router.get('/options', [VetConsultationsController, 'options'])
+  // Dictée différée : dépôt, puis suivi. /transcribe reste en place pour les
+  // onglets encore ouverts sur la version synchrone pendant un déploiement.
+  router.post('/dictations', [VetConsultationsController, 'startDictation'])
+  router.get('/dictations', [VetConsultationsController, 'listDictations'])
+  router.get('/dictations/:id', [VetConsultationsController, 'showDictation'])
   router.post('/transcribe', [VetConsultationsController, 'transcribe'])
   router.post('/', [VetConsultationsController, 'store'])
 }).prefix('/vet/consultations').use(middleware.vetAuth())

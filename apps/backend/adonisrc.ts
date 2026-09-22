@@ -68,6 +68,11 @@ export default defineConfig({
     () => import('#start/routes'),
     () => import('#start/kernel'),
     () => import('#start/validator'),
+    // Web seulement : en console, ce ménage tournerait avant les migrations.
+    {
+      file: () => import('#start/dictations'),
+      environment: ['web'],
+    },
   ],
 
   /*

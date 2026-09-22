@@ -1,10 +1,107 @@
 <template>
-  <div>
+  <div class="consultation-workspace">
     <!-- ══════════ Zone 1 — En-tête ══════════ -->
     <header class="mb-6">
-      <h1 class="page-title">Bonjour, {{ greetingName }}</h1>
-      <p class="text-sm text-surface-400 mt-1 dark:text-surface-500">{{ nowLabel }}</p>
+      <p class="workspace-eyebrow mb-2">Votre espace de consultation</p><h1 class="page-title">Dictez. Relisez. Enregistrez.</h1>
+      <p class="text-sm text-surface-500 mt-1 dark:text-surface-400">Préparez le dossier, puis concentrez-vous sur votre patient.</p>
     </header>
+
+    <ol class="consultation-progress" aria-label="Étapes de la consultation">
+      <li v-for="(label, index) in ['Préparer', 'Dicter', 'Relire', 'Enregistrer']" :key="label" :class="{ active: workflowIndex === index, done: workflowIndex > index }" :aria-current="workflowIndex === index ? 'step' : undefined"><span>{{ workflowIndex > index ? '✓' : index + 1 }}</span>{{ label }}</li>
+    </ol>
+          <!-- Patient -->
+          <section v-if="step === 'record'" class="card mb-5 consultation-patient">
+            <div class="flex items-center justify-between">
+              <span class="label mb-0">1 · Patient de la consultation</span>
+              <span v-if="selectedPatient" class="badge-accent">Sélectionné</span>
+            </div>
+
+            <!-- Patient choisi -->
+            <div v-if="selectedPatient" class="flex items-center gap-3 mt-4">
+              <div class="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden shrink-0 dark:bg-surface-800">
+                <img v-if="selectedPatient.avatarUrl" :src="selectedPatient.avatarUrl" :alt="selectedPatient.name" class="w-full h-full object-cover" />
+                <PatientSymbol v-else :species="selectedPatient.species" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-surface-900 truncate dark:text-surface-100">{{ selectedPatient.name }}</p>
+                <p class="text-xs text-surface-500 truncate dark:text-surface-400">
+                  {{ selectedPatient.breed || speciesLabel(selectedPatient.species) }}
+                  <template v-if="selectedPatient.owner">
+                    <span class="text-surface-300 dark:text-surface-600">·</span>
+                    {{ selectedPatient.owner.firstName }} {{ selectedPatient.owner.lastName }}
+                  </template>
+                </p>
+              </div>
+              <button
+                type="button"
+                class="btn-ghost px-2 text-xs"
+                :disabled="recording"
+                :class="recording ? 'opacity-40 cursor-not-allowed' : ''"
+                @click="clearPatient"
+              >
+                Changer
+              </button>
+            </div>
+
+            <!-- Recherche + liste -->
+            <div v-else class="mt-4">
+              <input
+                v-model="patientSearch"
+                type="search" aria-label="Rechercher un patient"
+                class="input"
+                placeholder="Nom, race ou propriétaire…"
+              />
+
+              <div v-if="patientsLoading" class="flex items-center gap-3 py-5">
+                <div class="animate-spin w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full dark:border-accent-500 dark:border-t-transparent"></div>
+                <p class="text-xs text-surface-500 dark:text-surface-400">Chargement des patients…</p>
+              </div>
+
+              <div
+                v-else-if="patientsError"
+                class="mt-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-xs text-danger-700 dark:border-danger-800 dark:bg-danger-900/30 dark:text-danger-200"
+              >
+                <p>{{ patientsError }}</p>
+                <button type="button" class="btn-ghost mt-1 px-0 text-xs text-danger-700 dark:text-danger-200" @click="loadPatients">
+                  Réessayer
+                </button>
+              </div>
+
+              <p
+                v-else-if="filteredPatients.length === 0"
+                class="text-xs text-surface-500 py-5 leading-relaxed dark:text-surface-400"
+              >
+                {{ patients.length === 0
+                  ? "Aucun patient ne vous a encore donné accès à son dossier. Le compte rendu a besoin d'un dossier pour être enregistré."
+                  : 'Aucun patient ne correspond à « ' + patientSearch + ' ».' }}
+              </p>
+
+              <ul v-else class="mt-2 max-h-40 overflow-y-auto divide-y divide-surface-100 dark:divide-surface-800">
+                <li v-for="patient in filteredPatients" :key="patient.id">
+                  <button
+                    type="button"
+                    class="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+                    @click="selectPatient(patient)"
+                  >
+                    <div class="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden shrink-0 dark:bg-surface-800">
+                      <img v-if="patient.avatarUrl" :src="patient.avatarUrl" :alt="patient.name" class="w-full h-full object-cover" />
+                      <PatientSymbol v-else :species="patient.species" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-surface-900 truncate dark:text-surface-100">{{ patient.name }}</p>
+                      <p class="text-xs text-surface-500 truncate dark:text-surface-400">
+                        {{ patient.breed || speciesLabel(patient.species) }}
+                        <template v-if="patient.owner">
+                          <span class="text-surface-300 dark:text-surface-600">·</span>
+                          {{ patient.owner.firstName }} {{ patient.owner.lastName }}
+                        </template>
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </section>
 
     <!-- ══════════ Zone 2 — Modèles de compte rendu ══════════ -->
     <!--
@@ -109,10 +206,10 @@
     <!-- ══════════ Étape 1 — Scène centrale + panneau de contexte ══════════ -->
     <!-- L'enregistrement est le geste central : il prend toute la hauteur utile.
          Le calcul retire la barre du haut (4rem) et le rembourrage du gabarit (3rem). -->
-    <div v-if="step === 'record'" class="flex flex-col lg:flex-row gap-6 lg:min-h-[calc(100vh-13rem)]">
+    <div v-if="step === 'record'" class="flex flex-col lg:flex-row gap-6 ">
       <!-- ---------- Scène centrale ---------- -->
       <div class="flex-1 min-w-0">
-        <div class="card flex h-full flex-col items-center justify-center py-16 px-6">
+        <div class="card flex h-full flex-col items-center justify-center py-10 px-6 min-h-[350px]">
           <!-- État courant -->
           <p class="text-sm font-semibold text-surface-900 dark:text-surface-100">{{ stageLabel }}</p>
 
@@ -157,9 +254,9 @@
           </div>
 
           <!-- Deux boutons ronds : dicter, ou importer une dictée -->
-          <div class="mt-10 flex items-center justify-center gap-7">
+          <div class="mt-8 flex flex-wrap items-center justify-center gap-7">
             <!-- Micro / arrêt -->
-            <div class="relative w-[116px] h-[116px]">
+            <div class="relative w-[116px] h-[116px] mb-8">
               <span
                 v-if="recording"
                 class="absolute inset-0 rounded-full bg-danger-500/20 transition-transform duration-100 dark:bg-danger-500/25"
@@ -174,7 +271,7 @@
                 class="relative w-full h-full rounded-full flex items-center justify-center border transition-colors"
                 :class="micButtonClass"
                 :disabled="micButtonDisabled"
-                :aria-label="recording ? 'Arrêter l’enregistrement' : 'Démarrer l’enregistrement'"
+                :aria-label="recording ? 'Arrêter la dictée' : 'Démarrer la dictée'"
                 @click="recording ? stopRecording() : startRecording()"
               >
                 <svg v-if="recording" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
@@ -184,23 +281,25 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0-4a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z" />
                 </svg>
               </button>
+              <span class="absolute top-full mt-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm font-semibold">{{ recording ? 'Arrêter la dictée' : 'Démarrer la dictée' }}</span>
             </div>
 
             <!-- Import d'un enregistrement existant -->
             <button
               type="button"
-              class="w-16 h-16 rounded-full flex items-center justify-center border transition-colors
-                     bg-primary-700 border-primary-700 text-white hover:bg-primary-800 hover:border-primary-800
+              class="px-4 py-3 rounded-xl flex items-center justify-center gap-2 border transition-colors
+                     bg-white border-surface-200 text-surface-700 hover:bg-surface-50 hover:border-surface-300
                      dark:bg-primary-600 dark:border-primary-500 dark:hover:bg-primary-500"
               :class="importDisabled ? 'opacity-40 cursor-not-allowed' : ''"
               :disabled="importDisabled"
-              aria-label="Importer un enregistrement"
+              aria-label="Importer un audio"
               title="Importer un enregistrement"
               @click="openFilePicker"
             >
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 16V4m0 0L8 8m4-4l4 4" />
               </svg>
+              <span class="text-sm font-medium">Importer un audio</span>
             </button>
 
             <input
@@ -221,10 +320,10 @@
           </p>
 
           <!-- Explication -->
-          <p class="mt-6 text-xs text-surface-400 text-center max-w-sm leading-relaxed dark:text-surface-500">
+          <p class="mt-6 text-sm text-surface-500 text-center max-w-md leading-relaxed dark:text-surface-500">
             <template v-if="!selectedPatient">
               Vous pouvez dicter sans patient&nbsp;: le compte rendu sera copiable, mais ne rejoindra aucun
-              dossier. Rattachez un patient à droite pour pouvoir l'enregistrer.
+              dossier. Sélectionnez un patient en haut pour pouvoir l'enregistrer.
             </template>
             <template v-else-if="recording">
               Parlez normalement, la dictée continue en arrière-plan. Rien ne part tant que vous n'avez pas
@@ -276,106 +375,35 @@
           >
             {{ recordError }}
           </div>
+
+          <!-- Dictée retrouvée : son traitement n'est pas allé au bout, mais
+               l'enregistrement est encore là. On relance sans refaire dicter. -->
+          <div
+            v-if="pendingFound"
+            class="mt-6 w-full max-w-md rounded-lg border border-warning-200 bg-warning-50 px-4 py-4 text-sm dark:border-warning-800 dark:bg-warning-900/30"
+          >
+            <p class="font-semibold text-warning-800 dark:text-warning-100">
+              Une dictée vous attend
+            </p>
+            <p class="mt-1 text-warning-700 dark:text-warning-200">
+              Son traitement n'est pas allé au bout, mais l'enregistrement est resté sur ce poste.
+              Vous pouvez le relancer sans redicter.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="button" class="btn-primary text-xs px-3 py-1.5" @click="retryDictation">
+                Relancer la transcription
+              </button>
+              <button type="button" class="btn-ghost text-xs px-3 py-1.5" @click="discardPending">
+                Supprimer cet enregistrement
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- ---------- Panneau de contexte ---------- -->
       <aside class="w-full lg:w-80 xl:w-96 shrink-0 lg:self-stretch">
         <div class="card flex h-full flex-col p-0 divide-y divide-surface-200 dark:divide-surface-800">
-          <!-- Patient -->
-          <section class="p-5">
-            <div class="flex items-center justify-between">
-              <span class="label mb-0">Patient</span>
-              <span v-if="selectedPatient" class="badge-accent">Sélectionné</span>
-            </div>
-
-            <!-- Patient choisi -->
-            <div v-if="selectedPatient" class="flex items-center gap-3 mt-4">
-              <div class="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden shrink-0 dark:bg-surface-800">
-                <img v-if="selectedPatient.avatarUrl" :src="selectedPatient.avatarUrl" :alt="selectedPatient.name" class="w-full h-full object-cover" />
-                <span v-else class="text-xl">{{ selectedPatient.species === 'dog' ? '🐕' : '🐱' }}</span>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-semibold text-surface-900 truncate dark:text-surface-100">{{ selectedPatient.name }}</p>
-                <p class="text-xs text-surface-500 truncate dark:text-surface-400">
-                  {{ selectedPatient.breed || speciesLabel(selectedPatient.species) }}
-                  <template v-if="selectedPatient.owner">
-                    <span class="text-surface-300 dark:text-surface-600">·</span>
-                    {{ selectedPatient.owner.firstName }} {{ selectedPatient.owner.lastName }}
-                  </template>
-                </p>
-              </div>
-              <button
-                type="button"
-                class="btn-ghost px-2 text-xs"
-                :disabled="recording"
-                :class="recording ? 'opacity-40 cursor-not-allowed' : ''"
-                @click="clearPatient"
-              >
-                Changer
-              </button>
-            </div>
-
-            <!-- Recherche + liste -->
-            <div v-else class="mt-4">
-              <input
-                v-model="patientSearch"
-                type="search"
-                class="input"
-                placeholder="Nom, race ou propriétaire…"
-              />
-
-              <div v-if="patientsLoading" class="flex items-center gap-3 py-5">
-                <div class="animate-spin w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full dark:border-accent-500 dark:border-t-transparent"></div>
-                <p class="text-xs text-surface-500 dark:text-surface-400">Chargement des patients…</p>
-              </div>
-
-              <div
-                v-else-if="patientsError"
-                class="mt-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-xs text-danger-700 dark:border-danger-800 dark:bg-danger-900/30 dark:text-danger-200"
-              >
-                <p>{{ patientsError }}</p>
-                <button type="button" class="btn-ghost mt-1 px-0 text-xs text-danger-700 dark:text-danger-200" @click="loadPatients">
-                  Réessayer
-                </button>
-              </div>
-
-              <p
-                v-else-if="filteredPatients.length === 0"
-                class="text-xs text-surface-500 py-5 leading-relaxed dark:text-surface-400"
-              >
-                {{ patients.length === 0
-                  ? "Aucun patient ne vous a encore donné accès à son dossier. Le compte rendu a besoin d'un dossier pour être enregistré."
-                  : 'Aucun patient ne correspond à « ' + patientSearch + ' ».' }}
-              </p>
-
-              <ul v-else class="mt-2 max-h-60 overflow-y-auto divide-y divide-surface-100 dark:divide-surface-800">
-                <li v-for="patient in filteredPatients" :key="patient.id">
-                  <button
-                    type="button"
-                    class="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-left transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
-                    @click="selectPatient(patient)"
-                  >
-                    <div class="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden shrink-0 dark:bg-surface-800">
-                      <img v-if="patient.avatarUrl" :src="patient.avatarUrl" :alt="patient.name" class="w-full h-full object-cover" />
-                      <span v-else class="text-base">{{ patient.species === 'dog' ? '🐕' : '🐱' }}</span>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-surface-900 truncate dark:text-surface-100">{{ patient.name }}</p>
-                      <p class="text-xs text-surface-500 truncate dark:text-surface-400">
-                        {{ patient.breed || speciesLabel(patient.species) }}
-                        <template v-if="patient.owner">
-                          <span class="text-surface-300 dark:text-surface-600">·</span>
-                          {{ patient.owner.firstName }} {{ patient.owner.lastName }}
-                        </template>
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              </ul>
-            </div>
-          </section>
-
           <!-- Instruction libre -->
           <section class="p-5">
             <label class="label mb-0" for="dictee-instruction">Instruction (optionnel)</label>
@@ -643,6 +671,7 @@
 
 <script setup lang="ts">
 import { onBeforeRouteLeave } from 'vue-router'
+import type { PendingDictation } from '~/utils/dictationStore'
 
 definePageMeta({
   middleware: 'auth',
@@ -696,6 +725,7 @@ const api = useVetApi()
 const authStore = useVetAuthStore()
 const runtimeConfig = useRuntimeConfig()
 const router = useRouter()
+const route = useRoute()
 
 // 18 Mo : limite acceptée par le serveur (config du bodyparser côté API).
 const MAX_BYTES = 18 * 1024 * 1024
@@ -886,8 +916,8 @@ const attachPatient = (patient: PatientSummary) => {
 
 /** Rendu texte du brouillon, identique à ce que le serveur écrirait au dossier. */
 const draftAsText = () => {
-  const title = draft.value?.title?.trim()
-  const body = (draft.value?.sections ?? [])
+  const title = draft.title?.trim()
+  const body = (draft.sections ?? [])
     .filter((sec) => sec.value.trim())
     .map((sec) => `${sec.label}\n${sec.value.trim()}`)
     .join('\n\n')
@@ -920,16 +950,17 @@ const selectedPatient = computed(
 )
 
 const filteredPatients = computed(() => {
-  const query = patientSearch.value.trim().toLowerCase()
+  const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const query = normalize(patientSearch.value.trim())
   if (!query) return patients.value
   return patients.value.filter((p) =>
     [p.name, p.breed, p.owner?.firstName, p.owner?.lastName, p.owner?.email]
       .filter(Boolean)
-      .some((field) => String(field).toLowerCase().includes(query))
+      .join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes(query)
   )
 })
 
-const speciesLabel = (species: string) => (species === 'dog' ? 'Chien' : 'Chat')
+const speciesLabel = vetSpeciesLabel
 
 const loadPatients = async () => {
   patientsLoading.value = true
@@ -938,6 +969,11 @@ const loadPatients = async () => {
     const response = await api.get<PatientSummary[]>('/vet/patients')
     if (response.success && response.data) {
       patients.value = response.data.filter((p) => !!p.vetToken)
+      const requested = route.query.patient
+      if (typeof requested === 'string' && !selectedToken.value) {
+        const match = patients.value.find(patient => patient.vetToken === requested)
+        if (match) selectPatient(match)
+      }
     } else {
       patientsError.value =
         response.message ||
@@ -960,6 +996,8 @@ const clearPatient = () => {
   if (recording.value) return
   selectedToken.value = null
 }
+
+const workflowIndex = computed(() => step.value === 'saved' || saving.value ? 3 : step.value === 'review' ? 2 : step.value === 'transcribing' ? 1 : selectedPatient.value || recording.value || audioBlob.value ? 1 : 0)
 
 /* ---------- Enregistrement ---------- */
 
@@ -1275,15 +1313,39 @@ const transcript = ref('')
 const transcribeSeconds = ref(0)
 let transcribeTick: ReturnType<typeof setInterval> | null = null
 
+/**
+ * État réel du travail, tel que le serveur le rapporte. La progression
+ * n'est plus déduite d'une minuterie : elle suivait un temps supposé et
+ * restait collée à 94 % sur les longues dictées, pendant que le praticien se
+ * demandait si tout était bloqué.
+ */
+const dictationStatus = ref<'sending' | 'pending' | 'transcribing' | 'structuring'>('sending')
+
 const transcribePhase = computed(() => {
-  if (transcribeSeconds.value < 1.5) return "Envoi de l'enregistrement…"
-  if (transcribeSeconds.value < 7) return 'Transcription de la dictée…'
-  return 'Mise en forme du compte rendu…'
+  switch (dictationStatus.value) {
+    case 'sending':
+      return "Envoi de l'enregistrement…"
+    case 'pending':
+      return 'Dictée reçue, mise en file…'
+    case 'transcribing':
+      return 'Transcription de la dictée…'
+    default:
+      return 'Mise en forme du compte rendu…'
+  }
 })
 
-const transcribeProgress = computed(() =>
-  Math.min(94, Math.round((transcribeSeconds.value / 16) * 94))
-)
+const transcribeProgress = computed(() => {
+  switch (dictationStatus.value) {
+    case 'sending':
+      return 12
+    case 'pending':
+      return 28
+    case 'transcribing':
+      return 60
+    default:
+      return 88
+  }
+})
 
 const draft = reactive({
   title: '',
@@ -1316,41 +1378,139 @@ const failTranscription = (message: string) => {
   step.value = 'record'
 }
 
-const startTranscription = async () => {
-  if (!audioBlob.value) return
+/* ---------- Dictée différée ---------- */
+
+/*
+ * Le traitement ne tient plus la requête ouverte : le serveur accuse réception
+ * puis travaille de son côté, et l'on suit son avancement. Un onglet fermé ou
+ * une connexion perdue ne coûtent donc plus la dictée.
+ *
+ * L'audio, lui, reste sur ce poste jusqu'à ce que le compte rendu soit revenu.
+ * C'est ce qui permet de relancer un traitement interrompu sans refaire dicter
+ * le praticien — et cela préserve la règle du produit : le serveur ne conserve
+ * aucun enregistrement.
+ */
+
+const POLL_MS = 2000
+let pollTimer: ReturnType<typeof setTimeout> | null = null
+const pendingFound = ref(false)
+
+const stopWatching = () => {
+  if (pollTimer !== null) {
+    clearTimeout(pollTimer)
+    pollTimer = null
+  }
+  if (transcribeTick !== null) {
+    clearInterval(transcribeTick)
+    transcribeTick = null
+  }
+}
+
+/** Replie le compte rendu renvoyé sur les rubriques affichées à la relecture. */
+const applyDraft = (data: { transcript?: string | null; draft?: any }) => {
+  const text = (data.transcript || '').trim()
+
+  const sections = Array.isArray(data.draft?.sections)
+    ? data.draft.sections.filter((s: any) => s && typeof s.key === 'string')
+    : []
+
+  // Contrat en place : le brouillon peut aussi arriver à plat (motif,
+  // examenClinique, hypotheses, conduiteATenir). On le replie pour que la
+  // relecture affiche les champs rédigés, et non la dictée brute.
+  const flat = (data.draft || {}) as Record<string, unknown>
+  const flatSections = API_SECTIONS.map((s) => ({
+    key: s.key,
+    label: s.label,
+    value: typeof flat[s.key] === 'string' ? (flat[s.key] as string) : '',
+  }))
+  const hasFlatDraft = flatSections.some((s) => s.value.trim().length > 0)
+
+  transcript.value = text
+  draft.title = (data.draft?.title || '').trim() || 'Consultation'
+  draft.templateId = data.draft?.templateId || selectedTemplateId.value
+  // Ni rubriques ni champs connus : la dictée est placée telle quelle dans une
+  // rubrique unique plutôt que d'être perdue.
+  draft.sections = sections.length
+    ? sections.map((s: any) => ({
+        key: s.key,
+        label: (s.label || s.key).trim(),
+        value: typeof s.value === 'string' ? s.value : '',
+      }))
+    : hasFlatDraft
+      ? flatSections
+      : [{ key: 'compteRendu', label: 'Compte rendu', value: text }]
+  draft.date = todayISO()
+  showTranscript.value = false
+  saveError.value = ''
+  step.value = 'review'
+}
+
+/** Échec : l'audio est conservé, la reprise reste donc possible. */
+const failDictation = (message: string) => {
+  stopWatching()
+  pendingFound.value = true
+  failTranscription(message)
+}
+
+const watchDictation = async (id: number) => {
+  const result = await api.get<any>(`/vet/consultations/dictations/${id}`)
+
+  // Serveur injoignable : on ne solde rien, le travail se poursuit peut-être.
+  // On réessaiera au prochain tour plutôt que de déclarer un échec à tort.
+  if (!result.success) {
+    if (result.message === 'Dictée introuvable') {
+      await clearPending()
+      failDictation('Cette dictée est introuvable sur le serveur. Relancez la transcription.')
+      return
+    }
+    pollTimer = setTimeout(() => watchDictation(id), POLL_MS)
+    return
+  }
+
+  const data = result.data
+
+  if (data.status === 'done') {
+    stopWatching()
+    await clearPending()
+    pendingFound.value = false
+    if (!(data.transcript || '').trim()) {
+      failTranscription(
+        "Aucune parole n'a été reconnue dans cet enregistrement. Rapprochez-vous du micro, parlez plus distinctement, puis refaites la dictée."
+      )
+      return
+    }
+    applyDraft(data)
+    return
+  }
+
+  if (data.status === 'failed') {
+    failDictation(
+      data.message || "Le traitement n'a pas abouti. Votre enregistrement est conservé : relancez-le."
+    )
+    return
+  }
+
+  dictationStatus.value = data.status
+  pollTimer = setTimeout(() => watchDictation(id), POLL_MS)
+}
+
+/** Dépose l'audio et se raccroche au travail. L'entrée locale existe déjà. */
+const sendDictation = async (entry: PendingDictation) => {
+  step.value = 'transcribing'
+  dictationStatus.value = 'sending'
   recordError.value = ''
 
-  if (!selectedToken.value) {
-    recordError.value = "Choisissez le patient concerné avant de transcrire la dictée."
-    return
-  }
-  if (audioBlob.value.size === 0) {
-    recordError.value =
-      "L'enregistrement est vide : aucun son n'a été capté. Vérifiez le micro sélectionné, puis recommencez."
-    return
-  }
-  if (audioBlob.value.size > MAX_BYTES) {
-    recordError.value = `L'enregistrement pèse ${formatSize(audioBlob.value.size)} et dépasse la limite de 18 Mo. Découpez la consultation en plusieurs dictées plus courtes.`
-    return
-  }
-
-  step.value = 'transcribing'
-  transcribeSeconds.value = 0
-  transcribeTick = setInterval(() => {
-    transcribeSeconds.value += 0.2
-  }, 200)
-
   const body = new FormData()
-  body.append('audio', audioBlob.value, `consultation.${audioExt.value}`)
-  body.append('token', selectedToken.value)
-  body.append('template', selectedTemplateId.value)
-  body.append('language', language.value)
-  body.append('instruction', instruction.value.trim())
+  body.append('audio', entry.blob, `consultation.${entry.ext}`)
+  body.append('token', entry.token)
+  body.append('template', entry.templateId)
+  body.append('language', entry.language)
+  body.append('instruction', entry.instruction)
 
   const baseUrl = runtimeConfig.public.apiBase || 'http://localhost:3333'
 
   try {
-    const response = await fetch(`${baseUrl}/vet/consultations/transcribe`, {
+    const response = await fetch(`${baseUrl}/vet/consultations/dictations`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${authStore.token}` },
       body,
@@ -1366,75 +1526,147 @@ const startTranscription = async () => {
     try {
       payload = await response.json()
     } catch {
-      failTranscription(
-        "Le serveur a renvoyé une réponse illisible. Votre enregistrement est toujours en mémoire : relancez la transcription dans un instant."
+      failDictation(
+        "Le serveur a renvoyé une réponse illisible. Votre enregistrement est conservé : relancez-le dans un instant."
       )
       return
     }
 
-    if (!payload?.success) {
+    if (!payload?.success || !payload?.data?.id) {
       // Le message du serveur est repris tel quel : il décrit précisément le refus.
-      failTranscription(
+      failDictation(
         payload?.message ||
-          "La transcription n'a pas abouti. Votre enregistrement est toujours en mémoire : réessayez dans un instant."
+          "L'envoi n'a pas abouti. Votre enregistrement est conservé : réessayez dans un instant."
       )
       return
     }
 
-    const data = payload.data as TranscribeResult | undefined
-    const text = (data?.transcript || '').trim()
-
-    if (!text) {
-      failTranscription(
-        "Aucune parole n'a été reconnue dans cet enregistrement. Rapprochez-vous du micro, parlez plus distinctement, puis refaites la dictée."
-      )
-      return
-    }
-
-    const sections = Array.isArray(data?.draft?.sections)
-      ? data!.draft!.sections!.filter((s) => s && typeof s.key === 'string')
-      : []
-
-    // Contrat en place : le brouillon arrive à plat (motif, examenClinique,
-    // hypotheses, conduiteATenir). On le replie sur des rubriques pour que la
-    // relecture affiche les quatre champs rédigés, et non la dictée brute.
-    const flat = (data?.draft || {}) as Record<string, unknown>
-    const flatSections = API_SECTIONS.map((s) => ({
-      key: s.key,
-      label: s.label,
-      value: typeof flat[s.key] === 'string' ? (flat[s.key] as string) : '',
-    }))
-    const hasFlatDraft = flatSections.some((s) => s.value.trim().length > 0)
-
-    transcript.value = text
-    draft.title = (data?.draft?.title || '').trim() || 'Consultation'
-    draft.templateId = data?.draft?.templateId || selectedTemplateId.value
-    // Ni rubriques ni champs connus : la dictée est placée telle quelle dans une
-    // rubrique unique plutôt que d'être perdue.
-    draft.sections = sections.length
-      ? sections.map((s) => ({
-          key: s.key,
-          label: (s.label || s.key).trim(),
-          value: typeof s.value === 'string' ? s.value : '',
-        }))
-      : hasFlatDraft
-        ? flatSections
-        : [{ key: 'compteRendu', label: 'Compte rendu', value: text }]
-    draft.date = todayISO()
-    showTranscript.value = false
-    saveError.value = ''
-    step.value = 'review'
+    const id = payload.data.id as number
+    await attachDictationId(id)
+    dictationStatus.value = 'pending'
+    await watchDictation(id)
   } catch {
-    failTranscription(
-      "Le serveur est injoignable. Votre enregistrement est toujours en mémoire : vérifiez votre connexion, puis relancez la transcription."
+    failDictation(
+      "Le serveur est injoignable. Votre enregistrement est conservé sur ce poste : vérifiez votre connexion, puis relancez-le."
     )
-  } finally {
-    if (transcribeTick !== null) {
-      clearInterval(transcribeTick)
-      transcribeTick = null
-    }
   }
 }
+
+const startTranscription = async () => {
+  if (!audioBlob.value) return
+  recordError.value = ''
+
+  // Pas de patient exigé : l'interface annonce la dictée libre et l'étape de
+  // relecture la prévoit, mais ce garde la rendait inatteignable. Le serveur
+  // accepte un patient nul ; le compte rendu sera simplement copiable sans
+  // rejoindre de dossier.
+  if (audioBlob.value.size === 0) {
+    recordError.value =
+      "L'enregistrement est vide : aucun son n'a été capté. Vérifiez le micro sélectionné, puis recommencez."
+    return
+  }
+  if (audioBlob.value.size > MAX_BYTES) {
+    recordError.value = `L'enregistrement pèse ${formatSize(audioBlob.value.size)} et dépasse la limite de 18 Mo. Découpez la consultation en plusieurs dictées plus courtes.`
+    return
+  }
+
+  const entry: PendingDictation = {
+    dictationId: null,
+    blob: audioBlob.value,
+    ext: audioExt.value,
+    token: selectedToken.value,
+    templateId: selectedTemplateId.value,
+    language: language.value,
+    instruction: instruction.value.trim(),
+    savedAt: Date.now(),
+  }
+
+  // Conservé avant l'envoi : si celui-ci échoue, la dictée est déjà à l'abri.
+  await savePending(entry)
+  await sendDictation(entry)
+}
+
+/** Relance depuis la copie locale, sans refaire dicter. */
+const retryDictation = async () => {
+  const entry = await readPending()
+  if (!entry) {
+    pendingFound.value = false
+    recordError.value = "L'enregistrement n'est plus disponible sur ce poste. Refaites la dictée."
+    return
+  }
+
+  audioBlob.value = entry.blob
+  audioExt.value = entry.ext
+  pendingFound.value = false
+
+  // Le travail précédent a pu aboutir entre-temps : on regarde avant de renvoyer.
+  if (entry.dictationId) {
+    const check = await api.get<any>(`/vet/consultations/dictations/${entry.dictationId}`)
+    if (check.success && check.data?.status === 'done') {
+      await clearPending()
+      applyDraft(check.data)
+      return
+    }
+    if (check.success && check.data && check.data.status !== 'failed') {
+      step.value = 'transcribing'
+      dictationStatus.value = check.data.status
+      await watchDictation(entry.dictationId)
+      return
+    }
+  }
+
+  await sendDictation(entry)
+}
+
+const discardPending = async () => {
+  await clearPending()
+  pendingFound.value = false
+  audioBlob.value = null
+  recordError.value = ''
+}
+
+/**
+ * À l'ouverture de la page : une dictée laissée en plan se rattrape. Soit son
+ * traitement continue côté serveur et l'on s'y raccroche, soit il a échoué et
+ * l'on propose de le relancer.
+ */
+const resumePending = async () => {
+  const entry = await readPending()
+  if (!entry) return
+
+  audioBlob.value = entry.blob
+  audioExt.value = entry.ext
+
+  if (!entry.dictationId) {
+    pendingFound.value = true
+    return
+  }
+
+  const check = await api.get<any>(`/vet/consultations/dictations/${entry.dictationId}`)
+
+  if (!check.success) {
+    pendingFound.value = true
+    return
+  }
+
+  if (check.data?.status === 'done') {
+    await clearPending()
+    applyDraft(check.data)
+    return
+  }
+
+  if (check.data?.status === 'failed') {
+    pendingFound.value = true
+    recordError.value = check.data.message || 'Le traitement précédent a échoué.'
+    return
+  }
+
+  step.value = 'transcribing'
+  dictationStatus.value = check.data.status
+  await watchDictation(entry.dictationId)
+}
+
+onBeforeUnmount(stopWatching)
 
 /* ---------- Enregistrement au dossier ---------- */
 
@@ -1575,6 +1807,9 @@ onMounted(() => {
   window.addEventListener('mousedown', onPickerOutside)
   loadOptions()
   loadPatients()
+  // Une dictée laissée en plan se rattrape ici : soit son traitement se
+  // poursuit côté serveur, soit il a échoué et l'audio local permet de relancer.
+  resumePending()
 })
 
 onBeforeUnmount(() => {
@@ -1591,3 +1826,14 @@ onBeforeUnmount(() => {
   if (audioUrl.value) URL.revokeObjectURL(audioUrl.value)
 })
 </script>
+
+<style scoped>
+.consultation-progress { display:flex; gap:12px; margin:0 0 24px; padding:0; list-style:none; }
+.consultation-progress li { display:flex; align-items:center; gap:8px; flex:1; padding:12px; border-bottom:2px solid #dde4df; font-size:13px; color:#62716c; }
+.consultation-progress li.active { border-color:#7ba73e; color:#3e5b24; font-weight:600; }
+.consultation-progress li.done { color:#4e702b; }
+.consultation-progress li span { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; background:#e9efe3; flex-shrink:0; }
+.consultation-patient ul { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 16px; }
+:global(.dark .consultation-progress li) { color:#becbb2; border-color:#3c4935; }
+@media(max-width:767px) { .consultation-patient ul { grid-template-columns:1fr; } .consultation-progress { gap:4px; } .consultation-progress li { flex-direction:column; padding:8px 2px; font-size:12px; gap:6px; } }
+</style>
