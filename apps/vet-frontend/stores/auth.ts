@@ -14,6 +14,12 @@ interface Veterinarian {
 interface AuthState {
   vet: Veterinarian | null
   token: string | null
+  /**
+   * `null` tant que l'état du parcours d'accueil est inconnu. Le garde-fou de
+   * navigation ne redirige que sur `false` : dans le doute il laisse passer,
+   * plutôt que d'enfermer quelqu'un dehors sur une simple coupure réseau.
+   */
+  onboardingCompleted: boolean | null
 }
 
 /**
@@ -31,18 +37,29 @@ interface AuthState {
  */
 const TOKEN_COOKIE = 'vet_token'
 
-const sessionCookie = () =>
-  useCookie<string | null>(TOKEN_COOKIE, {
-    maxAge: 60 * 60 * 24 * 30,
-    sameSite: 'lax',
-    secure: import.meta.client ? location.protocol === 'https:' : true,
-    path: '/',
-  })
+/**
+ * L'état du parcours d'accueil voyage lui aussi en cookie, pour la même raison
+ * que le token : le middleware s'exécute pendant le rendu serveur. Le garder
+ * en localStorage seul ferait conclure « état inconnu » à chaque rendu.
+ */
+const ONBOARDING_COOKIE = 'vet_onboarding_done'
+
+const cookieOptions = () => ({
+  maxAge: 60 * 60 * 24 * 30,
+  sameSite: 'lax' as const,
+  secure: import.meta.client ? location.protocol === 'https:' : true,
+  path: '/',
+})
+
+const sessionCookie = () => useCookie<string | null>(TOKEN_COOKIE, cookieOptions())
+
+const onboardingCookie = () => useCookie<string | null>(ONBOARDING_COOKIE, cookieOptions())
 
 export const useVetAuthStore = defineStore('vetAuth', {
   state: (): AuthState => ({
     vet: null,
     token: null,
+    onboardingCompleted: null,
   }),
 
   getters: {
@@ -64,10 +81,17 @@ export const useVetAuthStore = defineStore('vetAuth', {
       }
     },
 
+    setOnboardingCompleted(completed: boolean) {
+      this.onboardingCompleted = completed
+      onboardingCookie().value = completed ? '1' : '0'
+    },
+
     logout() {
       this.vet = null
       this.token = null
+      this.onboardingCompleted = null
       sessionCookie().value = null
+      onboardingCookie().value = null
       if (import.meta.client) {
         localStorage.removeItem('vet_token')
         localStorage.removeItem('vet_user')
@@ -76,6 +100,12 @@ export const useVetAuthStore = defineStore('vetAuth', {
 
     initFromStorage() {
       const cookie = sessionCookie()
+      const onboarding = onboardingCookie()
+
+      // Absent = inconnu, et non « pas terminé » : les sessions ouvertes avant
+      // l'introduction de ce cookie ne doivent pas être renvoyées au parcours.
+      this.onboardingCompleted =
+        onboarding.value === '1' ? true : onboarding.value === '0' ? false : null
 
       if (!import.meta.client) {
         // Rendu serveur : seul le cookie est lisible. Il suffit à savoir
@@ -102,8 +132,10 @@ export const useVetAuthStore = defineStore('vetAuth', {
       // localStorage vidé mais cookie encore là : session incohérente,
       // on la ferme plutôt que de laisser un token orphelin.
       if (cookie.value) cookie.value = null
+      if (onboarding.value) onboarding.value = null
       this.token = null
       this.vet = null
+      this.onboardingCompleted = null
     },
   },
 })

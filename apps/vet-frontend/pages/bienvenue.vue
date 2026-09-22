@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-surface-50 dark:bg-surface-950">
+  <div class="welcome-shell min-h-screen flex flex-col bg-surface-50 dark:bg-surface-950">
     <!-- ══════════ Barre d'étape ══════════ -->
     <header class="sticky top-0 z-10 bg-white border-b border-surface-200 dark:bg-surface-900 dark:border-surface-800">
-      <div class="mx-auto max-w-2xl px-4 sm:px-5 h-14 flex items-center gap-2">
+      <div class="mx-auto max-w-6xl w-full px-4 sm:px-6 h-16 flex items-center gap-2">
         <!-- Retour : disponible à partir de la deuxième étape -->
         <button
           v-if="step > 1"
@@ -31,12 +31,12 @@
 
         <!-- Sortie immédiate : deux clics suffisent pour rejoindre l'application -->
         <button type="button" class="btn-ghost px-2 text-xs" :disabled="initializing || finishing" @click="finish">
-          Tout passer
+          Configurer plus tard
         </button>
       </div>
 
       <!-- Progression -->
-      <div class="h-0.5 bg-surface-100 dark:bg-surface-800">
+      <div class="h-0.5 bg-surface-100 dark:bg-surface-800" role="progressbar" aria-label="Progression de la configuration" :aria-valuenow="step" :aria-valuemin="1" :aria-valuemax="TOTAL_STEPS">
         <div
           class="h-full bg-accent-500 transition-all duration-300 ease-out"
           :style="{ width: progress + '%' }"
@@ -46,24 +46,34 @@
 
     <!-- ══════════ Contenu ══════════ -->
     <main class="flex-1 px-4 sm:px-5 py-8 sm:py-12 onboarding-main" :aria-busy="initializing">
-      <div class="mx-auto max-w-2xl mb-8">
-        <img src="/brand/ficana-wordmark.png" alt="Ficana" class="h-7 w-auto mb-5" />
-        <p class="text-xs text-surface-500 mb-3">Votre espace, à votre façon · environ 3 minutes, hors essai</p>
-        <ol class="flex gap-1.5" aria-label="Votre parcours">
-          <li v-for="(label, index) in stepLabels" :key="label" class="flex-1 min-w-0" :aria-current="step === index + 1 ? 'step' : undefined">
-            <span class="block h-1 rounded-full mb-2" :class="step >= index + 1 ? 'bg-accent-500' : 'bg-surface-200 dark:bg-surface-700'"></span>
-            <span class="hidden sm:block text-[11px]" :class="step === index + 1 ? 'font-semibold text-primary-700 dark:text-accent-400' : 'text-surface-500'">{{ label }}</span>
+      <div class="welcome-grid">
+      <aside class="welcome-guide" aria-label="Étapes de configuration">
+        <img src="/brand/ficana-wordmark.png" alt="Ficana" class="h-7 w-auto mb-6 dark:hidden" />
+        <img src="/brand/ficana-wordmark-dark.png" alt="Ficana" class="h-7 w-auto mb-6 hidden dark:block" />
+        <p class="welcome-kicker">Faisons connaissance</p>
+        <h2>Un espace qui suit<br><span class="display-accent">votre façon de soigner.</span></h2>
+        <p class="welcome-guide-intro">Quelques repères pour préparer votre démarrage. Environ 3 minutes, à votre rythme.</p>
+        <ol class="welcome-steps">
+          <li v-for="(label,index) in stepLabels" :key="label" :class="{ active: step === index + 1, done: step > index + 1 }" :aria-current="step === index + 1 ? 'step' : undefined">
+            <button type="button" :aria-label="`Étape ${index + 1} : ${label}`" :disabled="initializing || finishing || index + 1 > step" @click="step = index + 1">
+              <span class="welcome-step-number" aria-hidden="true">{{ step > index + 1 ? '✓' : index + 1 }}</span>
+              <span>{{ label }}<small>{{ stepDescriptions[index] }}</small></span>
+            </button>
           </li>
         </ol>
-      </div>
+        <div class="welcome-help"><span aria-hidden="true">✦</span><p>{{ stepBenefits[step - 1] }}</p></div>
+      </aside>
+      <div class="welcome-panel">
+      <div class="welcome-panel-top"><span>PERSONNALISATION · {{ stepLabels[step - 1] }}</span><span class="welcome-save" role="status">{{ initializing ? 'Chargement…' : savingCount ? 'Enregistrement…' : saveNotice ? 'À réessayer' : lastSaved ? '✓ Réponses enregistrées' : 'À votre rythme' }}</span></div>
       <div v-if="initializing" class="mx-auto max-w-2xl py-12 text-surface-500" role="status">Chargement de votre parcours…</div>
-      <div v-else class="mx-auto max-w-2xl onboarding-content">
+      <div v-else class="onboarding-content">
         <!-- Enregistrement des réponses en échec : on le dit, on ne bloque pas -->
         <div
           v-if="saveNotice"
           class="mb-6 rounded-lg border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700 dark:border-warning-800 dark:bg-warning-900/30 dark:text-warning-200"
         >
           {{ saveNotice }}
+          <button type="button" class="underline font-semibold ml-1" :disabled="savingCount > 0" @click="retrySave">Réessayer</button>
         </div>
 
         <!-- Options indisponibles : liste habituelle, le parcours continue -->
@@ -71,14 +81,13 @@
           v-if="optionsFallback && step < 4"
           class="mb-6 rounded-lg border border-surface-200 bg-surface-100 px-4 py-3 text-sm text-surface-600 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-300"
         >
-          Les choix proposés n'ont pas pu être chargés depuis le serveur&nbsp;: voici la liste habituelle.
-          Vous pourrez tout ajuster plus tard dans vos réglages.
+          Nous utilisons les choix standards pour le moment. Vous pourrez ajuster vos préférences plus tard.
         </div>
 
         <!-- ────────── Étape 1 — Type d'exercice ────────── -->
         <section v-if="step === 1">
           <span class="eyebrow">Bienvenue</span>
-          <h1 class="page-title">Vous exercez plutôt…</h1>
+          <h1 class="page-title">Quels patients soignez-vous ?</h1>
           <p class="page-subtitle">
             Votre réponse choisit le modèle de compte rendu proposé par défaut lors de vos dictées.
             Vous pourrez en changer à chaque consultation.
@@ -89,7 +98,7 @@
               v-for="type in practiceTypes"
               :key="type.id"
               type="button"
-              class="card-hover p-4 text-left flex flex-col gap-3"
+              class="practice-choice card-hover p-4 text-left flex flex-col gap-3"
               :class="type.id === practiceType
                 ? 'border-accent-500 bg-accent-50 dark:border-accent-500 dark:bg-accent-900/20'
                 : ''"
@@ -114,6 +123,7 @@
               <span class="text-sm font-medium text-surface-900 dark:text-surface-100">
                 {{ type.label }}
               </span>
+              <span class="welcome-choice-check" aria-hidden="true">{{ type.id === practiceType ? '✓' : '+' }}</span>
             </button>
           </div>
         </section>
@@ -121,7 +131,7 @@
         <!-- ────────── Étape 2 — Spécialités ────────── -->
         <section v-else-if="step === 2">
           <span class="eyebrow">Votre pratique</span>
-          <h1 class="page-title">Des spécialités en particulier&nbsp;?</h1>
+          <h1 class="page-title">Quelles sont vos spécialités ?</h1>
           <p class="page-subtitle">
             Plusieurs réponses possibles, aucune n'est obligatoire. Une spécialité dominante affine
             le modèle de compte rendu qui vous sera proposé.
@@ -143,19 +153,15 @@
             </button>
           </div>
 
-          <div class="mt-8">
-            <button type="button" class="btn-primary" @click="confirmSpecialties">
-              {{ selectedSpecialties.length ? 'Continuer' : 'Continuer sans spécialité' }}
-            </button>
-          </div>
+
         </section>
 
         <!-- ────────── Étape 3 — Taille d'équipe ────────── -->
         <section v-else-if="step === 3">
           <span class="eyebrow">Votre équipe</span>
-          <h1 class="page-title">Vous travaillez…</h1>
+          <h1 class="page-title">Comment est organisée votre équipe ?</h1>
           <p class="page-subtitle">
-            Décrivez votre organisation. Cette réponse ne crée pas d’équipe et ne modifie aucun accès aux dossiers.
+            Indiquez votre rôle et la taille de votre équipe. Vous pourrez gérer les accès de vos collaborateurs ensuite, depuis le logiciel.
           </p>
 
           <div class="mt-6">
@@ -172,7 +178,7 @@
                 ? 'border-accent-500 bg-accent-50 dark:border-accent-500 dark:bg-accent-900/20'
                 : ''"
               :aria-pressed="size.id === teamSize"
-              @click="teamSize = size.id"
+              @click="teamSize = size.id; savePartial({ teamSize: size.id })"
             >
               <span
                 class="w-4 h-4 shrink-0 rounded-full border flex items-center justify-center"
@@ -199,11 +205,7 @@
             </button>
           </div>
 
-          <div class="mt-8">
-            <button type="button" class="btn-primary" @click="confirmTeamSize">
-              Continuer
-            </button>
-          </div>
+
         </section>
 
         <section v-else-if="step === 4">
@@ -221,13 +223,13 @@
             <input id="current-software" v-model="profile.currentSoftware" class="input" maxlength="80" placeholder="Nom de votre logiciel" @change="persistProfile" />
             <p class="text-xs text-surface-500 mt-2">Pour connaître votre environnement de travail. Aucune connexion ni import automatique.</p>
           </div>
-          <button type="button" class="btn-primary mt-8" @click="advanceProfile(5)">Continuer</button>
+
         </section>
 
         <section v-else-if="step === 5">
           <span class="eyebrow">Vos priorités</span>
           <h1 class="page-title">Par quoi souhaitez-vous commencer ?</h1>
-          <p class="page-subtitle">Choisissez jusqu’à trois objectifs. Nous vous proposerons un premier pas adapté à votre priorité principale.</p>
+          <p class="page-subtitle">Choisissez jusqu’à trois objectifs, en commençant par le plus important. Le premier choix détermine votre écran de démarrage.</p>
           <div class="grid sm:grid-cols-2 gap-3 mt-8">
             <button v-for="option in goals" :key="option.id" type="button" class="choice-card text-left" :aria-pressed="profile.priorities.includes(option.id)" :disabled="profile.priorities.length >= 3 && !profile.priorities.includes(option.id)" @click="toggleGoal(option.id)">
               <span class="block text-xs text-primary-600 dark:text-accent-400 mb-3">{{ profile.priorities.includes(option.id) ? '0' + (profile.priorities.indexOf(option.id) + 1) + ' · Sélectionné' : 'À découvrir' }}</span>
@@ -235,11 +237,14 @@
             </button>
           </div>
           <p class="text-xs text-surface-500 mt-4" aria-live="polite">{{ profile.priorities.length }} / 3 objectifs sélectionnés</p>
-          <button type="button" class="btn-primary mt-7" @click="advanceProfile(6)">Voir mon démarrage</button>
+
         </section>
 
         <!-- ────────── Étape 4 — Premier essai de dictée ────────── -->
         <section v-else>
+          <span class="eyebrow">Prêt à démarrer</span>
+          <h1 class="page-title">Votre espace prend forme.</h1>
+          <p class="page-subtitle mb-7">Voici le point de départ proposé à partir de vos réponses. Vous gardez la possibilité de tout ajuster ensuite.</p>
           <div class="rounded-2xl border border-accent-200 bg-accent-50 dark:bg-surface-900 dark:border-surface-700 p-5 mb-8">
             <span class="eyebrow">Votre démarrage personnalisé</span>
             <h2 class="text-lg font-semibold text-surface-900 dark:text-white">{{ recommendedStart.title }}</h2>
@@ -247,8 +252,11 @@
             <dl class="grid sm:grid-cols-2 gap-3 mt-5 text-sm"><div><dt class="text-xs text-surface-500">Exercice</dt><dd>{{ practiceTypes.find(p => p.id === practiceType)?.label || 'À préciser plus tard' }}</dd></div><div><dt class="text-xs text-surface-500">Équipe</dt><dd>{{ teamSizes.find(p => p.id === teamSize)?.label || 'À préciser plus tard' }}</dd></div></dl>
             <button type="button" class="btn-ghost mt-3 text-xs" @click="step = 1">Ajuster mes réponses</button>
           </div>
+          <button type="button" class="btn-primary w-full sm:w-auto" :disabled="finishing || savingCount > 0" @click="finish">{{ finishing ? 'Préparation de votre espace…' : startAction }}</button>
+          <button type="button" class="welcome-trial-toggle" :disabled="recordState === 'recording' || recordState === 'transcribing'" :aria-expanded="showTrial" @click="showTrial = !showTrial">{{ showTrial ? 'Masquer l’essai de dictée' : 'Tester aussi la dictée vocale' }} <span>Facultatif · environ 1 minute</span></button>
+          <div v-show="showTrial" class="welcome-trial">
           <span class="eyebrow">Premier essai · facultatif</span>
-          <h1 class="page-title">Essayons tout de suite</h1>
+          <h2 class="text-xl font-semibold">Essayons la dictée</h2>
           <p class="page-subtitle">
             Lisez ce court compte rendu à voix haute. Vous verrez ce que Ficana en fait, et nous
             vérifierons au passage que votre micro fonctionne. Rien n'est enregistré dans un dossier.
@@ -401,7 +409,7 @@
               @click="finish"
             >
               <div v-if="finishing" class="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full"></div>
-              {{ recordState === 'result' ? 'Terminer' : 'Continuer sans enregistrer' }}
+              {{ finishing ? 'Préparation de votre espace…' : startAction }}
             </button>
             <button
               v-if="recordState === 'result'"
@@ -412,7 +420,14 @@
               Refaire un essai
             </button>
           </div>
+          </div>
         </section>
+        <footer v-if="step < TOTAL_STEPS" class="welcome-actions">
+          <p>Vos choix restent modifiables.<br><span>Vous pouvez passer les questions facultatives.</span></p>
+          <button type="button" class="btn-primary" :disabled="initializing || finishing" @click="continueStep">{{ step === 5 ? 'Voir mon démarrage' : 'Continuer' }} <span aria-hidden="true">→</span></button>
+        </footer>
+      </div>
+      </div>
       </div>
     </main>
   </div>
@@ -463,7 +478,13 @@ const TOTAL_STEPS = 6
 
 const step = ref(1)
 const initializing = ref(true)
-const stepLabels = ['Exercice', 'Spécialités', 'Équipe', 'Habitudes', 'Priorités', 'Premier pas']
+const stepLabels = ['Votre exercice', 'Vos spécialités', 'Votre équipe', 'Vos habitudes', 'Vos priorités', 'Votre démarrage']
+const stepDescriptions = ['Les animaux que vous soignez', 'Vos domaines de pratique', 'Votre organisation', 'Vos outils au quotidien', 'Ce qui compte pour vous', 'Un premier pas concret']
+const stepBenefits = ['Le bon modèle de compte rendu commence par votre type de pratique.', 'Précisez les domaines que vous souhaitez retrouver dans vos modèles.', 'Décrivez votre équipe : aucun accès aux dossiers n’est créé à cette étape.', 'Votre rythme et vos outils nous aident à comprendre votre quotidien.', 'Choisissez votre priorité principale pour trouver le bon point de départ.', 'Tout est prêt pour découvrir votre espace. L’essai du micro reste facultatif.']
+const showTrial = ref(false)
+const savingCount = ref(0)
+const lastSaved = ref(false)
+const startAction = computed(() => (({ reports: 'Ouvrir mon espace', followup: 'Découvrir mes patients', organisation: 'Ouvrir mon planning', team: 'Configurer ma clinique' } as Record<string,string>)[profile.priorities[0] || 'reports'] || 'Ouvrir mon espace'))
 const profile = reactive({ role: '', consultationVolume: '', reportMethod: '', currentSoftware: '', priorities: [] as string[] })
 const roles = [{ id: 'owner', label: 'Titulaire / associé' }, { id: 'employee', label: 'Vétérinaire salarié' }, { id: 'locum', label: 'Remplaçant / indépendant' }, { id: 'other', label: 'Autre rôle' }]
 const volumes = [{ id: 'under10', label: 'Moins de 10' }, { id: '10to20', label: '10 à 20' }, { id: 'over20', label: 'Plus de 20' }]
@@ -476,16 +497,16 @@ const goals = [
 ]
 const recommendedStart = computed(() => {
   const starts: Record<string, { title: string; description: string; path: string }> = {
-    reports: { title: 'Votre premier compte rendu commence ici.', description: 'Essayez le micro ci-dessous, puis retrouvez vos consultations dans votre espace.', path: '/dashboard' },
-    followup: { title: 'Commençons par vos patients.', description: 'Après cet essai facultatif, ouvrez votre liste de patients pour prendre vos repères.', path: '/patients' },
-    organisation: { title: 'Votre agenda est le point de départ.', description: 'Après cet essai facultatif, découvrez votre planning et préparez votre journée.', path: '/calendar' },
+    reports: { title: 'Votre premier compte rendu commence ici.', description: 'Ouvrez votre espace pour retrouver la dictée et préparer votre premier compte rendu.', path: '/dashboard' },
+    followup: { title: 'Commençons par vos patients.', description: 'Retrouvez les dossiers partagés et prenez vos repères dans le suivi de vos patients.', path: '/patients' },
+    organisation: { title: 'Votre agenda est le point de départ.', description: 'Découvrez votre planning et préparez les rendez-vous de votre journée.', path: '/calendar' },
     team: { title: 'Préparons votre espace professionnel.', description: 'Vérifiez les informations de votre profil avant d’organiser le travail de votre clinique.', path: '/settings' },
   }
   return starts[profile.priorities[0] || 'reports'] || starts.reports
 })
 const profileSnapshot = () => ({ ...profile, priorities: [...profile.priorities], currentStep: step.value })
 const persistProfile = () => { void savePartial({ profile: profileSnapshot() }) }
-const advanceProfile = (next: number) => { step.value = next; persistProfile() }
+const advanceProfile = (next: number) => { step.value = next }
 const toggleGoal = (id: string) => {
   profile.priorities = profile.priorities.includes(id) ? profile.priorities.filter(p => p !== id) : [...profile.priorities, id].slice(0, 3)
   persistProfile()
@@ -568,7 +589,8 @@ const saveNotice = ref('')
 
 let saveQueue: Promise<unknown> = Promise.resolve()
 const savePartial = (payload: Record<string, unknown>) => {
-  const operation = saveQueue.then(() => sendPartial(payload))
+  savingCount.value += 1
+  const operation = saveQueue.then(() => sendPartial(payload)).finally(() => { savingCount.value -= 1 })
   saveQueue = operation.catch(() => false)
   return operation
 }
@@ -583,6 +605,7 @@ const sendPartial = async (payload: Record<string, unknown>) => {
       if (response.data?.defaultTemplate) defaultTemplate.value = response.data.defaultTemplate
       for (const key of Object.keys(payload)) delete pending[key]
       saveNotice.value = ''
+      lastSaved.value = true
       return true
     }
 
@@ -627,6 +650,12 @@ const loadState = async () => {
 
 /* ---------- Navigation entre les étapes ---------- */
 
+const retrySave = () => savePartial({ ...pending, practiceType: practiceType.value, specialties: [...selectedSpecialties.value], teamSize: teamSize.value, profile: profileSnapshot() })
+const continueStep = () => {
+  if (step.value === 2) confirmSpecialties()
+  else if (step.value === 3) confirmTeamSize()
+  else advanceProfile(step.value + 1)
+}
 const goBack = () => {
   if (step.value > 1) step.value -= 1
 }
@@ -641,9 +670,6 @@ const skipStep = () => {
 
 const choosePracticeType = (id: string) => {
   practiceType.value = id
-  // On avance sans attendre le serveur : l'échec éventuel s'affiche à l'étape
-  // suivante sans jamais retenir le praticien.
-  step.value = 2
   void savePartial({ practiceType: id, profile: profileSnapshot() })
 }
 
@@ -654,6 +680,7 @@ const toggleSpecialty = (specialty: string) => {
   } else {
     selectedSpecialties.value = selectedSpecialties.value.filter((s) => s !== specialty)
   }
+  void savePartial({ specialties: [...selectedSpecialties.value] })
 }
 
 const confirmSpecialties = () => {
@@ -1102,6 +1129,9 @@ const finish = async () => {
   const saved = await savePartial({ ...pending, practiceType: practiceType.value, specialties: [...selectedSpecialties.value], teamSize: teamSize.value, profile: profileSnapshot(), completed: true })
   finishing.value = false
   if (!saved) return
+  // Avant de sortir : sans cela le garde-fou de navigation, qui lit l'état mis
+  // en cache, renverrait aussitôt vers ce même parcours.
+  authStore.setOnboardingCompleted(true)
   await navigateTo(recommendedStart.value.path)
 
 }
@@ -1164,4 +1194,60 @@ onBeforeUnmount(() => {
 :global(.dark) .choice-card { background: #18232b; border-color: #43515b; }
 :global(.dark) .choice-card[aria-pressed="true"] { background: #273921; border-color: #7eb13f; }
 .onboarding-content h1:focus { outline: none; }
+
+.welcome-shell { background:#f6f8f4; }
+.welcome-grid { display:grid; grid-template-columns:280px minmax(0,1fr); gap:56px; max-width:1100px; margin:0 auto; align-items:start; }
+.welcome-guide { position:sticky; top:108px; padding-top:8px; }
+.welcome-kicker { font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:#71845c; font-weight:700; margin-bottom:12px; }
+.welcome-guide h2 { font-size:24px; line-height:1.3; letter-spacing:-.04em; }
+.welcome-guide-intro { color:#71808c; font-size:12px; line-height:1.8; margin-top:14px; }
+.welcome-steps { margin-top:32px; }
+.welcome-steps li { margin:0 0 8px; }
+.welcome-steps button { display:flex; align-items:center; gap:12px; text-align:left; padding:10px; width:100%; border-radius:12px; font-size:13px; color:#71808c; }
+.welcome-steps button:disabled { cursor:default; }
+.welcome-steps small { display:block; font-size:10px; font-weight:400; margin-top:3px; color:#71808c; }
+.welcome-step-number { display:flex; align-items:center; justify-content:center; width:30px; height:30px; border:1px solid #dbe3d6; border-radius:50%; flex-shrink:0; font-size:11px; }
+.welcome-steps .active button { background:#eaf1e2; color:#36511b; font-weight:600; }
+.welcome-steps .active .welcome-step-number { background:#476a21; border-color:#476a21; color:white; }
+.welcome-steps .done .welcome-step-number { background:#eaf1e2; color:#476a21; }
+.welcome-help { display:flex; gap:12px; padding:18px 10px; margin-top:18px; border-top:1px solid #dfe6d9; color:#708163; font-size:12px; line-height:1.8; }
+.welcome-help > span { color:#7eb13f; }
+.welcome-panel { padding:32px; border:1px solid #e2e8dc; border-radius:24px; background:white; box-shadow:0 14px 50px -32px #54664940; min-width:0; }
+.welcome-panel-top { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; font-size:9px; letter-spacing:.06em; color:#71808c; border-bottom:1px solid #e3e8ec; padding-bottom:20px; margin-bottom:28px; }
+.welcome-save { letter-spacing:0; font-size:10px; color:#608139; }
+.welcome-panel .page-title { font-size:clamp(24px,2.5vw,32px); line-height:1.2; letter-spacing:-.045em; }
+.welcome-panel .page-subtitle { margin-top:12px; line-height:1.8; }
+.practice-choice { position:relative; min-height:120px; border-radius:14px; }
+.practice-choice[aria-pressed="true"] { box-shadow:inset 0 0 0 1px #7eb13f; }
+.welcome-choice-check { position:absolute; top:12px; right:12px; width:18px; height:18px; border-radius:50%; background:#f1f4ed; color:#71845c; font-size:11px; text-align:center; }
+.practice-choice[aria-pressed="true"] .welcome-choice-check { background:#476a21; color:white; }
+.welcome-actions { display:flex; align-items:center; justify-content:space-between; gap:20px; border-top:1px solid #e3e8ec; padding-top:24px; margin-top:32px; }
+.welcome-actions p { font-size:11px; line-height:1.7; color:#55636f; }
+.welcome-actions p span { color:#71808c; }
+.welcome-actions .btn-primary { flex-shrink:0; }
+.welcome-trial-toggle { width:100%; display:block; text-align:left; margin-top:28px; padding:20px 0; border-top:1px solid #e3e8ec; font-size:13px; font-weight:600; }
+.welcome-trial-toggle span { display:block; font-size:11px; font-weight:400; color:#71808c; margin-top:5px; }
+.welcome-trial { padding-top:8px; }
+:global(.dark) .welcome-shell { background:#0f1418; }
+:global(.dark) .welcome-panel { background:#1b2229; border-color:#2c353d; }
+:global(.dark) .welcome-steps .active button { background:#283c15; color:#d4e8b6; }
+:global(.dark) .welcome-actions p { color:#cbd3da; }
+@media(max-width:1023px) { .welcome-grid { gap:28px; grid-template-columns:220px minmax(0,1fr); } .welcome-panel { padding:24px; } }
+@media(max-width:767px) {
+  .welcome-grid { display:block; max-width:600px; }
+  .welcome-guide { position:static; padding:0 4px; margin-bottom:24px; }
+  .welcome-guide > img { height:24px; margin-bottom:14px; }
+  .welcome-guide h2,.welcome-guide-intro,.welcome-kicker,.welcome-help,.welcome-steps small { display:none; }
+  .welcome-steps { display:flex; gap:6px; margin-top:16px; }
+  .welcome-steps li { flex:1; margin:0; }
+  .welcome-steps button { padding:0; justify-content:center; background:transparent !important; }
+  .welcome-steps button > span:last-child { display:none; }
+  .welcome-panel { padding:24px 20px; border-radius:20px; }
+  .welcome-actions { flex-direction:column-reverse; align-items:stretch; gap:12px; }
+  .welcome-actions p { text-align:center; }
+  .welcome-panel .input { font-size:16px; }
+  .welcome-panel .btn-primary { min-height:46px; }
+  .welcome-panel-top { margin-bottom:24px; }
+}
+@media(prefers-reduced-motion:reduce) { .welcome-shell * { animation:none !important; transition:none !important; } }
 </style>

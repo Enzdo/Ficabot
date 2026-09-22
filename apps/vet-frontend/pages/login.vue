@@ -93,6 +93,12 @@ const handleLogin = async () => {
       // est illisible, on ouvre l'application : un contrôle raté ne doit jamais
       // laisser quelqu'un à la porte de son outil.
       const onboarding = await api.get<{ completed: boolean }>('/vet/onboarding')
+      if (onboarding.success && typeof onboarding.data?.completed === 'boolean') {
+        // Mémorisé pour le garde-fou de navigation : la session survit à la
+        // fermeture de l'onglet, cette connexion-ci est la seule occasion de
+        // connaître l'état sans redemander au serveur.
+        authStore.setOnboardingCompleted(onboarding.data.completed)
+      }
       await navigateTo(
         onboarding.success && onboarding.data?.completed === false ? '/bienvenue' : '/dashboard'
       )
