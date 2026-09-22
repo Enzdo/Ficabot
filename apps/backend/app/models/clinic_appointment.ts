@@ -92,7 +92,9 @@ export default class ClinicAppointment extends BaseModel {
   @belongsTo(() => Veterinarian)
   declare veterinarian: BelongsTo<typeof Veterinarian>
 
-  @belongsTo(() => VetEmployee)
+  // Lucid déduit la clé du nom du modèle lié, pas de la propriété : sans cette
+  // précision il cherche « vetEmployeeId », alors que la colonne est employee_id.
+  @belongsTo(() => VetEmployee, { foreignKey: 'employeeId' })
   declare employee: BelongsTo<typeof VetEmployee>
 
   @belongsTo(() => Pet)

@@ -42,7 +42,9 @@ export default class TrainingTaskLog extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
-  @belongsTo(() => TrainingProgram)
+  // Même écueil que ClinicAppointment.employee : la clé déduite serait
+  // « trainingProgramId », or la colonne est program_id.
+  @belongsTo(() => TrainingProgram, { foreignKey: 'programId' })
   declare program: BelongsTo<typeof TrainingProgram>
 
   @belongsTo(() => User)
