@@ -1,10 +1,16 @@
-<svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="60" fill="#16212B"/>
-  <ellipse cx="78"  cy="114" rx="21" ry="19" fill="#7EB13F"/>
-  <ellipse cx="109" cy="93"  rx="21" ry="19" fill="#7EB13F"/>
-  <ellipse cx="147" cy="93"  rx="21" ry="19" fill="#7EB13F"/>
-  <ellipse cx="178" cy="114" rx="21" ry="19" fill="#7EB13F"/>
-  <ellipse cx="128" cy="158" rx="47" ry="41" fill="#7EB13F"/>
-  <rect x="121" y="137" width="14" height="42" rx="7" fill="#16212B"/>
-  <rect x="104" y="151" width="48" height="14" rx="7" fill="#16212B"/>
+<!-- Réduction du blason Ficana. Le blason porte deux animaux gravés, du
+     feuillage et le mot-symbole : à 16 px l'ensemble devient une tache. Seul
+     le losange survit à cette taille, c'est donc lui qu'on garde, avec une
+     feuille pour le vert de la marque. Trait épais à dessein : un filet fin
+     disparaît dans l'onglet. -->
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="56" fill="#16212b"/>
+  <path
+    d="M139.4 53.9 L188.6 114.1 Q200 128 188.6 141.9 L139.4 202.1 Q128 216 116.6 202.1 L67.4 141.9 Q56 128 67.4 114.1 L116.6 53.9 Q128 40 139.4 53.9 Z"
+    fill="none"
+    stroke="#e3d5c3"
+    stroke-width="15"
+  />
+  <path d="M168 168 q26 -6 34 16 q-26 6 -34 -16 Z" fill="#7eb13f"/>
+  <path d="M150 186 q22 4 22 26 q-24 -4 -22 -26 Z" fill="#7eb13f"/>
 </svg>
