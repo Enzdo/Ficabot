@@ -7,19 +7,19 @@
           <span class="eyebrow">Fonctionnalités</span>
 
           <h1 class="hero-title">
-            De l'agenda à la facture,<br >
-            sans <span class="display-accent">ressaisie.</span>
+            Votre journée de soins,<br >
+            <span class="display-accent">mieux organisée.</span>
           </h1>
 
           <p class="section-lead">
-            Ficana Pro couvre la journée entière d'une clinique : les rendez-vous,
-            les dossiers médicaux, la consultation, l'hospitalisation, les stocks
-            et la facturation. Chaque écran alimente le suivant.
+            Du premier rendez-vous au suivi à domicile, retrouvez les outils de votre clinique
+            dans un même espace. Choisissez l’offre adaptée à votre pratique
+            et à la taille de votre équipe.
           </p>
 
           <div class="mt-9 flex flex-col sm:flex-row gap-3">
             <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto">
-              Réserver une démo
+              Demander une démo
             </NuxtLink>
             <a :href="`${appUrl}/register`" class="btn-secondary btn-lg w-full sm:w-auto">
               Créer un compte
@@ -53,7 +53,7 @@
         <div class="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <div>
             <span class="eyebrow">Agenda &amp; rendez-vous</span>
-            <h2 class="section-title">Un planning que toute l'équipe lit pareil.</h2>
+            <h2 class="section-title">Toute l’équipe sur le même planning.</h2>
             <p class="section-lead">
               Le calendrier est partagé : praticiens, salles, urgences, congés.
               Le client réserve en ligne, le motif arrive avec le créneau, et le rappel
@@ -70,7 +70,7 @@
             </ul>
 
             <p class="mt-9">
-              <span class="chip-accent">−30 % de rendez-vous manqués</span>
+              <span class="chip-accent">Rappels de rendez-vous automatiques</span>
             </p>
           </div>
 
@@ -170,11 +170,11 @@
 
           <div class="order-1 lg:order-2">
             <span class="eyebrow">Dossier patient</span>
-            <h2 class="section-title">L'historique complet, en deux secondes.</h2>
+            <h2 class="section-title">Le bon contexte avant chaque consultation.</h2>
             <p class="section-lead">
-              Un dossier par animal, tenu dans le temps : antécédents, vaccins, poids,
-              analyses, ordonnances passées. Il est déjà ouvert quand le client
-              s'assoit en face de vous.
+              Antécédents, vaccins, poids, analyses et ordonnances : retrouvez l’historique
+              de l’animal dans un seul dossier. Préparez sa visite avec les informations
+              des consultations précédentes.
             </p>
 
             <ul class="mt-10 space-y-5">
@@ -196,11 +196,11 @@
         <div class="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
           <div>
             <span class="eyebrow">Consultation &amp; ordonnances</span>
-            <h2 class="section-title">Rédigez pendant, pas après.</h2>
+            <h2 class="section-title">Des documents prêts pour le suivi.</h2>
             <p class="section-lead">
-              Le compte rendu se remplit au fil de la consultation. L'ordonnance se monte
-              à partir des posologies que vous utilisez déjà, et part au client avant
-              qu'il ait repris la route.
+              Rédigez votre compte rendu et préparez l’ordonnance à partir de vos posologies
+              enregistrées. Relisez, puis imprimez ou partagez les documents
+              avec le propriétaire.
             </p>
 
             <ul class="mt-10 space-y-5">
@@ -249,13 +249,13 @@
         <div class="max-w-2xl mb-14 lg:mb-16">
           <span class="eyebrow">La clinique au quotidien</span>
           <h2 class="section-title">
-            Le reste de la structure<br class="hidden sm:block" >
-            tourne aussi.
+            Gardez une vue claire<br class="hidden sm:block" >
+            sur votre clinique.
           </h2>
           <p class="section-lead">
-            Hospitalisation, stocks, facturation, statistiques : les écrans qu'on ouvre
-            moins souvent, mais qui font perdre le plus de temps quand ils vivent
-            dans un tableur à part.
+            Suivez les animaux hospitalisés, anticipez les besoins de stock et retrouvez
+            vos devis et factures. Ces outils de gestion sont inclus dans les offres
+            Clinique et Réseau.
           </p>
         </div>
 
@@ -280,13 +280,13 @@
           <div>
             <span class="eyebrow text-brand-400">Lien client</span>
             <h2 class="section-title text-white">
-              Une partie du travail<br class="hidden sm:block" >
-              se fait hors de la clinique.
+              Vos consignes restent<br class="hidden sm:block" >
+              à portée de vos clients.
             </h2>
             <p class="section-lead text-surface-400">
-              Vos clients utilisent déjà Ficana comme carnet de santé. Ils vous écrivent,
-              vous envoient une photo avant de se déplacer, et retrouvent vos comptes rendus
-              sans avoir à chercher une pièce jointe dans leurs mails.
+              Les propriétaires équipés de Ficana peuvent vous écrire, partager une photo
+              et retrouver les documents de leur animal. Un lien direct avec votre clinique
+              pour faciliter le suivi entre deux visites.
             </p>
 
             <ul class="mt-10 space-y-5">
@@ -306,7 +306,7 @@
           <!-- Maquette : pré-diagnostic reçu -->
           <div class="card-dark">
             <p class="text-[11px] font-bold uppercase tracking-eyebrow text-surface-500 mb-5">
-              Pré-diagnostic reçu · 08:12
+              Demande de consultation · 08:12
             </p>
 
             <div class="rounded-xl border border-ink-700 bg-ink-900 p-4">
@@ -343,10 +343,10 @@
       <div class="container-pro">
         <div class="max-w-2xl mb-14 lg:mb-16">
           <span class="eyebrow">Ce qui change</span>
-          <h2 class="section-title">Le même travail, moins de frottement.</h2>
+          <h2 class="section-title">Moins de tâches dispersées. Un suivi plus simple.</h2>
           <p class="section-lead">
-            La plupart des cliniques ne manquent pas d'outils : elles en ont trop,
-            et aucun ne se parle. C'est surtout ça que Ficana Pro remplace.
+            En réunissant les informations de la clinique et les échanges avec les propriétaires,
+            Ficana Pro vous aide à suivre chaque patient dans la durée.
           </p>
         </div>
 
@@ -392,18 +392,18 @@
       <div class="container-pro py-24 lg:py-28 text-center">
         <span class="eyebrow text-brand-400">Passer à la pratique</span>
         <h2 class="section-title text-white">
-          Le mieux, c'est encore<br class="hidden sm:block" >
-          de le voir tourner.
+          Découvrez le parcours<br class="hidden sm:block" >
+          d’une consultation.
         </h2>
         <p class="section-lead text-surface-400 mx-auto">
-          On ouvre Ficana Pro avec votre planning de la semaine et deux ou trois dossiers
-          réels. Vous voyez tout de suite ce qui colle à votre organisation, et ce qui
-          demanderait à être repris.
+          Agenda, dossier patient, ordonnance, suivi : découvrez chaque étape en démo.
+          Posez vos questions et voyez comment Ficana Pro peut s’intégrer
+          à votre organisation.
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <NuxtLink to="/contact" class="btn-accent btn-lg w-full sm:w-auto">
-            Réserver une démo
+            Demander une démo
           </NuxtLink>
           <a :href="`${appUrl}/register`" class="btn-on-dark btn-lg w-full sm:w-auto">
             Créer un compte
@@ -411,7 +411,7 @@
         </div>
 
         <p class="mt-6 text-sm text-surface-500">
-          Validation de votre compte vétérinaire en moins de 24 h.
+          30 minutes en visio pour faire le point sur vos besoins.
         </p>
       </div>
     </section>
@@ -424,7 +424,8 @@ const appUrl = config.public.appUrl as string
 const consumerUrl = config.public.consumerUrl as string
 
 useHead({
-  title: 'Fonctionnalités — Ficana Pro',
+  title: 'Agenda, dossiers patients et suivi vétérinaire — Ficana Pro',
+  meta: [{ name: 'description', content: 'Découvrez les fonctionnalités de Ficana Pro : agenda partagé, dossiers patients, ordonnances, suivi client et gestion de clinique selon votre offre.' }],
 })
 
 const summary = [
@@ -577,7 +578,7 @@ const dailyFeatures = [
 
 const clientPoints = [
   'Messagerie sécurisée pour le suivi post-opératoire, sans donner votre numéro personnel.',
-  'Pré-diagnostics envoyés par le propriétaire : description, photos, durée des symptômes.',
+  'Symptômes décrits par le propriétaire : observations, photos et durée avant la consultation.',
   'Comptes rendus et ordonnances déposés directement dans son carnet de santé.',
   'Vaccins saisis en consultation : le rappel se programme des deux côtés.',
   'Les clients sans application ne sont pas laissés de côté : tout reste envoyable par email.',
@@ -597,13 +598,13 @@ const beforeAfter = {
   after: [
     'Un seul dossier par animal, alimenté par chaque rendez-vous.',
     'Les rappels et relances vaccinales partent automatiquement, au nom de la clinique.',
-    'Le compte rendu est terminé quand le client sort.',
+    'Le compte rendu se rédige directement dans le dossier patient.',
     "L'ordonnance est déjà dans son application, consultable à tout moment.",
   ],
 }
 
 const gains = [
-  { value: '−30 %', label: 'de rendez-vous manqués' },
-  { value: '5 h', label: 'gagnées par semaine' },
+  { value: 'Un dossier', label: 'pour retrouver l’historique de chaque patient' },
+  { value: 'Un lien direct', label: 'pour partager les informations avec les propriétaires' },
 ]
 </script>

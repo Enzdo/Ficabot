@@ -1,304 +1,167 @@
 <template>
-  <div>
-    <!-- Welcome Section -->
-    <div class="mb-8">
-      <h1 class="page-title">
-        Bonjour, Dr. {{ authStore.vet?.lastName || 'Vétérinaire' }} 👋
-      </h1>
-      <p class="page-subtitle">Voici un aperçu de vos patients</p>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <!-- Skeleton loading -->
-      <template v-if="loading">
-        <div v-for="i in 3" :key="i" class="card">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-surface-200 rounded-xl animate-pulse"></div>
-            <div class="space-y-2">
-              <div class="w-12 h-7 bg-surface-200 rounded animate-pulse"></div>
-              <div class="w-24 h-4 bg-surface-100 rounded animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <template v-else>
-        <div class="card">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-surface-900">{{ stats.totalPatients }}</p>
-              <p class="text-sm text-surface-500">Patients actifs</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-accent-100 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-surface-900">{{ stats.dogs }}</p>
-              <p class="text-sm text-surface-500">Chiens</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-warning-50 rounded-xl flex items-center justify-center">
-              <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <div>
-              <p class="text-2xl font-bold text-surface-900">{{ stats.cats }}</p>
-              <p class="text-sm text-surface-500">Chats</p>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <!-- Upcoming Reminders Widget -->
-    <div v-if="remindersData.overdue > 0 || remindersData.upcoming > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-      <div v-if="remindersData.overdue > 0" class="card bg-danger-50 border border-danger-200 cursor-pointer hover:shadow-md transition-shadow" @click="navigateTo('/reminders')">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-danger-100 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-danger-700">{{ remindersData.overdue }} rappel(s) en retard</p>
-            <p class="text-sm text-danger-600">Vaccins ou traitements a renouveler</p>
-          </div>
-          <svg class="w-5 h-5 text-danger-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
+  <div class="dashboard-workspace">
+    <section class="dashboard-welcome">
+      <div>
+        <p class="workspace-eyebrow mb-3">Votre espace de travail</p>
+        <h1 class="page-title">Bonjour{{ authStore.vet?.lastName ? ', Dr ' + authStore.vet.lastName : '' }}.</h1>
+        <p class="page-subtitle">Une vue claire sur votre journée et les patients à suivre.</p>
       </div>
-      <div v-if="remindersData.upcoming > 0" class="card bg-warning-50 border border-warning-200 cursor-pointer hover:shadow-md transition-shadow" @click="navigateTo('/reminders')">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-warning-100 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <p class="text-lg font-bold text-warning-700">{{ remindersData.upcoming }} rappel(s) cette semaine</p>
-            <p class="text-sm text-warning-600">A traiter prochainement</p>
-          </div>
-          <svg class="w-5 h-5 text-warning-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
+      <NuxtLink to="/appointments" class="btn-primary">Ouvrir mon planning <span aria-hidden="true">↗</span></NuxtLink>
+    </section>
+
+    <div v-if="failedSections.length" class="workspace-error mb-6" role="alert">
+      Certaines données n’ont pas pu être chargées : {{ failedSections.join(', ') }}.
+      <button type="button" :disabled="loading" @click="loadDashboard">Réessayer</button>
+    </div>
+
+    <section aria-label="Vue d’ensemble" class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8" :aria-busy="loading">
+      <NuxtLink v-for="metric in metrics" :key="metric.label" :to="metric.to" class="card dashboard-metric">
+        <div class="flex items-center justify-between gap-2">
+          <span class="dashboard-metric-label">{{ metric.label }}</span><span class="text-surface-400" aria-hidden="true">↗</span>
         </div>
+        <div v-if="loading" class="h-9 w-16 bg-surface-100 dark:bg-surface-800 animate-pulse rounded-lg my-3" />
+        <p v-else class="dashboard-metric-value">{{ metric.value ?? '—' }}</p>
+        <p class="text-xs text-surface-500 dark:text-surface-400">{{ metric.hint }}</p>
+      </NuxtLink>
+    </section>
+
+    <div class="grid xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-6">
+      <section class="card">
+        <div class="workspace-section-heading">
+          <div><p class="workspace-eyebrow mb-2">Votre journée</p><h2>Rendez-vous du jour</h2></div>
+          <NuxtLink to="/appointments">Voir le planning →</NuxtLink>
+        </div>
+        <div v-if="loading" class="space-y-3" role="status" aria-label="Chargement du planning">
+          <div v-for="i in 3" :key="i" class="h-20 rounded-xl bg-surface-100 dark:bg-surface-800 animate-pulse" />
+        </div>
+        <p v-else-if="failures.appointments" class="workspace-empty">Le planning est momentanément indisponible.</p>
+        <div v-else-if="!todayAppointments.length" class="workspace-empty">
+          <span class="dashboard-empty-icon" aria-hidden="true">☷</span>
+          <h3 class="font-semibold mb-2">Votre planning est libre aujourd’hui</h3>
+          <p>Retrouvez vos prochains rendez-vous ou ajoutez-en un depuis le planning.</p>
+          <NuxtLink to="/appointments" class="btn-secondary mt-5">Gérer les rendez-vous</NuxtLink>
+        </div>
+        <div v-else class="space-y-2">
+          <NuxtLink v-for="appointment in todayAppointments.slice(0,6)" :key="appointment.id" to="/appointments" class="dashboard-appointment">
+            <div class="dashboard-time"><strong>{{ appointment.time || appointment.startTime?.slice(0,5) || '—' }}</strong><small>{{ appointment.duration || 30 }} min</small></div>
+            <div class="flex-1 min-w-0"><p class="font-semibold text-sm truncate">{{ appointment.petName }}</p><p class="text-xs text-surface-500 mt-1 truncate">{{ appointment.reason || 'Consultation' }} · {{ appointment.clientName }}</p></div>
+            <span class="badge" :class="appointment.status === 'completed' ? 'badge-success' : 'badge-primary'">{{ statusLabel(appointment.status) }}</span>
+          </NuxtLink>
+          <NuxtLink v-if="todayAppointments.length > 6" to="/appointments" class="block text-sm text-accent-700 pt-3">Voir les {{ todayAppointments.length }} rendez-vous →</NuxtLink>
+        </div>
+      </section>
+
+      <div class="space-y-6">
+        <section class="card">
+          <div class="workspace-section-heading"><div><p class="workspace-eyebrow mb-2">À suivre</p><h2>Les priorités de la clinique</h2></div></div>
+          <div v-if="loading" class="h-32 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
+          <template v-else>
+            <NuxtLink v-for="item in priorities" :key="item.label" :to="item.to" class="dashboard-priority">
+              <span class="dashboard-priority-dot" :class="{ 'has-alert': item.alert }" aria-hidden="true" />
+              <div class="flex-1"><p class="text-sm font-semibold">{{ item.label }}</p><p class="text-xs text-surface-500 dark:text-surface-400 mt-1">{{ item.detail }}</p></div>
+              <span class="text-surface-400" aria-hidden="true">→</span>
+            </NuxtLink>
+          </template>
+        </section>
+        <section class="dashboard-shortcuts">
+          <p class="workspace-eyebrow mb-2">Accès rapide</p><h2 class="font-semibold mb-4">Passer à l’action</h2>
+          <NuxtLink to="/patients">Retrouver un patient <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink to="/consultation">Ouvrir la dictée <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink to="/chat">Consulter les messages <span aria-hidden="true">→</span></NuxtLink>
+        </section>
       </div>
     </div>
 
-    <!-- Activite recente -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-      <!-- Hospitalisations en cours -->
-      <div class="card bg-accent-50 border border-accent-200 cursor-pointer hover:shadow-md transition-shadow" @click="navigateTo('/hospitalization')">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-accent-100 rounded-lg flex items-center justify-center">
-            <svg class="w-5 h-5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 6v12a2 2 0 002 2h12a2 2 0 002-2V6M4 6l1-2h14l1 2M10 11h4m-2-2v4" />
-            </svg>
-          </div>
-          <div class="flex-1">
-            <p v-if="hospitalStats.active > 0" class="text-lg font-bold text-accent-700">{{ hospitalStats.active }} hospitalisation(s) en cours</p>
-            <p v-else class="text-lg font-bold text-accent-700">Aucune hospitalisation</p>
-            <p class="text-sm text-accent-600">Hospitalisations en cours</p>
-          </div>
-          <svg class="w-5 h-5 text-accent-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-      </div>
-
-      <!-- Stock bas -->
-      <div class="card cursor-pointer hover:shadow-md transition-shadow" :class="inventoryStats.lowStockCount > 0 ? 'bg-warning-50 border border-warning-200' : 'bg-success-50 border border-success-200'" @click="navigateTo('/inventory')">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center" :class="inventoryStats.lowStockCount > 0 ? 'bg-warning-100' : 'bg-success-100'">
-            <svg class="w-5 h-5" :class="inventoryStats.lowStockCount > 0 ? 'text-warning-600' : 'text-success-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-          </div>
-          <div class="flex-1">
-            <template v-if="inventoryStats.lowStockCount > 0">
-              <p class="text-lg font-bold text-warning-700">{{ inventoryStats.lowStockCount }} produit(s) en stock bas</p>
-              <p class="text-sm text-warning-600">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-warning-200 text-warning-800">{{ inventoryStats.lowStockCount }} alerte(s)</span>
-              </p>
-            </template>
-            <template v-else>
-              <p class="text-lg font-bold text-success-700">Stock OK</p>
-              <p class="text-sm text-success-600">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-200 text-success-800">Tous les stocks sont suffisants</span>
-              </p>
-            </template>
-          </div>
-          <svg class="w-5 h-5 ml-auto" :class="inventoryStats.lowStockCount > 0 ? 'text-warning-400' : 'text-success-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Patients -->
-    <div class="card">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-lg font-semibold text-surface-900">Patients récents</h2>
-        <NuxtLink to="/patients" class="text-primary-600 text-sm font-medium hover:underline">
-          Voir tous →
+    <section class="card mt-6">
+      <div class="workspace-section-heading"><h2>Vos patients</h2><NuxtLink to="/patients">Tous les dossiers →</NuxtLink></div>
+      <div v-if="loading" class="h-24 rounded-xl bg-surface-100 dark:bg-surface-800 animate-pulse" />
+      <p v-else-if="failures.patients" class="workspace-empty">Les dossiers patients sont momentanément indisponibles.</p>
+      <div v-else-if="!patients.length" class="workspace-empty"><h3 class="font-semibold mb-2">Accueillez votre premier patient</h3><p>Ses informations apparaîtront ici lorsque son propriétaire partagera l’accès à son dossier.</p><NuxtLink to="/patients" class="btn-secondary mt-5">Ouvrir les patients</NuxtLink></div>
+      <div v-else class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        <NuxtLink v-for="patient in patients.slice(0,6)" :key="patient.id" :to="`/patients/${patient.vetToken}`" class="dashboard-patient">
+          <img v-if="patient.avatarUrl" :src="patient.avatarUrl" :alt="patient.name" class="w-11 h-11 rounded-xl object-cover shrink-0" />
+          <span v-else class="dashboard-avatar" aria-hidden="true">{{ patient.name?.[0] || 'P' }}</span>
+          <div class="flex-1 min-w-0"><h3 class="font-semibold text-sm truncate">{{ patient.name }}</h3><p class="text-xs text-surface-500 truncate mt-1">{{ patient.breed || speciesLabel(patient.species) }}</p></div><span class="text-surface-400" aria-hidden="true">↗</span>
         </NuxtLink>
       </div>
-
-      <div v-if="loading" class="space-y-3">
-        <div v-for="i in 3" :key="i" class="flex items-center gap-4 p-4 rounded-xl">
-          <div class="w-12 h-12 rounded-full bg-surface-200 animate-pulse"></div>
-          <div class="flex-1 space-y-2">
-            <div class="w-32 h-4 bg-surface-200 rounded animate-pulse"></div>
-            <div class="w-20 h-3 bg-surface-100 rounded animate-pulse"></div>
-          </div>
-          <div class="w-16 h-6 bg-surface-100 rounded animate-pulse"></div>
-        </div>
-      </div>
-
-      <div v-else-if="error" class="text-center py-8">
-        <div class="w-12 h-12 bg-danger-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <svg class="w-6 h-6 text-danger-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-        </div>
-        <p class="text-surface-600 text-sm">{{ error }}</p>
-        <button @click="loadPatients" class="mt-3 text-primary-600 text-sm font-medium hover:underline">
-          Réessayer
-        </button>
-      </div>
-
-      <div v-else-if="patients.length === 0" class="text-center py-12">
-        <div class="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-        </div>
-        <p class="text-surface-500">Aucun patient pour le moment</p>
-        <p class="text-sm text-surface-400 mt-1">Les patients apparaîtront ici lorsqu'ils partageront leur accès</p>
-      </div>
-
-      <div v-else class="space-y-3">
-        <NuxtLink 
-          v-for="patient in patients.slice(0, 5)" 
-          :key="patient.id"
-          :to="`/patients/${patient.vetToken}`"
-          class="flex items-center gap-4 p-4 rounded-xl hover:bg-surface-50 transition-colors"
-        >
-          <div class="w-12 h-12 rounded-full bg-surface-200 flex items-center justify-center overflow-hidden">
-            <img 
-              v-if="patient.avatarUrl" 
-              :src="patient.avatarUrl" 
-              :alt="patient.name"
-              class="w-full h-full object-cover"
-            />
-            <span v-else class="text-xl">{{ patient.species === 'dog' ? '🐕' : '🐱' }}</span>
-          </div>
-          <div class="flex-1">
-            <p class="font-medium text-surface-900">{{ patient.name }}</p>
-            <p class="text-sm text-surface-500">{{ patient.breed || getSpeciesLabel(patient.species) }}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <span v-if="patient.hasHealthBook" class="badge-success">Carnet</span>
-            <svg class="w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
-        </NuxtLink>
-      </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-definePageMeta({
-  middleware: 'auth',
-})
-
+definePageMeta({ middleware: 'auth' })
 const authStore = useVetAuthStore()
 const api = useVetApi()
-
-const patients = ref<any[]>([])
 const loading = ref(true)
-const error = ref('')
-const remindersData = ref({ overdue: 0, upcoming: 0 })
-const hospitalStats = ref({ active: 0 })
-const inventoryStats = ref({ lowStockCount: 0 })
-
-const stats = computed(() => ({
-  totalPatients: patients.value.length,
-  dogs: patients.value.filter(p => p.species === 'dog').length,
-  cats: patients.value.filter(p => p.species === 'cat').length,
-}))
-
-const getSpeciesLabel = (species: string) => {
-  const labels: Record<string, string> = { dog: 'Chien', cat: 'Chat', bird: 'Oiseau', rabbit: 'Lapin' }
-  return labels[species] || species
-}
-
-const loadPatients = async () => {
+const patients = ref<any[]>([])
+const appointments = ref<any[]>([])
+const reminders = ref({ overdueCount: 0, upcomingCount: 0 })
+const hospital = ref({ active: 0 })
+const inventory = ref({ lowStockCount: 0 })
+const failures = reactive({ patients: false, appointments: false, reminders: false, hospital: false, inventory: false })
+const labels = { patients: 'patients', appointments: 'planning', reminders: 'rappels', hospital: 'hospitalisations', inventory: 'stocks' }
+const failedSections = computed(() => (Object.keys(failures) as (keyof typeof failures)[]).filter(key => failures[key]).map(key => labels[key]))
+const today = ref('')
+const todayAppointments = computed(() => appointments.value.filter(a => a.date?.slice(0,10) === today.value && a.status !== 'cancelled').sort((a,b) => (a.time || a.startTime || '').localeCompare(b.time || b.startTime || '')))
+const metrics = computed(() => [
+  { label: 'Rendez-vous', value: failures.appointments ? null : todayAppointments.value.length, hint: 'Aujourd’hui, hors annulations', to: '/appointments' },
+  { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' },
+  { label: 'Rappels à venir', value: failures.reminders ? null : reminders.value.upcomingCount, hint: 'Sur les 7 prochains jours', to: '/reminders' },
+  { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization' },
+])
+const priorities = computed(() => [
+  { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders' },
+  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory' },
+  { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization' },
+])
+const statusLabel = (status: string) => (({ confirmed: 'Confirmé', pending: 'À confirmer', completed: 'Terminé', scheduled: 'Planifié' } as Record<string,string>)[status] || 'Planifié')
+const speciesLabel = (species: string) => (({ dog: 'Chien', cat: 'Chat', bird: 'Oiseau', rabbit: 'Lapin' } as Record<string,string>)[species] || 'Autre espèce')
+const loadDashboard = async () => {
   loading.value = true
-  error.value = ''
-  try {
-    const response = await api.get<any[]>('/vet/patients')
-    if (response.success && response.data) {
-      patients.value = response.data
-    } else {
-      error.value = response.message || 'Erreur de chargement'
-    }
-  } catch {
-    error.value = 'Erreur de connexion au serveur'
-  } finally {
-    loading.value = false
-  }
+  const now = new Date()
+  today.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+  const resources = [
+    ['patients', '/vet/patients', patients], ['appointments', '/vet/appointments', appointments],
+    ['reminders', '/vet/reminders/upcoming', reminders], ['hospital', '/vet/hospitalizations/stats', hospital], ['inventory', '/vet/inventory/stats', inventory],
+  ] as const
+  await Promise.all(resources.map(async ([key, endpoint, target]) => {
+    failures[key] = false
+    try {
+      const response = await api.get<any>(endpoint)
+      if (!response.success || response.data == null) { failures[key] = true; return }
+      target.value = key === 'appointments' ? response.data.map(normalizeVetAppointment) : response.data
+    } catch { failures[key] = true }
+  }))
+  loading.value = false
 }
-
-const loadReminders = async () => {
-  const response = await api.get<any>('/vet/reminders/upcoming')
-  if (response.success && response.data) {
-    remindersData.value = {
-      overdue: response.data.overdueCount || 0,
-      upcoming: response.data.upcomingCount || 0,
-    }
-  }
-}
-
-const loadHospitalStats = async () => {
-  const response = await api.get<any>('/vet/hospitalizations/stats')
-  if (response.success && response.data) {
-    hospitalStats.value = response.data
-  }
-}
-
-const loadInventoryStats = async () => {
-  const response = await api.get<any>('/vet/inventory/stats')
-  if (response.success && response.data) {
-    inventoryStats.value = response.data
-  }
-}
-
-onMounted(() => {
-  loadPatients()
-  loadReminders()
-  loadHospitalStats()
-  loadInventoryStats()
-})
+onMounted(loadDashboard)
 </script>
+
+<style scoped>
+.dashboard-welcome { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:24px; padding:12px 0 32px; }
+.dashboard-metric { display:block; transition:border-color .2s; }
+.dashboard-metric:hover { border-color:#9bc657; }
+.dashboard-metric-label { font-size:12px; color:#55636f; font-weight:600; }
+.dashboard-metric-value { font-size:34px; font-weight:600; letter-spacing:-.06em; margin:12px 0 6px; font-variant-numeric:tabular-nums; }
+.dashboard-appointment { display:flex; align-items:center; gap:16px; padding:16px 12px; border:1px solid #e3e8ec; border-radius:12px; transition:background .2s; }
+.dashboard-appointment:hover,.dashboard-patient:hover { background:#f4faec; }
+.dashboard-time { flex-shrink:0; width:55px; padding-right:12px; border-right:2px solid #b8d886; }
+.dashboard-time strong { display:block; font-size:14px; font-variant-numeric:tabular-nums; }
+.dashboard-time small { display:block; font-size:10px; color:#71808c; margin-top:4px; }
+.dashboard-priority { display:flex; align-items:center; gap:12px; padding:16px 0; border-bottom:1px solid #e3e8ec; }
+.dashboard-priority:last-child { border:0; padding-bottom:0; }
+.dashboard-priority-dot { width:8px; height:8px; border-radius:50%; background:#b8d886; flex-shrink:0; }
+.dashboard-priority-dot.has-alert { background:#ed783b; box-shadow:0 0 0 4px #fdf0e8; }
+.dashboard-shortcuts { border:1px solid #dbe6cf; background:linear-gradient(120deg,#f4f8ef,#fbfcf9); padding:24px; border-radius:16px; }
+.dashboard-shortcuts a { display:flex; justify-content:space-between; padding:12px 0; font-size:13px; border-top:1px solid #dde6d3; }
+.dashboard-shortcuts a:hover { color:#476a21; }
+.dashboard-patient { display:flex; align-items:center; gap:12px; border:1px solid #e3e8ec; padding:14px; border-radius:12px; transition:background .2s; }
+.dashboard-avatar,.dashboard-empty-icon { display:flex; align-items:center; justify-content:center; width:44px; height:44px; background:#edf4e4; color:#608139; border-radius:12px; flex-shrink:0; font-family:'Instrument Serif',serif; font-size:24px; }
+.dashboard-empty-icon { margin:0 auto 16px; }
+:global(.dark) .dashboard-metric-label { color:#9aa6b1; }
+:global(.dark) .dashboard-shortcuts { background:#1b2719; border-color:#34422c; }
+:global(.dark) .dashboard-patient,:global(.dark) .dashboard-appointment,:global(.dark) .dashboard-priority,:global(.dark) .dashboard-shortcuts a { border-color:#2c353d; }
+:global(.dark) .dashboard-patient:hover,:global(.dark) .dashboard-appointment:hover { background:#283c15; }
+@media(max-width:639px) { .dashboard-welcome { padding-top:4px; } .dashboard-appointment { gap:10px; flex-wrap:wrap; } .dashboard-appointment .badge { margin-left:65px; } .dashboard-metric-value { font-size:30px; } }
+@media(prefers-reduced-motion:reduce) { .dashboard-metric,.dashboard-appointment,.dashboard-patient { transition:none; } }
+</style>

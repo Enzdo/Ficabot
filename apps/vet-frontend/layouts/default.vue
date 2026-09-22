@@ -1,21 +1,28 @@
 <template>
-  <div class="min-h-screen bg-surface-50 dark:bg-surface-950">
+  <div class="workspace-shell min-h-screen bg-surface-50 dark:bg-surface-950">
+    <a href="#workspace-content" class="workspace-skip">Aller au contenu</a>
+    <div v-if="mobileOpen" class="workspace-backdrop" aria-hidden="true" @click="mobileOpen = false" />
     <!-- Sidebar -->
     <aside 
       v-if="authStore.isAuthenticated"
-      class="fixed left-0 top-0 h-full bg-white border-r border-surface-200 z-40 flex flex-col dark:bg-surface-900 dark:border-surface-800"
-      :class="[sidebarCollapsed ? 'w-[68px] sidebar-collapsed' : 'w-64', mounted ? 'transition-[width] duration-200' : '']"
+      id="workspace-navigation" ref="sidebarRef"
+      :role="isMobile ? 'dialog' : undefined"
+      :aria-modal="isMobile && mobileOpen ? true : undefined"
+      aria-label="Navigation du logiciel"
+      :inert="isMobile && !mobileOpen"
+      class="workspace-sidebar fixed left-0 top-0 h-full bg-white border-r border-surface-200 z-40 flex flex-col dark:bg-surface-900 dark:border-surface-800"
+      :class="[displayCollapsed ? 'w-[68px] sidebar-collapsed' : 'w-64', mobileOpen ? 'mobile-open' : '', mounted ? 'transition-[width] duration-200' : '']"
     >
       <!-- Replier / déplier : posé sur le bord droit de la barre -->
       <button
         type="button"
-        class="absolute -right-3 top-20 z-50 w-6 h-6 rounded-full bg-white border border-surface-300 text-surface-500 flex items-center justify-center transition-colors hover:text-primary-700 hover:border-primary-400 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-400 dark:hover:text-surface-100"
-        :title="sidebarCollapsed ? 'Déplier le menu' : 'Replier le menu'"
-        :aria-label="sidebarCollapsed ? 'Déplier le menu' : 'Replier le menu'"
-        :aria-expanded="!sidebarCollapsed"
+        class="hidden lg:flex absolute -right-3 top-20 z-50 w-6 h-6 rounded-full bg-white border border-surface-300 text-surface-500 flex items-center justify-center transition-colors hover:text-primary-700 hover:border-primary-400 dark:bg-surface-800 dark:border-surface-700 dark:text-surface-400 dark:hover:text-surface-100"
+        :title="displayCollapsed ? 'Déplier le menu' : 'Replier le menu'"
+        :aria-label="displayCollapsed ? 'Déplier le menu' : 'Replier le menu'"
+        :aria-expanded="!displayCollapsed"
         @click="toggleSidebar"
       >
-        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="sidebarCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="displayCollapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
@@ -29,7 +36,7 @@
         -->
         <div class="flex items-center gap-3 min-w-0">
           <img
-            v-if="sidebarCollapsed"
+            v-if="displayCollapsed"
             src="/brand/ficana-mark.png"
             alt="Ficana"
             class="w-9 h-9 shrink-0 object-contain"
@@ -50,6 +57,7 @@
         </div>
       </div>
 
+      <button v-if="isMobile" ref="closeMenuRef" type="button" class="workspace-close" aria-label="Fermer le menu" @click="mobileOpen = false">✕</button>
       <!-- Navigation -->
       <nav class="flex-1 overflow-y-auto px-3 py-4">
         <template v-for="(group, gi) in navGroups" :key="group.id">
@@ -59,7 +67,7 @@
               v-for="item in group.items"
               :key="item.to"
               :to="item.to"
-              class="nav-link"
+              class="nav-link" :aria-current="isNavActive(item.to) ? 'page' : undefined" :aria-label="item.label"
               :class="{ 'nav-link-active': isNavActive(item.to) }"
             >
               <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,13 +91,13 @@
               <span>{{ group.label }}</span>
             </button>
 
-            <div class="nav-group-body">
+            <div class="nav-group-body" :inert="!displayCollapsed && !isGroupOpen(group.id)">
               <div class="min-h-0 overflow-hidden space-y-0.5">
                 <NuxtLink
                   v-for="item in group.items"
                   :key="item.to"
                   :to="item.to"
-                  class="nav-link"
+                  class="nav-link" :aria-current="isNavActive(item.to) ? 'page' : undefined" :aria-label="item.label"
                   :class="{ 'nav-link-active': isNavActive(item.to) }"
                 >
                   <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,20 +137,23 @@
     </aside>
 
     <!-- Main content -->
-    <main :class="[authStore.isAuthenticated ? (sidebarCollapsed ? 'ml-[68px]' : 'ml-64') : '', mounted ? 'transition-[margin] duration-200' : '']">
+    <main :inert="mobileOpen" class="workspace-main" :class="[authStore.isAuthenticated ? (displayCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64') : '', mounted ? 'transition-[margin] duration-200' : '']">
       <!-- Top bar for authenticated users -->
       <header 
         v-if="authStore.isAuthenticated"
-        class="h-16 bg-white border-b border-surface-200 flex items-center justify-between px-6 dark:bg-surface-900 dark:border-surface-700"
+        class="workspace-header h-16 bg-white border-b border-surface-200 flex items-center justify-between px-6 dark:bg-surface-900 dark:border-surface-700"
       >
-        <div>
+        <div class="flex items-center gap-3 min-w-0">
+          <button ref="menuButtonRef" type="button" class="workspace-menu lg:hidden" aria-label="Ouvrir le menu" :aria-expanded="mobileOpen" aria-controls="workspace-navigation" @click="mobileOpen = true">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
           <h2 class="text-base font-semibold tracking-tighter text-primary-600 dark:text-surface-50">{{ pageTitle }}</h2>
         </div>
         <div class="flex items-center gap-2 sm:gap-3">
           <!-- Le raccourci doit être visible : un raccourci qu'on ne voit pas n'existe pas -->
           <button
             type="button"
-            class="hidden sm:flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg border border-surface-200
+            aria-label="Rechercher une page ou une action" class="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-lg border border-surface-200
                    text-sm text-surface-500 transition-colors duration-150
                    hover:border-surface-300 hover:text-surface-700
                    dark:border-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
@@ -151,14 +162,15 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <span>Rechercher</span>
-            <kbd class="ql-kbd ml-1">{{ metaKey }}</kbd>
-            <kbd class="ql-kbd">K</kbd>
+            <span class="hidden sm:inline">Rechercher</span>
+            <kbd class="ql-kbd ml-1 hidden md:inline-flex">{{ metaKey }}</kbd>
+            <kbd class="ql-kbd hidden md:inline-flex">K</kbd>
           </button>
 
           <!-- Dark mode toggle -->
           <button
             @click="toggleDarkMode"
+            :aria-label="isDark ? 'Activer le thème clair' : 'Activer le thème sombre'"
             class="p-2 text-surface-500 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors dark:text-surface-400 dark:hover:text-surface-200 dark:hover:bg-surface-800"
             :title="isDark ? 'Passer en mode clair' : 'Passer en mode sombre'"
           >
@@ -175,6 +187,7 @@
           <div ref="notifRef" class="relative">
             <button
               @click="showNotifications = !showNotifications"
+              aria-label="Notifications" :aria-expanded="showNotifications"
               class="p-2 text-surface-500 hover:text-surface-700 hover:bg-surface-100 rounded-lg transition-colors relative dark:text-surface-400 dark:hover:text-surface-200 dark:hover:bg-surface-800"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +204,7 @@
             <!-- Notification dropdown -->
             <div
               v-if="showNotifications"
-              class="absolute right-0 top-12 w-80 bg-white rounded-xl shadow-xl border border-surface-200 z-50 overflow-hidden dark:bg-surface-800 dark:border-surface-700"
+              class="absolute right-0 top-12 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-xl border border-surface-200 z-50 overflow-hidden dark:bg-surface-800 dark:border-surface-700"
             >
               <div class="flex items-center justify-between px-4 py-3 border-b border-surface-100 dark:border-surface-700">
                 <h3 class="font-semibold text-surface-900 text-sm dark:text-surface-100">Notifications</h3>
@@ -222,7 +235,7 @@
         </div>
       </header>
 
-      <div :class="authStore.isAuthenticated ? 'p-6' : ''">
+      <div id="workspace-content" tabindex="-1" :class="authStore.isAuthenticated ? 'workspace-content' : ''">
         <slot />
       </div>
     </main>
@@ -233,6 +246,8 @@
 </template>
 
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
+
 const quickLaunch = ref<{ openPalette: () => void } | null>(null)
 
 // ⌘ sur Mac, Ctrl ailleurs : afficher la mauvaise touche décrédibilise tout
@@ -327,6 +342,41 @@ const openActiveGroup = () => {
 
 const sidebarCollapsed = ref(false)
 const mounted = ref(false)
+const isMobile = useMediaQuery('(max-width: 1023px)')
+const mobileOpen = ref(false)
+const displayCollapsed = computed(() => sidebarCollapsed.value && !isMobile.value)
+const sidebarRef = ref<HTMLElement>()
+const menuButtonRef = ref<HTMLButtonElement>()
+const closeMenuRef = ref<HTMLButtonElement>()
+let previousOverflow = ''
+watch(mobileOpen, async (open) => {
+  if (!import.meta.client) return
+  if (open) {
+    previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    await nextTick()
+    if (mobileOpen.value) closeMenuRef.value?.focus()
+  } else {
+    document.body.style.overflow = previousOverflow
+    await nextTick()
+    menuButtonRef.value?.focus()
+  }
+})
+watch(isMobile, (mobile) => { if (!mobile) mobileOpen.value = false })
+const onMenuKeydown = (event: KeyboardEvent) => {
+  if (!mobileOpen.value) return
+  if (event.key === 'Escape') { mobileOpen.value = false; return }
+  if (event.key !== 'Tab') return
+  const elements = [...(sidebarRef.value?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') || [])].filter(el => el.getClientRects().length > 0 && !el.closest('[inert]'))
+  const first = elements[0], last = elements[elements.length - 1]
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+  if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+}
+onMounted(() => document.addEventListener('keydown', onMenuKeydown))
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', onMenuKeydown)
+  if (mobileOpen.value) document.body.style.overflow = previousOverflow
+})
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
@@ -344,6 +394,7 @@ const applyNavTitles = () => {
 }
 const router = useRouter()
 const route = useRoute()
+watch(() => route.path, () => { mobileOpen.value = false; showNotifications.value = false; openActiveGroup() })
 
 const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
 const showNotifications = ref(false)
@@ -399,7 +450,7 @@ const pageTitle = computed(() => {
     '/analytics': 'Statistiques',
     '/settings': 'Paramètres',
   }
-  return titles[route.path] || 'Ficana Vétérinaire'
+  return titles[route.path] || Object.entries(titles).find(([path]) => route.path.startsWith(path + '/'))?.[1] || 'Ficana Vétérinaire'
 })
 
 const handleMarkAllRead = async () => {

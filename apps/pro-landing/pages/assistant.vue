@@ -10,22 +10,22 @@
           </div>
 
           <h1 class="hero-title">
-            Vous consultez à voix haute,<br >
-            le compte rendu <span class="display-accent">s'écrit.</span>
+            Moins de rédaction.<br >
+            Bientôt, <span class="display-accent">avec {{ assistant }}.</span>
           </h1>
 
           <p class="section-lead">
-            Dictez votre consultation comme vous la raconteriez à un confrère.
-            {{ assistant }} en tire un compte rendu structuré, rattaché au bon patient,
-            prêt à être relu puis envoyé au propriétaire.
+            Nous préparons {{ assistant }}, un assistant pour transformer votre dictée
+            en compte rendu structuré. L’objectif : alléger la rédaction,
+            tout en vous laissant la relecture et la validation.
           </p>
 
           <div class="mt-9 flex flex-col sm:flex-row gap-3">
             <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto">
-              Rejoindre la liste d'attente
+              Demander à participer aux tests
             </NuxtLink>
             <NuxtLink to="/fonctionnalites" class="btn-secondary btn-lg w-full sm:w-auto">
-              Voir ce qui existe déjà
+              Découvrir les fonctionnalités disponibles
             </NuxtLink>
           </div>
 
@@ -58,10 +58,10 @@
       <div class="container-pro">
         <div class="max-w-2xl mb-14 lg:mb-16">
           <span class="eyebrow">Le principe</span>
-          <h2 class="section-title">Trois gestes, rien de plus.</h2>
+          <h2 class="section-title">Dicter. Relire. Valider.</h2>
           <p class="section-lead">
-            Pas de nouveau logiciel à apprendre, pas de formulaire à remplir pendant
-            que l'animal attend sur la table.
+            Le parcours envisagé s’intègre à votre espace Ficana Pro,
+            de la dictée au partage du compte rendu validé.
           </p>
         </div>
 
@@ -118,9 +118,9 @@
               <span class="display-accent text-brand-400">tout le dossier.</span>
             </h2>
             <p class="section-lead text-surface-400">
-              {{ assistant }} travaille à l'intérieur de Ficana Pro, avec l'historique du patient
-              sous les yeux. Vous posez une question en français, vous obtenez une réponse
-              sourcée sur ses consultations précédentes — pas sur une base générique.
+              Nous concevons {{ assistant }} pour retrouver les informations utiles dans
+              l’historique du patient et citer les consultations associées.
+              Vous pourrez vérifier la source avant de vous appuyer sur une réponse.
             </p>
 
             <ul class="mt-10 space-y-5">
@@ -201,18 +201,18 @@
       <div class="container-pro py-24 lg:py-28 text-center">
         <span class="eyebrow text-brand-400">Avant tout le monde</span>
         <h2 class="section-title text-white">
-          Testez-la dans<br class="hidden sm:block" >
-          <span class="display-accent text-brand-400">votre clinique.</span>
+          Aidez-nous à préparer<br class="hidden sm:block" >
+          <span class="display-accent text-brand-400">votre futur assistant.</span>
         </h2>
         <p class="section-lead text-surface-400 mx-auto">
-          Nous ouvrons cette fonction à un petit groupe de cliniques pour la régler
-          sur des consultations réelles. Dites-nous votre spécialité et votre façon
-          de travailler, on revient vers vous.
+          Vous souhaitez participer aux tests ? Écrivez-nous en précisant votre spécialité
+          et vos habitudes de rédaction. Nous vous tiendrons informé
+          des prochaines étapes.
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <NuxtLink to="/contact" class="btn-accent btn-lg w-full sm:w-auto">
-            Rejoindre la liste d'attente
+            Demander à participer aux tests
           </NuxtLink>
           <NuxtLink to="/tarifs" class="btn-on-dark btn-lg w-full sm:w-auto">
             Voir les tarifs actuels

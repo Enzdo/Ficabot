@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="page-title">Planning</h1>
+        <p class="workspace-eyebrow mb-2">Organisation de la clinique</p><h1 class="page-title">Votre planning</h1>
         <p class="page-subtitle">Gérez vos rendez-vous et votre équipe</p>
       </div>
       <div class="flex gap-2">
@@ -25,7 +25,7 @@
     <!-- Employee filter -->
     <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
       <button 
-        @click="selectedEmployeeId = null"
+        @click="selectedEmployeeId = null" :aria-pressed="selectedEmployeeId === null"
         :class="[
           'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2',
           selectedEmployeeId === null ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
@@ -37,7 +37,7 @@
       <button 
         v-for="emp in employees" 
         :key="emp.id"
-        @click="selectedEmployeeId = emp.id"
+        @click="selectedEmployeeId = emp.id" :aria-pressed="selectedEmployeeId === emp.id"
         :class="[
           'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors flex items-center gap-2',
           selectedEmployeeId === emp.id ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
@@ -53,7 +53,7 @@
       <button 
         v-for="tab in tabs" 
         :key="tab.id"
-        @click="activeTab = tab.id"
+        @click="activeTab = tab.id; viewMode = 'list'" :aria-pressed="activeTab === tab.id"
         :class="[
           'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
           activeTab === tab.id ? 'bg-primary-600 text-white' : 'bg-white text-surface-600 hover:bg-surface-50'
@@ -66,7 +66,7 @@
     <!-- Calendar View Toggle -->
     <div class="flex gap-2 mb-6">
       <button 
-        @click="viewMode = 'list'"
+        @click="viewMode = 'list'" aria-label="Vue liste" :aria-pressed="viewMode === 'list'"
         :class="[
           'px-3 py-2 rounded-lg text-sm transition-colors',
           viewMode === 'list' ? 'bg-surface-200 text-surface-900' : 'text-surface-500 hover:bg-surface-100'
@@ -77,7 +77,7 @@
         </svg>
       </button>
       <button 
-        @click="viewMode = 'calendar'"
+        @click="viewMode = 'calendar'" aria-label="Vue semaine" :aria-pressed="viewMode === 'calendar'"
         :class="[
           'px-3 py-2 rounded-lg text-sm transition-colors',
           viewMode === 'calendar' ? 'bg-surface-200 text-surface-900' : 'text-surface-500 hover:bg-surface-100'
@@ -89,10 +89,12 @@
       </button>
     </div>
 
+    <div v-if="loading" class="card mb-6" role="status"><div class="h-20 rounded-xl bg-surface-100 dark:bg-surface-800 animate-pulse" /><p class="text-sm text-surface-500 mt-3">Chargement des rendez-vous…</p></div>
+    <div v-else-if="loadError" class="workspace-error mb-6" role="alert">{{ loadError }} <button @click="loadAppointments">Réessayer</button></div>
     <!-- List View -->
-    <div v-if="viewMode === 'list'" class="space-y-4">
+    <div v-if="!loading && !loadError && viewMode === 'list'" class="space-y-4">
       <!-- Today -->
-      <div class="card">
+      <div v-if="activeTab === 'all' || activeTab === 'today'" class="card">
         <h3 class="font-semibold text-surface-900 mb-4 flex items-center gap-2">
           <span class="w-2 h-2 bg-primary-500 rounded-full"></span>
           Aujourd'hui - {{ formatDate(new Date()) }}
@@ -106,7 +108,8 @@
           <div 
             v-for="apt in todayAppointments" 
             :key="apt.id"
-            class="flex items-center gap-4 p-4 rounded-xl border border-surface-200 hover:border-primary-300 transition-colors cursor-pointer"
+            class="appointment-row flex items-center gap-4 p-4 rounded-xl border border-surface-200 hover:border-primary-300 transition-colors cursor-pointer"
+            role="button" tabindex="0" @keydown.enter="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt"
             @click="selectedAppointment = apt"
           >
             <div class="text-center min-w-[60px]">
@@ -128,7 +131,7 @@
       </div>
 
       <!-- Upcoming -->
-      <div class="card">
+      <div v-if="activeTab === 'all' || activeTab === 'upcoming'" class="card">
         <h3 class="font-semibold text-surface-900 mb-4 flex items-center gap-2">
           <span class="w-2 h-2 bg-accent-500 rounded-full"></span>
           À venir
@@ -142,7 +145,8 @@
           <div 
             v-for="apt in upcomingAppointments" 
             :key="apt.id"
-            class="flex items-center gap-4 p-4 rounded-xl border border-surface-200 hover:border-primary-300 transition-colors cursor-pointer"
+            class="appointment-row flex items-center gap-4 p-4 rounded-xl border border-surface-200 hover:border-primary-300 transition-colors cursor-pointer"
+            role="button" tabindex="0" @keydown.enter="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt"
             @click="selectedAppointment = apt"
           >
             <div class="text-center min-w-[80px]">
@@ -162,18 +166,27 @@
           </div>
         </div>
       </div>
+      <div v-if="activeTab === 'past'" class="card">
+        <h3 class="font-semibold mb-4">Rendez-vous passés</h3>
+        <p v-if="!pastAppointments.length" class="workspace-empty">Aucun rendez-vous passé pour cette sélection.</p>
+        <button v-for="apt in pastAppointments" :key="apt.id" type="button" class="appointment-row w-full text-left flex items-center gap-4 p-4 rounded-xl border border-surface-200 mb-3 hover:border-accent-400" @click="selectedAppointment = apt">
+          <div class="text-sm shrink-0">{{ formatShortDate(apt.date) }}<strong class="block">{{ apt.time }}</strong></div>
+          <div class="flex-1"><p class="font-semibold">{{ apt.petName }}</p><p class="text-sm text-surface-500">{{ apt.clientName }} · {{ apt.reason }}</p></div>
+          <span :class="getStatusClass(apt.status)">{{ getStatusLabel(apt.status) }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Calendar View -->
-    <div v-if="viewMode === 'calendar'" class="card">
+    <div v-if="!loading && !loadError && viewMode === 'calendar'" class="card">
       <div class="flex items-center justify-between mb-6">
-        <button @click="prevWeek" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+        <button @click="prevWeek" aria-label="Semaine précédente" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <h3 class="font-semibold text-surface-900">{{ currentWeekLabel }}</h3>
-        <button @click="nextWeek" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+        <button @click="nextWeek" aria-label="Semaine suivante" class="p-2 hover:bg-surface-100 rounded-lg transition-colors">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
           </svg>
@@ -514,6 +527,7 @@ const selectedAppointment = ref<any>(null)
 const selectedEmployeeId = ref<number | null>(null)
 const currentWeekStart = ref(new Date())
 const loading = ref(true)
+const loadError = ref('')
 
 // Data
 const appointments = ref<any[]>([])
@@ -554,6 +568,7 @@ onMounted(async () => {
 
 const loadAppointments = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const params = new URLSearchParams()
     if (selectedEmployeeId.value) {
@@ -561,10 +576,10 @@ const loadAppointments = async () => {
     }
     const response = await api.get<any>(`/vet/appointments?${params}`)
     if (response.success) {
-      appointments.value = response.data
-    }
+      appointments.value = (response.data || []).map(normalizeVetAppointment)
+    } else { loadError.value = response.message || 'Impossible de charger le planning.' }
   } catch (e) {
-    console.error('Error loading appointments:', e)
+    loadError.value = 'Impossible de joindre le serveur.'
   } finally {
     loading.value = false
   }
@@ -597,13 +612,18 @@ watch(selectedEmployeeId, () => {
   loadAppointments()
 })
 
+const localToday = () => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
+}
+const pastAppointments = computed(() => filteredAppointments.value.filter(apt => apt.date < localToday()).sort((a,b) => b.date.localeCompare(a.date)))
 const todayAppointments = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = localToday()
   return filteredAppointments.value.filter(apt => apt.date === today)
 })
 
 const upcomingAppointments = computed(() => {
-  const today = new Date().toISOString().split('T')[0]
+  const today = localToday()
   return filteredAppointments.value.filter(apt => apt.date > today)
 })
 
@@ -833,3 +853,11 @@ const getPetEmoji = (species: string) => {
   return emojis[species] || '🐾'
 }
 </script>
+
+<style scoped>
+.appointment-row:focus-visible { outline:2px solid #7eb13f; outline-offset:3px; }
+@media(max-width:639px) {
+  .appointment-row { flex-wrap:wrap; gap:12px; }
+  .appointment-row > .flex-1 { min-width:120px; }
+}
+</style>

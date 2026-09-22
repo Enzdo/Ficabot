@@ -7,13 +7,13 @@
           <span class="eyebrow">Tarifs</span>
 
           <h1 class="hero-title">
-            Trois offres,<br >
-            aucun <span class="display-accent">frais caché.</span>
+            À chaque pratique,<br >
+            <span class="display-accent">son offre.</span>
           </h1>
 
           <p class="section-lead">
-            Pas de frais d'installation, pas de module à débloquer, pas de coût
-            à la consultation. Vous changez d'offre quand votre équipe change.
+            Seul, en équipe ou sur plusieurs sites : choisissez les outils adaptés à votre organisation.
+            Comparez les fonctionnalités incluses et préparez votre démarrage avec nous.
           </p>
 
           <div class="mt-8 flex flex-wrap gap-2">
@@ -82,8 +82,8 @@
         </div>
 
         <p class="mt-8 text-sm text-surface-400">
-          Chaque inscription est vérifiée avec votre numéro ordinal : la validation du compte
-          prend moins de 24 h.
+          Votre inscription professionnelle est vérifiée à partir de votre numéro ordinal.
+          Notre équipe vous accompagne dans les premières étapes.
         </p>
       </div>
     </section>
@@ -95,8 +95,8 @@
           <span class="eyebrow">Comparatif</span>
           <h2 class="section-title">Ce que contient chaque offre.</h2>
           <p class="section-lead">
-            Le détail, ligne par ligne. Si une fonctionnalité manque à votre organisation,
-            dites-le nous : c'est souvent une question d'offre, pas de développement.
+            Nombre de praticiens, suivi des patients, gestion de la clinique :
+            repérez les fonctionnalités qui comptent pour votre équipe.
           </p>
         </div>
 
@@ -180,12 +180,12 @@
         <div class="grid lg:grid-cols-12 gap-12">
           <div class="lg:col-span-4">
             <span class="eyebrow">Questions de tarifs</span>
-            <h2 class="section-title">Ce qu'il faut savoir avant de signer.</h2>
+            <h2 class="section-title">Choisir en toute clarté.</h2>
             <p class="mt-6 text-sm leading-relaxed text-surface-500">
               Une question qui n'est pas là ?
               <NuxtLink to="/contact" class="text-brand-700 font-medium underline underline-offset-4 hover:text-brand-600">
                 Écrivez-nous
-              </NuxtLink>, on répond sans détour.
+              </NuxtLink> pour en parler avec notre équipe.
             </p>
           </div>
 
@@ -206,17 +206,17 @@
       <div class="container-pro py-24 lg:py-28 text-center">
         <span class="eyebrow text-brand-400">Prêt quand vous l'êtes</span>
         <h2 class="section-title text-white">
-          Choisissez l'offre<br class="hidden sm:block" >
-          une fois la démo faite.
+          Trouvons l’offre<br class="hidden sm:block" >
+          adaptée à votre équipe.
         </h2>
         <p class="section-lead text-surface-400 mx-auto">
-          Trente minutes en visio, avec vos propres cas. On regarde votre organisation
-          actuelle et on vous dit franchement quelle offre vous convient — ou si aucune ne convient.
+          Présentez-nous votre organisation. Nous vous montrons les fonctionnalités utiles
+          à votre pratique et vous aidons à comparer les offres, sans engagement.
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <NuxtLink to="/contact" class="btn-accent btn-lg w-full sm:w-auto">
-            Réserver une démo
+            Demander une démo
           </NuxtLink>
           <a :href="`${appUrl}/register`" class="btn-on-dark btn-lg w-full sm:w-auto">
             Créer un compte
@@ -243,7 +243,7 @@ const checkoutHref = (plan: { key?: string }) =>
   (plan.key && stripeLinks[plan.key]) || `${appUrl}/register`
 
 useHead({
-  title: 'Tarifs — Ficana Pro',
+  title: 'Tarifs du logiciel vétérinaire — Ficana Pro',
   meta: [
     {
       name: 'description',
@@ -254,10 +254,10 @@ useHead({
 })
 
 const heroChips = [
-  'Sans engagement',
+  'Libéral et Clinique sans engagement',
   "Sans frais d'installation",
   'Hébergement en France, conforme RGPD',
-  'Validation du compte en moins de 24 h',
+  'Compte réservé aux professionnels',
 ]
 
 const plans = [
@@ -266,7 +266,7 @@ const plans = [
     key: 'liberal',
     price: '29 €',
     period: '/ mois',
-    pitch: "L'essentiel pour exercer seul.",
+    pitch: "Votre activité en solo, organisée au même endroit.",
     seats: '1 praticien',
     lines: [
       'Agenda et prise de rendez-vous en ligne',
@@ -276,7 +276,7 @@ const plans = [
       'Rappels automatiques de vaccins et de contrôles',
       'Export de vos données à tout moment',
     ],
-    cta: 'Démarrer',
+    cta: 'Choisir Libéral',
     featured: false,
     internal: false,
   },
@@ -285,7 +285,7 @@ const plans = [
     key: 'clinique',
     price: '89 €',
     period: '/ mois',
-    pitch: 'Le standard pour les cabinets.',
+    pitch: 'Un espace partagé pour coordonner toute l’équipe.',
     seats: "Jusqu'à 5 praticiens",
     lines: [
       'Tout ce que contient Libéral',
@@ -295,7 +295,7 @@ const plans = [
       'Stocks, seuils, péremptions, devis et factures',
       "Statistiques d'activité",
     ],
-    cta: 'Essai 30 jours',
+    cta: 'Choisir Clinique',
     featured: true,
     internal: false,
   },
@@ -304,7 +304,7 @@ const plans = [
     key: null,
     price: 'Sur mesure',
     period: '',
-    pitch: 'Pour les groupes de cliniques.',
+    pitch: 'Une vue commune pour piloter plusieurs cliniques.',
     seats: 'Praticiens et sites illimités',
     lines: [
       'Tout ce que contient Clinique',
@@ -314,7 +314,7 @@ const plans = [
       'Interlocuteur dédié',
       'Conditions contractuelles adaptées',
     ],
-    cta: "Contacter l'équipe",
+    cta: 'Parlons de votre réseau',
     featured: false,
     internal: true,
   },
@@ -387,7 +387,7 @@ const faq = [
   },
   {
     q: 'Peut-on essayer avant de payer ?',
-    a: "L'offre Clinique s'essaie pendant 30 jours. Pour les offres Libéral et Réseau, parlez-en à l'équipe pendant la démo : on cale l'essai sur votre situation plutôt que sur une règle générale.",
+    a: "L'offre Clinique s'essaie pendant 30 jours. Pour les offres Libéral et Réseau, parlez-en à l'équipe pendant la démo : nous vous préciserons les modalités adaptées à votre situation.",
   },
   {
     q: 'Et la reprise de nos données actuelles ?',
@@ -399,7 +399,7 @@ const faq = [
   },
   {
     q: 'Que se passe-t-il si nous résilions ?',
-    a: "Vous arrêtez quand vous le décidez. Vous restez propriétaire de vos données et pouvez les exporter à tout moment, y compris au moment du départ.",
+    a: "Les offres Libéral et Clinique sont sans engagement. Pour Réseau, les conditions sont définies dans votre contrat. Vous pouvez exporter vos données avant votre départ.",
   },
 ]
 </script>

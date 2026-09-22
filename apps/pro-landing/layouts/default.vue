@@ -28,7 +28,7 @@
           <div class="hidden xl:flex items-center gap-3">
             <a :href="`${appUrl}/login`" class="nav-link">Se connecter</a>
             <NuxtLink to="/contact" class="btn-primary text-sm py-2.5 px-4">
-              Réserver une démo
+              Demander une démo
             </NuxtLink>
           </div>
 
@@ -58,7 +58,7 @@
           <a :href="consumerUrl" class="block py-2 nav-link">Site particuliers</a>
           <a :href="`${appUrl}/login`" class="block py-2 nav-link">Se connecter</a>
           <NuxtLink to="/contact" class="btn-primary w-full mt-3" @click="menuOpen = false">
-            Réserver une démo
+            Demander une démo
           </NuxtLink>
         </div>
       </div>
@@ -80,8 +80,8 @@
               </span>
             </div>
             <p class="text-sm text-surface-400 max-w-sm leading-relaxed">
-              Le logiciel de gestion des cliniques vétérinaires, relié au carnet de santé
-              que vos clients ont déjà dans la poche.
+              Votre clinique et le suivi de vos patients, réunis dans un même espace.
+              Avec un lien direct vers le carnet de santé Ficana des propriétaires.
             </p>
           </div>
 

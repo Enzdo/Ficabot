@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="page-title">Dossiers médicaux</h1>
+        <p class="workspace-eyebrow mb-2">Historique des soins</p><h1 class="page-title">Dossiers médicaux</h1>
         <p class="page-subtitle">Historique complet des consultations</p>
       </div>
     </div>
@@ -16,14 +16,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input 
-            v-model="searchQuery"
+            aria-label="Rechercher un dossier médical" v-model="searchQuery"
             type="text"
             placeholder="Rechercher par patient, client ou diagnostic..."
             class="w-full pl-12 pr-4 py-3 rounded-xl border border-surface-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
           />
         </div>
-        <div class="flex gap-2">
-          <select v-model="filterType" class="input min-w-[150px]">
+        <div class="flex flex-wrap gap-2">
+          <select aria-label="Type de consultation" v-model="filterType" class="input min-w-[150px]">
             <option value="">Tous les types</option>
             <option value="consultation">Consultation</option>
             <option value="vaccination">Vaccination</option>
@@ -31,7 +31,7 @@
             <option value="checkup">Bilan</option>
             <option value="emergency">Urgence</option>
           </select>
-          <select v-model="filterSpecies" class="input min-w-[120px]">
+          <select aria-label="Espèce du patient" v-model="filterSpecies" class="input min-w-[120px]">
             <option value="">Toutes espèces</option>
             <option value="dog">Chiens</option>
             <option value="cat">Chats</option>
@@ -60,13 +60,15 @@
       </div>
     </div>
 
+    <div v-if="loading" class="card mb-6" role="status">Chargement des dossiers…</div>
+    <div v-else-if="error" class="workspace-error mb-6" role="alert">{{ error }} <button @click="fetchRecords">Réessayer</button></div>
     <!-- Records List -->
-    <div class="space-y-4">
+    <div v-if="!loading && !error" class="space-y-4">
       <div 
         v-for="record in filteredRecords" 
         :key="record.id"
         class="card-hover cursor-pointer"
-        @click="selectedRecord = record"
+        @click="selectedRecord = record" role="button" tabindex="0" @keydown.enter="selectedRecord = record" @keydown.space.prevent="selectedRecord = record"
       >
         <div class="flex items-start gap-4">
           <div class="w-14 h-14 rounded-2xl bg-surface-100 flex items-center justify-center flex-shrink-0">
@@ -95,6 +97,7 @@
           </svg>
         </div>
         <p class="text-surface-500">Aucun dossier trouvé</p>
+        <button v-if="searchQuery || filterType || filterSpecies" class="btn-secondary mt-4" @click="searchQuery = ''; filterType = ''; filterSpecies = ''">Effacer les filtres</button>
       </div>
     </div>
 
@@ -219,21 +222,26 @@ const filterType = ref('')
 const filterSpecies = ref('')
 const selectedRecord = ref<any>(null)
 const loading = ref(true)
+const error = ref('')
+let requestId = 0
 const records = ref<any[]>([])
 const stats = ref({ total: 0, thisMonth: 0, vaccinations: 0, surgeries: 0 })
 
 const fetchRecords = async () => {
+  const currentRequest = ++requestId
   loading.value = true
+  error.value = ''
   const params = new URLSearchParams()
   if (filterType.value) params.set('type', filterType.value)
   if (filterSpecies.value) params.set('species', filterSpecies.value)
   if (searchQuery.value) params.set('search', searchQuery.value)
 
-  const response = await api.get<any>(`/vet/records?${params.toString()}`)
+  const response = await api.get<any>(`/vet/records?${params.toString()}`) as { success: boolean; data?: any[]; stats?: typeof stats.value; message?: string }
+  if (currentRequest !== requestId) return
   if (response.success) {
-    records.value = response.data
+    records.value = response.data || []
     if (response.stats) stats.value = response.stats
-  }
+  } else { error.value = response.message || 'Impossible de charger les dossiers.' }
   loading.value = false
 }
 
@@ -247,8 +255,10 @@ watch(searchQuery, () => {
   searchTimeout = setTimeout(fetchRecords, 400)
 })
 
+onBeforeUnmount(() => { clearTimeout(searchTimeout); requestId++ })
+
 const filteredRecords = computed(() => {
-  return records.value.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return [...records.value].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
 })
 
 const formatDate = (date: Date | string) => {

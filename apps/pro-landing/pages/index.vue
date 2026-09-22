@@ -14,14 +14,13 @@
           </h1>
 
           <p class="section-lead mx-auto">
-            Agenda, dossiers patients, ordonnances et rappels automatiques.
-            Et surtout : un lien direct avec le carnet de santé que vos clients
-            ont déjà dans la poche.
+            Réunissez votre agenda, vos dossiers patients et vos ordonnances dans un même espace.
+            Automatisez les rappels et prolongez le suivi dans le carnet de santé Ficana de vos clients.
           </p>
 
           <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
             <NuxtLink to="/contact" class="btn-primary btn-lg w-full sm:w-auto">
-              Réserver une démo
+              Demander une démo
             </NuxtLink>
             <a :href="`${appUrl}/register`" class="btn-secondary btn-lg w-full sm:w-auto">
               Créer un compte
@@ -29,7 +28,7 @@
           </div>
 
           <p class="mt-5 text-sm text-surface-400">
-            Accompagnement à la reprise de vos données. Sans engagement.
+            Découvrez Ficana Pro lors d’une démo de 30 minutes, sans engagement.
           </p>
         </div>
 
@@ -54,55 +53,7 @@
               preload="metadata"
             />
 
-            <template v-else>
-              <!-- Chrome navigateur -->
-              <div class="flex items-center gap-3 px-4 py-3 border-b border-surface-200 bg-surface-50">
-                <div class="flex gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-surface-300" />
-                  <span class="w-2.5 h-2.5 rounded-full bg-surface-300" />
-                  <span class="w-2.5 h-2.5 rounded-full bg-surface-300" />
-                </div>
-                <div class="flex-1 text-center text-[11px] font-mono text-surface-400 truncate">
-                  Aperçu illustratif · Ficana Pro
-                </div>
-              </div>
-
-              <div class="p-5 sm:p-8 grid sm:grid-cols-3 gap-5">
-                <!-- Chiffres du jour -->
-                <div class="sm:col-span-1 grid grid-cols-3 sm:grid-cols-1 gap-3">
-                  <div class="rounded-xl border border-surface-200 p-3">
-                    <p class="text-2xl font-semibold tracking-tightest text-ink-900">12</p>
-                    <p class="text-[11px] text-surface-500 mt-0.5">RDV aujourd'hui</p>
-                  </div>
-                  <div class="rounded-xl border border-surface-200 p-3">
-                    <p class="text-2xl font-semibold tracking-tightest text-ink-900">5</p>
-                    <p class="text-[11px] text-surface-500 mt-0.5">En attente</p>
-                  </div>
-                  <div class="rounded-xl border border-brand-200 bg-brand-50 p-3">
-                    <p class="text-2xl font-semibold tracking-tightest text-brand-700">3</p>
-                    <p class="text-[11px] text-brand-700 mt-0.5">Rappels envoyés</p>
-                  </div>
-                </div>
-
-                <!-- Planning -->
-                <div class="sm:col-span-2 rounded-xl border border-surface-200">
-                  <div class="flex items-center justify-between px-4 py-3 border-b border-surface-200">
-                    <p class="text-sm font-semibold text-ink-900">Planning</p>
-                    <span class="chip-accent">Jeudi 14</span>
-                  </div>
-                  <ul class="divide-y divide-surface-200">
-                    <li v-for="slot in planning" :key="slot.time" class="flex items-center gap-3 px-4 py-3">
-                      <span class="text-xs font-mono text-surface-400 w-11 shrink-0">{{ slot.time }}</span>
-                      <span class="w-1 h-8 rounded-full shrink-0" :class="slot.accent ? 'bg-brand-500' : 'bg-surface-300'" />
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-ink-900 truncate">{{ slot.pet }}</p>
-                        <p class="text-xs text-surface-500 truncate">{{ slot.reason }}</p>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </template>
+            <AnimatedProductPreview v-else />
           </div>
         </div>
       </div>
@@ -113,7 +64,7 @@
       <div class="container-pro py-12 lg:py-16">
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-8">
           <div v-for="stat in stats" :key="stat.label">
-            <p class="text-3xl sm:text-4xl font-semibold tracking-tightest text-ink-900">{{ stat.value }}</p>
+            <p class="text-xl sm:text-2xl font-semibold tracking-tightest text-ink-900">{{ stat.value }}</p>
             <p class="mt-1 text-sm text-surface-500">{{ stat.label }}</p>
           </div>
         </div>
@@ -130,8 +81,8 @@
             au compte rendu.
           </h2>
           <p class="section-lead">
-            Chaque étape alimente la suivante. Vous ne ressaisissez jamais deux fois
-            la même information.
+            Retrouvez les informations du patient à chaque étape : rendez-vous,
+            consultation et suivi. Moins de ressaisie, un dossier qui reste à jour.
           </p>
         </div>
 
@@ -155,8 +106,8 @@
           <span class="eyebrow">Fonctionnalités</span>
           <h2 class="section-title">Tout le cabinet, au même endroit.</h2>
           <p class="section-lead">
-            Conçu avec des vétérinaires praticiens, pour les gestes que vous répétez
-            trente fois par jour.
+            Préparez vos consultations, coordonnez votre équipe et retrouvez les informations
+            utiles au même endroit, tout au long de la journée.
           </p>
         </div>
 
@@ -187,13 +138,13 @@
           <div>
             <span class="eyebrow text-brand-400">Le lien client</span>
             <h2 class="section-title text-white">
-              Vos clients ont déjà<br class="hidden sm:block" >
-              <span class="display-accent text-brand-400">l'autre moitié.</span>
+              Le suivi continue<br class="hidden sm:block" >
+              <span class="display-accent text-brand-400">après la consultation.</span>
             </h2>
             <p class="section-lead text-surface-400">
-              Ficana est d'abord un carnet de santé que les propriétaires utilisent au
-              quotidien. Quand votre clinique passe sur Ficana Pro, les deux se parlent :
-              un vaccin saisi en consultation apparaît chez le client, et son rappel part tout seul.
+              Avec l’application Ficana, vos clients retrouvent les documents et les rappels
+              de leur animal dans son carnet de santé. Votre clinique garde le fil du suivi,
+              et les propriétaires savent où retrouver vos consignes.
             </p>
 
             <ul class="mt-10 space-y-5">
@@ -206,7 +157,7 @@
             </ul>
 
             <a :href="consumerUrl" class="btn-on-dark mt-10">
-              Découvrir l'app côté client
+              Découvrir le carnet de santé
             </a>
           </div>
 
@@ -323,17 +274,17 @@
       <div class="container-pro py-24 lg:py-28 text-center">
         <span class="eyebrow text-brand-400">Prêt quand vous l'êtes</span>
         <h2 class="section-title text-white">
-          Voyons ce que ça donne<br class="hidden sm:block" >
+          Découvrez Ficana Pro<br class="hidden sm:block" >
           dans <span class="display-accent text-brand-400">votre clinique.</span>
         </h2>
         <p class="section-lead text-surface-400 mx-auto">
-          Trente minutes en visio, avec vos propres cas. On regarde votre organisation
-          actuelle et on vous dit franchement si Ficana Pro y a sa place.
+          En 30 minutes, découvrez le parcours d’une consultation et les outils utiles à votre équipe.
+          Nous répondons à vos questions sur les offres et la reprise de vos données.
         </p>
 
         <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
           <NuxtLink to="/contact" class="btn-accent btn-lg w-full sm:w-auto">
-            Réserver une démo
+            Demander une démo
           </NuxtLink>
           <a :href="`${appUrl}/register`" class="btn-on-dark btn-lg w-full sm:w-auto">
             Créer un compte
@@ -352,46 +303,42 @@ const heroPoster = (config.public.heroPoster as string) || ''
 const consumerUrl = config.public.consumerUrl as string
 
 useHead({
-  title: 'Ficana Pro — Le logiciel des cliniques vétérinaires',
+  title: 'Ficana Pro — Logiciel de gestion vétérinaire',
+  meta: [{ name: 'description', content: 'Simplifiez le quotidien de votre clinique : agenda, dossiers patients, ordonnances et rappels réunis dans Ficana Pro. Demandez une démo de 30 minutes.' }],
 })
 
-const planning = [
-  { time: '09:00', pet: 'Max — Golden Retriever', reason: 'Vaccin annuel', accent: true },
-  { time: '10:30', pet: 'Luna — Siamois', reason: 'Contrôle post-opératoire', accent: false },
-  { time: '11:15', pet: 'Pilou — Lapin nain', reason: 'Consultation', accent: false },
-]
 
 const stats = [
-  { value: '−30 %', label: 'de rendez-vous manqués' },
-  { value: '5 h', label: 'gagnées par semaine' },
-  { value: 'RGPD', label: 'hébergement en France' },
-  { value: '< 24 h', label: 'validation de votre compte' },
+  { value: 'Centralisez', label: 'vos rendez-vous et dossiers patients' },
+  { value: 'Coordonnez', label: 'le quotidien de votre équipe' },
+  { value: 'Automatisez', label: 'les rappels de rendez-vous et de suivi' },
+  { value: 'Gardez le lien', label: 'avec les propriétaires après la consultation' },
 ]
 
 const steps = [
   {
     title: 'Le client prend rendez-vous',
-    body: "Depuis son app ou votre page de réservation. Le créneau se pose dans votre agenda, et le motif arrive avec.",
+    body: "Depuis votre page de réservation ou son application Ficana, le propriétaire choisit un créneau. Le rendez-vous et son motif rejoignent votre agenda.",
   },
   {
     title: 'Vous consultez',
-    body: "Le dossier de l'animal est déjà ouvert : historique, poids, vaccins, ordonnances passées. Vous complétez, vous signez.",
+    body: "Retrouvez les antécédents, vaccins et traitements dans le dossier patient. Complétez vos observations et préparez l’ordonnance au fil de la consultation.",
   },
   {
-    title: 'Le suivi part tout seul',
-    body: "Compte rendu envoyé, rappel de rappel programmé, relance vaccinale calée. Vous n'y repensez plus.",
+    title: 'Vous organisez la suite',
+    body: "Partagez le compte rendu et programmez les rappels. Le propriétaire retrouve les informations utiles pour poursuivre les soins à la maison.",
   },
 ]
 
 const features = [
   {
     title: 'Agenda multi-praticiens',
-    body: "Plannings partagés, salles, congés. Les rappels SMS et email partent sans que personne n'y pense.",
+    body: "Visualisez les rendez-vous de votre équipe, gérez les disponibilités et automatisez les rappels aux clients.",
     icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
   },
   {
     title: 'Dossiers patients',
-    body: "Historique complet, courbes de poids, photos d'analyses, antécédents. Consultable en deux secondes.",
+    body: "Retrouvez les antécédents, analyses et courbes de poids dans un dossier qui suit l’animal à chaque visite.",
     icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
   },
   {
@@ -417,8 +364,8 @@ const features = [
 ]
 
 const linkPoints = [
-  'Le carnet de santé de chaque patient est déjà rempli par son propriétaire.',
-  'Vos comptes rendus arrivent directement dans son app, sans pièce jointe à chercher.',
+  'Retrouvez les informations partagées par le propriétaire dans le carnet de son animal.',
+  'Le propriétaire retrouve vos comptes rendus dans son application Ficana.',
   'Les relances vaccinales partent depuis votre clinique, à votre nom.',
 ]
 
@@ -427,35 +374,35 @@ const plans = [
     name: 'Libéral',
     price: '29 €',
     period: '/ mois',
-    pitch: "L'essentiel pour exercer seul.",
+    pitch: "Votre activité en solo, organisée au même endroit.",
     lines: ['1 praticien', 'Agenda et prise de RDV en ligne', 'Dossiers patients liés', 'Messagerie client'],
-    cta: 'Démarrer',
+    cta: 'Découvrir Libéral',
     featured: false,
   },
   {
     name: 'Clinique',
     price: '89 €',
     period: '/ mois',
-    pitch: 'Le standard pour les cabinets.',
+    pitch: 'Un espace partagé pour coordonner toute l’équipe.',
     lines: ['Jusqu\'à 5 praticiens', 'Planning partagé et secrétariat', 'Hospitalisation et stocks', 'Statistiques d\'activité'],
-    cta: 'Essai 30 jours',
+    cta: 'Découvrir Clinique',
     featured: true,
   },
   {
     name: 'Réseau',
     price: 'Sur mesure',
     period: '',
-    pitch: 'Pour les groupes de cliniques.',
+    pitch: 'Une vue commune pour piloter plusieurs cliniques.',
     lines: ['Praticiens et sites illimités', 'Administration centralisée', 'API et intégrations', 'Accompagnement dédié'],
-    cta: "Contacter l'équipe",
+    cta: 'Parlons de votre réseau',
     featured: false,
   },
 ]
 
 const faq = [
   {
-    q: 'Est-ce compatible avec mon logiciel actuel ?',
-    a: "Ficana Pro peut fonctionner en complément ou en remplacement. Nous proposons des outils d'importation pour récupérer vos fiches clients et l'historique de vos patients.",
+    q: 'Comment passer de mon logiciel actuel à Ficana Pro ?',
+    a: "Nous étudions avec vous les données à reprendre et les possibilités d’import de votre logiciel actuel. La démo permet de préparer cette transition et de préciser l’accompagnement adapté.",
   },
   {
     q: 'Comment se passe la validation de mon compte ?',

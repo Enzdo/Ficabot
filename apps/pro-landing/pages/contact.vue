@@ -12,8 +12,8 @@
           </h1>
 
           <p class="section-lead">
-            Trente minutes en visio, avec vos propres cas. On regarde votre organisation
-            actuelle et on vous dit franchement si Ficana Pro y a sa place.
+            Votre organisation, vos besoins, vos questions : prenons 30 minutes pour faire le point.
+            Découvrez les outils adaptés à votre pratique et préparez votre passage à Ficana Pro.
           </p>
         </div>
       </div>
@@ -30,7 +30,7 @@
                 Demander une démo
               </h2>
               <p class="mt-2 text-sm leading-relaxed text-surface-500 pb-6 border-b border-surface-200">
-                Les champs marqués d'une étoile sont nécessaires pour préparer l'échange.
+                Présentez-nous votre clinique. Vous pourrez ensuite envoyer votre demande depuis votre messagerie. Les champs marqués * sont obligatoires.
               </p>
 
               <div class="mt-6 grid sm:grid-cols-2 gap-5">
@@ -101,7 +101,7 @@
                     v-model="form.ordinal"
                     type="text"
                     name="ordinal"
-                    placeholder="Accélère la validation du compte"
+                    placeholder="Votre numéro d’inscription à l’Ordre"
                     class="input"
                   >
                 </div>
@@ -124,7 +124,7 @@
 
                 <div class="sm:col-span-2">
                   <label class="label" for="message">
-                    Votre message <span class="text-brand-600">*</span>
+                    Votre besoin principal <span class="text-brand-600">*</span>
                   </label>
                   <textarea
                     id="message"
@@ -143,8 +143,7 @@
                   Préparer ma demande
                 </button>
                 <p class="text-xs leading-relaxed text-surface-400">
-                  Vos informations servent uniquement à préparer l'échange.
-                  Rien n'est transmis à un tiers.
+                  Ce bouton prépare un récapitulatif. Vous choisirez ensuite de l’envoyer par email.
                 </p>
               </div>
             </form>
@@ -157,9 +156,8 @@
                 Récapitulatif de votre demande
               </h2>
               <p class="mt-2 text-sm leading-relaxed text-surface-500">
-                L'envoi automatique depuis ce formulaire n'est pas encore actif.
-                Le bouton ci-dessous ouvre votre messagerie avec le récapitulatif déjà rédigé :
-                il ne reste qu'à l'envoyer à
+                Votre demande est prête, mais n’a pas encore été envoyée.
+                Ouvrez votre messagerie avec le bouton ci-dessous, puis envoyez le message à
                 <span class="font-medium text-ink-900">contact@ficana.com</span>.
               </p>
 
@@ -205,8 +203,8 @@
             <div class="card">
               <span class="eyebrow">Écrire directement</span>
               <p class="text-sm leading-relaxed text-surface-500">
-                Le formulaire vous ennuie ? Un email suffit, avec le nom de votre clinique
-                et le nombre de praticiens.
+                Vous préférez nous écrire directement ? Indiquez le nom de votre clinique,
+                la taille de votre équipe et ce que vous souhaitez découvrir.
               </p>
               <a
                 href="mailto:contact@ficana.com"
@@ -252,7 +250,7 @@ const appUrl = config.public.appUrl as string
 const consumerUrl = config.public.consumerUrl as string
 
 useHead({
-  title: 'Contact — Ficana Pro',
+  title: 'Demandez votre démo de 30 minutes — Ficana Pro',
   meta: [
     {
       name: 'description',
@@ -276,11 +274,11 @@ const nextSteps = [
   },
   {
     title: 'Démo de trente minutes',
-    body: 'En visio, avec vos propres cas : votre organisation actuelle, vos plannings, vos dossiers.',
+    body: 'Découvrez le parcours d’une consultation et les fonctionnalités utiles à votre équipe. Nous répondons à vos questions.',
   },
   {
     title: 'Mise en route',
-    body: "Si ça vous convient, on ouvre le compte. La validation par numéro ordinal prend moins de 24 h, et nous vous accompagnons pour la reprise de vos données.",
+    body: "Si vous souhaitez démarrer, nous précisons avec vous les étapes : création du compte, choix de l’offre et reprise de vos données.",
   },
 ]
 
