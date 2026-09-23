@@ -1,14 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import Pet from '#models/pet'
 import HealthBook from '#models/health_book'
+import Veterinarian from '#models/veterinarian'
+import { scopedPets, findScopedPetByToken } from '#services/vet_patient_scope'
 
 export default class VetPatientsController {
   /**
-   * List all pets that have granted vet access via token
+   * Patients du vétérinaire connecté : animaux dont le propriétaire lui est lié
+   * et qui ont ouvert l'accès à leur dossier.
    */
-  async index({ response }: HttpContext) {
-    const pets = await Pet.query()
-      .whereNotNull('vetToken')
+  async index({ auth, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const pets = await scopedPets(vet.id)
       .preload('healthBook')
       .preload('user')
       .orderBy('name', 'asc')
@@ -36,13 +39,12 @@ export default class VetPatientsController {
   /**
    * Get detailed patient info by vet access token
    */
-  async show({ params, response }: HttpContext) {
-    const pet = await Pet.query()
-      .where('vetToken', params.token)
-      .preload('healthBook')
-      .preload('medicalRecords')
-      .preload('user')
-      .first()
+  async show({ auth, params, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const pet = await findScopedPetByToken(vet.id, params.token, (query) => {
+      query.preload('healthBook').preload('medicalRecords').preload('user')
+    })
 
     if (!pet) {
       return response.notFound({
@@ -77,11 +79,12 @@ export default class VetPatientsController {
   /**
    * Get health book for a patient
    */
-  async healthBook({ params, response }: HttpContext) {
-    const pet = await Pet.query()
-      .where('vetToken', params.token)
-      .preload('healthBook')
-      .first()
+  async healthBook({ auth, params, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const pet = await findScopedPetByToken(vet.id, params.token, (query) => {
+      query.preload('healthBook')
+    })
 
     if (!pet) {
       return response.notFound({
@@ -106,11 +109,12 @@ export default class VetPatientsController {
   /**
    * Add a medical note to a patient's health book
    */
-  async addNote({ params, request, response }: HttpContext) {
-    const pet = await Pet.query()
-      .where('vetToken', params.token)
-      .preload('healthBook')
-      .first()
+  async addNote({ auth, params, request, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const pet = await findScopedPetByToken(vet.id, params.token, (query) => {
+      query.preload('healthBook')
+    })
 
     if (!pet) {
       return response.notFound({
@@ -130,7 +134,7 @@ export default class VetPatientsController {
 
     // Add entry based on type
     const entry = { ...data, addedByVet: true, date: new Date().toISOString() }
-    
+
     switch (type) {
       case 'vaccine':
         const vaccines = healthBook.vaccines ? JSON.parse(healthBook.vaccines as any) : []
@@ -167,12 +171,12 @@ export default class VetPatientsController {
   /**
    * Search patients by name
    */
-  async search({ request, response }: HttpContext) {
+  async search({ auth, request, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
     const { query } = request.only(['query'])
 
-    const pets = await Pet.query()
-      .whereNotNull('vetToken')
-      .where('name', 'like', `%${query}%`)
+    const pets = await scopedPets(vet.id)
+      .whereILike('name', `%${query}%`)
       .preload('healthBook')
       .limit(20)
 

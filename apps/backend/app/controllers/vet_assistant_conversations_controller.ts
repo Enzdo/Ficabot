@@ -4,6 +4,7 @@ import Pet from '#models/pet'
 import VetAssistantConversation from '#models/vet_assistant_conversation'
 import VetAssistantMessage from '#models/vet_assistant_message'
 import VetAssistantService from '#services/vet_assistant_service'
+import { findScopedPetByToken } from '#services/vet_patient_scope'
 
 /**
  * Discussions avec l'assistant.
@@ -69,7 +70,7 @@ export default class VetAssistantConversationsController {
 
     let pet: Pet | null = null
     if (petToken) {
-      pet = await Pet.query().where('vetToken', petToken).first()
+      pet = await findScopedPetByToken(vet.id, petToken)
       if (!pet) {
         return response.notFound({
           success: false,

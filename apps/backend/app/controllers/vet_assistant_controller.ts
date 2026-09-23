@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import Pet from '#models/pet'
+import Veterinarian from '#models/veterinarian'
 import VetAssistantService from '#services/vet_assistant_service'
+import { findScopedPetByToken } from '#services/vet_patient_scope'
 
 /**
  * Assistant contextuel : questions/réponses sur le dossier d'un patient.
@@ -11,7 +12,8 @@ export default class VetAssistantController {
    * POST /vet/patients/:token/assistant
    * body : { question, history?: [{ role, content }] }
    */
-  async ask({ params, request, response }: HttpContext) {
+  async ask({ auth, params, request, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
     const question = (request.input('question') ?? '').trim()
     const history = request.input('history') ?? []
 
@@ -19,11 +21,13 @@ export default class VetAssistantController {
       return response.badRequest({ success: false, message: 'Question vide' })
     }
 
-    const pet = await Pet.query()
-      .where('vetToken', params.token)
-      .preload('healthBook')
-      .preload('medicalRecords', (q) => q.orderBy('date', 'desc').limit(30))
-      .first()
+    // Le jeton seul ne suffit pas : sans ce cadrage, l'assistant résumait le
+    // dossier médical d'un patient d'un autre cabinet à qui le lui demandait.
+    const pet = await findScopedPetByToken(vet.id, params.token, (query) => {
+      query
+        .preload('healthBook')
+        .preload('medicalRecords', (q) => q.orderBy('date', 'desc').limit(30))
+    })
 
     if (!pet) {
       return response.notFound({
