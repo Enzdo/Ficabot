@@ -120,11 +120,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
-                <button @click="sendReminder(invoice)" class="p-2 text-surface-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg" title="Envoyer rappel">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </button>
               </div>
             </td>
           </tr>
@@ -292,15 +287,19 @@
             <textarea v-model="newInvoice.notes" class="input" rows="2" placeholder="Notes ou conditions particulières..."></textarea>
           </div>
 
+          <p v-if="saveError" class="text-sm text-danger-600 pt-4" role="alert">{{ saveError }}</p>
+
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showNewInvoice = false" class="flex-1 btn-secondary">
               Annuler
             </button>
-            <button type="button" @click="saveAsDraft" class="btn-secondary">
+            <button type="button" @click="saveAsDraft" :disabled="saving" class="btn-secondary disabled:opacity-50">
               Brouillon
             </button>
-            <button type="submit" class="flex-1 btn-primary">
-              Créer et envoyer
+            <!-- « Créer et envoyer » : aucun envoi n'existe côté serveur, il n'y a
+                 pas de gabarit de courriel de facture. Le bouton dit ce qu'il fait. -->
+            <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
+              {{ saving ? 'Enregistrement...' : 'Créer la facture' }}
             </button>
           </div>
         </form>
@@ -401,6 +400,8 @@ const selectedInvoice = ref<any>(null)
 const searchQuery = ref('')
 const activeFilter = ref('all')
 const loading = ref(true)
+const saving = ref(false)
+const saveError = ref('')
 
 const statusFilters = [
   { id: 'all', label: 'Toutes' },
@@ -622,11 +623,17 @@ const removeItem = (index: number) => {
   }
 }
 
-const createInvoice = async () => {
+// Sans cette remontée, un refus du serveur laissait la modale ouverte sans le
+// moindre message : le praticien recliquait, persuadé de ne pas avoir cliqué.
+const submitInvoice = async (status: 'pending' | 'draft') => {
+  saveError.value = ''
+  saving.value = true
+
   const response = await api.post<any>('/vet/invoices', {
     ...newInvoice.value,
-    status: 'pending',
+    status,
   })
+
   if (response.success) {
     showNewInvoice.value = false
     newInvoice.value = {
@@ -638,20 +645,15 @@ const createInvoice = async () => {
     }
     fetchInvoices()
     fetchStats()
+  } else {
+    saveError.value = response.message || 'La facture n’a pas pu être enregistrée.'
   }
+
+  saving.value = false
 }
 
-const saveAsDraft = async () => {
-  const response = await api.post<any>('/vet/invoices', {
-    ...newInvoice.value,
-    status: 'draft',
-  })
-  if (response.success) {
-    showNewInvoice.value = false
-    fetchInvoices()
-    fetchStats()
-  }
-}
+const createInvoice = () => submitInvoice('pending')
+const saveAsDraft = () => submitInvoice('draft')
 
 const viewInvoice = (invoice: any) => {
   selectedInvoice.value = invoice
@@ -732,10 +734,6 @@ const markAsPaid = async (id: number) => {
     fetchInvoices()
     fetchStats()
   }
-}
-
-const sendReminder = (invoice: any) => {
-  alert(`Rappel envoyé pour la facture ${invoice.number}`)
 }
 
 const exportInvoices = async () => {

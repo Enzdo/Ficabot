@@ -42,5 +42,9 @@ export const vetUpdateProfileValidator = vine.compile(
     phone: vine.string().optional(),
     address: vine.string().optional(),
     specialization: vine.string().optional(),
+    // Le champ était proposé dans « Mon compte », envoyé par personne et refusé
+    // ici sans erreur : le praticien lisait « Profil mis à jour » et son numéro
+    // d'ordre repartait vide au rechargement.
+    licenseNumber: vine.string().trim().maxLength(50).optional(),
   })
 )

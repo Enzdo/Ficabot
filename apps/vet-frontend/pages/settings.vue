@@ -65,8 +65,12 @@
               <input v-model="clinicInfo.phone" type="tel" class="input" />
             </div>
             <div>
-              <label class="label">Email</label>
-              <input v-model="clinicInfo.email" type="email" class="input" />
+              <label class="label" for="clinic-email">Email</label>
+              <!-- Adresse de connexion : en lecture seule ici, car la modifier
+                   change l'accès au compte. Le champ était éditable et n'était
+                   jamais enregistré. -->
+              <input id="clinic-email" :value="clinicInfo.email" type="email" class="input" readonly disabled />
+              <p class="text-xs text-surface-500 mt-1">Votre adresse de connexion.</p>
             </div>
           </div>
           <div>
@@ -242,6 +246,13 @@
 
     <!-- Notifications -->
     <div v-if="activeTab === 'notifications'" class="space-y-6">
+      <!-- Ces réglages ne sont pas encore reliés au serveur : aucun n'est lu ni
+           écrit, et l'onglet n'a pas de bouton d'enregistrement. Le dire vaut
+           mieux que laisser croire qu'on paramètre quelque chose. -->
+      <div class="bg-warning-50 border border-warning-200 text-warning-800 rounded-xl px-4 py-3 text-sm dark:bg-warning-900/30 dark:border-warning-800 dark:text-warning-200" role="status">
+        Ces préférences ne sont pas encore actives : elles ne sont pas enregistrées et n'ont pas d'effet sur les notifications que vous recevez.
+      </div>
+
       <div class="card">
         <h3 class="font-semibold text-surface-900 mb-4">Préférences de notification</h3>
         <div class="space-y-4">
@@ -825,6 +836,7 @@ const saveProfile = async () => {
     lastName: profile.value.lastName,
     phone: profile.value.phone,
     specialization: profile.value.specialization,
+    licenseNumber: profile.value.licenseNumber,
   })
   if (response.success) {
     showMessage('Profil mis à jour avec succès')

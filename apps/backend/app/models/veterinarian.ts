@@ -36,6 +36,22 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   declare address: string | null
 
   @column()
+  declare postalCode: string | null
+
+  @column()
+  declare city: string | null
+
+  @column()
+  declare siret: string | null
+
+  @column()
+  declare website: string | null
+
+  /** Horaires du cabinet, saisis dans les réglages. Alimente la prise de RDV. */
+  @column()
+  declare openingHours: object | null
+
+  @column()
   declare licenseNumber: string | null
 
   @column()

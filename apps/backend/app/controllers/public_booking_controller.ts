@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
-import VetClinic from '#models/vet_clinic'
 import VetService from '#models/vet_service'
 import VetEmployee from '#models/vet_employee'
 import ClinicAppointment from '#models/clinic_appointment'
@@ -69,9 +68,11 @@ export default class PublicBookingController {
       .where('veterinarian_id', vet.id)
       .where('is_active', true)
 
-    // Get clinic hours
+    // Horaires saisis par le praticien dans ses réglages ; la fiche Google ne
+    // sert que de repli, et n'est renseignée que pour les comptes qui y sont
+    // rattachés — aucun de ceux créés par l'application.
     await vet.load('clinic')
-    const hours = (vet.clinic?.openingHours as any) || null
+    const hours = (vet.openingHours as any) || (vet.clinic?.openingHours as any) || null
 
     // Determine day of week
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()

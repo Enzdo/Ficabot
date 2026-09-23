@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
-import VetClinic from '#models/vet_clinic'
 import VetService from '#models/vet_service'
 
 export default class VetClinicSettingsController {
@@ -16,14 +15,17 @@ export default class VetClinicSettingsController {
     return response.ok({
       success: true,
       data: {
-        name: clinic?.name || vet.clinicName || '',
-        address: clinic?.address || vet.address || '',
-        phone: clinic?.phone || vet.phone || '',
-        website: clinic?.website || '',
+        name: vet.clinicName || clinic?.name || '',
+        // `address` ne porte plus que la voie : le code postal et la ville sont
+        // des colonnes à part. Elles étaient renvoyées vides en dur, ce qui
+        // vidait les champs de l'écran à chaque rechargement.
+        address: vet.address || clinic?.address || '',
+        postalCode: vet.postalCode || '',
+        city: vet.city || '',
+        phone: vet.phone || clinic?.phone || '',
+        website: vet.website || clinic?.website || '',
         email: vet.email,
-        siret: '',
-        postalCode: '',
-        city: '',
+        siret: vet.siret || '',
         clinicId: clinic?.id || null,
       },
     })
@@ -34,27 +36,36 @@ export default class VetClinicSettingsController {
    */
   async updateClinicInfo({ request, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
-    const { name, address, phone, website, email, siret, postalCode, city } = request.only([
-      'name', 'address', 'phone', 'website', 'email', 'siret', 'postalCode', 'city',
+    // `email` n'est volontairement pas repris : c'est l'adresse de connexion, la
+    // changer ici modifierait l'accès au compte. Le champ est en lecture seule.
+    const { name, address, phone, website, siret, postalCode, city } = request.only([
+      'name', 'address', 'phone', 'website', 'siret', 'postalCode', 'city',
     ])
 
     await vet.load('clinic')
 
+    // Le praticien fait foi : c'est là que tout est écrit, y compris pour les
+    // comptes sans clinique Google rattachée — c'est-à-dire tous ceux créés par
+    // l'application.
+    vet.clinicName = name ?? vet.clinicName
+    vet.address = address ?? vet.address
+    vet.postalCode = postalCode ?? vet.postalCode
+    vet.city = city ?? vet.city
+    vet.phone = phone ?? vet.phone
+    vet.website = website ?? vet.website
+    vet.siret = siret ?? vet.siret
+    await vet.save()
+
+    // Quand une fiche Google est rattachée, on la tient à jour en miroir.
     if (vet.clinic) {
-      const fullAddress = [address, postalCode, city].filter(Boolean).join(', ')
       vet.clinic.merge({
         name,
-        address: fullAddress,
+        address: [address, postalCode, city].filter(Boolean).join(', '),
         phone,
         website,
       })
       await vet.clinic.save()
     }
-
-    // Also update legacy fields on vet
-    vet.clinicName = name
-    vet.address = [address, postalCode, city].filter(Boolean).join(', ')
-    await vet.save()
 
     return response.ok({
       success: true,
@@ -69,7 +80,7 @@ export default class VetClinicSettingsController {
     const vet = auth.user as Veterinarian
     await vet.load('clinic')
 
-    const hours = (vet.clinic?.openingHours as any) || null
+    const hours = (vet.openingHours as any) || (vet.clinic?.openingHours as any) || null
 
     return response.ok({
       success: true,
@@ -85,6 +96,13 @@ export default class VetClinicSettingsController {
     const { hours } = request.only(['hours'])
 
     await vet.load('clinic')
+
+    // Écriture inconditionnelle : enfermée dans `if (vet.clinic)`, elle ne
+    // s'exécutait pour personne, et le message « Horaires enregistrés »
+    // s'affichait quand même. La prise de RDV en ligne répondait « Fermé ce
+    // jour » en permanence, faute d'horaires jamais persistés.
+    vet.openingHours = hours
+    await vet.save()
 
     if (vet.clinic) {
       vet.clinic.openingHours = hours
