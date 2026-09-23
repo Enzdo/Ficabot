@@ -3,6 +3,7 @@ import VetInvoice from '#models/vet_invoice'
 import Veterinarian from '#models/veterinarian'
 import { createInvoiceValidator, updateInvoiceStatusValidator } from '#validators/vet_invoice'
 import { DateTime } from 'luxon'
+import logger from '@adonisjs/core/services/logger'
 
 export default class VetInvoicesController {
   async index({ request, response, auth }: HttpContext) {
@@ -60,6 +61,30 @@ export default class VetInvoicesController {
     })
   }
 
+  /**
+   * Prochain numéro de facture du praticien pour l'année en cours.
+   *
+   * Dérivé du plus grand rang déjà attribué, et non d'un `count()` : compter
+   * faisait reculer la séquence après chaque suppression, et rejouait donc un
+   * numéro déjà utilisé.
+   */
+  private async nextInvoiceNumber(veterinarianId: number): Promise<string> {
+    const year = DateTime.now().year
+    const prefix = `FAC-${year}-`
+
+    const existing = await VetInvoice.query()
+      .where('veterinarian_id', veterinarianId)
+      .whereLike('number', `${prefix}%`)
+      .select('number')
+
+    const highest = existing.reduce((max, row) => {
+      const rank = Number.parseInt(row.number.slice(prefix.length), 10)
+      return Number.isFinite(rank) && rank > max ? rank : max
+    }, 0)
+
+    return `${prefix}${String(highest + 1).padStart(3, '0')}`
+  }
+
   async store({ request, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
     const data = await request.validateUsing(createInvoiceValidator)
@@ -69,26 +94,42 @@ export default class VetInvoicesController {
     const tax = subtotal * (taxRate / 100)
     const total = subtotal + tax
 
-    // Generate invoice number
-    const count = await VetInvoice.query().where('veterinarian_id', vet.id).count('* as total')
-    const num = Number(count[0].$extras.total) + 1
-    const invoiceNumber = `FAC-${DateTime.now().year}-${String(num).padStart(3, '0')}`
+    // Deux créations simultanées peuvent viser le même rang : on retente sur
+    // collision plutôt que de renvoyer une erreur 500 au praticien.
+    let invoice: VetInvoice | null = null
+    let lastError: unknown = null
 
-    const invoice = await VetInvoice.create({
-      veterinarianId: vet.id,
-      number: invoiceNumber,
-      clientName: data.clientName,
-      clientEmail: data.clientEmail || null,
-      petName: data.petName || null,
-      date: data.date,
-      dueDate: data.dueDate,
-      subtotal,
-      taxRate,
-      tax,
-      total,
-      status: data.status || 'pending',
-      notes: data.notes || null,
-    })
+    for (let attempt = 0; attempt < 5 && !invoice; attempt++) {
+      try {
+        invoice = await VetInvoice.create({
+          veterinarianId: vet.id,
+          number: await this.nextInvoiceNumber(vet.id),
+          clientName: data.clientName,
+          clientEmail: data.clientEmail || null,
+          petName: data.petName || null,
+          date: data.date,
+          dueDate: data.dueDate,
+          subtotal,
+          taxRate,
+          tax,
+          total,
+          status: data.status || 'pending',
+          notes: data.notes || null,
+        })
+      } catch (error: any) {
+        // 23505 = violation d'unicité côté Postgres. Toute autre erreur remonte.
+        if (error?.code !== '23505') throw error
+        lastError = error
+      }
+    }
+
+    if (!invoice) {
+      logger.error({ err: lastError }, 'Impossible d’attribuer un numéro de facture')
+      return response.conflict({
+        success: false,
+        message: 'Le numéro de facture n’a pas pu être attribué. Réessayez.',
+      })
+    }
 
     for (const item of data.items) {
       await invoice.related('items').create({
