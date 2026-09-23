@@ -2,26 +2,64 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
 import VetInventoryItem from '#models/vet_inventory_item'
 import VetReminder from '#models/vet_reminder'
+import UserVeterinarian from '#models/user_veterinarian'
+import VetExternalClient from '#models/vet_external_client'
 import db from '@adonisjs/lucid/services/db'
 
+/**
+ * Échappe une valeur pour le CSV. Les colonnes étaient simplement entourées de
+ * guillemets : un nom contenant lui-même un guillemet, ou une note contenant un
+ * retour à la ligne, cassait le fichier à partir de cette ligne.
+ */
+function csvCell(value: unknown): string {
+  return `"${String(value ?? '').replace(/"/g, '""')}"`
+}
+
 export default class VetExportsController {
+  /**
+   * Export des clients.
+   *
+   * La requête d'origine joignait une table `vet_accesses` qui n'existe pas —
+   * aucune migration ne la crée, seule `vet_access_tokens` existe et c'est la
+   * table des jetons d'authentification. L'export partait donc en erreur SQL à
+   * chaque appel, et la page, qui ne vérifiait pas le statut HTTP, téléchargeait
+   * le corps de l'erreur sous le nom `clients-<date>.csv`.
+   *
+   * On lit désormais les deux mêmes sources que la page Clients : les comptes
+   * liés par `user_veterinarians` accepté, et les clients externes.
+   */
   async clients({ response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
 
-    const clients = await db.rawQuery(
-      `SELECT DISTINCT u.id, u.first_name, u.last_name, u.email, u.phone
-       FROM users u
-       INNER JOIN pets p ON p.user_id = u.id
-       INNER JOIN vet_accesses va ON va.pet_id = p.id
-       WHERE va.veterinarian_id = ?
-       ORDER BY u.last_name ASC`,
-      [vet.id]
-    )
+    const links = await UserVeterinarian.query()
+      .where('veterinarian_id', vet.id)
+      .where('status', 'accepted')
+      .preload('user')
 
-    const rows = clients.rows || clients
-    let csv = 'Nom,Prénom,Email,Téléphone\n'
-    for (const c of rows) {
-      csv += `"${c.last_name || ''}","${c.first_name || ''}","${c.email || ''}","${c.phone || ''}"\n`
+    const external = await VetExternalClient.query()
+      .where('veterinarian_id', vet.id)
+      .orderBy('last_name', 'asc')
+
+    const rows = [
+      ...links.map((link) => ({
+        lastName: link.user?.lastName,
+        firstName: link.user?.firstName,
+        email: link.user?.email,
+        phone: link.user?.phone,
+        type: 'Compte lié',
+      })),
+      ...external.map((client) => ({
+        lastName: client.lastName,
+        firstName: client.firstName,
+        email: client.email,
+        phone: client.phone,
+        type: client.inviteSentAt ? 'Invitation envoyée' : 'Client externe',
+      })),
+    ].sort((a, b) => String(a.lastName || '').localeCompare(String(b.lastName || ''), 'fr'))
+
+    let csv = 'Nom,Prénom,Email,Téléphone,Type\n'
+    for (const row of rows) {
+      csv += [row.lastName, row.firstName, row.email, row.phone, row.type].map(csvCell).join(',') + '\n'
     }
 
     response.header('Content-Type', 'text/csv; charset=utf-8')

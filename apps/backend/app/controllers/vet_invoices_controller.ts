@@ -15,7 +15,19 @@ export default class VetInvoicesController {
       .preload('items')
       .orderBy('created_at', 'desc')
 
-    if (status && status !== 'all') {
+    // « En retard » n'était jamais posé par personne : aucune tâche planifiée
+    // n'existe, et rien ne comparait la date d'échéance. Le filtre restait donc
+    // vide et le compteur à 0 € même avec des factures échues impayées.
+    // Le retard se déduit à la lecture : une facture en attente dont l'échéance
+    // est passée est en retard. Les deux états sont disjoints, pour que les
+    // compteurs « En attente » et « En retard » ne comptent pas deux fois.
+    const today = DateTime.now().toFormat('yyyy-MM-dd')
+
+    if (status === 'overdue') {
+      query = query.where('status', 'pending').where('due_date', '<', today)
+    } else if (status === 'pending') {
+      query = query.where('status', 'pending').where('due_date', '>=', today)
+    } else if (status && status !== 'all') {
       query = query.where('status', status)
     }
 
@@ -29,7 +41,15 @@ export default class VetInvoicesController {
 
     const invoices = await query
 
-    return response.ok({ success: true, data: invoices })
+    // Le drapeau accompagne chaque ligne : l'écran peut signaler le retard sans
+    // refaire le calcul, et sans se fier à un statut stocké qui ne bouge jamais.
+    return response.ok({
+      success: true,
+      data: invoices.map((invoice) => ({
+        ...invoice.serialize(),
+        isOverdue: invoice.status === 'pending' && String(invoice.dueDate ?? '') < today,
+      })),
+    })
   }
 
   async stats({ response, auth }: HttpContext) {
@@ -42,21 +62,31 @@ export default class VetInvoicesController {
       .where('veterinarian_id', vet.id)
       .whereBetween('date', [startOfMonth!, endOfMonth!])
 
-    const total = invoices.reduce((sum, inv) => sum + Number(inv.total), 0)
-    const paid = invoices.filter(i => i.status === 'paid').reduce((sum, inv) => sum + Number(inv.total), 0)
-    const pending = invoices.filter(i => i.status === 'pending').reduce((sum, inv) => sum + Number(inv.total), 0)
-    const overdue = invoices.filter(i => i.status === 'overdue').reduce((sum, inv) => sum + Number(inv.total), 0)
+    const today = now.toFormat('yyyy-MM-dd')
+    const sum = (list: VetInvoice[]) => list.reduce((acc, inv) => acc + Number(inv.total), 0)
+
+    const paidInvoices = invoices.filter(i => i.status === 'paid')
+    // Mêmes règles que la liste, pour que les compteurs correspondent à ce que
+    // les onglets affichent : en retard = en attente et échéance dépassée.
+    const overdueInvoices = invoices.filter(
+      i => i.status === 'pending' && String(i.dueDate ?? '') < today
+    )
+    const pendingInvoices = invoices.filter(
+      i => i.status === 'pending' && String(i.dueDate ?? '') >= today
+    )
 
     return response.ok({
       success: true,
       data: {
-        total,
-        paid,
-        paidCount: invoices.filter(i => i.status === 'paid').length,
-        pending,
-        pendingCount: invoices.filter(i => i.status === 'pending').length,
-        overdue,
-        overdueCount: invoices.filter(i => i.status === 'overdue').length,
+        // Les brouillons ne sont pas du chiffre d'affaires : ils gonflaient le
+        // total du mois alors qu'ils ne sont pas encore des factures.
+        total: sum(invoices.filter(i => i.status !== 'draft')),
+        paid: sum(paidInvoices),
+        paidCount: paidInvoices.length,
+        pending: sum(pendingInvoices),
+        pendingCount: pendingInvoices.length,
+        overdue: sum(overdueInvoices),
+        overdueCount: overdueInvoices.length,
       },
     })
   }

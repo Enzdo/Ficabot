@@ -22,6 +22,8 @@
       </div>
     </div>
 
+    <p v-if="exportError" class="text-sm text-danger-600 mb-4" role="alert">{{ exportError }}</p>
+
     <!-- Search -->
     <div class="relative mb-5">
       <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,19 +599,37 @@ const formatDate = (dateStr: string) => {
   })
 }
 
+const exportError = ref('')
+
 const exportClients = async () => {
   const authStore = useVetAuthStore()
   const config = useRuntimeConfig()
   const baseUrl = config.public.apiBase || 'http://localhost:3333'
-  const res = await fetch(`${baseUrl}/vet/exports/clients`, {
-    headers: { Authorization: `Bearer ${authStore.token}` },
-  })
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `clients-${new Date().toISOString().split('T')[0]}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  exportError.value = ''
+
+  try {
+    const res = await fetch(`${baseUrl}/vet/exports/clients`, {
+      headers: { Authorization: `Bearer ${authStore.token}` },
+    })
+
+    // Sans ce contrôle, le corps d'une erreur 500 était transformé en blob et
+    // téléchargé sous le nom d'un CSV : l'utilisateur repartait avec un fichier
+    // qui ressemblait à un export.
+    if (!res.ok) {
+      exportError.value = "L'export n'a pas abouti. Réessayez dans un instant."
+      return
+    }
+
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    // Date locale : `toISOString()` bascule la veille en soirée, à Paris.
+    a.download = `clients-${toLocalDateKey(new Date())}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    exportError.value = "L'export n'a pas abouti. Vérifiez votre connexion."
+  }
 }
 </script>
