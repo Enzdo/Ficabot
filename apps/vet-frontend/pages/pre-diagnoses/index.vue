@@ -29,6 +29,8 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
     </div>
 
+    <div v-else-if="error" class="workspace-error" role="alert">{{ error }} <button type="button" @click="fetchPreDiagnoses">Réessayer</button></div>
+
     <!-- Empty State -->
     <div v-else-if="preDiagnoses.length === 0" class="card text-center py-12">
       <div class="text-6xl mb-4">📋</div>
@@ -105,6 +107,7 @@ definePageMeta({
 
 const api = useVetApi()
 const loading = ref(true)
+const error = ref('')
 const preDiagnoses = ref<any[]>([])
 const filters = ref({
   status: '',
@@ -117,9 +120,15 @@ const fetchPreDiagnoses = async () => {
   if (filters.value.status) params.append('status', filters.value.status)
   if (filters.value.urgency) params.append('urgency', filters.value.urgency)
 
-  const res = await api.get(`/vet/auth/pre-diagnoses?${params}`)
+  error.value = ''
+
+  const res = await api.get(`/vet/pre-diagnoses?${params}`)
   if (res.success) {
     preDiagnoses.value = res.data
+  } else {
+    // Sans cette branche, un échec serveur s'affichait comme « Aucun
+    // pré-diagnostic » — le praticien concluait qu'il n'avait rien reçu.
+    error.value = res.message || 'Les pré-diagnostics n’ont pas pu être chargés.'
   }
   loading.value = false
 }

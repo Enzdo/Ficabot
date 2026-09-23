@@ -13,6 +13,8 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
     </div>
 
+    <div v-else-if="loadError" class="workspace-error" role="alert">{{ loadError }} <button type="button" @click="fetchPreDiagnosis">Réessayer</button></div>
+
     <!-- Content -->
     <div v-else-if="preDiagnosis" class="space-y-6">
       <!-- Header Card -->
@@ -166,6 +168,7 @@
             {{ chatLoading ? '...' : 'Envoyer' }}
           </button>
         </div>
+        <p v-if="chatError" class="text-sm text-danger-600 mt-2" role="alert">{{ chatError }}</p>
         <p class="text-xs text-surface-500 mt-2">Ctrl + Entrée pour envoyer</p>
       </div>
 
@@ -193,6 +196,8 @@
           >
             {{ submitting ? 'Envoi...' : 'Envoyer la réponse' }}
           </button>
+
+          <p v-if="submitError" class="text-sm text-danger-600 mt-3" role="alert">{{ submitError }}</p>
         </div>
       </div>
     </div>
@@ -208,54 +213,68 @@ const route = useRoute()
 const api = useVetApi()
 
 const loading = ref(true)
+const loadError = ref('')
 const preDiagnosis = ref<any>(null)
 const response = ref('')
 const submitting = ref(false)
+const submitError = ref('')
 
 const chatMessage = ref('')
 const chatHistory = ref<Array<{ role: string; content: string }>>([])
 const chatLoading = ref(false)
+const chatError = ref('')
 
 const fetchPreDiagnosis = async () => {
   loading.value = true
-  const res = await api.get(`/vet/auth/pre-diagnoses/${route.params.id}`)
+  loadError.value = ''
+  const res = await api.get(`/vet/pre-diagnoses/${route.params.id}`)
   if (res.success) {
     preDiagnosis.value = res.data
+  } else {
+    loadError.value = res.message || 'Ce pré-diagnostic n’a pas pu être chargé.'
   }
   loading.value = false
 }
 
 const submitResponse = async () => {
   if (!response.value.trim()) return
-  
+
   submitting.value = true
-  const res = await api.post(`/vet/auth/pre-diagnoses/${route.params.id}/response`, {
+  submitError.value = ''
+  const res = await api.post(`/vet/pre-diagnoses/${route.params.id}/response`, {
     responseText: response.value,
   })
-  
+
   if (res.success) {
     await fetchPreDiagnosis()
     response.value = ''
+  } else {
+    submitError.value = res.message || 'La réponse n’a pas pu être envoyée. Votre texte est conservé.'
   }
   submitting.value = false
 }
 
 const sendChatMessage = async () => {
   if (!chatMessage.value.trim() || chatLoading.value) return
-  
+
   chatLoading.value = true
+  chatError.value = ''
   const userMessage = chatMessage.value
-  chatMessage.value = ''
-  
-  const res = await api.post(`/vet/auth/pre-diagnoses/${route.params.id}/ai-chat`, {
+
+  const res = await api.post(`/vet/pre-diagnoses/${route.params.id}/ai-chat`, {
     message: userMessage,
     conversationHistory: chatHistory.value,
   })
-  
+
   if (res.success && res.data) {
     chatHistory.value = res.data.conversationHistory
+    // La question n'est effacée qu'une fois partie : la vider avant l'appel
+    // la perdait définitivement au moindre échec.
+    chatMessage.value = ''
+  } else {
+    chatError.value = res.message || 'L’assistant n’a pas répondu. Votre question est conservée.'
   }
-  
+
   chatLoading.value = false
 }
 

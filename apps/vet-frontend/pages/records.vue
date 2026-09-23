@@ -72,7 +72,7 @@
       >
         <div class="flex items-start gap-4">
           <div class="w-14 h-14 rounded-2xl bg-surface-100 flex items-center justify-center flex-shrink-0">
-            <span class="text-2xl">{{ record.petSpecies === 'dog' ? '🐕' : '🐱' }}</span>
+            <PatientSymbol :species="record.petSpecies" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-start justify-between">
@@ -116,11 +116,11 @@
         <!-- Patient Info -->
         <div class="flex items-center gap-4 p-4 bg-surface-50 rounded-xl mb-6">
           <div class="w-16 h-16 rounded-2xl bg-white flex items-center justify-center">
-            <span class="text-3xl">{{ selectedRecord.petSpecies === 'dog' ? '🐕' : '🐱' }}</span>
+            <PatientSymbol :species="selectedRecord.petSpecies" class="w-8 h-8" />
           </div>
           <div>
             <h3 class="font-semibold text-surface-900">{{ selectedRecord.petName }}</h3>
-            <p class="text-sm text-surface-500">{{ selectedRecord.petBreed }} • {{ selectedRecord.petAge }}</p>
+            <p v-if="selectedRecord.petBreed" class="text-sm text-surface-500">{{ selectedRecord.petBreed }}</p>
             <p class="text-sm text-surface-500">Propriétaire: {{ selectedRecord.clientName }}</p>
           </div>
         </div>
