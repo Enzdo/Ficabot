@@ -87,12 +87,9 @@
             <div class="flex items-center gap-2">
               <h3 class="font-semibold text-surface-900">{{ h.petName }}</h3>
               <span
-                :class="[
-                  'px-2 py-0.5 text-xs font-medium rounded-full',
-                  h.status === 'active' ? 'bg-primary-100 text-primary-700' : 'bg-success-100 text-success-700'
-                ]"
+                :class="['px-2 py-0.5 text-xs font-medium rounded-full', statusClasses(h.status)]"
               >
-                {{ h.status === 'active' ? 'En cours' : 'Sorti' }}
+                {{ statusLabel(h.status) }}
               </span>
             </div>
             <p class="text-sm text-surface-500">{{ h.clientName }}</p>
@@ -218,12 +215,9 @@
             <div class="flex items-center gap-2">
               <h3 class="font-semibold text-surface-900 text-lg">{{ selectedHospitalization.petName }}</h3>
               <span
-                :class="[
-                  'px-2 py-0.5 text-xs font-medium rounded-full',
-                  selectedHospitalization.status === 'active' ? 'bg-primary-100 text-primary-700' : 'bg-success-100 text-success-700'
-                ]"
+                :class="['px-2 py-0.5 text-xs font-medium rounded-full', statusClasses(selectedHospitalization.status)]"
               >
-                {{ selectedHospitalization.status === 'active' ? 'En cours' : 'Sorti' }}
+                {{ statusLabel(selectedHospitalization.status) }}
               </span>
             </div>
             <p class="text-sm text-surface-500">{{ selectedHospitalization.clientName }} {{ selectedHospitalization.clientPhone ? '- ' + selectedHospitalization.clientPhone : '' }}</p>
@@ -328,10 +322,15 @@
           </button>
         </div>
 
-        <div v-if="selectedHospitalization.status === 'discharged' && selectedHospitalization.dischargeDate" class="p-4 bg-success-50 rounded-xl border border-success-200 mt-4">
+        <!-- Le champ s'appelle `actualDischarge` — c'est ce que la sortie écrit
+             et ce que l'API renvoie. Le gabarit testait `dischargeDate`, qui
+             n'existe nulle part : le bandeau ne s'affichait donc jamais, et la
+             date de sortie n'apparaissait à aucun endroit de l'interface. Les
+             notes de sortie, elles, sont enregistrées comme entrée du journal,
+             où elles figurent déjà. -->
+        <div v-if="selectedHospitalization.status === 'discharged' && selectedHospitalization.actualDischarge" class="p-4 bg-success-50 rounded-xl border border-success-200 mt-4">
           <p class="text-xs text-success-600 mb-1">Sorti le</p>
-          <p class="font-medium text-success-800">{{ formatDateTime(selectedHospitalization.dischargeDate) }}</p>
-          <p v-if="selectedHospitalization.dischargeNotes" class="text-sm text-success-700 mt-1">{{ selectedHospitalization.dischargeNotes }}</p>
+          <p class="font-medium text-success-800">{{ formatDate(selectedHospitalization.actualDischarge) }}</p>
         </div>
       </div>
     </div>
@@ -512,6 +511,21 @@ const getSpeciesEmoji = (species: string) => {
   }
   return emojis[species] || '🐾'
 }
+
+/**
+ * Le modèle connaît trois états : en cours, sorti, décédé. L'interface les
+ * réduisait à un ternaire « en cours / sorti », si bien qu'un animal décédé
+ * s'affichait « Sorti » sur une pastille verte de réussite.
+ */
+const statusLabel = (status: string) =>
+  status === 'active' ? 'En cours' : status === 'deceased' ? 'Décédé' : 'Sorti'
+
+const statusClasses = (status: string) =>
+  status === 'active'
+    ? 'bg-primary-100 text-primary-700'
+    : status === 'deceased'
+      ? 'bg-surface-200 text-surface-700'
+      : 'bg-success-100 text-success-700'
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
