@@ -1,10 +1,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
-import VetAppointment from '#models/vet_appointment'
+// Même table que VetAppointment, mais ClinicAppointment déclare les colonnes
+// vétérinaires (type, status, employee_id). Avec l'autre modèle, `apt.type`
+// valait undefined et le graphique « Répartition par type » affichait une barre
+// unique libellée « undefined » à 100 %.
+import ClinicAppointment from '#models/clinic_appointment'
 import UserVeterinarian from '#models/user_veterinarian'
 import VetEmployee from '#models/vet_employee'
 import VetInvoice from '#models/vet_invoice'
 import { DateTime } from 'luxon'
+import logger from '@adonisjs/core/services/logger'
 
 export default class VetAnalyticsController {
   async index({ request, response, auth }: HttpContext) {
@@ -39,12 +44,12 @@ export default class VetAnalyticsController {
     }
 
     // Current period appointments
-    const appointments = await VetAppointment.query()
+    const appointments = await ClinicAppointment.query()
       .where('veterinarian_id', vet.id)
       .where('date', '>=', startDate.toFormat('yyyy-MM-dd'))
 
     // Previous period appointments
-    const prevAppointments = await VetAppointment.query()
+    const prevAppointments = await ClinicAppointment.query()
       .where('veterinarian_id', vet.id)
       .where('date', '>=', prevStartDate.toFormat('yyyy-MM-dd'))
       .where('date', '<', prevEndDate.toFormat('yyyy-MM-dd'))
@@ -110,8 +115,11 @@ export default class VetAnalyticsController {
         .where('date', '>=', prevStartDate.toFormat('yyyy-MM-dd'))
         .where('date', '<', prevEndDate.toFormat('yyyy-MM-dd'))
       prevRevenue = prevInvoices.reduce((sum, inv) => sum + Number(inv.total), 0)
-    } catch {
-      // Invoice table may not exist yet
+    } catch (error) {
+      // Le catch muet d'origine faisait passer un chiffre d'affaires réel pour
+      // zéro sans le moindre indice. La table existe désormais : si la requête
+      // échoue, c'est un incident, et il doit laisser une trace.
+      logger.error({ err: error, vetId: vet.id }, 'Lecture du chiffre d’affaires impossible')
     }
 
     // Employee stats
@@ -121,7 +129,7 @@ export default class VetAnalyticsController {
 
     const employeeStats = await Promise.all(
       employees.map(async (emp) => {
-        const empApts = await VetAppointment.query()
+        const empApts = await ClinicAppointment.query()
           .where('employee_id', emp.id)
           .where('date', '>=', startDate.toFormat('yyyy-MM-dd'))
 
@@ -136,16 +144,24 @@ export default class VetAnalyticsController {
           color: emp.color || '#0d9488',
           appointments: empApts.length,
           completionRate: Math.round((completed / total) * 100),
-          rating: 4.5 + Math.random() * 0.5,
-          revenue: 0,
+          // `rating` valait 4.5 + Math.random() * 0.5 et changeait à chaque
+          // rechargement ; `revenue` était figé à zéro. Aucune note n'est
+          // recueillie nulle part, et rien ne relie une facture à un employé.
+          // Les deux colonnes sont retirées plutôt qu'inventées.
         }
       })
     )
 
-    // Trends
-    const prevCount = prevAppointments.length || 1
-    const appointmentsTrend = Math.round(((appointments.length - prevCount) / prevCount) * 100)
-    const revenueTrend = prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : 0
+    // Une comparaison n'a de sens que si la période précédente porte quelque
+    // chose. Le `|| 1` d'origine transformait « 0 rendez-vous le mois dernier,
+    // 40 ce mois-ci » en « +3900 % ». `null` dit « pas de comparaison possible »
+    // et l'écran affiche un tiret.
+    const appointmentsTrend =
+      prevAppointments.length > 0
+        ? Math.round(((appointments.length - prevAppointments.length) / prevAppointments.length) * 100)
+        : null
+    const revenueTrend =
+      prevRevenue > 0 ? Math.round(((revenue - prevRevenue) / prevRevenue) * 100) : null
 
     return response.ok({
       success: true,

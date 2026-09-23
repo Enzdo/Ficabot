@@ -31,10 +31,13 @@
           </div>
         </div>
         <div class="mt-3 flex items-center gap-1 text-sm">
-          <span :class="stats.appointmentsTrend >= 0 ? 'text-success-600' : 'text-danger-600'">
-            {{ stats.appointmentsTrend >= 0 ? '+' : '' }}{{ stats.appointmentsTrend }}%
-          </span>
-          <span class="text-surface-400">vs période précédente</span>
+          <template v-if="stats.appointmentsTrend !== null">
+            <span :class="stats.appointmentsTrend >= 0 ? 'text-success-600' : 'text-danger-600'">
+              {{ stats.appointmentsTrend >= 0 ? '+' : '' }}{{ stats.appointmentsTrend }}%
+            </span>
+            <span class="text-surface-400">vs période précédente</span>
+          </template>
+          <span v-else class="text-surface-400">Pas de comparaison possible</span>
         </div>
       </div>
 
@@ -69,30 +72,21 @@
           </div>
         </div>
         <div class="mt-3 flex items-center gap-1 text-sm">
-          <span :class="stats.revenueTrend >= 0 ? 'text-success-600' : 'text-danger-600'">
-            {{ stats.revenueTrend >= 0 ? '+' : '' }}{{ stats.revenueTrend }}%
-          </span>
-          <span class="text-surface-400">vs période précédente</span>
+          <template v-if="stats.revenueTrend !== null">
+            <span :class="stats.revenueTrend >= 0 ? 'text-success-600' : 'text-danger-600'">
+              {{ stats.revenueTrend >= 0 ? '+' : '' }}{{ stats.revenueTrend }}%
+            </span>
+            <span class="text-surface-400">vs période précédente</span>
+          </template>
+          <span v-else class="text-surface-400">Pas de comparaison possible</span>
         </div>
       </div>
-
-      <div class="card">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-secondary-100 rounded-xl flex items-center justify-center">
-            <svg class="w-6 h-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-          </div>
-          <div>
-            <p class="text-2xl font-bold text-surface-900">{{ stats.satisfaction }}/5</p>
-            <p class="text-sm text-surface-500">Satisfaction</p>
-          </div>
-        </div>
-        <div class="mt-3 flex items-center gap-1 text-sm">
-          <span class="text-surface-400">Basé sur {{ stats.reviewCount }} avis</span>
-        </div>
-      </div>
+      <!-- La carte « Satisfaction » est retirée : aucun avis n'est recueilli
+           dans le produit, le backend ne renvoyait rien, et elle affichait
+           « 0/5 — basé sur 0 avis » comme s'il s'agissait d'une mesure. -->
     </div>
+
+    <div v-if="error" class="workspace-error mb-6" role="alert">{{ error }} <button type="button" @click="fetchAnalytics">Réessayer</button></div>
 
     <div class="grid lg:grid-cols-2 gap-6 mb-8">
       <!-- Appointments by type -->
@@ -111,25 +105,9 @@
         </div>
       </div>
 
-      <!-- Top patients -->
-      <div class="card">
-        <h3 class="font-semibold text-surface-900 mb-4">Patients fréquents</h3>
-        <div class="space-y-3">
-          <div v-for="(patient, index) in topPatients" :key="patient.id" class="flex items-center gap-3 p-2 rounded-lg hover:bg-surface-50">
-            <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-600 text-xs font-bold flex items-center justify-center">
-              {{ index + 1 }}
-            </span>
-            <div class="w-10 h-10 rounded-full bg-surface-200 flex items-center justify-center text-lg">
-              {{ patient.species === 'dog' ? '🐕' : patient.species === 'cat' ? '🐱' : '🐾' }}
-            </div>
-            <div class="flex-1">
-              <p class="font-medium text-surface-900">{{ patient.name }}</p>
-              <p class="text-xs text-surface-500">{{ patient.ownerName }}</p>
-            </div>
-            <span class="text-sm text-surface-600">{{ patient.visits }} visites</span>
-          </div>
-        </div>
-      </div>
+      <!-- La carte « Patients fréquents » est retirée : `topPatients` était
+           déclaré, rendu, et alimenté par rien — ni le front ni le back ne
+           l'ont jamais renseigné. Elle affichait un titre au-dessus du vide. -->
     </div>
 
     <!-- Employee performance -->
@@ -142,8 +120,10 @@
               <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Employé</th>
               <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">RDV traités</th>
               <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">Taux complétion</th>
-              <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">Note moyenne</th>
-              <th class="text-right py-3 px-4 text-sm font-medium text-surface-500">CA généré</th>
+              <!-- Colonnes « Note moyenne » et « CA généré » retirées : la note
+                   était tirée au sort à chaque requête, le CA codé en dur à
+                   zéro. Rien ne relie une facture à un employé, et aucune note
+                   n'est recueillie. -->
             </tr>
           </thead>
           <tbody>
@@ -165,50 +145,14 @@
                   {{ emp.completionRate }}%
                 </span>
               </td>
-              <td class="text-center py-3 px-4">
-                <div class="flex items-center justify-center gap-1">
-                  <svg class="w-4 h-4 text-warning-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span class="font-medium text-surface-900">{{ emp.rating }}</span>
-                </div>
-              </td>
-              <td class="text-right py-3 px-4 font-medium text-surface-900">{{ formatCurrency(emp.revenue) }}</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Recent activity -->
-    <div class="card">
-      <h3 class="font-semibold text-surface-900 mb-4">Activité récente</h3>
-      <div class="space-y-4">
-        <div v-for="activity in recentActivity" :key="activity.id" class="flex items-start gap-3">
-          <div :class="[
-            'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
-            activity.type === 'appointment' ? 'bg-primary-100 text-primary-600' :
-            activity.type === 'client' ? 'bg-success-100 text-success-600' :
-            activity.type === 'message' ? 'bg-primary-100 text-primary-600' :
-            'bg-surface-100 text-surface-600'
-          ]">
-            <svg v-if="activity.type === 'appointment'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <svg v-else-if="activity.type === 'client'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <div class="flex-1">
-            <p class="text-sm text-surface-900">{{ activity.description }}</p>
-            <p class="text-xs text-surface-500">{{ activity.time }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Le bloc « Activité récente » est retiré : `recentActivity` était
+         déclaré et rendu, mais aucune ligne du produit ne l'alimentait. -->
   </div>
 </template>
 
@@ -220,43 +164,47 @@ definePageMeta({
 const api = useVetApi()
 const period = ref('month')
 const loading = ref(true)
+const error = ref('')
 
+// `satisfaction` et `reviewCount` ont disparu : le backend ne les a jamais
+// renvoyés, et la carte affichait donc « 0/5 — basé sur 0 avis » en
+// permanence, présenté comme un relevé. Aucun avis n'est recueilli nulle part.
 const stats = ref({
   totalAppointments: 0,
-  appointmentsTrend: 0,
+  appointmentsTrend: null as number | null,
   totalClients: 0,
   newClients: 0,
   revenue: 0,
-  revenueTrend: 0,
-  satisfaction: 0,
-  reviewCount: 0,
+  revenueTrend: null as number | null,
 })
 
 const appointmentTypes = ref<any[]>([])
 const employeeStats = ref<any[]>([])
-const topPatients = ref<any[]>([])
-const recentActivity = ref<any[]>([])
 
 const fetchAnalytics = async () => {
   loading.value = true
+  error.value = ''
+
   const response = await api.get<any>(`/vet/analytics?period=${period.value}`)
+
   if (response.success && response.data) {
     stats.value = {
       totalAppointments: response.data.totalAppointments || 0,
-      appointmentsTrend: response.data.appointmentsTrend || 0,
+      // `?? null` et non `|| 0` : une tendance absente n'est pas une stagnation.
+      appointmentsTrend: response.data.appointmentsTrend ?? null,
       totalClients: response.data.totalClients || 0,
       newClients: response.data.newClients || 0,
       revenue: response.data.revenue || 0,
-      revenueTrend: response.data.revenueTrend || 0,
-      satisfaction: response.data.satisfaction || 0,
-      reviewCount: response.data.reviewCount || 0,
+      revenueTrend: response.data.revenueTrend ?? null,
     }
     appointmentTypes.value = response.data.appointmentTypes || []
-    employeeStats.value = (response.data.employeeStats || []).map((e: any) => ({
-      ...e,
-      rating: Number(e.rating?.toFixed(1)) || 0,
-    }))
+    employeeStats.value = response.data.employeeStats || []
+  } else {
+    // Sans cette branche, un échec laissait les zéros initiaux à l'écran, à
+    // lire comme des chiffres réels — le pire cas pour un tableau de bord.
+    error.value = response.message || 'Les statistiques n’ont pas pu être chargées.'
   }
+
   loading.value = false
 }
 
