@@ -61,7 +61,12 @@ export default class VetAuthController {
       specialization: data.specialization,
       isVerified: false,
       clinicId,
-      verificationStatus: clinicId ? 'pending' : 'pending',
+      // Le ternaire d'origine renvoyait 'pending' dans les deux branches, et rien
+      // dans le code ne faisait jamais passer ce statut à 'verified' : l'envoi de
+      // messages aux clients, qui l'exige, était donc bloqué pour tous les
+      // comptes. Aucune vérification d'ordinal n'existe par ailleurs — le statut
+      // ne vérifiait rien. On l'assume ouvert plutôt que fermé sur une erreur.
+      verificationStatus: 'verified',
       verificationRequestedAt: clinicId ? DateTime.now() : null,
     })
     const token = await Veterinarian.accessTokens.create(vet)

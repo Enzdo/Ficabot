@@ -136,6 +136,7 @@
                 </svg>
               </button>
             </form>
+            <p v-if="sendError" class="text-sm text-danger-600 mt-2" role="alert">{{ sendError }}</p>
           </div>
         </template>
 
@@ -170,6 +171,7 @@ const conversations = ref<any[]>([])
 const selectedConversation = ref<any>(null)
 const messages = ref<any[]>([])
 const newMessage = ref('')
+const sendError = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
 
 let pollInterval: any = null
@@ -239,17 +241,21 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || !selectedConversation.value) return
   
   sending.value = true
+  sendError.value = ''
   const content = newMessage.value
-  newMessage.value = ''
-  
+
   try {
     const response = await api.post<any>(`/vet/chat/conversations/${selectedConversation.value.id}/messages`, {
       content,
     })
-    
+
     if (response.success) {
+      // Le champ n'est vidé qu'une fois le message parti. Le vider avant
+      // l'appel le perdait sans trace : le composable ne lève pas sur un refus
+      // du serveur, donc la restauration du catch n'était jamais atteinte.
+      newMessage.value = ''
       messages.value.push(response.data)
-      
+
       // Update last message in conversation list
       const conv = conversations.value.find(c => c.id === selectedConversation.value.id)
       if (conv) {
@@ -266,10 +272,12 @@ const sendMessage = async () => {
           messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
         }
       })
+    } else {
+      sendError.value = response.message || 'Le message n’a pas pu être envoyé. Votre texte est conservé.'
     }
   } catch (e) {
     console.error('Error sending message:', e)
-    newMessage.value = content // Restore message on error
+    sendError.value = 'Le message n’a pas pu être envoyé. Votre texte est conservé.'
   } finally {
     sending.value = false
   }
