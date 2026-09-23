@@ -86,6 +86,28 @@ export const useVetAuthStore = defineStore('vetAuth', {
       onboardingCookie().value = completed ? '1' : '0'
     },
 
+    /**
+     * Déconnexion volontaire : on prévient le serveur avant d'oublier le jeton,
+     * faute de quoi il reste valable après la « déconnexion ».
+     *
+     * Réservé au geste délibéré. Les reprises après 401 appellent `logout()`
+     * directement : y placer cet appel créerait une boucle, le 401 déclenchant
+     * une requête qui renverrait un 401.
+     */
+    async signOut() {
+      const token = this.token
+      if (token) {
+        const config = useRuntimeConfig()
+        // L'échec ne bloque pas : mieux vaut une session oubliée localement
+        // qu'un praticien coincé sur un écran dont il veut sortir.
+        await $fetch(`${config.public.apiBase}/vet/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {})
+      }
+      this.logout()
+    },
+
     logout() {
       this.vet = null
       this.token = null

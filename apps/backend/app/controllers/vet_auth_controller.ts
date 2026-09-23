@@ -6,6 +6,7 @@ import { DateTime } from 'luxon'
 import { randomBytes } from 'node:crypto'
 import mail from '@adonisjs/mail/services/main'
 import logger from '@adonisjs/core/services/logger'
+import * as throttle from '#services/login_throttle'
 import env from '#start/env'
 import WelcomeVetNotification from '#mails/welcome_vet_notification'
 import PasswordResetVetNotification from '#mails/password_reset_vet_notification'
@@ -110,7 +111,33 @@ export default class VetAuthController {
   async login({ request, response }: HttpContext) {
     const { email, password } = await request.validateUsing(vetLoginValidator)
 
-    const vet = await Veterinarian.verifyCredentials(email, password)
+    const throttleKey = `login:${request.ip()}:${email.toLowerCase()}`
+    const verdict = throttle.hit(throttleKey, 10, 15 * 60 * 1000)
+
+    if (!verdict.allowed) {
+      return response.tooManyRequests({
+        success: false,
+        message: `Trop de tentatives. Réessayez dans ${Math.ceil(verdict.retryAfter / 60)} minutes.`,
+        code: 'TOO_MANY_ATTEMPTS',
+      })
+    }
+
+    let vet: Veterinarian
+    try {
+      vet = await Veterinarian.verifyCredentials(email, password)
+    } catch {
+      // Laissée remonter, l'exception d'identifiants s'auto-rend en texte brut
+      // — faute de middleware de session, elle choisit la branche « html ». Le
+      // composable tentait alors d'en lire du JSON, échouait, et affichait
+      // « Erreur de connexion au serveur » : le praticien partait chercher une
+      // panne réseau au lieu de corriger son mot de passe.
+      return response.badRequest({
+        success: false,
+        message: 'Email ou mot de passe incorrect.',
+      })
+    }
+
+    throttle.clear(throttleKey)
     const token = await Veterinarian.accessTokens.create(vet)
 
     return response.ok({
@@ -177,6 +204,26 @@ export default class VetAuthController {
     })
   }
 
+  /**
+   * Révoque les jetons d'accès du praticien, hormis celui passé en second
+   * argument. Un échec de révocation n'est pas silencieux : mieux vaut un
+   * journal qui alerte qu'une session qu'on croit fermée et qui ne l'est pas.
+   */
+  private async revokeTokens(vet: Veterinarian, keepIdentifier?: string | number | BigInt) {
+    const tokens = await Veterinarian.accessTokens.all(vet)
+
+    for (const token of tokens) {
+      if (keepIdentifier !== undefined && String(token.identifier) === String(keepIdentifier)) {
+        continue
+      }
+      try {
+        await Veterinarian.accessTokens.delete(vet, token.identifier)
+      } catch (error) {
+        logger.error({ err: error, vetId: vet.id }, 'Échec de révocation d’un jeton vétérinaire')
+      }
+    }
+  }
+
   async logout({ response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
     await Veterinarian.accessTokens.delete(vet, vet.currentAccessToken!.identifier)
@@ -204,6 +251,11 @@ export default class VetAuthController {
     vet.password = newPassword
     await vet.save()
 
+    // Les autres sessions tombent : sans cela, reprendre son mot de passe après
+    // une compromission ne délogeait pas l'intrus. Celle en cours est conservée,
+    // pour ne pas éjecter le praticien de l'écran où il vient d'agir.
+    await this.revokeTokens(vet, vet.currentAccessToken?.identifier)
+
     // Send confirmation email (async)
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
       logger.error({ err: error }, 'Failed to send vet password changed email')
@@ -217,6 +269,23 @@ export default class VetAuthController {
 
   async forgotPassword({ request, response }: HttpContext) {
     const { email } = request.only(['email'])
+
+    // Chaque appel réécrit le jeton de réinitialisation et déclenche un envoi :
+    // sans limite, l'adresse d'un confrère pouvait être bombardée, et son lien
+    // en cours invalidé à chaque fois.
+    const verdict = throttle.hit(
+      `forgot:${request.ip()}:${String(email).toLowerCase()}`,
+      5,
+      60 * 60 * 1000
+    )
+
+    if (!verdict.allowed) {
+      return response.tooManyRequests({
+        success: false,
+        message: 'Trop de demandes. Réessayez dans une heure.',
+        code: 'TOO_MANY_ATTEMPTS',
+      })
+    }
 
     const vet = await Veterinarian.findBy('email', email)
 
@@ -274,6 +343,11 @@ export default class VetAuthController {
     vet.resetToken = null
     vet.resetTokenExpiresAt = null
     await vet.save()
+
+    // Toutes les sessions tombent, sans exception : une réinitialisation est
+    // souvent la réaction à une perte de contrôle du compte. En laisser une
+    // seule debout viderait la manœuvre de son sens.
+    await this.revokeTokens(vet)
 
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
       logger.error({ err: error }, 'Failed to send vet password changed email')

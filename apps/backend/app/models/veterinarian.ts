@@ -3,7 +3,7 @@ import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
 import { BaseModel, column, manyToMany, belongsTo } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
-import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import { DbAccessTokensProvider, type AccessToken } from '@adonisjs/auth/access_tokens'
 import type { ManyToMany, BelongsTo } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import VetClinic from '#models/vet_clinic'
@@ -118,9 +118,20 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   })
   declare clinic: BelongsTo<typeof VetClinic>
 
+  /**
+   * Jeton ayant authentifié la requête en cours. Posé par le garde d'accès ;
+   * il n'était pas déclaré, si bien que `logout` et le changement de mot de
+   * passe le manipulaient hors du typage.
+   */
+  declare currentAccessToken?: AccessToken
+
   static accessTokens = DbAccessTokensProvider.forModel(Veterinarian, {
     type: 'vetAccessTokens',
     table: 'vet_access_tokens',
+    // Sans échéance, un jeton dérobé une fois restait valable indéfiniment.
+    // Trente jours : assez long pour ne pas redemander la connexion sans
+    // cesse, assez court pour qu'une fuite ne soit pas définitive.
+    expiresIn: '30 days',
   })
 
 }

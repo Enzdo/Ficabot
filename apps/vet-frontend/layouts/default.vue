@@ -464,8 +464,8 @@ const handleNotifClick = async (notif: any) => {
   showNotifications.value = false
 }
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.signOut()
   router.push('/login')
 }
 
