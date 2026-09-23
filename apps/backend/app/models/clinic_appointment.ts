@@ -6,6 +6,18 @@ import VetEmployee from '#models/vet_employee'
 import Pet from '#models/pet'
 import User from '#models/user'
 
+/** Libellés des types de rendez-vous, partagés par les vues qui les affichent. */
+export const APPOINTMENT_TYPE_LABELS: Record<string, string> = {
+  consultation: 'Consultation',
+  vaccination: 'Vaccination',
+  surgery: 'Chirurgie',
+  emergency: 'Urgence',
+  checkup: 'Bilan',
+  grooming: 'Toilettage',
+  followup: 'Suivi',
+  other: 'Autre',
+}
+
 export default class ClinicAppointment extends BaseModel {
   static table = 'vet_appointments'
 
@@ -39,6 +51,14 @@ export default class ClinicAppointment extends BaseModel {
 
   @column()
   declare petSpecies: string | null
+
+  /**
+   * Libellé du rendez-vous. Colonne NOT NULL partagée avec le modèle côté
+   * propriétaire ; elle n'était pas déclarée ici, si bien qu'une valeur passée
+   * à la création était écartée par Lucid et l'insertion échouait.
+   */
+  @column()
+  declare title: string
 
   // Appointment details
   @column()

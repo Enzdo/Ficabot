@@ -264,12 +264,14 @@
             <textarea v-model="newAppointment.notes" class="input" rows="2" placeholder="Notes additionnelles..."></textarea>
           </div>
 
+          <p v-if="formError" class="text-sm text-danger-600 pt-4" role="alert">{{ formError }}</p>
+
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showNewAppointment = false" class="flex-1 btn-secondary">
               Annuler
             </button>
-            <button type="submit" class="flex-1 btn-primary">
-              Créer le RDV
+            <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
+              {{ saving ? 'Création...' : 'Créer le RDV' }}
             </button>
           </div>
         </form>
@@ -341,6 +343,8 @@
             <NuxtLink v-if="appointmentPatient(selectedAppointment, sharedPatients)" :to="`/patients/${appointmentPatient(selectedAppointment, sharedPatients)?.vetToken}`" class="btn-secondary">Ouvrir le dossier</NuxtLink>
             <p v-else class="text-sm text-surface-500 w-full">Aucun dossier partagé associé. Vous pourrez choisir le patient dans la consultation.</p>
           </div>
+          <p v-if="detailError" class="text-sm text-danger-600 pt-4" role="alert">{{ detailError }}</p>
+
           <div class="flex gap-3 pt-4">
             <button @click="cancelAppointment(selectedAppointment.id)" class="flex-1 btn-secondary text-danger-600">
               Annuler
@@ -473,6 +477,9 @@ const tabs = [
 const activeTab = ref('all')
 const viewMode = ref<'list' | 'calendar'>('list')
 const showNewAppointment = ref(false)
+const saving = ref(false)
+const formError = ref('')
+const detailError = ref('')
 const showEmployeeModal = ref(false)
 const selectedAppointment = ref<any>(null)
 const sharedPatients = ref<any[]>([])
@@ -702,6 +709,9 @@ const openNewAppointment = () => {
 }
 
 const createAppointment = async () => {
+  formError.value = ''
+  saving.value = true
+
   try {
     const response = await api.post<any>('/vet/appointments', {
       ...newAppointment.value,
@@ -710,15 +720,27 @@ const createAppointment = async () => {
     if (response.success) {
       showNewAppointment.value = false
       await loadAppointments()
+    } else {
+      // La modale restait ouverte sans un mot : le praticien recliquait,
+      // persuadé de ne pas avoir cliqué, alors que le serveur refusait.
+      formError.value = response.message || "Le rendez-vous n'a pas pu être créé."
     }
   } catch (e) {
     console.error('Error creating appointment:', e)
+    formError.value = "Le rendez-vous n'a pas pu être créé."
+  } finally {
+    saving.value = false
   }
 }
 
 const cancelAppointment = async (id: number) => {
   try {
-    await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'cancelled' })
+    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'cancelled' })
+    if (!response.success) {
+      detailError.value = response.message || "Le rendez-vous n'a pas pu être annulé."
+      return
+    }
+    detailError.value = ''
     selectedAppointment.value = null
     await loadAppointments()
   } catch (e) {
@@ -728,11 +750,17 @@ const cancelAppointment = async (id: number) => {
 
 const completeAppointment = async (id: number) => {
   try {
-    await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'completed' })
+    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'completed' })
+    if (!response.success) {
+      detailError.value = response.message || "Le rendez-vous n'a pas pu être marqué terminé."
+      return
+    }
+    detailError.value = ''
     selectedAppointment.value = null
     await loadAppointments()
   } catch (e) {
     console.error('Error completing appointment:', e)
+    detailError.value = "Le rendez-vous n'a pas pu être marqué terminé."
   }
 }
 

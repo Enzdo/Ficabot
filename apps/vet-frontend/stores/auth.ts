@@ -47,7 +47,12 @@ const ONBOARDING_COOKIE = 'vet_onboarding_done'
 const cookieOptions = () => ({
   maxAge: 60 * 60 * 24 * 30,
   sameSite: 'lax' as const,
-  secure: import.meta.client ? location.protocol === 'https:' : true,
+  // `secure` était forcé à vrai pendant le rendu serveur. Sur une origine HTTP
+  // — le développement, ou un déploiement mal configuré — le navigateur rejette
+  // alors le cookie posé par le serveur. Le middleware ne lit que le cookie
+  // pendant le rendu serveur : son absence renvoyait à l'écran de connexion une
+  // session pourtant valide, dont le jeton dormait intact dans localStorage.
+  secure: import.meta.client ? location.protocol === 'https:' : !import.meta.dev,
   path: '/',
 })
 

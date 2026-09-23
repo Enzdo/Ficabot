@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import ClinicAppointment from '#models/clinic_appointment'
+import ClinicAppointment, { APPOINTMENT_TYPE_LABELS } from '#models/clinic_appointment'
 import Veterinarian from '#models/veterinarian'
 import { DateTime } from 'luxon'
 
@@ -169,8 +169,24 @@ export default class ClinicAppointmentsController {
       data.endTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
     }
 
+    // `vet_appointments.title` est NOT NULL sans valeur par défaut : la table
+    // est partagée avec le modèle côté propriétaire, qui s'en sert pour libeller
+    // le rendez-vous. Ce contrôleur ne le renseignait pas, et toute création
+    // depuis l'espace vétérinaire partait en violation de contrainte — aucun
+    // rendez-vous ne pouvait être créé, et l'échec ne disait rien à l'écran.
+    const label = APPOINTMENT_TYPE_LABELS[data.type as string] || 'Rendez-vous'
+    const title = data.petName ? `${label} — ${data.petName}` : label
+
     const appointment = await ClinicAppointment.create({
       ...data,
+      title,
+      // Les clés étrangères absentes doivent valoir `null`, pas `undefined` :
+      // le formulaire ne transmet qu'un nom d'animal libre, et Lucid refusait
+      // ensuite de précharger la relation — l'insertion réussissait, puis la
+      // réponse partait en 500.
+      petId: data.petId ?? null,
+      userId: data.userId ?? null,
+      employeeId: data.employeeId ?? null,
       veterinarianId: vet.id,
       status: 'pending',
     })
