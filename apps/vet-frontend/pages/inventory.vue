@@ -346,6 +346,7 @@
             <button @click="addMovement" :disabled="!movementForm.quantity || savingMovement" class="btn-primary w-full disabled:opacity-50">
               {{ savingMovement ? 'Enregistrement...' : 'Enregistrer le mouvement' }}
             </button>
+            <p v-if="movementError" class="text-sm text-danger-600" role="alert">{{ movementError }}</p>
           </div>
         </div>
 
@@ -394,6 +395,7 @@ const api = useVetApi()
 const loading = ref(true)
 const saving = ref(false)
 const savingMovement = ref(false)
+const movementError = ref('')
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const lowStockOnly = ref(false)
@@ -527,28 +529,44 @@ const saveItem = async () => {
   saving.value = false
 }
 
+// L'historique est servi par /vet/inventory/:id/movements, qui était
+// implémenté mais que rien n'appelait : le bloc « Historique des mouvements »
+// restait donc invisible en permanence.
+const loadMovements = async (itemId: number) => {
+  const response = await api.get<any>(`/vet/inventory/${itemId}/movements`)
+  if (response.success && selectedItem.value?.id === itemId) {
+    selectedItem.value = { ...selectedItem.value, movements: response.data }
+  }
+}
+
 const openDetailModal = async (item: any) => {
   selectedItem.value = { ...item }
   movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '' }
   showDetailModal.value = true
+  loadMovements(item.id)
 }
 
 const addMovement = async () => {
   if (!selectedItem.value || !movementForm.value.quantity) return
   savingMovement.value = true
+  movementError.value = ''
 
-  const response = await api.post<any>(`/vet/inventory/${selectedItem.value.id}/movement`, movementForm.value)
-  if (response.success) {
-    if (response.data) {
-      selectedItem.value = response.data
-    } else {
-      const refreshed = await api.get<any>(`/vet/inventory/${selectedItem.value.id}`)
-      if (refreshed.success) selectedItem.value = refreshed.data
-    }
+  const itemId = selectedItem.value.id
+  const response = await api.post<any>(`/vet/inventory/${itemId}/movement`, movementForm.value)
+
+  if (response.success && response.data) {
+    // La réponse ne portait qu'un fragment de l'article et écrasait la fiche
+    // ouverte ; elle renvoie maintenant l'article entier. L'historique est
+    // conservé le temps d'être rechargé, pour ne pas faire clignoter le bloc.
+    selectedItem.value = { ...response.data, movements: selectedItem.value.movements }
     movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '' }
+    loadMovements(itemId)
     fetchItems()
     fetchStats()
+  } else {
+    movementError.value = response.message || 'Le mouvement n’a pas pu être enregistré.'
   }
+
   savingMovement.value = false
 }
 

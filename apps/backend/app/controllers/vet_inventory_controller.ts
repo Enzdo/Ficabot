@@ -120,14 +120,32 @@ export default class VetInventoryController {
       'category',
       'sku',
       'unit',
+      'quantity',
       'minStock',
       'price',
       'supplier',
       'expiryDate',
       'notes',
     ])
+
+    // `quantity` était absent de cette liste alors que le formulaire l'expose en
+    // champ requis : la correction de stock partait à la poubelle sans un mot.
+    // Elle est désormais reprise, et tracée — dans un stock, aucune variation ne
+    // doit être invisible dans l'historique.
+    const previousQuantity = item.quantity
+    const nextQuantity = data.quantity === undefined ? previousQuantity : Number(data.quantity)
+
     item.merge(data)
     await item.save()
+
+    if (Number.isFinite(nextQuantity) && nextQuantity !== previousQuantity) {
+      await VetInventoryMovement.create({
+        itemId: item.id,
+        type: 'adjustment',
+        quantity: nextQuantity,
+        reason: 'Correction manuelle depuis la fiche article',
+      })
+    }
 
     return response.ok({ success: true, data: item })
   }
@@ -166,9 +184,13 @@ export default class VetInventoryController {
     }
     await item.save()
 
+    // L'article entier, et non le seul triplet {id, quantity, isLowStock} : la
+    // page réinjectait cette réponse partielle dans la fiche ouverte, qui
+    // perdait alors nom, prix, fournisseur et péremption sous les yeux de
+    // l'utilisateur.
     return response.ok({
       success: true,
-      data: { id: item.id, quantity: item.quantity, isLowStock: item.quantity <= item.minStock },
+      data: { ...item.serialize(), isLowStock: item.quantity <= item.minStock },
     })
   }
 
