@@ -50,12 +50,17 @@
           </div>
           <div>
             <p class="text-2xl font-bold text-surface-900">{{ stats.totalClients }}</p>
-            <p class="text-sm text-surface-500">Clients actifs</p>
+            <!-- « Clients actifs » laissait croire à un décompte sur la période
+                 choisie, alors que le serveur ne borne ce chiffre par aucune
+                 date : c'est le total des clients liés depuis toujours. -->
+            <p class="text-sm text-surface-500">Clients au total</p>
           </div>
         </div>
         <div class="mt-3 flex items-center gap-1 text-sm">
           <span class="text-success-600">+{{ stats.newClients }}</span>
-          <span class="text-surface-400">nouveaux ce mois</span>
+          <!-- Le libellé était figé sur « ce mois » alors que la valeur suit la
+               période sélectionnée : en vue « Cette année », il mentait. -->
+          <span class="text-surface-400">nouveaux {{ periodSuffix }}</span>
         </div>
       </div>
 
@@ -173,6 +178,17 @@ definePageMeta({
 
 const api = useVetApi()
 const period = ref('month')
+
+/** Complément de phrase accordé à la période choisie, pour les légendes. */
+const periodSuffix = computed(
+  () =>
+    ({
+      week: 'cette semaine',
+      month: 'ce mois',
+      quarter: 'ce trimestre',
+      year: 'cette année',
+    })[period.value] || 'sur la période'
+)
 const loading = ref(true)
 const error = ref('')
 
