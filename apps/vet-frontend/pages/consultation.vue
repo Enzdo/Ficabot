@@ -1157,10 +1157,11 @@ const startRecording = async () => {
   recordError.value = ''
 
   if (micSupport.value !== 'ok') return
-  if (!selectedPatient.value) {
-    recordError.value = "Choisissez d'abord le patient concerné : le compte rendu doit rejoindre un dossier."
-    return
-  }
+
+  // Pas de garde sur le patient : l'écran annonce juste au-dessus qu'on peut
+  // dicter sans patient, le compte rendu restant copiable. Le garde avait été
+  // retiré de la transcription mais oublié ici, si bien que la dictée libre
+  // n'était possible que par import de fichier — l'inverse de ce qui est écrit.
 
   try {
     micStream = await navigator.mediaDevices.getUserMedia({
@@ -1392,7 +1393,18 @@ const failTranscription = (message: string) => {
  */
 
 const POLL_MS = 2000
+
+/**
+ * Au-delà, on cesse d'attendre. Le suivi se reprogrammait sans aucun plafond
+ * et l'écran d'attente n'offrait aucune sortie : une dictée restée coincée
+ * côté serveur faisait tourner la page indéfiniment. Dix minutes couvrent
+ * largement une longue dictée ; au-delà, mieux vaut rendre la main — l'audio
+ * est conservé, la relance reste donc possible.
+ */
+const WATCH_TIMEOUT_MS = 10 * 60 * 1000
+
 let pollTimer: ReturnType<typeof setTimeout> | null = null
+let watchStartedAt = 0
 const pendingFound = ref(false)
 
 const stopWatching = () => {
@@ -1404,6 +1416,24 @@ const stopWatching = () => {
     clearInterval(transcribeTick)
     transcribeTick = null
   }
+}
+
+/**
+ * Entre dans l'écran d'attente et lance le compteur de secondes.
+ *
+ * `transcribeSeconds` était affiché mais n'était jamais incrémenté : le
+ * praticien lisait « 0 s » pendant toute l'attente, sur l'écran précisément
+ * destiné à le rassurer.
+ */
+const beginTranscribing = () => {
+  step.value = 'transcribing'
+  transcribeSeconds.value = 0
+  watchStartedAt = Date.now()
+
+  if (transcribeTick !== null) clearInterval(transcribeTick)
+  transcribeTick = setInterval(() => {
+    transcribeSeconds.value += 1
+  }, 1000)
 }
 
 /** Replie le compte rendu renvoyé sur les rubriques affichées à la relecture. */
@@ -1453,6 +1483,13 @@ const failDictation = (message: string) => {
 }
 
 const watchDictation = async (id: number) => {
+  if (watchStartedAt && Date.now() - watchStartedAt > WATCH_TIMEOUT_MS) {
+    failDictation(
+      "Le traitement n'a pas répondu depuis dix minutes. Votre enregistrement est conservé : relancez-le."
+    )
+    return
+  }
+
   const result = await api.get<any>(`/vet/consultations/dictations/${id}`)
 
   // Serveur injoignable : on ne solde rien, le travail se poursuit peut-être.
@@ -1496,7 +1533,7 @@ const watchDictation = async (id: number) => {
 
 /** Dépose l'audio et se raccroche au travail. L'entrée locale existe déjà. */
 const sendDictation = async (entry: PendingDictation) => {
-  step.value = 'transcribing'
+  beginTranscribing()
   dictationStatus.value = 'sending'
   recordError.value = ''
 
@@ -1586,6 +1623,28 @@ const startTranscription = async () => {
   await sendDictation(entry)
 }
 
+/**
+ * Remet la page dans l'état où la dictée a été laissée.
+ *
+ * Seuls le blob et l'extension étaient restaurés. Le patient rattaché, lui,
+ * était perdu : au retour du compte rendu, la page se croyait en dictée libre
+ * et le bouton « Enregistrer dans le dossier » disparaissait — le praticien
+ * n'avait plus qu'à recopier son texte à la main. L'audio n'était pas
+ * réécoutable non plus, faute de reconstruire son URL.
+ */
+const restoreFromPending = (entry: PendingDictation) => {
+  audioBlob.value = entry.blob
+  audioExt.value = entry.ext
+
+  if (audioUrl.value) URL.revokeObjectURL(audioUrl.value)
+  audioUrl.value = URL.createObjectURL(entry.blob)
+
+  if (entry.token) selectedToken.value = entry.token
+  if (entry.templateId) selectedTemplateId.value = entry.templateId
+  if (entry.language) language.value = entry.language
+  instruction.value = entry.instruction || ''
+}
+
 /** Relance depuis la copie locale, sans refaire dicter. */
 const retryDictation = async () => {
   const entry = await readPending()
@@ -1595,8 +1654,7 @@ const retryDictation = async () => {
     return
   }
 
-  audioBlob.value = entry.blob
-  audioExt.value = entry.ext
+  restoreFromPending(entry)
   pendingFound.value = false
 
   // Le travail précédent a pu aboutir entre-temps : on regarde avant de renvoyer.
@@ -1608,7 +1666,7 @@ const retryDictation = async () => {
       return
     }
     if (check.success && check.data && check.data.status !== 'failed') {
-      step.value = 'transcribing'
+      beginTranscribing()
       dictationStatus.value = check.data.status
       await watchDictation(entry.dictationId)
       return
@@ -1634,8 +1692,7 @@ const resumePending = async () => {
   const entry = await readPending()
   if (!entry) return
 
-  audioBlob.value = entry.blob
-  audioExt.value = entry.ext
+  restoreFromPending(entry)
 
   if (!entry.dictationId) {
     pendingFound.value = true
@@ -1661,7 +1718,7 @@ const resumePending = async () => {
     return
   }
 
-  step.value = 'transcribing'
+  beginTranscribing()
   dictationStatus.value = check.data.status
   await watchDictation(entry.dictationId)
 }
