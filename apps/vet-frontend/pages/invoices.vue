@@ -179,7 +179,72 @@
             </div>
             <div class="space-y-2">
               <div v-for="(item, index) in newInvoice.items" :key="index" class="flex gap-2 items-start">
-                <input v-model="item.description" type="text" class="input flex-1" placeholder="Description" />
+                <!-- Description : saisie libre, ou puisée dans le catalogue -->
+                <div class="relative flex-1">
+                  <input v-model="item.description" type="text" class="input w-full pr-10" placeholder="Description" />
+                  <button
+                    type="button"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-700 dark:hover:bg-surface-800"
+                    :aria-expanded="openPicker === index"
+                    aria-label="Choisir une prestation ou un article"
+                    @click="togglePicker(index)"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <Transition name="popover">
+                    <div v-if="openPicker === index" class="absolute left-0 right-0 z-30 mt-1">
+                      <!-- Ferme au clic ailleurs, sans écouteur global -->
+                      <div class="fixed inset-0 -z-10" @mousedown="closePicker"></div>
+                      <div class="rounded-xl border border-surface-200 bg-white shadow-lg dark:border-surface-700 dark:bg-surface-900">
+                        <div class="border-b border-surface-100 p-2 dark:border-surface-800">
+                          <input
+                            v-model="pickerQuery"
+                            type="text"
+                            class="input w-full text-sm"
+                            placeholder="Chercher une prestation ou un article…"
+                          />
+                        </div>
+                        <ul class="max-h-56 overflow-y-auto py-1">
+                          <li v-if="!catalogLoaded" class="px-3 py-2 text-sm text-surface-500">
+                            Chargement du catalogue…
+                          </li>
+                          <li v-else-if="!filteredCatalog.length" class="px-3 py-2 text-sm text-surface-500">
+                            {{ catalog.length ? 'Aucun résultat.' : 'Votre catalogue est vide : ajoutez des prestations dans les réglages, ou des articles dans l’inventaire.' }}
+                          </li>
+                          <li v-for="entry in filteredCatalog" :key="entry.key">
+                            <button
+                              type="button"
+                              class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-surface-100 dark:hover:bg-surface-800"
+                              @click="pickEntry(index, entry)"
+                            >
+                              <span
+                                class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                                :class="entry.kind === 'service'
+                                  ? 'bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-200'
+                                  : 'bg-accent-100 text-accent-800 dark:bg-accent-900/40 dark:text-accent-200'"
+                              >
+                                {{ entry.kind === 'service' ? 'Presta' : 'Stock' }}
+                              </span>
+                              <span class="min-w-0 flex-1">
+                                <span class="block truncate text-surface-900 dark:text-surface-100">{{ entry.label }}</span>
+                                <!-- Le stock restant est dit ici : facturer un article épuisé se voit avant, pas après -->
+                                <span v-if="entry.stock !== null" class="block text-[11px]" :class="entry.stock > 0 ? 'text-surface-400' : 'text-danger-600'">
+                                  {{ entry.stock > 0 ? `${entry.stock} ${entry.unit} en stock` : 'épuisé' }}
+                                </span>
+                              </span>
+                              <span class="shrink-0 font-medium text-surface-700 dark:text-surface-300">
+                                {{ formatCurrency(entry.price) }}
+                              </span>
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
                 <input v-model.number="item.quantity" type="number" class="input w-20" placeholder="Qté" min="1" />
                 <input v-model.number="item.unitPrice" type="number" step="0.01" class="input w-24" placeholder="Prix" />
                 <div class="w-24 py-2 text-right font-medium text-surface-900">
@@ -367,6 +432,98 @@ const newInvoice = ref({
   items: [{ description: '', quantity: 1, unitPrice: 0 }],
   notes: '',
 })
+
+/* ---------- Catalogue : prestations et articles en stock ---------- */
+
+/*
+ * Les deux existaient déjà, mais n'alimentaient pas la facturation : chaque
+ * ligne se retapait à la main, prix compris. On les rassemble ici en une seule
+ * liste cherchable. Rien n'est imposé : le texte libre reste possible, le
+ * catalogue ne fait que remplir.
+ */
+
+interface CatalogEntry {
+  key: string
+  kind: 'service' | 'product'
+  label: string
+  price: number
+  unit: string
+  category: string
+  /** Pour un article en stock seulement : ce qu'il en reste. */
+  stock: number | null
+}
+
+const catalog = ref<CatalogEntry[]>([])
+const catalogLoaded = ref(false)
+const openPicker = ref<number | null>(null)
+const pickerQuery = ref('')
+
+const loadCatalog = async () => {
+  // Les deux sources sont indépendantes : l'échec de l'une ne prive pas de l'autre.
+  const [services, inventory] = await Promise.all([
+    api.get<any>('/vet/clinic/services'),
+    api.get<any>('/vet/inventory'),
+  ])
+
+  const entries: CatalogEntry[] = []
+
+  if (services.success && Array.isArray(services.data)) {
+    for (const s of services.data) {
+      entries.push({
+        key: `service-${s.id}`,
+        kind: 'service',
+        label: s.name,
+        price: Number(s.price) || 0,
+        unit: '',
+        category: 'Prestation',
+        stock: null,
+      })
+    }
+  }
+
+  if (inventory.success && Array.isArray(inventory.data)) {
+    for (const i of inventory.data) {
+      entries.push({
+        key: `product-${i.id}`,
+        kind: 'product',
+        label: i.name,
+        price: Number(i.price) || 0,
+        unit: i.unit || '',
+        category: i.category || 'Article',
+        stock: typeof i.quantity === 'number' ? i.quantity : null,
+      })
+    }
+  }
+
+  catalog.value = entries
+  catalogLoaded.value = true
+}
+
+const filteredCatalog = computed(() => {
+  const q = pickerQuery.value.trim().toLowerCase()
+  if (!q) return catalog.value
+  return catalog.value.filter(
+    (e) => e.label.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
+  )
+})
+
+const togglePicker = (index: number) => {
+  openPicker.value = openPicker.value === index ? null : index
+  pickerQuery.value = ''
+  if (openPicker.value !== null && !catalogLoaded.value) loadCatalog()
+}
+
+const pickEntry = (index: number, entry: CatalogEntry) => {
+  const line = newInvoice.value.items[index]
+  line.description = entry.unit ? `${entry.label} (${entry.unit})` : entry.label
+  line.unitPrice = entry.price
+  openPicker.value = null
+  pickerQuery.value = ''
+}
+
+const closePicker = () => {
+  openPicker.value = null
+}
 
 const subtotal = computed(() => {
   return newInvoice.value.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
