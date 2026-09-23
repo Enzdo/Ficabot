@@ -98,7 +98,7 @@
                 :style="getAppointmentStyle(apt, day.dayIndex)"
                 :class="[
                   'absolute rounded-lg px-1.5 py-1 cursor-pointer overflow-hidden border text-xs leading-tight transition-shadow hover:shadow-md z-10',
-                  getAppointmentClasses(apt.type)
+                  getAppointmentClasses(apt.type, apt.status)
                 ]"
                 role="button" tabindex="0" :aria-label="`Ouvrir le rendez-vous de ${apt.petName} à ${apt.startTime}`" @keydown.enter.prevent="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt" @click.stop="selectedAppointment = apt"
               >
@@ -146,7 +146,7 @@
               :style="getDayAppointmentStyle(apt)"
               :class="[
                 'absolute rounded-lg px-3 py-2 cursor-pointer overflow-hidden border transition-shadow hover:shadow-md z-10',
-                getAppointmentClasses(apt.type)
+                getAppointmentClasses(apt.type, apt.status)
               ]"
               role="button" tabindex="0" :aria-label="`Ouvrir le rendez-vous de ${apt.petName} à ${apt.startTime}`" @keydown.enter.prevent="selectedAppointment = apt" @keydown.space.prevent="selectedAppointment = apt" @click.stop="selectedAppointment = apt"
             >
@@ -209,7 +209,40 @@ const selectedAppointment = ref<Appointment | null>(null)
 const closePopover = () => { selectedAppointment.value = null }
 const loadError = ref('')
 
-const hours = Array.from({ length: 12 }, (_, i) => i + 8)
+/**
+ * Amplitude de la grille.
+ *
+ * Elle était figée de 8 h à 19 h, et `top` se calculait sans borne : un
+ * rendez-vous à 7 h recevait `top: -60px` et se dessinait par-dessus l'en-tête,
+ * un rendez-vous à 21 h passait sous la grille. Les urgences de nuit
+ * disparaissaient purement et simplement du calendrier.
+ *
+ * La plage s'étend désormais à ce qu'il y a à montrer, sans jamais se réduire
+ * en deçà des heures ouvrées habituelles.
+ */
+const DEFAULT_START_HOUR = 8
+const DEFAULT_END_HOUR = 19
+
+const gridBounds = computed(() => {
+  const shown = viewMode.value === 'week' ? appointments.value : dayAppointments.value
+
+  let start = DEFAULT_START_HOUR
+  let end = DEFAULT_END_HOUR
+
+  for (const apt of shown) {
+    const from = parseTime(apt.startTime)
+    if (!Number.isFinite(from)) continue
+    const to = from + (Number(apt.duration) || 30) / 60
+    start = Math.min(start, Math.floor(from))
+    end = Math.max(end, Math.ceil(to))
+  }
+
+  return { start, end: Math.max(end, start + 1) }
+})
+
+const hours = computed(() =>
+  Array.from({ length: gridBounds.value.end - gridBounds.value.start }, (_, i) => i + gridBounds.value.start)
+)
 
 const dayLabels = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const dayLabelsShort = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -334,7 +367,7 @@ const parseTime = (timeStr: string): number => {
 
 const getAppointmentStyle = (apt: Appointment, dayIndex: number) => {
   const time = parseTime(apt.startTime)
-  const top = (time - 8) * 60
+  const top = (time - gridBounds.value.start) * 60
   const height = Math.max((apt.duration / 60) * 60, 18)
   const colFraction = 1 / 7
 
@@ -348,7 +381,7 @@ const getAppointmentStyle = (apt: Appointment, dayIndex: number) => {
 
 const getDayAppointmentStyle = (apt: Appointment) => {
   const time = parseTime(apt.startTime)
-  const top = (time - 8) * 60
+  const top = (time - gridBounds.value.start) * 60
   const height = Math.max((apt.duration / 60) * 60, 24)
   return {
     top: `${top}px`,
@@ -362,10 +395,14 @@ const currentTimePosition = ref<number | null>(null)
 
 const updateCurrentTime = () => {
   const now = new Date()
-  const hours = now.getHours()
+  const h = now.getHours()
   const minutes = now.getMinutes()
-  if (hours >= 8 && hours < 19) {
-    currentTimePosition.value = (hours - 8 + minutes / 60) * 60
+  const { start, end } = gridBounds.value
+
+  // Adossé à l'amplitude réelle de la grille, et non plus à 8 h–19 h en dur :
+  // sur une journée étendue par une urgence, le repère se posait de travers.
+  if (h >= start && h < end) {
+    currentTimePosition.value = (h - start + minutes / 60) * 60
   } else {
     currentTimePosition.value = null
   }
@@ -400,7 +437,14 @@ const getStatusLabel = (status: string): string => {
   return labels[status] || status
 }
 
-const getAppointmentClasses = (type: string): string => {
+const getAppointmentClasses = (type: string, status?: string): string => {
+  // Un rendez-vous annulé occupait son créneau exactement comme un confirmé :
+  // la couleur ne venait que du type, jamais du statut. Il est maintenant
+  // délavé et barré — le créneau reste visible, mais ne se confond plus.
+  if (status === 'cancelled' || status === 'no_show') {
+    return 'bg-surface-50 border-surface-200 text-surface-400 line-through opacity-70'
+  }
+
   const map: Record<string, string> = {
     consultation: 'bg-primary-100 border-primary-300 text-primary-800',
     surgery: 'bg-danger-50 border-danger-300 text-danger-800',
