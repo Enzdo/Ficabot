@@ -42,6 +42,10 @@ export const useVetApi = () => {
           success: false,
           message: data.message || 'Une erreur est survenue',
           errors: data.errors,
+          // Le backend distingue certains refus par un code (TOKEN_EXPIRED…).
+          // Sans ce report, l'appelant ne voyait qu'un message et ne pouvait
+          // pas proposer la bonne issue.
+          code: data.code,
         }
       }
 

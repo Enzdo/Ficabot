@@ -70,6 +70,9 @@ export interface ApiResponse<T> {
   data?: T
   message?: string
   errors?: Record<string, string[]>
+  // Code de refus, quand le backend en précise un (ex. TOKEN_EXPIRED), pour que
+  // l'appelant puisse proposer l'issue adaptée plutôt qu'un message générique.
+  code?: string
 }
 
 export interface PaginatedResponse<T> {
