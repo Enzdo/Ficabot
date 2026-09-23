@@ -7,7 +7,8 @@ import Pet from '#models/pet'
 import MedicalRecord from '#models/medical_record'
 import VetDictation from '#models/vet_dictation'
 import ConsultationService, { DICTATION_LANGUAGES } from '#services/consultation_service'
-import { CONSULTATION_TEMPLATES, templateCategory } from '#services/consultation_templates'
+import Veterinarian from '#models/veterinarian'
+import { listTemplatesFor } from '#services/report_template_resolver'
 import DictationRunner from '#services/dictation_runner'
 
 /** Forme unique envoyée au navigateur, que la dictée soit consultée seule ou en liste. */
@@ -34,16 +35,16 @@ export default class VetConsultationsController {
    * GET /vet/consultations/options
    * Modèles de compte rendu et langues disponibles.
    */
-  async options({ response }: HttpContext) {
+  async options({ response, auth }: HttpContext) {
+    // La liste vient de la bibliothèque : les modèles que le praticien compose
+    // sur la page « Modèles » apparaissent ici, ce qui n'était pas le cas tant
+    // que la constante faisait seule autorité.
+    const templates = await listTemplatesFor((auth.user as Veterinarian | null)?.id)
+
     return response.ok({
       success: true,
       data: {
-        templates: CONSULTATION_TEMPLATES.map((t) => ({
-          id: t.id,
-          label: t.label,
-          category: templateCategory(t.id),
-          sections: t.sections.map((s) => ({ key: s.key, label: s.label })),
-        })),
+        templates,
         languages: DICTATION_LANGUAGES,
       },
     })
@@ -53,7 +54,7 @@ export default class VetConsultationsController {
    * POST /vet/consultations/transcribe
    * multipart : audio (fichier), token, template, language, instruction
    */
-  async transcribe({ request, response }: HttpContext) {
+  async transcribe({ request, response, auth }: HttpContext) {
     // 18 Mo : sous la limite globale du bodyparser (20 Mo, config/bodyparser.ts),
     // pour que l'erreur renvoyée soit la nôtre et non celle du parseur.
     // À ~24 kbps mono, cela laisse largement plus d'une heure de dictée.
@@ -101,7 +102,11 @@ export default class VetConsultationsController {
         })
       }
 
-      const draft = await service.structure(transcript, pet, { templateId, instruction })
+      const draft = await service.structure(transcript, pet, {
+        templateId,
+        instruction,
+        veterinarianId: (auth.user as Veterinarian | null)?.id,
+      })
 
       return response.ok({
         success: true,

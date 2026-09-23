@@ -1,7 +1,8 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { cleanOnboardingProfile, parseOnboardingProfile } from '#services/onboarding_profile'
 import { DateTime } from 'luxon'
-import { CONSULTATION_TEMPLATES } from '#services/consultation_templates'
+import Veterinarian from '#models/veterinarian'
+import { listTemplatesFor } from '#services/report_template_resolver'
 
 /**
  * Parcours d'inscription : on qualifie l'exercice du vétérinaire pour lui
@@ -53,14 +54,18 @@ const SPECIALTY_TEMPLATE: Record<string, string> = {
 
 export default class VetOnboardingController {
   /** GET /vet/onboarding/options */
-  async options({ response }: HttpContext) {
+  async options({ response, auth }: HttpContext) {
+    // Même bibliothèque que la dictée : le choix fait ici doit désigner un
+    // modèle qui existe réellement au moment de dicter.
+    const templates = await listTemplatesFor((auth.user as Veterinarian | null)?.id)
+
     return response.ok({
       success: true,
       data: {
         practiceTypes: PRACTICE_TYPES.map(({ id, label }) => ({ id, label })),
         specialties: SPECIALTIES,
         teamSizes: TEAM_SIZES,
-        templates: CONSULTATION_TEMPLATES.map((t) => ({ id: t.id, label: t.label })),
+        templates: templates.map((t) => ({ id: t.id, label: t.label })),
       },
     })
   }

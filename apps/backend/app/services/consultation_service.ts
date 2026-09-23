@@ -2,7 +2,8 @@ import OpenAI from 'openai'
 import { toFile } from 'openai/uploads'
 import env from '#start/env'
 import type Pet from '#models/pet'
-import { findTemplate, type ConsultationTemplate } from '#services/consultation_templates'
+import { type ConsultationTemplate } from '#services/consultation_templates'
+import { resolveTemplate } from '#services/report_template_resolver'
 
 /**
  * Une rubrique remplie du compte rendu, prête à être relue.
@@ -65,9 +66,17 @@ export default class ConsultationService {
   async structure(
     transcript: string,
     pet: Pet | null,
-    options: { templateId?: string; instruction?: string } = {}
+    options: { templateId?: string; instruction?: string; veterinarianId?: number } = {}
   ): Promise<ConsultationDraft> {
-    const template: ConsultationTemplate = findTemplate(options.templateId)
+    // Le modèle vient désormais de la bibliothèque, celle que le praticien voit
+    // et modifie sur la page « Modèles ». Auparavant la constante faisait seule
+    // autorité : un modèle personnel était silencieusement remplacé par la
+    // consultation générale. Le repli sur les modèles fournis reste assuré par
+    // le résolveur, pour qu'une lecture en échec n'arrête jamais une dictée.
+    const template: ConsultationTemplate = await resolveTemplate(
+      options.templateId,
+      options.veterinarianId
+    )
     const instruction = (options.instruction ?? '').trim()
 
     const petContext = pet

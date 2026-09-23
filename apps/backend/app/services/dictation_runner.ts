@@ -71,6 +71,9 @@ export default class DictationRunner {
       const draft = await service.structure(transcript, pet, {
         templateId: dictation.templateId ?? undefined,
         instruction: dictation.instruction ?? undefined,
+        // Sans le praticien, ses modèles personnels resteraient invisibles au
+        // résolveur, qui retomberait sur la consultation générale.
+        veterinarianId: dictation.veterinarianId,
       })
 
       dictation.status = 'done'
