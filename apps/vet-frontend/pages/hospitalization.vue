@@ -121,6 +121,14 @@
         </div>
 
         <form @submit.prevent="createHospitalization" class="space-y-4">
+          <div>
+            <label class="label">Dossier concerné</label>
+            <PatientPicker @select="applyPatient" />
+            <p class="mt-1 text-xs text-surface-500">
+              Rattachée à un dossier, l'hospitalisation est visible par le propriétaire dans son application.
+            </p>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="label">Nom de l'animal *</label>
@@ -185,6 +193,8 @@
             <label class="label">Notes</label>
             <textarea v-model="newForm.notes" class="input" rows="2" placeholder="Informations complementaires..."></textarea>
           </div>
+
+          <p v-if="createError" class="text-sm text-danger-600" role="alert">{{ createError }}</p>
 
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showCreateModal = false" class="flex-1 btn-secondary">Annuler</button>
@@ -373,13 +383,17 @@ const saving = ref(false)
 const savingLog = ref(false)
 const savingDischarge = ref(false)
 const showCreateModal = ref(false)
+const createError = ref('')
 const showDischargeConfirm = ref(false)
 const dischargeNotes = ref('')
 const hospitalizations = ref<any[]>([])
 const selectedHospitalization = ref<any>(null)
 const stats = ref({ active: 0, discharged: 0 })
 
-const newForm = ref({
+const emptyForm = () => ({
+  // `petId` est ce que l'application du propriétaire interroge : sans lui,
+  // l'hospitalisation de son animal lui reste invisible.
+  petId: null as number | null,
   petName: '',
   petSpecies: 'dog',
   clientName: '',
@@ -392,6 +406,19 @@ const newForm = ref({
   cageNumber: '',
   notes: '',
 })
+
+const newForm = ref(emptyForm())
+
+/** Le choix d'un dossier renseigne l'identifiant et pré-remplit les noms. */
+const applyPatient = (patient: any | null) => {
+  newForm.value.petId = patient?.id ?? null
+  if (patient) {
+    newForm.value.petName = patient.name || ''
+    if (patient.species) newForm.value.petSpecies = patient.species
+    newForm.value.clientName =
+      [patient.owner?.firstName, patient.owner?.lastName].filter(Boolean).join(' ') || ''
+  }
+}
 
 const newLog = ref({
   type: 'note',
@@ -436,29 +463,25 @@ onMounted(() => {
 watch(activeTab, fetchHospitalizations)
 
 const openCreateModal = () => {
-  newForm.value = {
-    petName: '',
-    petSpecies: 'dog',
-    clientName: '',
-    clientPhone: '',
-    admissionDate: new Date().toISOString().split('T')[0],
-    expectedDischarge: '',
-    reason: '',
-    diagnosis: '',
-    treatmentPlan: '',
-    cageNumber: '',
-    notes: '',
-  }
+  createError.value = ''
+  newForm.value = emptyForm()
+  // Date locale : `toISOString()` bascule sur la veille en soirée, à Paris.
+  newForm.value.admissionDate = toLocalDateKey(new Date())
   showCreateModal.value = true
 }
 
 const createHospitalization = async () => {
   saving.value = true
+  createError.value = ''
+
   const response = await api.post<any>('/vet/hospitalizations', newForm.value)
   if (response.success) {
     showCreateModal.value = false
     fetchHospitalizations()
     fetchStats()
+  } else {
+    // La modale restait ouverte sans un mot en cas de refus du serveur.
+    createError.value = response.message || "L'hospitalisation n'a pas pu être enregistrée."
   }
   saving.value = false
 }

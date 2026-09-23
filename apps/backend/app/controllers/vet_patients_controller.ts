@@ -28,6 +28,9 @@ export default class VetPatientsController {
         vetToken: pet.vetToken,
         hasHealthBook: !!pet.healthBook,
         owner: {
+          // L'identifiant est nécessaire pour rattacher un rappel à son
+          // propriétaire, faute de quoi le rappel reste invisible côté client.
+          id: pet.user.id,
           firstName: pet.user.firstName,
           lastName: pet.user.lastName,
           email: pet.user.email,

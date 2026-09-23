@@ -143,6 +143,14 @@
             <label class="label">Titre</label>
             <input v-model="newReminder.title" type="text" class="input" placeholder="Ex: Rappel vaccin rage" required />
           </div>
+          <div>
+            <label class="label">Dossier concerné</label>
+            <PatientPicker @select="applyPatient" />
+            <p class="mt-1 text-xs text-surface-500">
+              Rattaché à un dossier, le rappel est visible par le propriétaire dans son application.
+            </p>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="label">Animal</label>
@@ -161,6 +169,8 @@
             <label class="label">Description (optionnel)</label>
             <textarea v-model="newReminder.description" class="input" rows="2"></textarea>
           </div>
+          <p v-if="createError" class="text-sm text-danger-600" role="alert">{{ createError }}</p>
+
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showNewReminder = false" class="flex-1 btn-secondary">Annuler</button>
             <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
@@ -191,14 +201,21 @@ const statusFilters = [
   { id: 'all', label: 'Tous' },
 ]
 
-const newReminder = ref({
+const emptyReminder = () => ({
   type: 'vaccine',
   title: '',
+  // `petId` et `userId` sont ce que l'application du propriétaire interroge :
+  // sans eux, le rappel ne lui parvient jamais.
+  petId: null as number | null,
+  userId: null as number | null,
   petName: '',
   clientName: '',
   dueDate: '',
   description: '',
 })
+
+const createError = ref('')
+const newReminder = ref(emptyReminder())
 
 const completedCount = computed(() => reminders.value.filter(r => r.status === 'completed').length)
 const filteredReminders = computed(() => {
@@ -223,14 +240,29 @@ const fetchUpcoming = async () => {
 
 onMounted(() => { fetchReminders(); fetchUpcoming() })
 
+/** Le choix d'un dossier renseigne les identifiants et pré-remplit les noms. */
+const applyPatient = (patient: any | null) => {
+  newReminder.value.petId = patient?.id ?? null
+  newReminder.value.userId = patient?.owner?.id ?? null
+  if (patient) {
+    newReminder.value.petName = patient.name || ''
+    newReminder.value.clientName =
+      [patient.owner?.firstName, patient.owner?.lastName].filter(Boolean).join(' ') || ''
+  }
+}
+
 const createReminder = async () => {
   saving.value = true
+  createError.value = ''
+
   const response = await api.post<any>('/vet/reminders', newReminder.value)
   if (response.success) {
     showNewReminder.value = false
-    newReminder.value = { type: 'vaccine', title: '', petName: '', clientName: '', dueDate: '', description: '' }
+    newReminder.value = emptyReminder()
     fetchReminders()
     fetchUpcoming()
+  } else {
+    createError.value = response.message || "Le rappel n'a pas pu être créé."
   }
   saving.value = false
 }
