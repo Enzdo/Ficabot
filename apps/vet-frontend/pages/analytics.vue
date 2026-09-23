@@ -92,7 +92,12 @@
       <!-- Appointments by type -->
       <div class="card">
         <h3 class="font-semibold text-surface-900 mb-4">Répartition par type</h3>
-        <div class="space-y-3">
+
+        <p v-if="!loading && appointmentTypes.length === 0" class="text-sm text-surface-500 py-6 text-center">
+          Aucun rendez-vous sur cette période.
+        </p>
+
+        <div v-else class="space-y-3">
           <div v-for="type in appointmentTypes" :key="type.name" class="flex items-center gap-3">
             <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: type.color }"></div>
             <span class="flex-1 text-sm text-surface-700">{{ type.name }}</span>
@@ -113,7 +118,12 @@
     <!-- Employee performance -->
     <div class="card mb-8">
       <h3 class="font-semibold text-surface-900 mb-4">Performance de l'équipe</h3>
-      <div class="overflow-x-auto">
+
+      <p v-if="!loading && employeeStats.length === 0" class="text-sm text-surface-500 py-6 text-center">
+        Aucun membre d'équipe enregistré. Ajoutez-en depuis la page Rendez-vous.
+      </p>
+
+      <div v-else class="overflow-x-auto">
         <table class="w-full">
           <thead>
             <tr class="border-b border-surface-100">

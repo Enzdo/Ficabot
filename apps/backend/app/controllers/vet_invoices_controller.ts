@@ -62,6 +62,17 @@ export default class VetInvoicesController {
       .where('veterinarian_id', vet.id)
       .whereBetween('date', [startOfMonth!, endOfMonth!])
 
+    // Mois précédent, pour une comparaison réelle : l'écran affichait
+    // « +0 % vs mois dernier » en permanence, la valeur étant forcée à zéro
+    // côté page et jamais calculée côté serveur.
+    const previousMonth = now.minus({ months: 1 })
+    const previousInvoices = await VetInvoice.query()
+      .where('veterinarian_id', vet.id)
+      .whereBetween('date', [
+        previousMonth.startOf('month').toSQL()!,
+        previousMonth.endOf('month').toSQL()!,
+      ])
+
     const today = now.toFormat('yyyy-MM-dd')
     const sum = (list: VetInvoice[]) => list.reduce((acc, inv) => acc + Number(inv.total), 0)
 
@@ -75,12 +86,21 @@ export default class VetInvoicesController {
       i => i.status === 'pending' && String(i.dueDate ?? '') >= today
     )
 
+    // Les brouillons ne sont pas du chiffre d'affaires : ils gonflaient le
+    // total du mois alors qu'ils ne sont pas encore des factures.
+    const monthTotal = sum(invoices.filter(i => i.status !== 'draft'))
+    const previousTotal = sum(previousInvoices.filter(i => i.status !== 'draft'))
+
+    // `null` quand le mois précédent est vide : une comparaison n'a alors pas
+    // de sens, et un « +0 % » laisserait croire à une stagnation.
+    const growth =
+      previousTotal > 0 ? Math.round(((monthTotal - previousTotal) / previousTotal) * 100) : null
+
     return response.ok({
       success: true,
       data: {
-        // Les brouillons ne sont pas du chiffre d'affaires : ils gonflaient le
-        // total du mois alors qu'ils ne sont pas encore des factures.
-        total: sum(invoices.filter(i => i.status !== 'draft')),
+        total: monthTotal,
+        growth,
         paid: sum(paidInvoices),
         paidCount: paidInvoices.length,
         pending: sum(pendingInvoices),

@@ -27,7 +27,10 @@
       <div class="card">
         <p class="text-sm text-surface-500">Ce mois</p>
         <p class="text-2xl font-bold text-surface-900">{{ formatCurrency(monthlyStats.total) }}</p>
-        <p class="text-xs text-success-600">+{{ monthlyStats.growth }}% vs mois dernier</p>
+        <p v-if="monthlyStats.growth !== null" class="text-xs" :class="monthlyStats.growth >= 0 ? 'text-success-600' : 'text-danger-600'">
+          {{ monthlyStats.growth >= 0 ? '+' : '' }}{{ monthlyStats.growth }}% vs mois dernier
+        </p>
+        <p v-else class="text-xs text-surface-400">Pas de comparaison possible</p>
       </div>
       <div class="card">
         <p class="text-sm text-surface-500">En attente</p>
@@ -413,7 +416,7 @@ const statusFilters = [
 
 const monthlyStats = ref({
   total: 0,
-  growth: 0,
+  growth: null as number | null,
   pending: 0,
   pendingCount: 0,
   paid: 0,
@@ -548,11 +551,9 @@ const fetchInvoices = async () => {
 const fetchStats = async () => {
   const response = await api.get<any>('/vet/invoices/stats')
   if (response.success && response.data) {
-    monthlyStats.value = {
-      total: response.data.paid + response.data.pending + response.data.overdue,
-      growth: 0,
-      ...response.data,
-    }
+    // Le serveur fait foi, y compris pour le total : le recalcul local était de
+    // toute façon écrasé par le spread juste en dessous.
+    monthlyStats.value = { ...monthlyStats.value, ...response.data }
   }
 }
 

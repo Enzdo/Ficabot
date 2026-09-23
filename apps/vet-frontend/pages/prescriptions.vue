@@ -194,7 +194,13 @@
               <div v-for="(med, idx) in newPrescription.items" :key="idx" class="p-4 bg-surface-50 rounded-xl">
                 <div class="flex items-start gap-2">
                   <div class="flex-1 space-y-3">
-                    <input v-model="med.medicationName" type="text" class="input" placeholder="Nom du médicament" required />
+                    <div class="flex gap-2">
+                      <input v-model="med.medicationName" type="text" class="input flex-1" placeholder="Nom du médicament" required />
+                      <!-- La quantité était affichée « x1 » sur l'ordonnance et
+                           forcée à 1 côté serveur, faute d'un champ pour la
+                           saisir : impossible de prescrire deux boîtes. -->
+                      <input v-model.number="med.quantity" type="number" min="1" step="1" class="input w-24" placeholder="Qté" aria-label="Quantité" />
+                    </div>
                     <div class="grid grid-cols-3 gap-2">
                       <input v-model="med.dosage" type="text" class="input" placeholder="Dosage (ex: 500mg)" required />
                       <input v-model="med.frequency" type="text" class="input" placeholder="Fréquence (ex: 2x/jour)" required />
@@ -257,7 +263,7 @@ const newPrescription = ref({
   clientName: '',
   diagnosis: '',
   notes: '',
-  items: [{ medicationName: '', dosage: '', frequency: '', duration: '', instructions: '' }],
+  items: [{ medicationName: '', quantity: 1, dosage: '', frequency: '', duration: '', instructions: '' }],
 })
 
 const fetchPrescriptions = async () => {
@@ -283,7 +289,7 @@ let searchTimeout: any = null
 watch(searchQuery, () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(fetchPrescriptions, 400) })
 
 const addMedication = () => {
-  newPrescription.value.items.push({ medicationName: '', dosage: '', frequency: '', duration: '', instructions: '' })
+  newPrescription.value.items.push({ medicationName: '', quantity: 1, dosage: '', frequency: '', duration: '', instructions: '' })
 }
 
 const createPrescription = async () => {
@@ -295,7 +301,7 @@ const createPrescription = async () => {
   })
   if (response.success) {
     showNewPrescription.value = false
-    newPrescription.value = { petName: '', clientName: '', diagnosis: '', notes: '', items: [{ medicationName: '', dosage: '', frequency: '', duration: '', instructions: '' }] }
+    newPrescription.value = { petName: '', clientName: '', diagnosis: '', notes: '', items: [{ medicationName: '', quantity: 1, dosage: '', frequency: '', duration: '', instructions: '' }] }
     fetchPrescriptions()
   } else {
     formError.value = response.message || 'Erreur lors de la création'
