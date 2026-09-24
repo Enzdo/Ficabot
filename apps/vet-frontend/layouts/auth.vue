@@ -92,6 +92,9 @@
         <slot />
       </div>
     </main>
+
+    <!-- Les écrans de connexion passent aussi par l'API : un refus doit se voir -->
+    <ToastStack />
   </div>
 </template>
 

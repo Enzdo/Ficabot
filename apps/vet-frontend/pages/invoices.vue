@@ -633,7 +633,7 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
   const response = await api.post<any>('/vet/invoices', {
     ...newInvoice.value,
     status,
-  })
+  }, { silent: true })
 
   if (response.success) {
     showNewInvoice.value = false

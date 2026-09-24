@@ -255,7 +255,7 @@ const createReminder = async () => {
   saving.value = true
   createError.value = ''
 
-  const response = await api.post<any>('/vet/reminders', newReminder.value)
+  const response = await api.post<any>('/vet/reminders', newReminder.value, { silent: true })
   if (response.success) {
     showNewReminder.value = false
     newReminder.value = emptyReminder()

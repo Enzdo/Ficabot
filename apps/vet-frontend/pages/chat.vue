@@ -247,7 +247,7 @@ const sendMessage = async () => {
   try {
     const response = await api.post<any>(`/vet/chat/conversations/${selectedConversation.value.id}/messages`, {
       content,
-    })
+    }, { silent: true })
 
     if (response.success) {
       // Le champ n'est vidé qu'une fois le message parti. Le vider avant

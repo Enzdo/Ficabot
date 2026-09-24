@@ -474,7 +474,7 @@ const createHospitalization = async () => {
   saving.value = true
   createError.value = ''
 
-  const response = await api.post<any>('/vet/hospitalizations', newForm.value)
+  const response = await api.post<any>('/vet/hospitalizations', newForm.value, { silent: true })
   if (response.success) {
     showCreateModal.value = false
     fetchHospitalizations()

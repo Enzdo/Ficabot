@@ -716,7 +716,7 @@ const createAppointment = async () => {
     const response = await api.post<any>('/vet/appointments', {
       ...newAppointment.value,
       employeeId: newAppointment.value.employeeId || null,
-    })
+    }, { silent: true })
     if (response.success) {
       showNewAppointment.value = false
       await loadAppointments()
@@ -735,7 +735,7 @@ const createAppointment = async () => {
 
 const cancelAppointment = async (id: number) => {
   try {
-    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'cancelled' })
+    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'cancelled' }, { silent: true })
     if (!response.success) {
       detailError.value = response.message || "Le rendez-vous n'a pas pu être annulé."
       return
@@ -750,7 +750,7 @@ const cancelAppointment = async (id: number) => {
 
 const completeAppointment = async (id: number) => {
   try {
-    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'completed' })
+    const response = await api.patch<any>(`/vet/appointments/${id}/status`, { status: 'completed' }, { silent: true })
     if (!response.success) {
       detailError.value = response.message || "Le rendez-vous n'a pas pu être marqué terminé."
       return

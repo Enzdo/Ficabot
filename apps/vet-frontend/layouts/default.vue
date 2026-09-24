@@ -242,6 +242,9 @@
 
     <!-- Lanceur rapide, disponible partout via ⌘K -->
     <QuickLaunch ref="quickLaunch" :nav-groups="navGroups" />
+
+    <!-- Échecs d'enregistrement, signalés d'où qu'ils viennent -->
+    <ToastStack />
   </div>
 </template>
 

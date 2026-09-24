@@ -243,7 +243,7 @@ const submitResponse = async () => {
   submitError.value = ''
   const res = await api.post(`/vet/pre-diagnoses/${route.params.id}/response`, {
     responseText: response.value,
-  })
+  }, { silent: true })
 
   if (res.success) {
     await fetchPreDiagnosis()
@@ -264,7 +264,7 @@ const sendChatMessage = async () => {
   const res = await api.post(`/vet/pre-diagnoses/${route.params.id}/ai-chat`, {
     message: userMessage,
     conversationHistory: chatHistory.value,
-  })
+  }, { silent: true })
 
   if (res.success && res.data) {
     chatHistory.value = res.data.conversationHistory

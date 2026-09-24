@@ -552,7 +552,7 @@ const addMovement = async () => {
   movementError.value = ''
 
   const itemId = selectedItem.value.id
-  const response = await api.post<any>(`/vet/inventory/${itemId}/movement`, movementForm.value)
+  const response = await api.post<any>(`/vet/inventory/${itemId}/movement`, movementForm.value, { silent: true })
 
   if (response.success && response.data) {
     // La réponse ne portait qu'un fragment de l'article et écrasait la fiche
