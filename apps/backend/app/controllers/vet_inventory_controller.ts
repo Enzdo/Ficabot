@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
 import VetInventoryItem from '#models/vet_inventory_item'
 import VetInventoryMovement from '#models/vet_inventory_movement'
+import VetHospitalization from '#models/vet_hospitalization'
 
 export default class VetInventoryController {
   async index({ response, auth, request }: HttpContext) {
@@ -173,6 +174,26 @@ export default class VetInventoryController {
       return response.badRequest({ success: false, message: 'Stock insuffisant' })
     }
 
+    // Le séjour vient du client : on vérifie qu'il est bien du praticien. Sans
+    // cela, une sortie pouvait être rattachée à l'hospitalisation d'un confrère,
+    // qui aurait alors vu le nom et le prix de cet article remonter sur sa
+    // propre facture de sortie.
+    let stayId: number | null = null
+    if (hospitalizationId) {
+      const stay = await VetHospitalization.query()
+        .where('id', hospitalizationId)
+        .where('veterinarian_id', vet.id)
+        .first()
+
+      if (!stay) {
+        return response.badRequest({
+          success: false,
+          message: 'Hospitalisation inconnue',
+        })
+      }
+      stayId = stay.id
+    }
+
     await VetInventoryMovement.create({
       itemId: item.id,
       type,
@@ -181,7 +202,7 @@ export default class VetInventoryController {
       notes,
       // Rattaché au séjour, le mouvement pourra être repris sur la facture de
       // sortie au lieu d'être refacturé de mémoire.
-      hospitalizationId: hospitalizationId || null,
+      hospitalizationId: stayId,
     })
 
     if (type === 'in') {

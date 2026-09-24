@@ -185,11 +185,34 @@ export default class VetInvoicesController {
     // Les consommations reprises sont marquées facturées, pour qu'elles ne
     // soient pas reproposées sur la facture suivante. Fait après la création :
     // si l'insertion échoue, rien n'a été consommé côté marquage.
-    const movementIds = (request.input('movementIds') || []) as number[]
-    if (Array.isArray(movementIds) && movementIds.length > 0) {
-      await VetInventoryMovement.query()
-        .whereIn('id', movementIds.map(Number).filter(Number.isFinite))
-        .update({ billed: true })
+    //
+    // Les identifiants viennent du client : on ne marque que les mouvements dont
+    // l'article appartient à ce praticien. Sans ce cadrage, un compte pouvait
+    // marquer « facturées » les consommations d'un confrère, qui ne les aurait
+    // alors plus vues remonter sur ses propres factures.
+    const requestedIds = (request.input('movementIds') || []) as unknown[]
+    const candidateIds = Array.isArray(requestedIds)
+      ? requestedIds.map(Number).filter(Number.isFinite)
+      : []
+
+    if (candidateIds.length > 0) {
+      const owned = await VetInventoryMovement.query()
+        .whereIn('id', candidateIds)
+        .whereHas('item', (q) => q.where('veterinarian_id', vet.id))
+        .select('id')
+
+      if (owned.length > 0) {
+        await VetInventoryMovement.query()
+          .whereIn('id', owned.map((m) => m.id))
+          .update({ billed: true })
+      }
+
+      if (owned.length !== candidateIds.length) {
+        logger.warn(
+          { vetId: vet.id, demandés: candidateIds.length, retenus: owned.length },
+          'Mouvements de stock hors périmètre ignorés à la facturation'
+        )
+      }
     }
 
     for (const item of data.items) {
