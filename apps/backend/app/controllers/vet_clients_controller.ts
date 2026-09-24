@@ -256,6 +256,142 @@ export default class VetClientsController {
    * - If email exists in app → creates UserVeterinarian (pending, initiated_by=vet)
    * - If not → creates VetExternalClient + sends invitation email
    */
+  /**
+   * POST /vet/clients — crée une fiche client sans rien envoyer.
+   *
+   * La seule façon de créer un client passait par « Inviter », qui exigeait une
+   * adresse et déclenchait un courriel. Un client de passage n'avait donc pas sa
+   * place dans le logiciel. L'adresse est ici facultative : sans elle on ne peut
+   * pas inviter plus tard, mais on peut tenir la fiche.
+   */
+  async store({ request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    const { email, firstName, lastName, phone, notes } = request.only([
+      'email',
+      'firstName',
+      'lastName',
+      'phone',
+      'notes',
+    ])
+
+    const cleanEmail = (email || '').trim() || null
+
+    if (!cleanEmail && !(firstName || '').trim() && !(lastName || '').trim()) {
+      return response.badRequest({
+        success: false,
+        message: 'Renseignez au moins un nom ou une adresse email.',
+      })
+    }
+
+    if (cleanEmail) {
+      const existing = await VetExternalClient.query()
+        .where('veterinarian_id', vet.id)
+        .where('email', cleanEmail)
+        .first()
+
+      if (existing) {
+        return response.conflict({
+          success: false,
+          message: 'Un client avec cet email existe déjà',
+          data: { id: existing.id },
+        })
+      }
+    }
+
+    const client = await VetExternalClient.create({
+      veterinarianId: vet.id,
+      email: cleanEmail,
+      firstName: firstName || null,
+      lastName: lastName || null,
+      phone: phone || null,
+      notes: notes || null,
+      // Aucun envoi : c'est toute la différence avec « Inviter ».
+      inviteSentAt: null,
+    })
+
+    return response.created({
+      success: true,
+      message: 'Client créé',
+      data: {
+        id: client.id,
+        email: client.email,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        phone: client.phone,
+        inviteSentAt: client.inviteSentAt,
+      },
+    })
+  }
+
+  /**
+   * POST /vet/clients/external/:id/invite — rattache une fiche existante.
+   *
+   * Si l'adresse correspond à un compte propriétaire, on crée le lien et la
+   * fiche externe disparaît au profit du vrai dossier. Sinon on envoie
+   * l'invitation à s'inscrire.
+   */
+  async inviteExternal({ params, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const client = await VetExternalClient.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!client) {
+      return response.notFound({ success: false, message: 'Client non trouvé' })
+    }
+
+    if (!client.email) {
+      return response.badRequest({
+        success: false,
+        message: 'Ce client n’a pas d’adresse email : ajoutez-en une pour pouvoir l’inviter.',
+      })
+    }
+
+    const vetName = [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+    const user = await User.findBy('email', client.email)
+
+    if (user) {
+      const existingLink = await UserVeterinarian.query()
+        .where('user_id', user.id)
+        .where('veterinarian_id', vet.id)
+        .first()
+
+      if (!existingLink) {
+        await UserVeterinarian.create({
+          userId: user.id,
+          veterinarianId: vet.id,
+          status: 'pending',
+          initiatedBy: 'vet',
+        })
+      }
+
+      // La fiche externe a fait son office : le vrai dossier la remplace.
+      await client.delete()
+
+      await mail.send(new VetClientAppInviteNotification(user.email, vetName, vet.clinicName))
+
+      return response.ok({
+        success: true,
+        type: 'app',
+        message: 'Ce client a déjà un compte : la demande de rattachement lui a été envoyée.',
+      })
+    }
+
+    await mail.send(new VetClientInviteNotification(client.email, vetName, vet.clinicName))
+
+    client.inviteSentAt = DateTime.now()
+    await client.save()
+
+    return response.ok({
+      success: true,
+      type: 'external',
+      message: 'Invitation envoyée',
+      data: { id: client.id, inviteSentAt: client.inviteSentAt },
+    })
+  }
+
   async invite({ request, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
     const { email, note, firstName, lastName } = request.only([

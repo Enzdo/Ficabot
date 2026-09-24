@@ -17,7 +17,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
-          Inviter un client
+          Nouveau client
         </button>
       </div>
     </div>
@@ -148,7 +148,7 @@
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 bg-surface-100 rounded-full flex items-center justify-center">
             <span class="text-surface-400 font-semibold text-lg">
-              {{ client.firstName?.[0] || client.email[0].toUpperCase() }}{{ client.lastName?.[0] || '' }}
+              {{ externalInitial(client) }}{{ client.lastName?.[0] || '' }}
             </span>
           </div>
           <div class="flex-1">
@@ -157,15 +157,26 @@
                 {{ client.firstName || '' }} {{ client.lastName || '' }}
                 <span v-if="!client.firstName && !client.lastName" class="text-surface-500 font-normal">—</span>
               </h3>
-              <span class="text-xs bg-surface-100 text-surface-500 px-2 py-0.5 rounded-full">Email uniquement</span>
+              <span class="text-xs bg-surface-100 text-surface-500 px-2 py-0.5 rounded-full">{{ client.inviteSentAt ? 'Invitation envoyée' : 'Fiche locale' }}</span>
             </div>
-            <p class="text-sm text-surface-500">{{ client.email }}</p>
+            <p class="text-sm text-surface-500">{{ client.email || 'Sans adresse email' }}</p>
             <p v-if="client.phone" class="text-sm text-surface-400">{{ client.phone }}</p>
           </div>
           <div class="text-right">
             <p class="text-xs text-surface-400">Ajouté le {{ formatDate(client.createdAt) }}</p>
           </div>
-          <div>
+          <div class="flex items-center gap-2">
+            <!-- Rattachement différé : la fiche a pu être créée sans adresse,
+                 l'invitation part quand le client la donne. -->
+            <button
+              v-if="!client.inviteSentAt"
+              :disabled="!client.email || invitingId === client.id"
+              @click="inviteExisting(client)"
+              class="btn-secondary !py-1.5 !px-3 text-sm disabled:opacity-40"
+              :title="client.email ? 'Envoyer l’invitation' : 'Ajoutez une adresse email pour inviter'"
+            >
+              {{ invitingId === client.id ? 'Envoi…' : 'Inviter' }}
+            </button>
             <button
               @click="removeExternalClient(client.id)"
               class="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
@@ -291,7 +302,7 @@
         <div class="flex items-center gap-4">
           <div class="w-14 h-14 bg-surface-100 rounded-full flex items-center justify-center">
             <span class="text-surface-400 font-semibold text-lg">
-              {{ client.firstName?.[0] || client.email[0].toUpperCase() }}{{ client.lastName?.[0] || '' }}
+              {{ externalInitial(client) }}{{ client.lastName?.[0] || '' }}
             </span>
           </div>
           <div class="flex-1">
@@ -324,7 +335,7 @@
     <div v-if="showInviteModal" class="modal-overlay">
       <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-surface-900">Inviter un client</h2>
+          <h2 class="text-xl font-bold text-surface-900">Nouveau client</h2>
           <button @click="closeInviteModal" class="p-2 hover:bg-surface-100 rounded-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -334,14 +345,18 @@
 
         <form @submit.prevent="inviteClient" class="space-y-4">
           <div>
-            <label class="label">Email du client *</label>
+            <label class="label">Email du client</label>
             <input
               v-model="inviteForm.email"
               type="email"
               class="input"
               placeholder="client@email.com"
-              required
             />
+            <!-- Plus obligatoire : un client de passage laisse souvent un nom et
+                 un téléphone, sans adresse. Elle reste nécessaire pour inviter. -->
+            <p class="mt-1 text-xs text-surface-500">
+              Facultatif. Nécessaire seulement pour envoyer une invitation.
+            </p>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -363,6 +378,11 @@
                 placeholder="Dupont"
               />
             </div>
+          </div>
+
+          <div>
+            <label class="label">Téléphone</label>
+            <input v-model="inviteForm.phone" type="tel" class="input" placeholder="06 12 34 56 78" />
           </div>
 
           <div>
@@ -390,12 +410,17 @@
             {{ inviteError }}
           </div>
 
-          <div class="flex gap-3 pt-4">
-            <button type="button" @click="closeInviteModal" class="flex-1 btn-secondary">
+          <div class="flex flex-wrap gap-3 pt-4">
+            <button type="button" @click="closeInviteModal" class="btn-secondary flex-1">
               Annuler
             </button>
-            <button type="submit" :disabled="inviteLoading" class="flex-1 btn-primary disabled:opacity-50">
-              {{ inviteLoading ? 'Envoi...' : 'Envoyer l\'invitation' }}
+            <!-- Créer sans rien envoyer : la fiche existe, l'invitation viendra
+                 plus tard si le client donne son adresse. -->
+            <button type="button" :disabled="inviteLoading" @click="createClient" class="btn-secondary flex-1 disabled:opacity-50">
+              Créer la fiche
+            </button>
+            <button type="submit" :disabled="inviteLoading || !inviteForm.email" class="btn-primary flex-1 disabled:opacity-50">
+              {{ inviteLoading ? 'Envoi...' : 'Créer et inviter' }}
             </button>
           </div>
         </form>
@@ -434,8 +459,50 @@ const inviteForm = ref({
   email: '',
   firstName: '',
   lastName: '',
+  phone: '',
   note: '',
 })
+
+const invitingId = ref<number | null>(null)
+
+/** Initiale d'une fiche externe, qui peut n'avoir ni nom ni adresse. */
+const externalInitial = (client: any) =>
+  (client.firstName?.[0] || client.lastName?.[0] || client.email?.[0] || '?').toUpperCase()
+
+/**
+ * Crée la fiche sans rien envoyer. C'est le cas du client de passage : on note
+ * son nom au comptoir, l'invitation viendra s'il laisse une adresse.
+ */
+const createClient = async () => {
+  inviteLoading.value = true
+  inviteError.value = ''
+  inviteResult.value = null
+
+  const response = await api.post<any>('/vet/clients', {
+    email: inviteForm.value.email || undefined,
+    firstName: inviteForm.value.firstName || undefined,
+    lastName: inviteForm.value.lastName || undefined,
+    phone: inviteForm.value.phone || undefined,
+    notes: inviteForm.value.note || undefined,
+  }, { silent: true })
+
+  if (response.success) {
+    closeInviteModal()
+    await loadAll()
+  } else {
+    inviteError.value = response.message || "La fiche n'a pas pu être créée."
+  }
+
+  inviteLoading.value = false
+}
+
+/** Envoie l'invitation à une fiche déjà créée, et la rattache si le compte existe. */
+const inviteExisting = async (client: any) => {
+  invitingId.value = client.id
+  const response = await api.post<any>(`/vet/clients/external/${client.id}/invite`, {}, { silent: true })
+  if (response.success) await loadAll()
+  invitingId.value = null
+}
 
 const search = ref('')
 
@@ -556,6 +623,10 @@ const openInviteModal = () => {
 const closeInviteModal = () => {
   showInviteModal.value = false
   inviteResult.value = null
+  inviteError.value = ''
+  // Le formulaire n'était pas vidé : la fiche suivante repartait avec les
+  // coordonnées de la précédente.
+  inviteForm.value = { email: '', firstName: '', lastName: '', phone: '', note: '' }
 }
 
 const inviteClient = async () => {

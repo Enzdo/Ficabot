@@ -13,7 +13,8 @@ export default class VetExternalClient extends BaseModel {
   declare veterinarianId: number
 
   @column()
-  declare email: string
+  /** Facultative : un client de passage peut n'avoir qu'un nom et un téléphone. */
+  declare email: string | null
 
   @column()
   declare firstName: string | null

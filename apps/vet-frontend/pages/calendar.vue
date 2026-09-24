@@ -3,7 +3,7 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
       <div>
         <h1 class="page-title">Calendrier</h1>
-        <p class="page-subtitle">Vue planning de vos rendez-vous</p>
+        <p class="page-subtitle">Vue d’ensemble jour par jour. Pour créer ou modifier, passez par le Planning</p>
       </div>
       <div class="flex items-center gap-2">
         <button @click="goToToday" class="btn-secondary flex items-center gap-2 !py-2 !px-4 text-sm">

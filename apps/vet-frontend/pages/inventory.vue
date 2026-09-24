@@ -2,7 +2,7 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="page-title">Inventaire</h1>
+        <h1 class="page-title">Stock</h1>
         <p class="page-subtitle">Gestion du stock et des fournitures</p>
       </div>
       <div class="flex gap-2">
@@ -593,7 +593,7 @@ const exportCsv = async () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `inventaire-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `stock-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     URL.revokeObjectURL(url)
   } catch (e) {

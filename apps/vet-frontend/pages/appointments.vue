@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <p class="workspace-eyebrow mb-2">Organisation de la clinique</p><h1 class="page-title">Votre planning</h1>
-        <p class="page-subtitle">Gérez vos rendez-vous et votre équipe</p>
+        <p class="page-subtitle">Créez, annulez et clôturez vos rendez-vous, et gérez votre équipe</p>
       </div>
       <div class="flex gap-2">
         <button @click="showEmployeeModal = true" class="btn-secondary flex items-center gap-2">
