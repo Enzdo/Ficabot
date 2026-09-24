@@ -339,6 +339,24 @@
                 </select>
               </div>
             </div>
+            <!-- Rattachement au séjour : c'est ce qui fait qu'« Utilisation
+                 patient » remonte jusqu'à la facture de sortie, au lieu de
+                 rester une simple mention dans l'historique. -->
+            <div v-if="movementForm.type === 'out' && movementForm.reason === 'Utilisation patient'">
+              <label class="label">Animal hospitalisé</label>
+              <select v-model="movementForm.hospitalizationId" class="input">
+                <option :value="null">Aucun — sortie simple</option>
+                <option v-for="h in activeStays" :key="h.id" :value="h.id">
+                  {{ h.petName }} — {{ h.clientName }}
+                </option>
+              </select>
+              <p class="mt-1 text-xs text-surface-500">
+                {{ activeStays.length
+                  ? 'Le produit sera proposé sur la facture de sortie.'
+                  : 'Aucune hospitalisation en cours.' }}
+              </p>
+            </div>
+
             <div>
               <label class="label">Notes</label>
               <input v-model="movementForm.notes" type="text" class="input" placeholder="Details supplementaires..." />
@@ -396,6 +414,13 @@ const loading = ref(true)
 const saving = ref(false)
 const savingMovement = ref(false)
 const movementError = ref('')
+const activeStays = ref<any[]>([])
+
+/** Séjours en cours, pour rattacher une sortie de stock au bon animal. */
+const loadActiveStays = async () => {
+  const response = await api.get<any>('/vet/hospitalizations?status=active')
+  activeStays.value = response.success ? response.data || [] : []
+}
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const lowStockOnly = ref(false)
@@ -541,9 +566,10 @@ const loadMovements = async (itemId: number) => {
 
 const openDetailModal = async (item: any) => {
   selectedItem.value = { ...item }
-  movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '' }
+  movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '', hospitalizationId: null as number | null }
   showDetailModal.value = true
   loadMovements(item.id)
+  loadActiveStays()
 }
 
 const addMovement = async () => {
@@ -559,7 +585,7 @@ const addMovement = async () => {
     // ouverte ; elle renvoie maintenant l'article entier. L'historique est
     // conservé le temps d'être rechargé, pour ne pas faire clignoter le bloc.
     selectedItem.value = { ...response.data, movements: selectedItem.value.movements }
-    movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '' }
+    movementForm.value = { type: 'in', quantity: 1, reason: '', notes: '', hospitalizationId: null as number | null }
     loadMovements(itemId)
     fetchItems()
     fetchStats()

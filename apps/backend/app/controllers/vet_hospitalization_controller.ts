@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
 import VetHospitalization from '#models/vet_hospitalization'
+import VetInventoryMovement from '#models/vet_inventory_movement'
 import VetHospitalizationLog from '#models/vet_hospitalization_log'
 
 export default class VetHospitalizationController {
@@ -143,6 +144,46 @@ export default class VetHospitalizationController {
     await hospitalization.save()
 
     return response.ok({ success: true, data: hospitalization })
+  }
+
+  /**
+   * GET /vet/hospitalizations/:id/consumables
+   *
+   * Produits sortis du stock pour ce séjour et pas encore facturés. C'est ce
+   * qui manquait pour que « Utilisation patient » serve à quelque chose :
+   * jusqu'ici la sortie de stock et la facture de sortie s'ignoraient.
+   */
+  async consumables({ params, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const hospitalization = await VetHospitalization.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!hospitalization) {
+      return response.notFound({ success: false, message: 'Hospitalisation non trouvée' })
+    }
+
+    const movements = await VetInventoryMovement.query()
+      .where('hospitalization_id', hospitalization.id)
+      .where('type', 'out')
+      .where('billed', false)
+      .preload('item')
+      .orderBy('created_at', 'asc')
+
+    return response.ok({
+      success: true,
+      data: movements.map((m) => ({
+        movementId: m.id,
+        itemId: m.itemId,
+        description: m.item?.name || 'Article supprimé',
+        unit: m.item?.unit || null,
+        quantity: m.quantity,
+        unitPrice: Number(m.item?.price ?? 0),
+        usedAt: m.createdAt,
+      })),
+    })
   }
 
   async discharge({ params, request, response, auth }: HttpContext) {

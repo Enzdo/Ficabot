@@ -161,7 +161,13 @@ export default class VetInventoryController {
       return response.notFound({ success: false, message: 'Article non trouvé' })
     }
 
-    const { type, quantity, reason, notes } = request.only(['type', 'quantity', 'reason', 'notes'])
+    const { type, quantity, reason, notes, hospitalizationId } = request.only([
+      'type',
+      'quantity',
+      'reason',
+      'notes',
+      'hospitalizationId',
+    ])
 
     if (type === 'out' && item.quantity < quantity) {
       return response.badRequest({ success: false, message: 'Stock insuffisant' })
@@ -173,6 +179,9 @@ export default class VetInventoryController {
       quantity,
       reason,
       notes,
+      // Rattaché au séjour, le mouvement pourra être repris sur la facture de
+      // sortie au lieu d'être refacturé de mémoire.
+      hospitalizationId: hospitalizationId || null,
     })
 
     if (type === 'in') {

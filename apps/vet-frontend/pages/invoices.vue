@@ -162,6 +162,25 @@
             </div>
           </div>
 
+          <!-- Reprise des consommations d'un séjour : jusqu'ici un médicament
+               administré pendant l'hospitalisation sortait du stock puis
+               disparaissait, et il fallait le refacturer de mémoire. -->
+          <div v-if="staysWithConsumables.length">
+            <label class="label">Reprendre les produits d'une hospitalisation</label>
+            <div class="flex gap-2">
+              <select v-model="selectedStayId" class="input flex-1">
+                <option :value="null">Choisir un séjour…</option>
+                <option v-for="h in staysWithConsumables" :key="h.id" :value="h.id">
+                  {{ h.petName }} — {{ h.clientName }}
+                </option>
+              </select>
+              <button type="button" :disabled="!selectedStayId || pullingStay" @click="pullConsumables" class="btn-secondary disabled:opacity-50">
+                {{ pullingStay ? 'Reprise…' : 'Reprendre' }}
+              </button>
+            </div>
+            <p v-if="pullNotice" class="mt-1 text-xs text-surface-500">{{ pullNotice }}</p>
+          </div>
+
           <div>
             <label class="label">Animal concerné</label>
             <input v-model="newInvoice.petName" type="text" class="input" placeholder="Nom de l'animal" />
@@ -405,6 +424,49 @@ const activeFilter = ref('all')
 const loading = ref(true)
 const saving = ref(false)
 const saveError = ref('')
+const staysWithConsumables = ref<any[]>([])
+const selectedStayId = ref<number | null>(null)
+const pullingStay = ref(false)
+const pullNotice = ref('')
+/** Mouvements repris : transmis à la création pour ne pas les reproposer. */
+const pulledMovementIds = ref<number[]>([])
+
+const loadStays = async () => {
+  const response = await api.get<any>('/vet/hospitalizations?status=all')
+  staysWithConsumables.value = response.success ? response.data || [] : []
+}
+
+const pullConsumables = async () => {
+  if (!selectedStayId.value) return
+  pullingStay.value = true
+  pullNotice.value = ''
+
+  const response = await api.get<any>(`/vet/hospitalizations/${selectedStayId.value}/consumables`)
+  const lines = response.success ? response.data || [] : []
+
+  if (lines.length === 0) {
+    pullNotice.value = 'Aucun produit non facturé pour ce séjour.'
+  } else {
+    const stay = staysWithConsumables.value.find((h) => h.id === selectedStayId.value)
+    if (stay && !newInvoice.value.clientName) newInvoice.value.clientName = stay.clientName || ''
+    if (stay && !newInvoice.value.petName) newInvoice.value.petName = stay.petName || ''
+
+    // La ligne vide du départ cède la place plutôt que de rester au milieu.
+    const existing = newInvoice.value.items.filter((i: any) => i.description || i.unitPrice)
+    newInvoice.value.items = [
+      ...existing,
+      ...lines.map((l: any) => ({
+        description: l.unit ? `${l.description} (${l.unit})` : l.description,
+        quantity: l.quantity,
+        unitPrice: l.unitPrice,
+      })),
+    ]
+    pulledMovementIds.value = [...pulledMovementIds.value, ...lines.map((l: any) => l.movementId)]
+    pullNotice.value = `${lines.length} produit(s) repris.`
+  }
+
+  pullingStay.value = false
+}
 
 const statusFilters = [
   { id: 'all', label: 'Toutes' },
@@ -575,6 +637,7 @@ onMounted(() => {
   fetchInvoices()
   fetchStats()
   fetchClinicInfo()
+  loadStays()
 })
 
 watch([activeFilter], fetchInvoices)
@@ -633,6 +696,7 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
   const response = await api.post<any>('/vet/invoices', {
     ...newInvoice.value,
     status,
+    movementIds: pulledMovementIds.value,
   }, { silent: true })
 
   if (response.success) {
@@ -644,6 +708,9 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
       items: [{ description: '', quantity: 1, unitPrice: 0 }],
       notes: '',
     }
+    pulledMovementIds.value = []
+    selectedStayId.value = null
+    pullNotice.value = ''
     fetchInvoices()
     fetchStats()
   } else {

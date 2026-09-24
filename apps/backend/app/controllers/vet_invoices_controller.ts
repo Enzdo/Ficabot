@@ -4,6 +4,7 @@ import Veterinarian from '#models/veterinarian'
 import { createInvoiceValidator, updateInvoiceStatusValidator } from '#validators/vet_invoice'
 import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
+import VetInventoryMovement from '#models/vet_inventory_movement'
 
 export default class VetInvoicesController {
   async index({ request, response, auth }: HttpContext) {
@@ -179,6 +180,16 @@ export default class VetInvoicesController {
         success: false,
         message: 'Le numéro de facture n’a pas pu être attribué. Réessayez.',
       })
+    }
+
+    // Les consommations reprises sont marquées facturées, pour qu'elles ne
+    // soient pas reproposées sur la facture suivante. Fait après la création :
+    // si l'insertion échoue, rien n'a été consommé côté marquage.
+    const movementIds = (request.input('movementIds') || []) as number[]
+    if (Array.isArray(movementIds) && movementIds.length > 0) {
+      await VetInventoryMovement.query()
+        .whereIn('id', movementIds.map(Number).filter(Number.isFinite))
+        .update({ billed: true })
     }
 
     for (const item of data.items) {

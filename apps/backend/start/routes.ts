@@ -665,6 +665,7 @@ router.group(() => {
   router.post('/', [VetHospitalizationController, 'store'])
   router.get('/:id', [VetHospitalizationController, 'show'])
   router.put('/:id', [VetHospitalizationController, 'update'])
+  router.get('/:id/consumables', [VetHospitalizationController, 'consumables'])
   router.post('/:id/discharge', [VetHospitalizationController, 'discharge'])
   router.post('/:id/log', [VetHospitalizationController, 'addLog'])
 }).prefix('/vet/hospitalizations').use(middleware.vetAuth())

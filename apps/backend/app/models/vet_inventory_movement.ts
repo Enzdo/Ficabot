@@ -19,6 +19,14 @@ export default class VetInventoryMovement extends BaseModel {
   @column()
   declare reason: string | null
 
+  /** Séjour pendant lequel l'article a été consommé, s'il y en a un. */
+  @column()
+  declare hospitalizationId: number | null
+
+  /** Passe à vrai quand la consommation a été reprise sur une facture. */
+  @column()
+  declare billed: boolean
+
   @column()
   declare reference: string | null
 
