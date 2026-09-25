@@ -52,6 +52,16 @@ export default class VetClientsController {
         phone: link.user.phone,
         avatarUrl: link.user.avatarUrl,
         petsCount: link.user.pets?.length || 0,
+        // Les animaux, et pas seulement leur nombre : les formulaires
+        // d'hospitalisation et de rappel proposent l'animal une fois le client
+        // choisi, ce qui évite de retaper un nom déjà connu du logiciel.
+        pets: (link.user.pets || []).map((pet) => ({
+          id: pet.id,
+          name: pet.name,
+          species: pet.species,
+          breed: pet.breed,
+          vetToken: pet.vetToken,
+        })),
       },
     })
 

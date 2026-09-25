@@ -74,7 +74,8 @@
     "openai": "^4.104.0",
     "pg": "^8.11.3",
     "reflect-metadata": "^0.2.2",
-    "resend": "^6.9.2"
+    "resend": "^6.9.2",
+    "stripe": "^22.6.2"
   },
   "hotHook": {
     "boundaries": [

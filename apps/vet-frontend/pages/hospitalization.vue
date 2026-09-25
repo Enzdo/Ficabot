@@ -121,18 +121,36 @@
         </div>
 
         <form @submit.prevent="createHospitalization" class="space-y-4">
-          <div>
-            <label class="label">Dossier concerné</label>
-            <PatientPicker @select="applyPatient" />
-            <p class="mt-1 text-xs text-surface-500">
-              Rattachée à un dossier, l'hospitalisation est visible par le propriétaire dans son application.
-            </p>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="label">Nom du client *</label>
+              <ClientPicker
+                v-model="newForm.clientName"
+                :entries="clientEntries"
+                placeholder="Tapez pour chercher…"
+                required
+                @select="applyClient"
+              />
+            </div>
+            <div>
+              <label class="label">Téléphone</label>
+              <input v-model="newForm.clientPhone" type="tel" class="input" />
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="label">Nom de l'animal *</label>
-              <input v-model="newForm.petName" type="text" class="input" required />
+              <ClientPicker
+                v-model="newForm.petName"
+                :entries="petEntries"
+                :placeholder="selectedClient ? 'Choisir parmi ses animaux…' : 'Nom de l’animal'"
+                required
+                @select="applyPet"
+              />
+              <p v-if="selectedClient && petEntries.length === 0" class="mt-1 text-xs text-surface-500">
+                Aucun animal enregistré pour ce client.
+              </p>
             </div>
             <div>
               <label class="label">Espece *</label>
@@ -143,17 +161,6 @@
                 <option value="bird">Oiseau</option>
                 <option value="other">Autre</option>
               </select>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="label">Nom du client *</label>
-              <input v-model="newForm.clientName" type="text" class="input" required />
-            </div>
-            <div>
-              <label class="label">Telephone</label>
-              <input v-model="newForm.clientPhone" type="tel" class="input" />
             </div>
           </div>
 
@@ -409,15 +416,63 @@ const emptyForm = () => ({
 
 const newForm = ref(emptyForm())
 
-/** Le choix d'un dossier renseigne l'identifiant et pré-remplit les noms. */
-const applyPatient = (patient: any | null) => {
-  newForm.value.petId = patient?.id ?? null
-  if (patient) {
-    newForm.value.petName = patient.name || ''
-    if (patient.species) newForm.value.petSpecies = patient.species
-    newForm.value.clientName =
-      [patient.owner?.firstName, patient.owner?.lastName].filter(Boolean).join(' ') || ''
-  }
+/**
+ * Clients du praticien, comptes liés comme fiches externes : on saisit d'abord
+ * le client, puis l'animal parmi les siens. L'inverse — choisir l'animal — ne
+ * marchait que pour les dossiers déjà partagés, et laissait de côté les clients
+ * de passage.
+ */
+const clients = ref<any[]>([])
+const selectedClient = ref<any | null>(null)
+
+const clientLabel = (c: any) =>
+  [c.firstName, c.lastName].filter(Boolean).join(' ') || c.email || 'Client sans nom'
+
+const loadClients = async () => {
+  const response = await api.get<any>('/vet/clients')
+  if (!response.success || !response.data) return
+
+  const linked = (response.data.clients || []).map((link: any) => ({
+    ...link.user,
+    kind: 'app',
+  }))
+  const external = (response.data.external || []).map((c: any) => ({ ...c, kind: 'external', pets: [] }))
+  clients.value = [...linked, ...external]
+}
+
+const clientEntries = computed(() =>
+  clients.value.map((c) => ({
+    key: `${c.kind}-${c.id}`,
+    label: clientLabel(c),
+    hint: [c.email, c.phone].filter(Boolean).join(' · '),
+    badge: c.kind === 'app' ? undefined : 'Fiche',
+    payload: c,
+  }))
+)
+
+/** Animaux du client choisi. Vide tant qu'aucun client n'est sélectionné. */
+const petEntries = computed(() =>
+  (selectedClient.value?.pets || []).map((pet: any) => ({
+    key: `pet-${pet.id}`,
+    label: pet.name,
+    hint: [pet.breed, vetSpeciesLabel(pet.species)].filter(Boolean).join(' · '),
+    payload: pet,
+  }))
+)
+
+const applyClient = (entry: any) => {
+  const client = entry.payload
+  selectedClient.value = client
+  newForm.value.clientPhone = client.phone || newForm.value.clientPhone
+  // Le client change : l'animal précédent n'est plus le sien.
+  newForm.value.petId = null
+  newForm.value.petName = ''
+}
+
+const applyPet = (entry: any) => {
+  const pet = entry.payload
+  newForm.value.petId = pet.id
+  if (pet.species) newForm.value.petSpecies = pet.species
 }
 
 const newLog = ref({
@@ -464,6 +519,8 @@ watch(activeTab, fetchHospitalizations)
 
 const openCreateModal = () => {
   createError.value = ''
+  selectedClient.value = null
+  loadClients()
   newForm.value = emptyForm()
   // Date locale : `toISOString()` bascule sur la veille en soirée, à Paris.
   newForm.value.admissionDate = toLocalDateKey(new Date())

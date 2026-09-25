@@ -135,8 +135,16 @@ router.group(() => {
 
 // Subscription / Premium
 const SubscriptionsController = () => import('#controllers/subscriptions_controller')
+const StripeWebhooksController = () => import('#controllers/stripe_webhooks_controller')
+
+/*
+ * Webhook Stripe : sans middleware d'authentification, c'est Stripe qui appelle.
+ * La sécurité tient à la signature du corps, vérifiée dans le contrôleur.
+ */
+router.post('/webhooks/stripe', [StripeWebhooksController, 'handle'])
 router.group(() => {
   router.get('/subscription', [SubscriptionsController, 'show'])
+  router.post('/subscription/checkout', [SubscriptionsController, 'checkout'])
   router.post('/subscription/activate', [SubscriptionsController, 'activate'])
   router.post('/subscription/cancel', [SubscriptionsController, 'cancel'])
 }).prefix('/user').use(middleware.auth())

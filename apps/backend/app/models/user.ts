@@ -89,6 +89,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column({ serializeAs: null })
   declare premiumSubscriptionId: string | null
 
+  /** Client Stripe, pour rattacher les renouvellements au même historique. */
+  @column()
+  declare stripeCustomerId: string | null
+
   /**
    * État réel de l'abonnement : payé et non expiré.
    * Sert à l'affichage de l'abonnement, pas au déblocage des fonctionnalités.

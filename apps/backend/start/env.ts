@@ -87,6 +87,19 @@ export default await Env.create(appRoot, {
   |--------------------------------------------------------------------------
   */
   RESEND_API_KEY: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Stripe — abonnement au logiciel
+  |----------------------------------------------------------
+  | Toutes facultatives : sans elles, l'abonnement reste sur
+  | l'activation manuelle et rien ne casse. Les valeurs vivent
+  | dans l'environnement, jamais dans le dépôt.
+  */
+  STRIPE_SECRET_KEY: Env.schema.string.optional(),
+  STRIPE_WEBHOOK_SECRET: Env.schema.string.optional(),
+  STRIPE_PRICE_MONTHLY: Env.schema.string.optional(),
+  STRIPE_PRICE_QUARTERLY: Env.schema.string.optional(),
   MAIL_FROM_ADDRESS: Env.schema.string.optional(),
   MAIL_FROM_NAME: Env.schema.string.optional(),
   VET_FRONTEND_URL: Env.schema.string.optional(),
