@@ -4,6 +4,11 @@
 // abandonnait le parcours en cours de route ne le revoyait plus jamais.
 const ONBOARDING_ROUTE = '/bienvenue'
 
+// Le péage vient après l'accueil : on ne demande pas de payer avant d'avoir
+// montré à quoi ça sert. La page elle-même reste ouverte, sinon la redirection
+// tourne en rond.
+const PAYWALL_ROUTE = '/abonnement'
+
 // Une seule tentative de résolution par chargement de page. Hors ligne, l'appel
 // échoue ; sans ce drapeau, chaque navigation attendrait un échec réseau.
 let resolutionAttempted = false
@@ -37,6 +42,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo(ONBOARDING_ROUTE)
   }
 
+  // Le péage. Comme pour l'accueil, `null` signifie « inconnu » et laisse
+  // passer : mieux vaut un accès accordé à tort une fois qu'un praticien
+  // enfermé dehors par une coupure réseau, au milieu d'une consultation.
+  if (to.path === PAYWALL_ROUTE) return
+
+  if (authStore.subscriptionActive === false) {
+    return navigateTo(PAYWALL_ROUTE)
+  }
+
   // État inconnu : sessions antérieures à ce cookie. On tranche une fois auprès
   // du serveur, côté client uniquement — pendant le rendu serveur, un échec
   // d'appel bloquerait la page entière pour un simple confort de parcours.
@@ -48,6 +62,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (success && typeof data?.completed === 'boolean') {
       authStore.setOnboardingCompleted(data.completed)
       if (!data.completed) return navigateTo(ONBOARDING_ROUTE)
+    }
+
+    // L'abonnement se résout par la même occasion, pour les sessions ouvertes
+    // avant l'introduction du péage.
+    const me = await useVetApi().get<any>('/vet/auth/me')
+    if (me.success && typeof me.data?.subscriptionActive === 'boolean') {
+      authStore.setSubscriptionActive(me.data.subscriptionActive)
+      if (!me.data.subscriptionActive) return navigateTo(PAYWALL_ROUTE)
     }
   }
 })

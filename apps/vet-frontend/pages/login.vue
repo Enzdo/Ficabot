@@ -99,8 +99,18 @@ const handleLogin = async () => {
         // connaître l'état sans redemander au serveur.
         authStore.setOnboardingCompleted(onboarding.data.completed)
       }
+
+      // L'abonnement vient avec la connexion : le garde-fou de navigation ne
+      // bloque que sur un « false » certain, il lui faut donc cette réponse.
+      if (typeof response.data.vet?.subscriptionActive === 'boolean') {
+        authStore.setSubscriptionActive(response.data.vet.subscriptionActive)
+      }
+
+      const needsOnboarding = onboarding.success && onboarding.data?.completed === false
+      const needsSubscription = response.data.vet?.subscriptionActive === false
+
       await navigateTo(
-        onboarding.success && onboarding.data?.completed === false ? '/bienvenue' : '/dashboard'
+        needsOnboarding ? '/bienvenue' : needsSubscription ? '/abonnement' : '/dashboard'
       )
     } else {
       error.value = response.message || 'Identifiants incorrects'

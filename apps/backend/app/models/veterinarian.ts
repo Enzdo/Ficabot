@@ -67,6 +67,13 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare stripeSubscriptionId: string | null
 
+  /**
+   * Dispense d'abonnement : accès ouvert sans payer. Posé pour les comptes
+   * antérieurs au péage, et utilisable au cas par cas.
+   */
+  @column()
+  declare subscriptionExempt: boolean
+
   /** Terme de la période réglée : l'accès reste ouvert jusque-là. */
   @column.dateTime()
   declare subscriptionEndsAt: DateTime | null

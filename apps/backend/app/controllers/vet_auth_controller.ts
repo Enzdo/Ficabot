@@ -6,6 +6,7 @@ import { DateTime } from 'luxon'
 import { randomBytes } from 'node:crypto'
 import mail from '@adonisjs/mail/services/main'
 import logger from '@adonisjs/core/services/logger'
+import { hasActiveAccess } from '#services/vet_access'
 import * as throttle from '#services/login_throttle'
 import env from '#start/env'
 import WelcomeVetNotification from '#mails/welcome_vet_notification'
@@ -96,6 +97,7 @@ export default class VetAuthController {
           licenseNumber: vet.licenseNumber,
           specialization: vet.specialization,
           isVerified: vet.isVerified,
+          subscriptionActive: hasActiveAccess(vet),
           verificationStatus: vet.verificationStatus,
           clinic: vet.clinic ? {
             id: vet.clinic.id,
@@ -154,6 +156,7 @@ export default class VetAuthController {
           licenseNumber: vet.licenseNumber,
           specialization: vet.specialization,
           isVerified: vet.isVerified,
+          subscriptionActive: hasActiveAccess(vet),
         },
         token: { token: token.value!.release(), type: 'bearer' },
       },
@@ -175,6 +178,7 @@ export default class VetAuthController {
         licenseNumber: vet.licenseNumber,
         specialization: vet.specialization,
         isVerified: vet.isVerified,
+        subscriptionActive: hasActiveAccess(vet),
         createdAt: vet.createdAt,
       },
     })
@@ -200,6 +204,7 @@ export default class VetAuthController {
         licenseNumber: vet.licenseNumber,
         specialization: vet.specialization,
         isVerified: vet.isVerified,
+        subscriptionActive: hasActiveAccess(vet),
       },
     })
   }

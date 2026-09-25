@@ -20,6 +20,12 @@ interface AuthState {
    * plutôt que d'enfermer quelqu'un dehors sur une simple coupure réseau.
    */
   onboardingCompleted: boolean | null
+  /**
+   * `null` tant que l'abonnement est inconnu. Comme pour l'accueil, le
+   * garde-fou ne bloque que sur `false` : une coupure réseau ne doit pas
+   * enfermer un praticien dehors au milieu d'une consultation.
+   */
+  subscriptionActive: boolean | null
 }
 
 /**
@@ -43,6 +49,7 @@ const TOKEN_COOKIE = 'vet_token'
  * en localStorage seul ferait conclure « état inconnu » à chaque rendu.
  */
 const ONBOARDING_COOKIE = 'vet_onboarding_done'
+const SUBSCRIPTION_COOKIE = 'vet_subscription_active'
 
 const cookieOptions = () => ({
   maxAge: 60 * 60 * 24 * 30,
@@ -60,11 +67,14 @@ const sessionCookie = () => useCookie<string | null>(TOKEN_COOKIE, cookieOptions
 
 const onboardingCookie = () => useCookie<string | null>(ONBOARDING_COOKIE, cookieOptions())
 
+const subscriptionCookie = () => useCookie<string | null>(SUBSCRIPTION_COOKIE, cookieOptions())
+
 export const useVetAuthStore = defineStore('vetAuth', {
   state: (): AuthState => ({
     vet: null,
     token: null,
     onboardingCompleted: null,
+    subscriptionActive: null,
   }),
 
   getters: {
@@ -89,6 +99,11 @@ export const useVetAuthStore = defineStore('vetAuth', {
     setOnboardingCompleted(completed: boolean) {
       this.onboardingCompleted = completed
       onboardingCookie().value = completed ? '1' : '0'
+    },
+
+    setSubscriptionActive(active: boolean) {
+      this.subscriptionActive = active
+      subscriptionCookie().value = active ? '1' : '0'
     },
 
     /**
@@ -117,8 +132,10 @@ export const useVetAuthStore = defineStore('vetAuth', {
       this.vet = null
       this.token = null
       this.onboardingCompleted = null
+      this.subscriptionActive = null
       sessionCookie().value = null
       onboardingCookie().value = null
+      subscriptionCookie().value = null
       if (import.meta.client) {
         localStorage.removeItem('vet_token')
         localStorage.removeItem('vet_user')
@@ -133,6 +150,10 @@ export const useVetAuthStore = defineStore('vetAuth', {
       // l'introduction de ce cookie ne doivent pas être renvoyées au parcours.
       this.onboardingCompleted =
         onboarding.value === '1' ? true : onboarding.value === '0' ? false : null
+
+      const subscription = subscriptionCookie()
+      this.subscriptionActive =
+        subscription.value === '1' ? true : subscription.value === '0' ? false : null
 
       if (!import.meta.client) {
         // Rendu serveur : seul le cookie est lisible. Il suffit à savoir
@@ -160,6 +181,7 @@ export const useVetAuthStore = defineStore('vetAuth', {
       // on la ferme plutôt que de laisser un token orphelin.
       if (cookie.value) cookie.value = null
       if (onboarding.value) onboarding.value = null
+      if (subscriptionCookie().value) subscriptionCookie().value = null
       this.token = null
       this.vet = null
       this.onboardingCompleted = null

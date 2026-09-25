@@ -1132,6 +1132,20 @@ const finish = async () => {
   // Avant de sortir : sans cela le garde-fou de navigation, qui lit l'état mis
   // en cache, renverrait aussitôt vers ce même parcours.
   authStore.setOnboardingCompleted(true)
+
+  // Le péage vient après l'accueil : on a montré à quoi sert l'outil avant de
+  // demander de payer. On interroge le serveur plutôt que de se fier au cache,
+  // qui n'a jamais été renseigné pour une inscription toute fraîche. En cas
+  // d'échec, on laisse passer — le garde-fou de navigation rattrapera.
+  const subscription = await api.get<any>('/vet/subscription')
+  if (subscription.success && subscription.data?.isActive === false) {
+    authStore.setSubscriptionActive(false)
+    return navigateTo('/abonnement')
+  }
+  if (subscription.success && subscription.data?.isActive === true) {
+    authStore.setSubscriptionActive(true)
+  }
+
   await navigateTo(recommendedStart.value.path)
 
 }
