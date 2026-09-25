@@ -155,7 +155,13 @@ export async function createCheckoutSession(
 export function constructEvent(rawBody: Buffer | string, signature: string): Stripe.Event {
   const secret = env.get('STRIPE_WEBHOOK_SECRET')
   if (!secret) throw new Error('STRIPE_WEBHOOK_SECRET absente')
-  return stripe().webhooks.constructEvent(rawBody, signature, secret)
+
+  // La vérification est un calcul local : elle ne contacte pas Stripe et n'a
+  // donc pas besoin d'une clé d'API valide. Exiger `STRIPE_SECRET_KEY` ici
+  // rendait le webhook inopérant tant que la clé n'était pas posée, alors que
+  // le traitement qui suit n'appelle jamais l'API — il ne fait qu'écrire en base.
+  const verifier = client ?? new Stripe(env.get('STRIPE_SECRET_KEY') || 'sk_verification_only')
+  return verifier.webhooks.constructEvent(rawBody, signature, secret)
 }
 
 /** Résilie à l'échéance, sans couper l'accès déjà payé. */
