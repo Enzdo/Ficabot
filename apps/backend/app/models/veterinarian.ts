@@ -51,6 +51,26 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare openingHours: object | null
 
+  // ─── Abonnement au logiciel ───
+
+  /** 'liberal' | 'clinique'. L'offre Réseau est sur mesure, hors paiement en ligne. */
+  @column()
+  declare plan: string | null
+
+  /** Vocabulaire de Stripe : active, trialing, past_due, canceled… */
+  @column()
+  declare subscriptionStatus: string | null
+
+  @column()
+  declare stripeCustomerId: string | null
+
+  @column()
+  declare stripeSubscriptionId: string | null
+
+  /** Terme de la période réglée : l'accès reste ouvert jusque-là. */
+  @column.dateTime()
+  declare subscriptionEndsAt: DateTime | null
+
   @column()
   declare licenseNumber: string | null
 

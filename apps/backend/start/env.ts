@@ -100,6 +100,10 @@ export default await Env.create(appRoot, {
   STRIPE_WEBHOOK_SECRET: Env.schema.string.optional(),
   STRIPE_PRICE_MONTHLY: Env.schema.string.optional(),
   STRIPE_PRICE_QUARTERLY: Env.schema.string.optional(),
+
+  /* Offres du logiciel vétérinaire. L'offre Réseau est sur mesure : pas de tarif. */
+  STRIPE_PRICE_LIBERAL: Env.schema.string.optional(),
+  STRIPE_PRICE_CLINIQUE: Env.schema.string.optional(),
   MAIL_FROM_ADDRESS: Env.schema.string.optional(),
   MAIL_FROM_NAME: Env.schema.string.optional(),
   VET_FRONTEND_URL: Env.schema.string.optional(),

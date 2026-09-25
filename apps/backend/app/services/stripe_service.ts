@@ -16,6 +16,9 @@ import type User from '#models/user'
 
 export type SubscriptionPlan = 'monthly' | 'quarterly'
 
+/** Offres du logiciel vétérinaire, telles que les annonce le site pro. */
+export type VetPlan = 'liberal' | 'clinique'
+
 /** Créé à la demande : au démarrage, les variables peuvent ne pas être là. */
 let client: Stripe | null = null
 
@@ -45,6 +48,14 @@ export function assertSafeKey() {
   }
 }
 
+export function vetPriceFor(plan: VetPlan): string {
+  const price =
+    plan === 'liberal' ? env.get('STRIPE_PRICE_LIBERAL') : env.get('STRIPE_PRICE_CLINIQUE')
+
+  if (!price) throw new Error(`Tarif Stripe non configuré pour l'offre ${plan}`)
+  return price
+}
+
 function priceFor(plan: SubscriptionPlan): string {
   const price =
     plan === 'monthly' ? env.get('STRIPE_PRICE_MONTHLY') : env.get('STRIPE_PRICE_QUARTERLY')
@@ -71,6 +82,45 @@ async function customerFor(user: User): Promise<string> {
   user.stripeCustomerId = customer.id
   await user.save()
   return customer.id
+}
+
+/**
+ * Page de paiement pour un praticien.
+ *
+ * Distincte de celle des propriétaires : le client Stripe n'est pas le même
+ * objet, et confondre les deux mélangerait deux grilles tarifaires sur un
+ * même historique de facturation.
+ */
+export async function createVetCheckoutSession(
+  vet: { id: number; email: string; firstName: string | null; lastName: string | null; clinicName: string | null; stripeCustomerId: string | null; save: () => Promise<any> },
+  plan: VetPlan,
+  urls: { success: string; cancel: string }
+) {
+  assertSafeKey()
+
+  let customerId = vet.stripeCustomerId
+  if (!customerId) {
+    const customer = await stripe().customers.create({
+      email: vet.email,
+      name: vet.clinicName || [vet.firstName, vet.lastName].filter(Boolean).join(' ') || undefined,
+      metadata: { veterinarianId: String(vet.id) },
+    })
+    customerId = customer.id
+    vet.stripeCustomerId = customerId
+    await vet.save()
+  }
+
+  const session = await stripe().checkout.sessions.create({
+    mode: 'subscription',
+    customer: customerId,
+    line_items: [{ price: vetPriceFor(plan), quantity: 1 }],
+    success_url: urls.success,
+    cancel_url: urls.cancel,
+    subscription_data: { metadata: { veterinarianId: String(vet.id), plan } },
+    metadata: { veterinarianId: String(vet.id), plan },
+  })
+
+  return session.url
 }
 
 /** Page de paiement hébergée par Stripe. On ne touche jamais aux cartes. */

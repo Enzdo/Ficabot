@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
 import User from '#models/user'
 import { constructEvent } from '#services/stripe_service'
+import VetSubscriptionController from '#controllers/vet_subscription_controller'
 
 /**
  * Réception des événements Stripe.
@@ -72,6 +73,12 @@ export default class StripeWebhooksController {
 
   private async applySubscription(event: any) {
     const object = event.data.object
+
+    // Deux publics partagent ce webhook : les praticiens abonnés au logiciel et
+    // les propriétaires abonnés au premium. La métadonnée tranche ; on tente le
+    // praticien d'abord, et on ne poursuit que si personne n'a reconnu l'objet.
+    if (await VetSubscriptionController.applyFromStripe(object, event.type)) return
+
     const user = await this.findUser(object)
 
     if (!user) {
@@ -119,6 +126,8 @@ export default class StripeWebhooksController {
   }
 
   private async revoke(event: any) {
+    if (await VetSubscriptionController.applyFromStripe(event.data.object, event.type)) return
+
     const user = await this.findUser(event.data.object)
     if (!user) return
 

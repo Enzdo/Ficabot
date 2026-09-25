@@ -506,6 +506,13 @@ router.group(() => {
   router.delete('/:id', [VetClientsController, 'remove'])
 }).prefix('/vet/clients').use(middleware.vetAuth())
 
+const VetSubscriptionController = () => import('#controllers/vet_subscription_controller')
+router.group(() => {
+  router.get('/', [VetSubscriptionController, 'show'])
+  router.post('/checkout', [VetSubscriptionController, 'checkout'])
+  router.post('/cancel', [VetSubscriptionController, 'cancel'])
+}).prefix('/vet/subscription').use(middleware.vetAuth())
+
 // User Veterinarians Management (from user side)
 const UserVeterinariansController = () => import('#controllers/user_veterinarians_controller')
 router.group(() => {
