@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
+import VetEmployee from '#models/vet_employee'
 import VetClinic from '#models/vet_clinic'
 import { vetRegisterValidator, vetLoginValidator, vetUpdateProfileValidator } from '#validators/vet_auth'
 import { DateTime } from 'luxon'
@@ -7,6 +8,14 @@ import { randomBytes } from 'node:crypto'
 import mail from '@adonisjs/mail/services/main'
 import logger from '@adonisjs/core/services/logger'
 import { hasActiveAccess } from '#services/vet_access'
+import { employeeAbility } from '#services/vet_actor'
+import { ownerCapabilities, resolveCapabilities } from '#services/vet_permissions'
+import {
+  revokeAllSessions,
+  revokeEmployeeSessions,
+  revokeOwnerSessions,
+} from '#services/vet_sessions'
+import type { Capability } from '#services/vet_permissions'
 import * as throttle from '#services/login_throttle'
 import env from '#start/env'
 import WelcomeVetNotification from '#mails/welcome_vet_notification'
@@ -14,6 +23,48 @@ import PasswordResetVetNotification from '#mails/password_reset_vet_notification
 import PasswordChangedVetNotification from '#mails/password_changed_vet_notification'
 
 export default class VetAuthController {
+  /**
+   * Identité du cabinet, telle que le logiciel l'affiche. Inchangée depuis
+   * l'introduction des employés : elle décrit le lieu d'exercice, pas la
+   * personne aux commandes — celle-ci est décrite par `actor`.
+   */
+  private clinicPayload(vet: Veterinarian) {
+    return {
+      id: vet.id,
+      email: vet.email,
+      firstName: vet.firstName,
+      lastName: vet.lastName,
+      clinicName: vet.clinicName,
+      phone: vet.phone,
+      address: vet.address,
+      licenseNumber: vet.licenseNumber,
+      specialization: vet.specialization,
+      isVerified: vet.isVerified,
+      subscriptionActive: hasActiveAccess(vet),
+    }
+  }
+
+  /**
+   * Qui agit, et ce qu'il a le droit d'ouvrir. Le logiciel s'en sert pour
+   * n'afficher que les écrans permis — la grille est aussi appliquée côté
+   * serveur, l'affichage n'étant qu'une politesse, jamais une garantie.
+   */
+  private actorPayload(vet: Veterinarian, employee: VetEmployee | null) {
+    const capabilities: Capability[] = employee
+      ? resolveCapabilities(employee.role, employee.capabilities)
+      : ownerCapabilities()
+
+    return {
+      kind: employee ? ('employee' as const) : ('owner' as const),
+      employeeId: employee?.id ?? null,
+      role: employee?.role ?? null,
+      firstName: employee?.firstName ?? vet.firstName,
+      lastName: employee?.lastName ?? vet.lastName,
+      email: employee?.email ?? vet.email,
+      capabilities,
+    }
+  }
+
   async register({ request, response }: HttpContext) {
     const data = await request.validateUsing(vetRegisterValidator)
 
@@ -124,15 +175,26 @@ export default class VetAuthController {
       })
     }
 
-    let vet: Veterinarian
+    let vet: Veterinarian | null = null
     try {
       vet = await Veterinarian.verifyCredentials(email, password)
     } catch {
-      // Laissée remonter, l'exception d'identifiants s'auto-rend en texte brut
+      // L'exception n'est pas laissée remonter : elle s'auto-rend en texte brut
       // — faute de middleware de session, elle choisit la branche « html ». Le
       // composable tentait alors d'en lire du JSON, échouait, et affichait
       // « Erreur de connexion au serveur » : le praticien partait chercher une
       // panne réseau au lieu de corriger son mot de passe.
+      vet = null
+    }
+
+    // Une seule porte d'entrée, pour le titulaire comme pour ses employés :
+    // demander à chacun de choisir le bon formulaire serait une friction
+    // gratuite. La résolution reste sans ambiguïté — l'adresse d'un employé
+    // ayant un accès est unique, et l'octroi refuse celle d'un titulaire.
+    if (!vet) {
+      const employee = await VetEmployee.verifyForLogin(email, password)
+      if (employee) return this.loginAsEmployee(employee, throttleKey, response)
+
       return response.badRequest({
         success: false,
         message: 'Email ou mot de passe incorrect.',
@@ -145,88 +207,107 @@ export default class VetAuthController {
     return response.ok({
       success: true,
       data: {
-        vet: {
-          id: vet.id,
-          email: vet.email,
-          firstName: vet.firstName,
-          lastName: vet.lastName,
-          clinicName: vet.clinicName,
-          phone: vet.phone,
-          address: vet.address,
-          licenseNumber: vet.licenseNumber,
-          specialization: vet.specialization,
-          isVerified: vet.isVerified,
-          subscriptionActive: hasActiveAccess(vet),
-        },
+        vet: this.clinicPayload(vet),
+        actor: this.actorPayload(vet, null),
         token: { token: token.value!.release(), type: 'bearer' },
       },
     })
   }
 
-  async me({ response, auth }: HttpContext) {
-    const vet = auth.user as Veterinarian
+  /**
+   * Ouvre une session d'employé.
+   *
+   * Le jeton est posé sur le compte du cabinet et marqué du nom de l'employé :
+   * le cloisonnement des données reste celui du cabinet — ce que l'employé doit
+   * précisément voir — et les 117 requêtes du logiciel n'ont pas à changer.
+   */
+  private async loginAsEmployee(
+    employee: VetEmployee,
+    throttleKey: string,
+    response: HttpContext['response']
+  ) {
+    const vet = await Veterinarian.find(employee.veterinarianId)
+
+    if (!vet) {
+      // Fiche orpheline : anormal, et sans recours pour l'employé. On journalise
+      // plutôt que de laisser une erreur muette.
+      logger.error(
+        { employeeId: employee.id, veterinarianId: employee.veterinarianId },
+        'Employé rattaché à un cabinet inexistant'
+      )
+      return response.badRequest({
+        success: false,
+        message: 'Email ou mot de passe incorrect.',
+      })
+    }
+
+    if (!hasActiveAccess(vet)) {
+      // L'employé ne peut pas régler l'abonnement à la place du titulaire :
+      // l'envoyer sur l'écran de paiement serait un cul-de-sac. On nomme la
+      // cause, pour qu'il sache à qui s'adresser.
+      return response.forbidden({
+        success: false,
+        message: "L'accès du cabinet au logiciel est suspendu. Contactez le titulaire.",
+        code: 'CLINIC_SUBSCRIPTION_INACTIVE',
+      })
+    }
+
+    throttle.clear(throttleKey)
+    const token = await Veterinarian.accessTokens.create(vet, [employeeAbility(employee.id)])
+
+    employee.lastLoginAt = DateTime.now()
+    await employee.save()
+
     return response.ok({
       success: true,
       data: {
-        id: vet.id,
-        email: vet.email,
-        firstName: vet.firstName,
-        lastName: vet.lastName,
-        clinicName: vet.clinicName,
-        phone: vet.phone,
-        address: vet.address,
-        licenseNumber: vet.licenseNumber,
-        specialization: vet.specialization,
-        isVerified: vet.isVerified,
-        subscriptionActive: hasActiveAccess(vet),
-        createdAt: vet.createdAt,
+        vet: this.clinicPayload(vet),
+        actor: this.actorPayload(vet, employee),
+        token: { token: token.value!.release(), type: 'bearer' },
       },
     })
   }
 
-  async updateProfile({ request, response, auth }: HttpContext) {
-    const vet = auth.user as Veterinarian
+  async me(ctx: HttpContext) {
+    const { response } = ctx
+    const actor = ctx.vetActor!
+    const vet = actor.veterinarian
+
+    // Forme historique conservée à plat — le logiciel lit `data.clinicName`
+    // depuis toujours —, enrichie de `actor` pour savoir qui est aux commandes.
+    return response.ok({
+      success: true,
+      data: {
+        ...this.clinicPayload(vet),
+        createdAt: vet.createdAt,
+        actor: this.actorPayload(vet, actor.employee),
+      },
+    })
+  }
+
+  async updateProfile(ctx: HttpContext) {
+    const { request, response } = ctx
+    const actor = ctx.vetActor!
+
+    // La route est déjà réservée au titulaire par la grille de droits. Cette
+    // seconde vérification tient pour ce qu'elle est — une ceinture en plus du
+    // harnais : la fiche modifiée ici est celle du cabinet, et une erreur
+    // d'assemblage des middlewares ne doit pas laisser un employé la réécrire.
+    if (!actor.isOwner) {
+      return response.forbidden({
+        success: false,
+        message: 'Seul le titulaire du cabinet peut modifier ces informations.',
+        code: 'OWNER_ONLY',
+      })
+    }
+
+    const vet = actor.veterinarian
     const data = await request.validateUsing(vetUpdateProfileValidator)
 
     vet.merge(data)
     await vet.save()
 
-    return response.ok({
-      success: true,
-      data: {
-        id: vet.id,
-        email: vet.email,
-        firstName: vet.firstName,
-        lastName: vet.lastName,
-        clinicName: vet.clinicName,
-        phone: vet.phone,
-        address: vet.address,
-        licenseNumber: vet.licenseNumber,
-        specialization: vet.specialization,
-        isVerified: vet.isVerified,
-        subscriptionActive: hasActiveAccess(vet),
-      },
-    })
-  }
-
-  /**
-   * Révoque les jetons d'accès du praticien, hormis celui passé en second
-   * argument. Un échec de révocation n'est pas silencieux : mieux vaut un
-   * journal qui alerte qu'une session qu'on croit fermée et qui ne l'est pas.
-   */
-  private async revokeTokens(vet: Veterinarian, keepIdentifier?: string | number | BigInt) {
-    const tokens = await Veterinarian.accessTokens.all(vet)
-
-    for (const token of tokens) {
-      if (keepIdentifier !== undefined && String(token.identifier) === String(keepIdentifier)) {
-        continue
-      }
-      try {
-        await Veterinarian.accessTokens.delete(vet, token.identifier)
-      } catch (error) {
-        logger.error({ err: error, vetId: vet.id }, 'Échec de révocation d’un jeton vétérinaire')
-      }
-    }
+    return response.ok({ success: true, data: this.clinicPayload(vet) })
   }
 
   async logout({ response, auth }: HttpContext) {
@@ -239,11 +320,49 @@ export default class VetAuthController {
     })
   }
 
-  async changePassword({ request, response, auth }: HttpContext) {
-    const vet = auth.user as Veterinarian
+  /**
+   * Change le mot de passe de la personne connectée — le titulaire, ou l'employé
+   * aux commandes. Le même écran sert les deux : chacun modifie le sien.
+   */
+  async changePassword(ctx: HttpContext) {
+    const { request, response } = ctx
+    const actor = ctx.vetActor!
+    const vet = actor.veterinarian
     const { currentPassword, newPassword } = request.only(['currentPassword', 'newPassword'])
 
-    // Verify current password
+    if (typeof newPassword !== 'string' || newPassword.length < 8) {
+      return response.badRequest({
+        success: false,
+        message: 'Le nouveau mot de passe doit faire au moins 8 caractères.',
+      })
+    }
+
+    const current = vet.currentAccessToken?.identifier
+
+    if (actor.employee) {
+      const employee = actor.employee
+      const verified = await VetEmployee.verifyForLogin(employee.email ?? '', String(currentPassword))
+
+      if (!verified || verified.id !== employee.id) {
+        return response.badRequest({
+          success: false,
+          message: 'Mot de passe actuel incorrect',
+        })
+      }
+
+      employee.password = String(newPassword)
+      await employee.save()
+
+      // Seules les sessions de cet employé tombent. Celles de ses collègues et
+      // du titulaire ne sont pas concernées par son mot de passe.
+      await revokeEmployeeSessions(vet, employee.id, current)
+
+      return response.ok({
+        success: true,
+        message: 'Mot de passe modifié avec succès',
+      })
+    }
+
     try {
       await Veterinarian.verifyCredentials(vet.email, currentPassword)
     } catch {
@@ -256,12 +375,13 @@ export default class VetAuthController {
     vet.password = newPassword
     await vet.save()
 
-    // Les autres sessions tombent : sans cela, reprendre son mot de passe après
-    // une compromission ne délogeait pas l'intrus. Celle en cours est conservée,
-    // pour ne pas éjecter le praticien de l'écran où il vient d'agir.
-    await this.revokeTokens(vet, vet.currentAccessToken?.identifier)
+    // Les autres sessions du titulaire tombent : sans cela, reprendre son mot de
+    // passe après une compromission ne délogeait pas l'intrus. Celle en cours
+    // est conservée, pour ne pas l'éjecter de l'écran où il vient d'agir — et
+    // celles de l'équipe aussi : son mot de passe n'est pas le leur, les
+    // déconnecter en pleine journée serait une surprise gratuite.
+    await revokeOwnerSessions(vet, current)
 
-    // Send confirmation email (async)
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
       logger.error({ err: error }, 'Failed to send vet password changed email')
     })
@@ -349,10 +469,10 @@ export default class VetAuthController {
     vet.resetTokenExpiresAt = null
     await vet.save()
 
-    // Toutes les sessions tombent, sans exception : une réinitialisation est
-    // souvent la réaction à une perte de contrôle du compte. En laisser une
-    // seule debout viderait la manœuvre de son sens.
-    await this.revokeTokens(vet)
+    // Toutes les sessions tombent, sans exception — employés compris : une
+    // réinitialisation est souvent la réaction à une perte de contrôle du
+    // compte. En laisser une seule debout viderait la manœuvre de son sens.
+    await revokeAllSessions(vet)
 
     mail.send(new PasswordChangedVetNotification(vet)).catch((error) => {
       logger.error({ err: error }, 'Failed to send vet password changed email')
@@ -366,8 +486,21 @@ export default class VetAuthController {
     })
   }
 
-  async deleteAccount({ response, auth }: HttpContext) {
-    const vet = auth.user as Veterinarian
+  async deleteAccount(ctx: HttpContext) {
+    const { response } = ctx
+    const actor = ctx.vetActor!
+
+    // Geste irréversible, et qui emporte tout le cabinet : il n'appartient qu'au
+    // titulaire, quelle que soit la grille de droits de l'employé.
+    if (!actor.isOwner) {
+      return response.forbidden({
+        success: false,
+        message: 'Seul le titulaire du cabinet peut supprimer ce compte.',
+        code: 'OWNER_ONLY',
+      })
+    }
+
+    const vet = actor.veterinarian
     await Veterinarian.accessTokens.delete(vet, vet.currentAccessToken!.identifier)
     await vet.delete()
 

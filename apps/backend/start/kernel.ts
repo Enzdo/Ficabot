@@ -42,5 +42,6 @@ router.use([() => import('@adonisjs/core/bodyparser_middleware')])
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
   vetAuth: () => import('#middleware/vet_auth_middleware'),
+  vetCan: () => import('#middleware/vet_capability_middleware'),
   premium: () => import('#middleware/require_premium_middleware'),
 })

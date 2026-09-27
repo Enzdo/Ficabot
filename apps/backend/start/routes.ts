@@ -399,23 +399,36 @@ router.group(() => {
 
 // Vet Protected Routes
 router.group(() => {
+  // `me`, `logout` et `password` servent tout le monde : chacun consulte sa
+  // session, la ferme, et change son propre mot de passe.
   router.get('/me', [VetAuthController, 'me'])
-  router.put('/profile', [VetAuthController, 'updateProfile'])
   router.post('/logout', [VetAuthController, 'logout'])
   router.put('/password', [VetAuthController, 'changePassword'])
+
+  // Le profil du cabinet et sa suppression appartiennent au titulaire.
+  router.put('/profile', [VetAuthController, 'updateProfile'])
+    .use(middleware.vetCan({ capability: 'settings' }))
   router.delete('/account', [VetAuthController, 'deleteAccount'])
+    .use(middleware.vetCan({ capability: 'settings' }))
 }).prefix('/vet/auth').use(middleware.vetAuth())
 
 // Vet Pre-Diagnoses & AI Chat
 const VetPreDiagnosesController = () => import('#controllers/vet_pre_diagnoses_controller')
 router.group(() => {
   router.get('/dashboard/stats', [VetPreDiagnosesController, 'stats'])
+    .use(middleware.vetCan({ capability: 'dashboard' }))
   router.get('/pre-diagnoses', [VetPreDiagnosesController, 'index'])
+    .use(middleware.vetCan({ capability: 'prediagnoses' }))
   router.get('/pre-diagnoses/:id', [VetPreDiagnosesController, 'show'])
+    .use(middleware.vetCan({ capability: 'prediagnoses' }))
   router.post('/pre-diagnoses/:id/response', [VetPreDiagnosesController, 'respond'])
+    .use(middleware.vetCan({ capability: 'prediagnoses' }))
   router.post('/pre-diagnoses/:id/ai-chat', [VetPreDiagnosesController, 'aiChat'])
+    .use(middleware.vetCan({ capability: 'prediagnoses' }))
   router.get('/notifications', [VetPreDiagnosesController, 'notifications'])
+    .use(middleware.vetCan({ capability: 'dashboard' }))
   router.patch('/notifications/:id/read', [VetPreDiagnosesController, 'markNotificationRead'])
+    .use(middleware.vetCan({ capability: 'dashboard' }))
 }).prefix('/vet').use(middleware.vetAuth())
 
 // Vet Notifications (Real-time)
@@ -427,7 +440,7 @@ router.group(() => {
   router.put('/:id/read', [NotificationsController, 'markAsRead'])
   router.put('/mark-all-read', [NotificationsController, 'markAllAsRead'])
   router.delete('/:id', [NotificationsController, 'destroy'])
-}).prefix('/notifications').use(middleware.vetAuth())
+}).prefix('/notifications').use([middleware.vetAuth(), middleware.vetCan({ capability: 'dashboard' })])
 
 // Vet Patients Management
 const VetConsultationsController = () => import('#controllers/vet_consultations_controller')
@@ -443,7 +456,7 @@ router.group(() => {
   router.post('/:token/notes', [VetPatientsController, 'addNote'])
   router.put('/:token/diet/vet-notes', [WeightGoalsController, 'updateVetNotes'])
   router.post('/:token/assistant', [VetAssistantController, 'ask'])
-}).prefix('/vet/patients').use(middleware.vetAuth())
+}).prefix('/vet/patients').use([middleware.vetAuth(), middleware.vetCan({ capability: 'patients' })])
 
 // Vet Consultations (dictée → compte rendu structuré)
 router.group(() => {
@@ -455,14 +468,14 @@ router.group(() => {
   router.get('/dictations/:id', [VetConsultationsController, 'showDictation'])
   router.post('/transcribe', [VetConsultationsController, 'transcribe'])
   router.post('/', [VetConsultationsController, 'store'])
-}).prefix('/vet/consultations').use(middleware.vetAuth())
+}).prefix('/vet/consultations').use([middleware.vetAuth(), middleware.vetCan({ capability: 'consultation' })])
 
 // Parcours d'inscription (profil d'exercice)
 router.group(() => {
   router.get('/options', [VetOnboardingController, 'options'])
   router.get('/', [VetOnboardingController, 'show'])
   router.post('/', [VetOnboardingController, 'update'])
-}).prefix('/vet/onboarding').use(middleware.vetAuth())
+}).prefix('/vet/onboarding').use([middleware.vetAuth(), middleware.vetCan({ capability: 'settings' })])
 
 // Discussions avec l'assistant
 router.group(() => {
@@ -473,7 +486,7 @@ router.group(() => {
   router.patch('/conversations/:id', [VetAssistantConversationsController, 'update'])
   router.delete('/conversations/:id', [VetAssistantConversationsController, 'destroy'])
   router.post('/conversations/:id/messages', [VetAssistantConversationsController, 'message'])
-}).prefix('/vet/assistant').use(middleware.vetAuth())
+}).prefix('/vet/assistant').use([middleware.vetAuth(), middleware.vetCan({ capability: 'assistant' })])
 
 // Bibliothèque de modèles de compte rendu.
 // Préfixe distinct de /vet/templates, déjà pris par les modèles de
@@ -486,7 +499,7 @@ router.group(() => {
   router.delete('/:id', [ReportTemplatesController, 'destroy'])
   router.post('/:id/duplicate', [ReportTemplatesController, 'duplicate'])
   router.post('/:id/favorite', [ReportTemplatesController, 'toggleFavorite'])
-}).prefix('/vet/report-templates').use(middleware.vetAuth())
+}).prefix('/vet/report-templates').use([middleware.vetAuth(), middleware.vetCan({ capability: 'templates' })])
 
 // Vet Clients Management (User-Veterinarian links)
 const VetClientsController = () => import('#controllers/vet_clients_controller')
@@ -504,14 +517,14 @@ router.group(() => {
   router.post('/:id/reject', [VetClientsController, 'reject'])
   router.delete('/external/:id', [VetClientsController, 'deleteExternal'])
   router.delete('/:id', [VetClientsController, 'remove'])
-}).prefix('/vet/clients').use(middleware.vetAuth())
+}).prefix('/vet/clients').use([middleware.vetAuth(), middleware.vetCan({ capability: 'clients' })])
 
 const VetSubscriptionController = () => import('#controllers/vet_subscription_controller')
 router.group(() => {
   router.get('/', [VetSubscriptionController, 'show'])
   router.post('/checkout', [VetSubscriptionController, 'checkout'])
   router.post('/cancel', [VetSubscriptionController, 'cancel'])
-}).prefix('/vet/subscription').use(middleware.vetAuth())
+}).prefix('/vet/subscription').use([middleware.vetAuth(), middleware.vetCan({ capability: 'subscription' })])
 
 // User Veterinarians Management (from user side)
 const UserVeterinariansController = () => import('#controllers/user_veterinarians_controller')
@@ -542,7 +555,7 @@ router.group(() => {
   router.get('/conversations/:conversationId/messages', [VetChatController, 'messages'])
   router.post('/conversations/:conversationId/messages', [VetChatController, 'send'])
   router.post('/conversations/:conversationId/read', [VetChatController, 'markRead'])
-}).prefix('/vet/chat').use(middleware.vetAuth())
+}).prefix('/vet/chat').use([middleware.vetAuth(), middleware.vetCan({ capability: 'messages' })])
 
 // User Vet Chat (for users to chat with their vets)
 const UserVetChatController = () => import('#controllers/user_vet_chat_controller')
@@ -561,7 +574,10 @@ router.group(() => {
   router.get('/:id', [VetEmployeesController, 'show'])
   router.put('/:id', [VetEmployeesController, 'update'])
   router.delete('/:id', [VetEmployeesController, 'destroy'])
-}).prefix('/vet/employees').use(middleware.vetAuth())
+  // Accès au logiciel : ouverture (ou remplacement du mot de passe) et retrait.
+  router.put('/:id/access', [VetEmployeesController, 'grantAccess'])
+  router.delete('/:id/access', [VetEmployeesController, 'revokeAccess'])
+}).prefix('/vet/employees').use([middleware.vetAuth(), middleware.vetCan({ capability: 'team' })])
 
 // Clinic Appointments Management
 const ClinicAppointmentsController = () => import('#controllers/clinic_appointments_controller')
@@ -574,19 +590,31 @@ router.group(() => {
   router.put('/:id', [ClinicAppointmentsController, 'update'])
   router.patch('/:id/status', [ClinicAppointmentsController, 'updateStatus'])
   router.delete('/:id', [ClinicAppointmentsController, 'destroy'])
-}).prefix('/vet/appointments').use(middleware.vetAuth())
+}).prefix('/vet/appointments').use([middleware.vetAuth(), middleware.vetCan({ capability: 'agenda' })])
 
 // Vet Clinic Settings (info, hours, services)
 const VetClinicSettingsController = () => import('#controllers/vet_clinic_settings_controller')
 router.group(() => {
+  // Coordonnées, horaires et actes se lisent avec l'agenda : sans eux, un
+  // employé ne pourrait pas poser un rendez-vous. Les modifier, en revanche,
+  // c'est régler le cabinet — réservé au titulaire.
   router.get('/info', [VetClinicSettingsController, 'getClinicInfo'])
-  router.put('/info', [VetClinicSettingsController, 'updateClinicInfo'])
+    .use(middleware.vetCan({ capability: 'agenda' }))
   router.get('/hours', [VetClinicSettingsController, 'getHours'])
-  router.put('/hours', [VetClinicSettingsController, 'updateHours'])
+    .use(middleware.vetCan({ capability: 'agenda' }))
   router.get('/services', [VetClinicSettingsController, 'listServices'])
+    .use(middleware.vetCan({ capability: 'agenda' }))
+
+  router.put('/info', [VetClinicSettingsController, 'updateClinicInfo'])
+    .use(middleware.vetCan({ capability: 'settings' }))
+  router.put('/hours', [VetClinicSettingsController, 'updateHours'])
+    .use(middleware.vetCan({ capability: 'settings' }))
   router.post('/services', [VetClinicSettingsController, 'createService'])
+    .use(middleware.vetCan({ capability: 'settings' }))
   router.put('/services/:id', [VetClinicSettingsController, 'updateService'])
+    .use(middleware.vetCan({ capability: 'settings' }))
   router.delete('/services/:id', [VetClinicSettingsController, 'deleteService'])
+    .use(middleware.vetCan({ capability: 'settings' }))
 }).prefix('/vet/clinic').use(middleware.vetAuth())
 
 // Vet Invoices Management
@@ -598,19 +626,19 @@ router.group(() => {
   router.get('/:id', [VetInvoicesController, 'show'])
   router.patch('/:id/status', [VetInvoicesController, 'updateStatus'])
   router.delete('/:id', [VetInvoicesController, 'destroy'])
-}).prefix('/vet/invoices').use(middleware.vetAuth())
+}).prefix('/vet/invoices').use([middleware.vetAuth(), middleware.vetCan({ capability: 'billing' })])
 
 // Vet Analytics
 const VetAnalyticsController = () => import('#controllers/vet_analytics_controller')
 router.group(() => {
   router.get('/', [VetAnalyticsController, 'index'])
-}).prefix('/vet/analytics').use(middleware.vetAuth())
+}).prefix('/vet/analytics').use([middleware.vetAuth(), middleware.vetCan({ capability: 'analytics' })])
 
 // Vet Records (completed appointments as medical records)
 const VetRecordsController = () => import('#controllers/vet_records_controller')
 router.group(() => {
   router.get('/', [VetRecordsController, 'index'])
-}).prefix('/vet/records').use(middleware.vetAuth())
+}).prefix('/vet/records').use([middleware.vetAuth(), middleware.vetCan({ capability: 'records' })])
 
 // Vet Prescriptions (Ordonnances)
 const VetPrescriptionsController = () => import('#controllers/vet_prescriptions_controller')
@@ -620,7 +648,7 @@ router.group(() => {
   router.get('/:id', [VetPrescriptionsController, 'show'])
   router.patch('/:id', [VetPrescriptionsController, 'update'])
   router.delete('/:id', [VetPrescriptionsController, 'destroy'])
-}).prefix('/vet/prescriptions').use(middleware.vetAuth())
+}).prefix('/vet/prescriptions').use([middleware.vetAuth(), middleware.vetCan({ capability: 'prescriptions' })])
 
 // Vet Reminders (Rappels vaccins/traitements)
 const VetRemindersController = () => import('#controllers/vet_reminders_controller')
@@ -631,7 +659,7 @@ router.group(() => {
   router.patch('/:id', [VetRemindersController, 'update'])
   router.patch('/:id/complete', [VetRemindersController, 'markCompleted'])
   router.delete('/:id', [VetRemindersController, 'destroy'])
-}).prefix('/vet/reminders').use(middleware.vetAuth())
+}).prefix('/vet/reminders').use([middleware.vetAuth(), middleware.vetCan({ capability: 'reminders' })])
 
 // Vet Consultation Templates
 const VetConsultationTemplatesController = () => import('#controllers/vet_consultation_templates_controller')
@@ -640,7 +668,7 @@ router.group(() => {
   router.post('/', [VetConsultationTemplatesController, 'store'])
   router.put('/:id', [VetConsultationTemplatesController, 'update'])
   router.delete('/:id', [VetConsultationTemplatesController, 'destroy'])
-}).prefix('/vet/templates').use(middleware.vetAuth())
+}).prefix('/vet/templates').use([middleware.vetAuth(), middleware.vetCan({ capability: 'templates' })])
 
 // Inventory
 const VetInventoryController = () => import('#controllers/vet_inventory_controller')
@@ -652,7 +680,7 @@ router.group(() => {
   router.post('/:id/movement', [VetInventoryController, 'addMovement'])
   router.get('/:id/movements', [VetInventoryController, 'movements'])
   router.delete('/:id', [VetInventoryController, 'destroy'])
-}).prefix('/vet/inventory').use(middleware.vetAuth())
+}).prefix('/vet/inventory').use([middleware.vetAuth(), middleware.vetCan({ capability: 'stock' })])
 
 // Weight tracking
 const VetWeightController = () => import('#controllers/vet_weight_controller')
@@ -661,7 +689,7 @@ router.group(() => {
   router.get('/chart', [VetWeightController, 'chart'])
   router.post('/', [VetWeightController, 'store'])
   router.delete('/:id', [VetWeightController, 'destroy'])
-}).prefix('/vet/weight').use(middleware.vetAuth())
+}).prefix('/vet/weight').use([middleware.vetAuth(), middleware.vetCan({ capability: 'patients' })])
 
 // Attachments
 const VetAttachmentsController = () => import('#controllers/vet_attachments_controller')
@@ -670,7 +698,7 @@ router.group(() => {
   router.post('/', [VetAttachmentsController, 'store'])
   router.get('/:id/download', [VetAttachmentsController, 'download'])
   router.delete('/:id', [VetAttachmentsController, 'destroy'])
-}).prefix('/vet/attachments').use(middleware.vetAuth())
+}).prefix('/vet/attachments').use([middleware.vetAuth(), middleware.vetCan({ capability: 'records' })])
 
 // Hospitalization
 const VetHospitalizationController = () => import('#controllers/vet_hospitalization_controller')
@@ -683,15 +711,19 @@ router.group(() => {
   router.get('/:id/consumables', [VetHospitalizationController, 'consumables'])
   router.post('/:id/discharge', [VetHospitalizationController, 'discharge'])
   router.post('/:id/log', [VetHospitalizationController, 'addLog'])
-}).prefix('/vet/hospitalizations').use(middleware.vetAuth())
+}).prefix('/vet/hospitalizations').use([middleware.vetAuth(), middleware.vetCan({ capability: 'hospitalization' })])
 
 // Exports
 const VetExportsController = () => import('#controllers/vet_exports_controller')
 router.group(() => {
   router.get('/clients', [VetExportsController, 'clients'])
+    .use(middleware.vetCan({ capability: 'clients' }))
   router.get('/invoices', [VetExportsController, 'invoices'])
+    .use(middleware.vetCan({ capability: 'billing' }))
   router.get('/inventory', [VetExportsController, 'inventory'])
+    .use(middleware.vetCan({ capability: 'stock' }))
   router.get('/reminders', [VetExportsController, 'reminders'])
+    .use(middleware.vetCan({ capability: 'reminders' }))
 }).prefix('/vet/exports').use(middleware.vetAuth())
 
 // User Vet Data (user sees data from their vets)
