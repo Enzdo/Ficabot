@@ -15,6 +15,8 @@ interface Actor {
   firstName: string | null
   lastName: string | null
   email: string | null
+  /** Nom du cabinet, porté ici pour être lisible pendant le rendu serveur. */
+  clinicName?: string | null
   capabilities: Capability[]
 }
 

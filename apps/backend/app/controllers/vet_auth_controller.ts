@@ -61,6 +61,11 @@ export default class VetAuthController {
       firstName: employee?.firstName ?? vet.firstName,
       lastName: employee?.lastName ?? vet.lastName,
       email: employee?.email ?? vet.email,
+      // Le nom du cabinet voyage avec l'acteur pour une raison d'affichage : ce
+      // bloc est le seul que le rendu serveur connaisse, le profil complet ne
+      // vivant qu'en localStorage. Sans lui, l'identité de la barre latérale
+      // clignotait à chaque chargement de page.
+      clinicName: vet.clinicName,
       capabilities,
     }
   }

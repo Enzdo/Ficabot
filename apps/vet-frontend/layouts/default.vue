@@ -116,7 +116,7 @@
         <div class="flex items-center gap-3 mb-3">
           <div class="w-9 h-9 shrink-0 bg-primary-600 rounded-full flex items-center justify-center dark:bg-accent-500">
             <span class="text-white font-semibold text-xs dark:text-primary-900">
-              {{ authStore.vet?.firstName?.[0] || 'V' }}{{ authStore.vet?.lastName?.[0] || '' }}
+              {{ actorInitials }}
             </span>
           </div>
           <div class="flex-1 min-w-0 sidebar-label">
@@ -274,7 +274,18 @@ const actorSubtitle = computed(() => {
   // au rendu serveur et à l'hydratation — le nom du cabinet, lui, ne vit qu'en
   // localStorage et ferait clignoter la ligne au chargement.
   if (actor?.kind === 'employee' && actor.role) return ROLE_LABELS[actor.role] || 'Employé·e'
-  return authStore.vet?.clinicName || 'Vétérinaire'
+  return actor?.clinicName || authStore.vet?.clinicName || 'Vétérinaire'
+})
+
+/**
+ * Initiales de l'avatar, tirées de l'acteur plutôt que du profil : l'acteur est
+ * en cookie, donc connu du serveur. Le profil ne vit qu'en localStorage, et
+ * l'initiale sautait de « V » au vrai nom à chaque hydratation.
+ */
+const actorInitials = computed(() => {
+  const person = authStore.actor ?? authStore.vet
+  const initials = `${person?.firstName?.[0] ?? ''}${person?.lastName?.[0] ?? ''}`
+  return initials.toUpperCase() || 'V'
 })
 
 // Barre latérale repliable — l'état est conservé entre les sessions.

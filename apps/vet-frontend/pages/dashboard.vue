@@ -110,7 +110,12 @@ const api = useVetApi()
 const greetingName = computed(() => {
   const actor = authStore.actor
   if (actor?.kind === 'employee') return actor.firstName ? `, ${actor.firstName}` : ''
-  return authStore.vet?.lastName ? `, Dr ${authStore.vet.lastName}` : ''
+
+  // Le nom vient de l'acteur — porté par le cookie, donc connu du rendu serveur
+  // — plutôt que du profil, qui ne vit qu'en localStorage : la salutation
+  // passait de « Bonjour. » à « Bonjour, Dr Martin. » sous les yeux.
+  const lastName = actor?.lastName ?? authStore.vet?.lastName
+  return lastName ? `, Dr ${lastName}` : ''
 })
 const loading = ref(true)
 const patients = ref<any[]>([])
