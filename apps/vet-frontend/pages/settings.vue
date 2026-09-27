@@ -146,21 +146,21 @@
       </div>
     </div>
 
-    <!-- Templates -->
+    <!-- Modèles -->
     <div v-if="activeTab === 'templates'" class="space-y-6">
       <div class="card">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="font-semibold text-surface-900">Templates de consultation</h3>
+            <h3 class="font-semibold text-surface-900">Modèles de consultation</h3>
             <p class="text-sm text-surface-500 mt-1">Modèles pré-remplis pour accélérer vos consultations</p>
           </div>
           <button @click="showAddTemplate = true" class="btn-primary text-sm py-2">
-            + Nouveau template
+            + Nouveau modèle
           </button>
         </div>
 
         <div v-if="templates.length === 0" class="text-center py-8 text-surface-400">
-          <p>Aucun template pour le moment</p>
+          <p>Aucun modèle pour le moment</p>
           <p class="text-sm mt-1">Créez des modèles pour gagner du temps</p>
         </div>
 
@@ -491,11 +491,11 @@
         </form>
       </div>
     </div>
-    <!-- Add/Edit Template Modal -->
+    <!-- Création et modification d’un modèle -->
     <div v-if="showAddTemplate" class="modal-overlay">
       <div class="modal-panel max-w-md p-6">
         <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-bold text-surface-900">{{ editingTemplate ? 'Modifier' : 'Nouveau' }} template</h2>
+          <h2 class="text-xl font-bold text-surface-900">{{ editingTemplate ? 'Modifier' : 'Nouveau' }} modèle</h2>
           <button @click="closeTemplateModal" class="p-2 hover:bg-surface-100 rounded-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -504,7 +504,7 @@
         </div>
         <form @submit.prevent="saveTemplate" class="space-y-4">
           <div>
-            <label class="label">Nom du template</label>
+            <label class="label">Nom du modèle</label>
             <input v-model="templateForm.name" type="text" class="input" placeholder="Ex: Consultation vaccinale" required />
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -565,7 +565,7 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
 const ALL_TABS: { id: string; label: string; capability: Capability | null }[] = [
   { id: 'clinic', label: 'Clinique', capability: 'settings' },
   { id: 'services', label: 'Services & Tarifs', capability: 'settings' },
-  { id: 'templates', label: 'Templates', capability: 'settings' },
+  { id: 'templates', label: 'Modèles', capability: 'settings' },
   { id: 'booking', label: 'RDV en ligne', capability: 'settings' },
   { id: 'notifications', label: 'Notifications', capability: 'settings' },
   { id: 'team', label: 'Équipe', capability: 'team' },
@@ -800,7 +800,7 @@ const closeServiceModal = () => {
   serviceForm.value = { name: '', duration: 30, price: 0, icon: '🩺' }
 }
 
-// Templates
+// Modèles
 const loadTemplates = async () => {
   const response = await api.get<any>('/vet/templates')
   if (response.success && response.data) {
@@ -826,7 +826,7 @@ const saveTemplate = async () => {
     if (response.success && response.data) {
       const idx = templates.value.findIndex(t => t.id === editingTemplate.value.id)
       if (idx !== -1) templates.value[idx] = response.data
-      showMessage('Template modifie')
+      showMessage('Modèle modifié')
     } else {
       showMessage(response.message || 'Erreur', 'error')
     }
@@ -834,7 +834,7 @@ const saveTemplate = async () => {
     const response = await api.post<any>('/vet/templates', templateForm.value)
     if (response.success && response.data) {
       templates.value.push(response.data)
-      showMessage('Template créé')
+      showMessage('Modèle créé')
     } else {
       showMessage(response.message || 'Erreur', 'error')
     }
@@ -844,11 +844,11 @@ const saveTemplate = async () => {
 }
 
 const deleteTemplate = async (id: number) => {
-  if (!confirm('Supprimer ce template ?')) return
+  if (!confirm('Supprimer ce modèle ?')) return
   const response = await api.del<any>(`/vet/templates/${id}`)
   if (response.success) {
     templates.value = templates.value.filter(t => t.id !== id)
-    showMessage('Template supprime')
+    showMessage('Modèle supprimé')
   } else {
     showMessage(response.message || 'Erreur', 'error')
   }
