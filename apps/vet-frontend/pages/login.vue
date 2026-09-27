@@ -89,10 +89,24 @@ const handleLogin = async () => {
     
     if (response.success && response.data) {
       authStore.setAuth(response.data.vet, response.data.token.token)
+
+      // Qui se connecte : le titulaire, ou l'un de ses employés. De là découlent
+      // le nom affiché et les écrans proposés.
+      const actor = response.data.actor ?? null
+      authStore.setActor(actor)
+
+      const isEmployee = actor?.kind === 'employee'
+
       // Le parcours d'accueil n'est proposé qu'à qui ne l'a pas terminé. Si l'état
       // est illisible, on ouvre l'application : un contrôle raté ne doit jamais
       // laisser quelqu'un à la porte de son outil.
-      const onboarding = await api.get<{ completed: boolean }>('/vet/onboarding')
+      //
+      // Un employé ne le voit jamais : ce parcours règle le cabinet, et l'appel
+      // lui serait refusé.
+      const onboarding = isEmployee
+        ? { success: false, data: null as { completed: boolean } | null }
+        : await api.get<{ completed: boolean }>('/vet/onboarding')
+
       if (onboarding.success && typeof onboarding.data?.completed === 'boolean') {
         // Mémorisé pour le garde-fou de navigation : la session survit à la
         // fermeture de l'onglet, cette connexion-ci est la seule occasion de
@@ -113,6 +127,9 @@ const handleLogin = async () => {
         needsOnboarding ? '/bienvenue' : needsSubscription ? '/abonnement' : '/dashboard'
       )
     } else {
+      // Un employé dont le cabinet n'est plus à jour de son abonnement ne peut
+      // rien y faire : on lui dit la cause, au lieu de l'envoyer sur un écran de
+      // paiement qui ne lui appartient pas.
       error.value = response.message || 'Identifiants incorrects'
     }
   } catch (e) {

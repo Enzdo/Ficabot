@@ -51,10 +51,30 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo(PAYWALL_ROUTE)
   }
 
+  // La grille de droits. Un employé n'a pas à découvrir ses limites par un
+  // « accès refusé » : on le mène directement à un écran qui lui est ouvert.
+  // Une grille inconnue — sessions antérieures aux employés — laisse passer,
+  // comme partout ailleurs ici : c'est le serveur qui tranche pour de bon.
+  const required = capabilityForPath(to.path)
+  const grid = authStore.capabilities
+
+  if (required && grid && !grid.includes(required)) {
+    const fallback = firstAllowedPath(grid)
+    return navigateTo(fallback === to.path ? '/settings' : fallback)
+  }
+
   // État inconnu : sessions antérieures à ce cookie. On tranche une fois auprès
   // du serveur, côté client uniquement — pendant le rendu serveur, un échec
   // d'appel bloquerait la page entière pour un simple confort de parcours.
-  if (authStore.onboardingCompleted === null && import.meta.client && !resolutionAttempted) {
+  // Le parcours d'accueil règle le cabinet : un employé n'y passe jamais, et la
+  // route lui est fermée. L'interroger ne rapportait qu'un 403 à chaque
+  // chargement de page.
+  if (
+    authStore.onboardingCompleted === null &&
+    authStore.actor?.kind !== 'employee' &&
+    import.meta.client &&
+    !resolutionAttempted
+  ) {
     resolutionAttempted = true
     const { success, data } = await useVetApi().get<{ completed: boolean }>('/vet/onboarding')
 

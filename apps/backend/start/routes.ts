@@ -569,15 +569,27 @@ router.group(() => {
 // Vet Employees Management
 const VetEmployeesController = () => import('#controllers/vet_employees_controller')
 router.group(() => {
+  // Savoir qui travaille au cabinet suit l'agenda : une secrétaire doit pouvoir
+  // affecter un rendez-vous à un praticien, et filtrer le planning par personne.
+  // Elle n'en reçoit qu'un annuaire — voir `index`.
   router.get('/', [VetEmployeesController, 'index'])
+    .use(middleware.vetCan({ capability: 'agenda' }))
+
+  // Gérer l'équipe, en revanche, appartient au titulaire seul.
   router.post('/', [VetEmployeesController, 'store'])
+    .use(middleware.vetCan({ capability: 'team' }))
   router.get('/:id', [VetEmployeesController, 'show'])
+    .use(middleware.vetCan({ capability: 'team' }))
   router.put('/:id', [VetEmployeesController, 'update'])
+    .use(middleware.vetCan({ capability: 'team' }))
   router.delete('/:id', [VetEmployeesController, 'destroy'])
+    .use(middleware.vetCan({ capability: 'team' }))
   // Accès au logiciel : ouverture (ou remplacement du mot de passe) et retrait.
   router.put('/:id/access', [VetEmployeesController, 'grantAccess'])
+    .use(middleware.vetCan({ capability: 'team' }))
   router.delete('/:id/access', [VetEmployeesController, 'revokeAccess'])
-}).prefix('/vet/employees').use([middleware.vetAuth(), middleware.vetCan({ capability: 'team' })])
+    .use(middleware.vetCan({ capability: 'team' }))
+}).prefix('/vet/employees').use(middleware.vetAuth())
 
 // Clinic Appointments Management
 const ClinicAppointmentsController = () => import('#controllers/clinic_appointments_controller')

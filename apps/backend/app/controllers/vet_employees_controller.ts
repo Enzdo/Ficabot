@@ -119,12 +119,38 @@ export default class VetEmployeesController {
     return null
   }
 
+  /**
+   * Annuaire du cabinet — nom, rôle, couleur d'agenda —, et pour le titulaire le
+   * dossier complet.
+   *
+   * La distinction n'est pas décorative : l'adresse de connexion d'un collègue,
+   * sa dernière visite et l'étendue de ses droits ne regardent que celui qui les
+   * accorde. Une secrétaire a besoin de savoir à qui affecter un rendez-vous,
+   * pas de savoir qui peut ouvrir la facturation.
+   */
   async index(ctx: HttpContext) {
-    const vet = ctx.vetActor!.veterinarian
+    const actor = ctx.vetActor!
 
     const employees = await VetEmployee.query()
-      .where('veterinarian_id', vet.id)
+      .where('veterinarian_id', actor.veterinarian.id)
       .orderBy('first_name', 'asc')
+
+    if (!actor.isOwner) {
+      return ctx.response.ok({
+        success: true,
+        data: employees
+          .filter((employee) => employee.isActive)
+          .map((employee) => ({
+            id: employee.id,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            role: employee.role,
+            color: employee.color,
+            isActive: employee.isActive,
+            workingHours: employee.workingHours,
+          })),
+      })
+    }
 
     return ctx.response.ok({
       success: true,

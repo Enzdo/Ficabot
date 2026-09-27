@@ -3,7 +3,7 @@
     <section class="dashboard-welcome">
       <div>
         <p class="workspace-eyebrow mb-3">Votre espace de travail</p>
-        <h1 class="page-title">Bonjour{{ authStore.vet?.lastName ? ', Dr ' + authStore.vet.lastName : '' }}.</h1>
+        <h1 class="page-title">Bonjour{{ greetingName }}.</h1>
         <p class="page-subtitle">Une vue claire sur votre journée et les patients à suivre.</p>
       </div>
       <NuxtLink to="/appointments" class="btn-primary">Ouvrir mon planning <span aria-hidden="true">↗</span></NuxtLink>
@@ -72,16 +72,14 @@
             </NuxtLink>
           </template>
         </section>
-        <section class="dashboard-shortcuts">
+        <section v-if="shortcuts.length" class="dashboard-shortcuts">
           <p class="workspace-eyebrow mb-2">Accès rapide</p><h2 class="font-semibold mb-4">Passer à l’action</h2>
-          <NuxtLink to="/patients">Retrouver un patient <span aria-hidden="true">→</span></NuxtLink>
-          <NuxtLink to="/consultation">Ouvrir la dictée <span aria-hidden="true">→</span></NuxtLink>
-          <NuxtLink to="/chat">Consulter les messages <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-for="shortcut in shortcuts" :key="shortcut.to" :to="shortcut.to">{{ shortcut.label }} <span aria-hidden="true">→</span></NuxtLink>
         </section>
       </div>
     </div>
 
-    <section class="card mt-6">
+    <section v-if="authStore.can('patients')" class="card mt-6">
       <div class="workspace-section-heading"><h2>Vos patients</h2><NuxtLink to="/patients">Tous les dossiers →</NuxtLink></div>
       <div v-if="loading" class="h-24 rounded-xl bg-surface-100 dark:bg-surface-800 animate-pulse" />
       <p v-else-if="failures.patients" class="workspace-empty">Les dossiers patients sont momentanément indisponibles.</p>
@@ -98,9 +96,22 @@
 </template>
 
 <script setup lang="ts">
+import type { Capability } from '~/utils/capabilities'
+
 definePageMeta({ middleware: 'auth' })
 const authStore = useVetAuthStore()
 const api = useVetApi()
+
+/**
+ * On salue la personne connectée, pas le cabinet : une secrétaire lisait
+ * « Bonjour, Dr Patron » sur son propre écran. Le titre de docteur ne suit que
+ * le titulaire — l'accoler au prénom d'une assistante serait faux.
+ */
+const greetingName = computed(() => {
+  const actor = authStore.actor
+  if (actor?.kind === 'employee') return actor.firstName ? `, ${actor.firstName}` : ''
+  return authStore.vet?.lastName ? `, Dr ${authStore.vet.lastName}` : ''
+})
 const loading = ref(true)
 const patients = ref<any[]>([])
 const appointments = ref<any[]>([])
@@ -119,26 +130,41 @@ onBeforeUnmount(() => clearInterval(clockTimer))
 const nextAppointment = computed(() => todayAppointments.value.find(a => !['completed','no_show'].includes(a.status) && a.time >= clockTime.value))
 const todayAppointments = computed(() => appointments.value.filter(a => a.date?.slice(0,10) === today.value && a.status !== 'cancelled').sort((a,b) => (a.time || a.startTime || '').localeCompare(b.time || b.startTime || '')))
 const metrics = computed(() => [
-  { label: 'Rendez-vous', value: failures.appointments ? null : todayAppointments.value.length, hint: 'Aujourd’hui, hors annulations', to: '/appointments' },
-  { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' },
-  { label: 'Rappels à venir', value: failures.reminders ? null : reminders.value.upcomingCount, hint: 'Sur les 7 prochains jours', to: '/reminders' },
-  { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization' },
-])
+  { label: 'Rendez-vous', value: failures.appointments ? null : todayAppointments.value.length, hint: 'Aujourd’hui, hors annulations', to: '/appointments' , capability: 'agenda' },
+  { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' , capability: 'patients' },
+  { label: 'Rappels à venir', value: failures.reminders ? null : reminders.value.upcomingCount, hint: 'Sur les 7 prochains jours', to: '/reminders' , capability: 'reminders' },
+  { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization', capability: 'hospitalization' },
+].filter((metric) => !metric.capability || authStore.can(metric.capability as Capability)))
+/** Raccourcis : seuls ceux qui mènent quelque part pour cette personne. */
+const shortcuts = computed(() =>
+  [
+    { to: '/patients', label: 'Retrouver un patient', capability: 'patients' },
+    { to: '/consultation', label: 'Ouvrir la dictée', capability: 'consultation' },
+    { to: '/chat', label: 'Consulter les messages', capability: 'messages' },
+  ].filter((shortcut) => authStore.can(shortcut.capability as Capability))
+)
 const priorities = computed(() => [
-  { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders', action: 'Voir les rappels' },
-  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' },
-  { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization', action: 'Voir les suivis' },
-])
+  { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders', action: 'Voir les rappels' , capability: 'reminders' },
+  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' , capability: 'stock' },
+  { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization', action: 'Voir les suivis', capability: 'hospitalization' },
+].filter((priority) => !priority.capability || authStore.can(priority.capability as Capability)))
 const statusLabel = (status: string) => (({ confirmed: 'Confirmé', pending: 'À confirmer', completed: 'Terminé', scheduled: 'Planifié' } as Record<string,string>)[status] || 'Planifié')
 const speciesLabel = (species: string) => (({ dog: 'Chien', cat: 'Chat', bird: 'Oiseau', rabbit: 'Lapin' } as Record<string,string>)[species] || 'Autre espèce')
 const loadDashboard = async () => {
   loading.value = true
   const now = new Date()
   today.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
-  const resources = [
-    ['patients', '/vet/patients', patients], ['appointments', '/vet/appointments', appointments],
-    ['reminders', '/vet/reminders/upcoming', reminders], ['hospital', '/vet/hospitalizations/stats', hospital], ['inventory', '/vet/inventory/stats', inventory],
-  ] as const
+  // Chaque bloc porte le domaine qu'il exige. Sans ce filtrage, une secrétaire
+  // voyait un bandeau « certaines données n'ont pas pu être chargées » énumérant
+  // les écrans qui lui sont fermés : un refus attendu affiché comme une panne.
+  const resources = ([
+    ['patients', '/vet/patients', patients, 'patients'],
+    ['appointments', '/vet/appointments', appointments, 'agenda'],
+    ['reminders', '/vet/reminders/upcoming', reminders, 'reminders'],
+    ['hospital', '/vet/hospitalizations/stats', hospital, 'hospitalization'],
+    ['inventory', '/vet/inventory/stats', inventory, 'stock'],
+  ] as const).filter(([, , , capability]) => authStore.can(capability))
+
   await Promise.all(resources.map(async ([key, endpoint, target]) => {
     failures[key] = false
     try {

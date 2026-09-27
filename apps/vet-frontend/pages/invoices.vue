@@ -417,6 +417,7 @@ definePageMeta({
 })
 
 const api = useVetApi()
+const authStore = useVetAuthStore()
 const showNewInvoice = ref(false)
 const selectedInvoice = ref<any>(null)
 const searchQuery = ref('')
@@ -432,6 +433,14 @@ const pullNotice = ref('')
 const pulledMovementIds = ref<number[]>([])
 
 const loadStays = async () => {
+  // Reprendre les consommables d'un séjour suppose d'avoir accès aux séjours.
+  // Une secrétaire facture sans cela : on ne lui propose simplement pas ce
+  // raccourci, plutôt que de lui faire réclamer un refus.
+  if (!authStore.can('hospitalization')) {
+    staysWithConsumables.value = []
+    return
+  }
+
   const response = await api.get<any>('/vet/hospitalizations?status=all')
   staysWithConsumables.value = response.success ? response.data || [] : []
 }
@@ -528,7 +537,11 @@ const loadCatalog = async () => {
   // Les deux sources sont indépendantes : l'échec de l'une ne prive pas de l'autre.
   const [services, inventory] = await Promise.all([
     api.get<any>('/vet/clinic/services'),
-    api.get<any>('/vet/inventory'),
+    // Le catalogue mêle actes et produits. Sans accès au stock, la facture se
+    // compose à partir des seuls actes — et de lignes libres.
+    authStore.can('stock')
+      ? api.get<any>('/vet/inventory')
+      : Promise.resolve({ success: false, data: null } as any),
   ])
 
   const entries: CatalogEntry[] = []
@@ -805,7 +818,6 @@ const markAsPaid = async (id: number) => {
 }
 
 const exportInvoices = async () => {
-  const authStore = useVetAuthStore()
   const config = useRuntimeConfig()
   const baseUrl = config.public.apiBase || 'http://localhost:3333'
   const res = await fetch(`${baseUrl}/vet/exports/invoices`, {

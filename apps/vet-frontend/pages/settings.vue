@@ -342,8 +342,32 @@
     </div>
 
     <!-- Account -->
+    <TeamSettings v-if="activeTab === 'team'" />
+
     <div v-if="activeTab === 'account'" class="space-y-6">
-      <div class="card">
+      <!-- Un employé ne modifie pas cette fiche : c'est celle du cabinet, et le
+           serveur refuserait l'enregistrement. On la lui montre en lecture. -->
+      <div v-if="authStore.isEmployee" class="card">
+        <h3 class="font-semibold text-surface-900 mb-4">Mon profil</h3>
+        <div class="flex items-center gap-6">
+          <div class="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xl font-bold">
+            {{ authStore.actor?.firstName?.[0] }}{{ authStore.actor?.lastName?.[0] }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-medium text-surface-900">{{ authStore.fullName }}</p>
+            <p class="text-sm text-surface-500">
+              {{ ROLE_LABELS[authStore.actor?.role || 'other'] }} · {{ authStore.vet?.clinicName }}
+            </p>
+            <p class="text-sm text-surface-500">{{ authStore.actor?.email }}</p>
+          </div>
+        </div>
+        <p class="mt-4 text-sm text-surface-500">
+          Nom, rôle et adresse de connexion sont tenus par le titulaire du cabinet.
+          Votre mot de passe, lui, n'appartient qu'à vous.
+        </p>
+      </div>
+
+      <div v-else class="card">
         <h3 class="font-semibold text-surface-900 mb-4">Informations personnelles</h3>
         <form @submit.prevent="saveProfile" class="space-y-4">
           <div class="flex items-center gap-6 mb-6">
@@ -405,10 +429,13 @@
         </form>
       </div>
 
-      <div class="card border-danger-200 bg-danger-50">
+      <!-- Ce bouton supprime le cabinet, pas « mon compte » au sens où un employé
+           l'entendrait : il n'appartient qu'au titulaire, et le serveur le lui
+           réserve. Le montrer aux autres serait au mieux inquiétant. -->
+      <div v-if="!authStore.isEmployee" class="card border-danger-200 bg-danger-50">
         <h3 class="font-semibold text-danger-700 mb-2">Zone de danger</h3>
         <p class="text-sm text-danger-600 mb-4">Ces actions sont irréversibles.</p>
-        <button @click="deleteAccount" class="btn bg-danger-600 text-white hover:bg-danger-700">
+        <button @click="deleteAccount" class="btn-danger">
           Supprimer mon compte
         </button>
       </div>
@@ -515,6 +542,9 @@ definePageMeta({
   middleware: 'auth',
 })
 
+import type { Capability } from '~/utils/capabilities'
+import { ROLE_LABELS } from '~/utils/capabilities'
+
 const authStore = useVetAuthStore()
 const api = useVetApi()
 const saving = ref(false)
@@ -527,16 +557,28 @@ const showMessage = (msg: string, type: 'success' | 'error' = 'success') => {
   setTimeout(() => { message.value = '' }, 3000)
 }
 
-const tabs = [
-  { id: 'clinic', label: 'Clinique' },
-  { id: 'services', label: 'Services & Tarifs' },
-  { id: 'templates', label: 'Templates' },
-  { id: 'booking', label: 'RDV en ligne' },
-  { id: 'notifications', label: 'Notifications' },
-  { id: 'account', label: 'Mon compte' },
+/**
+ * Cet écran mêle deux choses : le réglage du cabinet, qui appartient au
+ * titulaire, et « mon compte », qui appartient à chacun. D'où le domaine porté
+ * par chaque onglet — un employé n'y trouve que le sien.
+ */
+const ALL_TABS: { id: string; label: string; capability: Capability | null }[] = [
+  { id: 'clinic', label: 'Clinique', capability: 'settings' },
+  { id: 'services', label: 'Services & Tarifs', capability: 'settings' },
+  { id: 'templates', label: 'Templates', capability: 'settings' },
+  { id: 'booking', label: 'RDV en ligne', capability: 'settings' },
+  { id: 'notifications', label: 'Notifications', capability: 'settings' },
+  { id: 'team', label: 'Équipe', capability: 'team' },
+  { id: 'account', label: 'Mon compte', capability: null },
 ]
 
-const activeTab = ref('clinic')
+const tabs = computed(() =>
+  ALL_TABS.filter((tab) => !tab.capability || authStore.can(tab.capability))
+)
+
+// Le premier onglet permis, et non « clinic » : un employé ouvrirait sinon un
+// onglet vide dont il ne peut pas sortir par le menu.
+const activeTab = ref(tabs.value[0]?.id ?? 'account')
 const showAddService = ref(false)
 const editingService = ref<any>(null)
 const showAddTemplate = ref(false)
@@ -622,13 +664,13 @@ const passwordForm = ref({
 
 // Load all data on mount
 onMounted(async () => {
-  await Promise.all([
-    loadProfile(),
-    loadClinicInfo(),
-    loadHours(),
-    loadServices(),
-    loadTemplates(),
-  ])
+  // Un employé n'ouvre ici que « mon compte » : réclamer les réglages du
+  // cabinet lui vaudrait une volée de refus sans qu'il ait rien demandé.
+  const clinicLoaders = authStore.can('settings')
+    ? [loadClinicInfo(), loadHours(), loadServices(), loadTemplates()]
+    : []
+
+  await Promise.all([loadProfile(), ...clinicLoaders])
 })
 
 const loadProfile = async () => {

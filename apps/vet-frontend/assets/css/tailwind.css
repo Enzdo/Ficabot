@@ -131,6 +131,15 @@
            active:scale-[0.97] transition-[background-color,border-color,transform] duration-150;
   }
 
+  /* Rouge plein : réservé aux gestes irréversibles. */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-danger-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm
+           border border-danger-600
+           hover:bg-danger-700 hover:border-danger-700
+           active:scale-[0.97] transition-[background-color,border-color,transform] duration-150;
+  }
+
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2
            bg-transparent text-surface-600 px-3 py-2 rounded-lg font-medium text-sm

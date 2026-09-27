@@ -1,4 +1,22 @@
 import { defineStore } from 'pinia'
+import type { Capability } from '~/utils/capabilities'
+
+/**
+ * Qui est aux commandes : le titulaire du cabinet, ou l'un de ses employés.
+ *
+ * Le cabinet (`vet`) et la personne (`actor`) sont deux choses distinctes depuis
+ * l'ouverture du logiciel aux employés : une secrétaire travaille dans les
+ * données du cabinet, sous son propre nom et avec ses propres droits.
+ */
+interface Actor {
+  kind: 'owner' | 'employee'
+  employeeId: number | null
+  role: string | null
+  firstName: string | null
+  lastName: string | null
+  email: string | null
+  capabilities: Capability[]
+}
 
 interface Veterinarian {
   id: number
@@ -26,6 +44,12 @@ interface AuthState {
    * enfermer un praticien dehors au milieu d'une consultation.
    */
   subscriptionActive: boolean | null
+  /**
+   * `null` tant que l'acteur est inconnu — sessions ouvertes avant l'arrivée des
+   * employés. Comme ailleurs dans ce store, l'inconnu laisse passer : le serveur
+   * refuse de toute façon ce qui n'est pas permis.
+   */
+  actor: Actor | null
 }
 
 /**
@@ -51,6 +75,14 @@ const TOKEN_COOKIE = 'vet_token'
 const ONBOARDING_COOKIE = 'vet_onboarding_done'
 const SUBSCRIPTION_COOKIE = 'vet_subscription_active'
 
+/**
+ * L'acteur voyage en cookie pour la même raison que le jeton : le garde-fou de
+ * navigation s'exécute pendant le rendu serveur, où localStorage n'existe pas.
+ * Sans lui, un employé verrait apparaître puis disparaître des écrans interdits
+ * au moment de l'hydratation.
+ */
+const ACTOR_COOKIE = 'vet_actor'
+
 const cookieOptions = () => ({
   maxAge: 60 * 60 * 24 * 30,
   sameSite: 'lax' as const,
@@ -69,20 +101,38 @@ const onboardingCookie = () => useCookie<string | null>(ONBOARDING_COOKIE, cooki
 
 const subscriptionCookie = () => useCookie<string | null>(SUBSCRIPTION_COOKIE, cookieOptions())
 
+const actorCookie = () => useCookie<Actor | null>(ACTOR_COOKIE, cookieOptions())
+
 export const useVetAuthStore = defineStore('vetAuth', {
   state: (): AuthState => ({
     vet: null,
     token: null,
     onboardingCompleted: null,
     subscriptionActive: null,
+    actor: null,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.token,
+
+    /**
+     * Le nom de la personne connectée, et non celui du cabinet : une secrétaire
+     * doit se voir elle-même dans l'en-tête, pas son patron.
+     */
     fullName: (state) => {
-      if (!state.vet) return ''
-      return [state.vet.firstName, state.vet.lastName].filter(Boolean).join(' ') || state.vet.email
+      const person = state.actor ?? state.vet
+      if (!person) return ''
+      const name = [person.firstName, person.lastName].filter(Boolean).join(' ')
+      return name || state.actor?.email || state.vet?.email || ''
     },
+
+    /** Nom du cabinet, pour la ligne au-dessous. */
+    clinicLabel: (state) => state.vet?.clinicName || '',
+
+    isEmployee: (state) => state.actor?.kind === 'employee',
+
+    /** `null` = grille inconnue, donc passante. Voir `actor`. */
+    capabilities: (state): Capability[] | null => state.actor?.capabilities ?? null,
   },
 
   actions: {
@@ -94,6 +144,22 @@ export const useVetAuthStore = defineStore('vetAuth', {
         localStorage.setItem('vet_token', token)
         localStorage.setItem('vet_user', JSON.stringify(vet))
       }
+    },
+
+    setActor(actor: Actor | null) {
+      this.actor = actor
+      actorCookie().value = actor
+      if (import.meta.client) {
+        if (actor) localStorage.setItem('vet_actor', JSON.stringify(actor))
+        else localStorage.removeItem('vet_actor')
+      }
+    },
+
+    /** Un domaine est-il ouvert ? Une grille inconnue laisse passer. */
+    can(capability: Capability): boolean {
+      const grid = this.actor?.capabilities
+      if (!grid) return true
+      return grid.includes(capability)
     },
 
     setOnboardingCompleted(completed: boolean) {
@@ -133,12 +199,15 @@ export const useVetAuthStore = defineStore('vetAuth', {
       this.token = null
       this.onboardingCompleted = null
       this.subscriptionActive = null
+      this.actor = null
       sessionCookie().value = null
       onboardingCookie().value = null
       subscriptionCookie().value = null
+      actorCookie().value = null
       if (import.meta.client) {
         localStorage.removeItem('vet_token')
         localStorage.removeItem('vet_user')
+        localStorage.removeItem('vet_actor')
       }
     },
 
@@ -154,6 +223,15 @@ export const useVetAuthStore = defineStore('vetAuth', {
       const subscription = subscriptionCookie()
       this.subscriptionActive =
         subscription.value === '1' ? true : subscription.value === '0' ? false : null
+
+      // Le cookie fait foi pour l'acteur, des deux côtés : c'est le seul support
+      // lisible pendant le rendu serveur, et il est écrit en même temps que
+      // localStorage. Une valeur illisible vaut « inconnu », donc passante.
+      const cookieActor = actorCookie().value
+      this.actor =
+        cookieActor && typeof cookieActor === 'object' && Array.isArray(cookieActor.capabilities)
+          ? cookieActor
+          : null
 
       if (!import.meta.client) {
         // Rendu serveur : seul le cookie est lisible. Il suffit à savoir
@@ -182,9 +260,11 @@ export const useVetAuthStore = defineStore('vetAuth', {
       if (cookie.value) cookie.value = null
       if (onboarding.value) onboarding.value = null
       if (subscriptionCookie().value) subscriptionCookie().value = null
+      if (actorCookie().value) actorCookie().value = null
       this.token = null
       this.vet = null
       this.onboardingCompleted = null
+      this.actor = null
     },
   },
 })
