@@ -153,7 +153,7 @@
               </p>
             </div>
             <div>
-              <label class="label">Espece *</label>
+              <label class="label">Espèce *</label>
               <select v-model="newForm.petSpecies" class="input" required>
                 <option value="dog">Chien</option>
                 <option value="cat">Chat</option>
@@ -181,7 +181,7 @@
               <input v-model="newForm.reason" type="text" class="input" placeholder="Raison de l'hospitalisation" required />
             </div>
             <div>
-              <label class="label">Numero de cage</label>
+              <label class="label">Numéro de cage</label>
               <input v-model="newForm.cageNumber" type="text" class="input" placeholder="Ex: A3" />
             </div>
           </div>
@@ -206,7 +206,7 @@
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showCreateModal = false" class="flex-1 btn-secondary">Annuler</button>
             <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
-              {{ saving ? 'Creation...' : 'Hospitaliser' }}
+              {{ saving ? 'Création…' : 'Hospitaliser' }}
             </button>
           </div>
         </form>
@@ -287,7 +287,7 @@
             <div class="flex gap-3 mb-3">
               <select v-model="newLog.type" class="input w-auto">
                 <option value="note">Note</option>
-                <option value="medication">Medicament</option>
+                <option value="medication">Médicament</option>
                 <option value="feeding">Alimentation</option>
                 <option value="vitals">Constantes</option>
                 <option value="observation">Observation</option>
@@ -358,7 +358,7 @@
         <p class="text-sm text-surface-500 mb-4">L'animal sera marque comme sorti de l'hospitalisation.</p>
         <div class="mb-4">
           <label class="label">Notes de sortie</label>
-          <textarea v-model="dischargeNotes" class="input" rows="3" placeholder="Etat de l'animal, recommandations..."></textarea>
+          <textarea v-model="dischargeNotes" class="input" rows="3" placeholder="État de l'animal, recommandations…"></textarea>
         </div>
         <div class="flex gap-3">
           <button @click="showDischargeConfirm = false; dischargeNotes = ''" class="flex-1 btn-secondary">Annuler</button>
@@ -629,7 +629,7 @@ const getLogTypeIcon = (type: string) => {
 const getLogTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
     note: 'Note',
-    medication: 'Medicament',
+    medication: 'Médicament',
     feeding: 'Alimentation',
     vitals: 'Constantes',
     observation: 'Observation',

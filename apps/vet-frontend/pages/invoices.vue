@@ -770,7 +770,7 @@ const downloadInvoice = (invoice: any) => {
 </style></head><body>
   <div class="header">
     <div>
-      <h2 style="margin:0">${clinicInfo.value.name || 'Clinique Veterinaire'}</h2>
+      <h2 style="margin:0">${clinicInfo.value.name || 'Clinique Vétérinaire'}</h2>
       <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.address || ''}</p>
       <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.phone || ''}</p>
     </div>

@@ -152,7 +152,7 @@
         <div class="flex items-center justify-between mb-4">
           <div>
             <h3 class="font-semibold text-surface-900">Templates de consultation</h3>
-            <p class="text-sm text-surface-500 mt-1">Modeles pre-remplis pour accelerer vos consultations</p>
+            <p class="text-sm text-surface-500 mt-1">Modèles pré-remplis pour accélérer vos consultations</p>
           </div>
           <button @click="showAddTemplate = true" class="btn-primary text-sm py-2">
             + Nouveau template
@@ -161,7 +161,7 @@
 
         <div v-if="templates.length === 0" class="text-center py-8 text-surface-400">
           <p>Aucun template pour le moment</p>
-          <p class="text-sm mt-1">Creez des modeles pour gagner du temps</p>
+          <p class="text-sm mt-1">Créez des modèles pour gagner du temps</p>
         </div>
 
         <div v-else class="space-y-2">
@@ -196,7 +196,7 @@
         <div class="flex items-center justify-between mb-4">
           <div>
             <h3 class="font-semibold text-surface-900">Prise de rendez-vous en ligne</h3>
-            <p class="text-sm text-surface-500 mt-1">Permettez a vos clients de prendre RDV directement</p>
+            <p class="text-sm text-surface-500 mt-1">Permettez à vos clients de prendre RDV directement</p>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" v-model="bookingEnabled" class="sr-only peer">
@@ -206,7 +206,7 @@
 
         <div v-if="bookingEnabled" class="space-y-4">
           <div class="p-4 bg-primary-50 border border-primary-200 rounded-xl">
-            <p class="text-sm font-medium text-primary-800 mb-2">Lien de reservation</p>
+            <p class="text-sm font-medium text-primary-800 mb-2">Lien de réservation</p>
             <div class="flex gap-2">
               <input :value="bookingUrl" type="text" class="input flex-1 text-sm font-mono" readonly />
               <button @click="copyBookingUrl" class="btn-primary text-sm py-2 px-4">
@@ -239,7 +239,7 @@
           <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <p>Activez la prise de RDV en ligne pour que vos clients puissent reserver directement</p>
+          <p>Activez la prise de RDV en ligne pour que vos clients puissent réserver directement</p>
         </div>
       </div>
     </div>
@@ -519,7 +519,7 @@
               </select>
             </div>
             <div>
-              <label class="label">Duree (min)</label>
+              <label class="label">Durée (min)</label>
               <input v-model.number="templateForm.defaultDuration" type="number" class="input" min="5" step="5" />
             </div>
           </div>
@@ -529,7 +529,7 @@
           </div>
           <div class="flex gap-3 pt-4">
             <button type="button" @click="closeTemplateModal" class="flex-1 btn-secondary">Annuler</button>
-            <button type="submit" class="flex-1 btn-primary">{{ editingTemplate ? 'Modifier' : 'Creer' }}</button>
+            <button type="submit" class="flex-1 btn-primary">{{ editingTemplate ? 'Modifier' : 'Créer' }}</button>
           </div>
         </form>
       </div>
@@ -834,7 +834,7 @@ const saveTemplate = async () => {
     const response = await api.post<any>('/vet/templates', templateForm.value)
     if (response.success && response.data) {
       templates.value.push(response.data)
-      showMessage('Template cree')
+      showMessage('Template créé')
     } else {
       showMessage(response.message || 'Erreur', 'error')
     }

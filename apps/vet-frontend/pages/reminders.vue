@@ -101,7 +101,7 @@
               v-if="r.status === 'pending'"
               @click="completeReminder(r.id)"
               class="p-2 text-success-600 hover:bg-success-50 rounded-lg"
-              title="Marquer effectue"
+              title="Marquer effectué"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -157,12 +157,12 @@
               <input v-model="newReminder.petName" type="text" class="input" required />
             </div>
             <div>
-              <label class="label">Proprietaire</label>
+              <label class="label">Propriétaire</label>
               <input v-model="newReminder.clientName" type="text" class="input" required />
             </div>
           </div>
           <div>
-            <label class="label">Date d'echeance</label>
+            <label class="label">Date d'échéance</label>
             <input v-model="newReminder.dueDate" type="date" class="input" required />
           </div>
           <div>
@@ -174,7 +174,7 @@
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showNewReminder = false" class="flex-1 btn-secondary">Annuler</button>
             <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
-              {{ saving ? 'Creation...' : 'Creer' }}
+              {{ saving ? 'Création…' : 'Créer' }}
             </button>
           </div>
         </form>

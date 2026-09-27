@@ -129,7 +129,7 @@
         <thead class="bg-surface-50">
           <tr>
             <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Article</th>
-            <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Categorie</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Catégorie</th>
             <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">Quantite</th>
             <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">Stock min.</th>
             <th class="text-right py-3 px-4 text-sm font-medium text-surface-500">Prix unit.</th>
@@ -201,10 +201,10 @@
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="label">Categorie *</label>
+              <label class="label">Catégorie *</label>
               <select v-model="itemForm.category" class="input" required>
-                <option value="">Selectionner</option>
-                <option value="medication">Medicament</option>
+                <option value="">Sélectionner</option>
+                <option value="medication">Médicament</option>
                 <option value="consumable">Consommable</option>
                 <option value="equipment">Equipement</option>
                 <option value="other">Autre</option>
@@ -246,7 +246,7 @@
           <div class="flex gap-3 pt-4">
             <button type="button" @click="showItemModal = false" class="flex-1 btn-secondary">Annuler</button>
             <button type="submit" :disabled="saving" class="flex-1 btn-primary disabled:opacity-50">
-              {{ saving ? 'Enregistrement...' : (editingItem ? 'Mettre a jour' : 'Creer') }}
+              {{ saving ? 'Enregistrement...' : (editingItem ? 'Mettre à jour' : 'Créer') }}
             </button>
           </div>
         </form>
@@ -285,7 +285,7 @@
 
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div>
-            <p class="text-sm text-surface-500">Categorie</p>
+            <p class="text-sm text-surface-500">Catégorie</p>
             <span :class="getCategoryBadge(selectedItem.category)">{{ getCategoryLabel(selectedItem.category) }}</span>
           </div>
           <div>
@@ -334,7 +334,7 @@
               <div>
                 <label class="label">Raison</label>
                 <select v-model="movementForm.reason" class="input">
-                  <option value="">Selectionner</option>
+                  <option value="">Sélectionner</option>
                   <option v-for="r in getReasons(movementForm.type)" :key="r" :value="r">{{ r }}</option>
                 </select>
               </div>
@@ -439,7 +439,7 @@ const stats = ref({
 
 const categoryFilters = [
   { id: 'all', label: 'Tous' },
-  { id: 'medication', label: 'Medicaments' },
+  { id: 'medication', label: 'Médicaments' },
   { id: 'consumable', label: 'Consommables' },
   { id: 'equipment', label: 'Equipements' },
   { id: 'other', label: 'Autres' },
@@ -639,7 +639,7 @@ const isExpired = (d: string) => new Date(d) < new Date(new Date().toISOString()
 
 const getCategoryLabel = (cat: string) => {
   const labels: Record<string, string> = {
-    medication: 'Medicament',
+    medication: 'Médicament',
     consumable: 'Consommable',
     equipment: 'Equipement',
     other: 'Autre',

@@ -826,11 +826,11 @@ const generateVaccinationCertificate = () => {
 </style></head><body>
   <div class="header">
     <h1 style="margin:0">Carnet de Vaccination</h1>
-    <p style="color:#666;margin:8px 0 0">Document veterinaire officiel</p>
+    <p style="color:#666;margin:8px 0 0">Document vétérinaire officiel</p>
   </div>
   <div class="pet-info">
     <div><strong>Nom de l'animal</strong>${patient.value.name}</div>
-    <div><strong>Espece</strong>${patient.value.species === 'dog' ? 'Chien' : patient.value.species === 'cat' ? 'Chat' : patient.value.species}</div>
+    <div><strong>Espèce</strong>${patient.value.species === 'dog' ? 'Chien' : patient.value.species === 'cat' ? 'Chat' : patient.value.species}</div>
     <div><strong>Race</strong>${patient.value.breed || 'Non renseignee'}</div>
     <div><strong>Date de naissance</strong>${patient.value.birthDate ? formatDate(patient.value.birthDate) : 'Non renseignee'}</div>
   </div>
@@ -843,7 +843,7 @@ const generateVaccinationCertificate = () => {
   </table>
   <div style="margin-top:48px;padding-top:16px;border-top:1px solid #eee;display:flex;justify-content:space-between">
     <div><p style="font-size:12px;color:#666">Date d'emission: ${new Date().toLocaleDateString('fr-FR')}</p></div>
-    <div style="text-align:right"><p style="font-size:12px;color:#666">Signature et cachet du veterinaire</p><div style="width:200px;height:60px;border:1px dashed #ccc;border-radius:4px;margin-top:8px"></div></div>
+    <div style="text-align:right"><p style="font-size:12px;color:#666">Signature et cachet du vétérinaire</p><div style="width:200px;height:60px;border:1px dashed #ccc;border-radius:4px;margin-top:8px"></div></div>
   </div>
 </body></html>`)
   printWindow.document.close()
