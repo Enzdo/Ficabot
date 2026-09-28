@@ -25,7 +25,51 @@ export default class HealthController {
    * Detailed health check with dependencies
    * GET /health/detailed
    */
-  async detailed({ response }: HttpContext) {
+  /**
+   * Vérifie le laissez-passer du diagnostic détaillé.
+   *
+   * Fermé par défaut, et c'est délibéré : tant qu'aucun jeton n'est configuré,
+   * personne n'obtient le détail. L'inverse — ouvert jusqu'à ce qu'on pense à
+   * le fermer — laisse une fuite en place précisément là où l'on n'y pense pas.
+   *
+   * La comparaison est à durée constante : un `===` sur une chaîne secrète
+   * s'arrête au premier caractère faux et laisse deviner le jeton octet par
+   * octet, à force de mesures.
+   */
+  private isTrusted(request: HttpContext['request']): boolean {
+    const expected = env.get('HEALTH_TOKEN')
+    if (!expected) return false
+
+    const header = request.header('authorization') ?? ''
+    const provided = header.startsWith('Bearer ') ? header.slice(7) : ''
+    if (provided.length !== expected.length) return false
+
+    let diff = 0
+    for (let i = 0; i < expected.length; i++) {
+      diff |= provided.charCodeAt(i) ^ expected.charCodeAt(i)
+    }
+    return diff === 0
+  }
+
+  async detailed({ request, response }: HttpContext) {
+    // Cette réponse nomme la version exacte de Node, le PID, le type de base et
+    // les fournisseurs d'IA configurés — de quoi cibler les failles connues de
+    // cette version précise. Un moniteur n'a besoin que d'un état de santé ;
+    // sans laissez-passer, c'est tout ce qu'il obtient.
+    if (!this.isTrusted(request)) {
+      let databaseHealthy = true
+      try {
+        await db.rawQuery('SELECT 1')
+      } catch {
+        databaseHealthy = false
+      }
+
+      return response.status(databaseHealthy ? 200 : 503).json({
+        status: databaseHealthy ? 'healthy' : 'unhealthy',
+        timestamp: DateTime.now().toISO(),
+      })
+    }
+
     const checks: Record<string, any> = {
       application: {
         status: 'healthy',

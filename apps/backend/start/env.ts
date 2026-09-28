@@ -55,6 +55,12 @@ export default await Env.create(appRoot, {
    */
   OPENROUTER_API_KEY: Env.schema.string.optional(),
 
+  /**
+   * Laissez-passer du diagnostic détaillé (`/health/detailed`). Absent, la
+   * route ne rend qu'un état de santé — voir `HealthController.isTrusted`.
+   */
+  HEALTH_TOKEN: Env.schema.string.optional(),
+
   /*
   |--------------------------------------------------------------------------
   | Anthropic (Claude)
