@@ -62,13 +62,25 @@ export default class HealthController {
     }
 
     // Check AI services
+    //
+    // `route` dit par où sortent réellement les appels de conversation. Sans
+    // cette ligne, la seule façon de le savoir était de comparer la
+    // consommation du fournisseur avant et après un appel — et une variable
+    // posée sans redémarrage du conteneur passait inaperçue.
     checks.ai = {
+      route: env.get('OPENROUTER_API_KEY') ? 'openrouter' : 'direct',
       openai: {
         configured: Boolean(env.get('OPENAI_API_KEY')),
       },
       anthropic: {
         configured: Boolean(env.get('ANTHROPIC_API_KEY')),
       },
+      openrouter: {
+        configured: Boolean(env.get('OPENROUTER_API_KEY')),
+      },
+      // La transcription ne passe jamais par OpenRouter : il n'a pas d'endpoint
+      // pour cela. Écrit ici pour que ce ne soit pas pris pour un oubli.
+      transcription: 'openai',
     }
 
     // Overall health status
