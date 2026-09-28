@@ -127,6 +127,24 @@ export default class HealthController {
       transcription: 'openai',
     }
 
+    /**
+     * Réglages dont l'effet ne se voit nulle part ailleurs.
+     *
+     * Poser une variable sur l'hébergeur ne recharge pas le conteneur : il
+     * continue de tourner avec l'ancien environnement, sans rien signaler. Ce
+     * bloc dit ce que le processus *en cours* a réellement lu — c'est la seule
+     * façon de distinguer « posée » de « prise en compte ».
+     *
+     * `vetFrontendUrl` construit les liens de réinitialisation de mot de passe :
+     * absente, ils pointent vers localhost et n'aboutissent nulle part.
+     */
+    checks.config = {
+      vetFrontendUrl: env.get('VET_FRONTEND_URL') ?? null,
+      frontendUrl: env.get('FRONTEND_URL') ?? null,
+      mailFrom: env.get('MAIL_FROM_ADDRESS') ?? null,
+      startedAt: DateTime.now().minus({ seconds: process.uptime() }).toISO(),
+    }
+
     // Overall health status
     const overallHealthy = checks.database.status === 'healthy'
 
