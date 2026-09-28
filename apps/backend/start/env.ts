@@ -49,6 +49,12 @@ export default await Env.create(appRoot, {
   */
   OPENAI_API_KEY: Env.schema.string.optional(),
 
+  /**
+   * Passerelle OpenRouter. Absente, les appels repartent chez OpenAI et
+   * Anthropic en direct : le logiciel fonctionne dans les deux cas.
+   */
+  OPENROUTER_API_KEY: Env.schema.string.optional(),
+
   /*
   |--------------------------------------------------------------------------
   | Anthropic (Claude)

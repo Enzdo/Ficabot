@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import logger from '@adonisjs/core/services/logger'
 import { DateTime } from 'luxon'
 import Pet from '#models/pet'
 import VetAssistantConversation from '#models/vet_assistant_conversation'
@@ -228,6 +229,11 @@ export default class VetAssistantConversationsController {
         },
       })
     } catch (error) {
+      // L'échec était muet : rien au journal, un message rassurant à l'écran, et
+      // une panne d'IA — clé expirée, modèle retiré, quota épuisé — pouvait durer
+      // des jours sans que personne la voie.
+      logger.error({ err: error, conversationId: conversation.id }, 'Échec de réponse de l’assistant')
+
       // La question reste au fil : le praticien peut la relancer sans la retaper.
       return response.internalServerError({
         success: false,

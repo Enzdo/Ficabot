@@ -5,16 +5,14 @@ import VetNotification from '#models/vet_notification'
 import UserNotification from '#models/user_notification'
 import { DateTime } from 'luxon'
 import OpenAI from 'openai'
-import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export default class VetPreDiagnosesController {
     private openai: OpenAI
 
     constructor() {
-        this.openai = new OpenAI({
-            apiKey: env.get('OPENAI_API_KEY'),
-        })
+        this.openai = chatClient()
     }
 
     /**
@@ -157,7 +155,7 @@ export default class VetPreDiagnosesController {
 
         try {
             const completion = await this.openai.chat.completions.create({
-                model: 'gpt-4-turbo',
+                model: chatModel('gpt-4-turbo'),
                 messages,
                 temperature: 0.7,
                 max_tokens: 1000,

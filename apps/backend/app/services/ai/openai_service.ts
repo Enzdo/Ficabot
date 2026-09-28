@@ -1,15 +1,13 @@
 import OpenAI from 'openai'
-import env from '#start/env'
 import { ANALYSIS_PROMPT_TEMPLATE, ANALYSIS_LIMITS } from './prompts.js'
 import type { AIAnalysisContext, AIAnalysisResponse } from '@ficabot/shared'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export default class OpenAIService {
     private client: OpenAI
 
     constructor() {
-        this.client = new OpenAI({
-            apiKey: env.get('OPENAI_API_KEY'),
-        })
+        this.client = chatClient()
     }
 
     async analyze(context: AIAnalysisContext): Promise<AIAnalysisResponse> {
@@ -20,7 +18,7 @@ export default class OpenAIService {
             const imageContent = this.prepareImages(context.imageUrls)
 
             const response = await this.client.chat.completions.create({
-                model: 'gpt-4o',
+                model: chatModel('gpt-4o'),
                 max_tokens: 2000,
                 temperature: 0.3,
                 response_format: { type: 'json_object' },

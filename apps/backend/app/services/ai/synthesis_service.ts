@@ -1,16 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
 import env from '#start/env'
 import { SYNTHESIS_PROMPT } from './prompts.js'
+import { analysisModel, chatClient, usesOpenRouter } from '#services/ai_gateway'
 import type { AIResponse } from '@ficabot/shared'
 
+/**
+ * Réconcilie les deux avis en une synthèse unique. Comme l'analyse, elle sait
+ * parler aux deux routes — et elle n'est pas optionnelle : si elle échoue, le
+ * pré-diagnostic entier échoue.
+ */
 export default class SynthesisService {
-    private client: Anthropic
-
-    constructor() {
-        this.client = new Anthropic({
-            apiKey: env.get('ANTHROPIC_API_KEY'),
-        })
-    }
 
     async synthesize(aiResponses: AIResponse[]): Promise<any> {
         try {
@@ -19,18 +18,7 @@ export default class SynthesisService {
                 gpt: aiResponses.find((r) => r.model === 'gpt')?.rawResponse || null,
             }
 
-            const response = await this.client.messages.create({
-                // `claude-3-5-sonnet-20241022` a été retiré par Anthropic : chaque appel
-                // repartait en 404, et comme la synthèse n'est pas optionnelle, tout
-                // pré-diagnostic échouait. Remplacé par le modèle de même gamme.
-                model: 'claude-sonnet-5',
-                max_tokens: 2000,
-                // Pas de `temperature` : les modèles de cette génération rejettent les
-                // paramètres d'échantillonnage avec une erreur 400.
-                messages: [
-                    {
-                        role: 'user',
-                        content: `${SYNTHESIS_PROMPT}
+            const prompt = `${SYNTHESIS_PROMPT}
 
 **ANALYSES REÇUES:**
 
@@ -40,17 +28,9 @@ ${JSON.stringify(analysesData.claude, null, 2)}
 **GPT-4:**
 ${JSON.stringify(analysesData.gpt, null, 2)}
 
-Produis maintenant une synthèse complète en JSON selon le format spécifié.`,
-                    },
-                ],
-            })
+Produis maintenant une synthèse complète en JSON selon le format spécifié.`
 
-            const textContent = response.content.find((c) => c.type === 'text')
-            if (!textContent || textContent.type !== 'text') {
-                throw new Error('No content in synthesis response')
-            }
-
-            let jsonText = textContent.text
+            let jsonText = await this.complete(prompt)
             const jsonMatch = jsonText.match(/```json\n([\s\S]*?)\n```/)
             if (jsonMatch) jsonText = jsonMatch[1]
 
@@ -59,6 +39,35 @@ Produis maintenant une synthèse complète en JSON selon le format spécifié.`,
             console.error('Synthesis error:', error)
             throw error
         }
+    }
+
+    /** Envoie l'invite par la route configurée et rend le texte brut. */
+    private async complete(prompt: string): Promise<string> {
+        if (usesOpenRouter()) {
+            const response = await chatClient().chat.completions.create({
+                model: analysisModel(),
+                max_tokens: 2000,
+                messages: [{ role: 'user', content: prompt }],
+            })
+
+            const text = response.choices[0]?.message?.content
+            if (!text) throw new Error('Réponse vide du modèle de synthèse')
+            return text
+        }
+
+        const client = new Anthropic({ apiKey: env.get('ANTHROPIC_API_KEY') })
+        const response = await client.messages.create({
+            // Pas de `temperature` : cette génération de modèles la refuse.
+            model: analysisModel(),
+            max_tokens: 2000,
+            messages: [{ role: 'user', content: prompt }],
+        })
+
+        const textContent = response.content.find((c) => c.type === 'text')
+        if (!textContent || textContent.type !== 'text') {
+            throw new Error('Réponse vide du modèle de synthèse')
+        }
+        return textContent.text
     }
 
     calculateUrgency(aiResponses: AIResponse[]): 'low' | 'medium' | 'high' | 'critical' {

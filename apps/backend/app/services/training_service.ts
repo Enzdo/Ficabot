@@ -1,4 +1,3 @@
-import OpenAI from 'openai'
 import env from '#start/env'
 import logger from '@adonisjs/core/services/logger'
 import type Pet from '#models/pet'
@@ -15,6 +14,7 @@ import {
 } from '#services/training/questionnaire'
 import { buildFallbackPlan } from '#services/training/exercises'
 import type { CycleJournal } from '#services/training_program_service'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export interface TrainingPlanExercise {
   title: string
@@ -184,16 +184,18 @@ export default class TrainingService {
         sessionsPerDay: sessions,
       }) as TrainingPlan
 
-    const apiKey = env.get('OPENAI_API_KEY')
+    // Le repli générique reste conditionné à une clé : sans aucune route
+    // configurée, inutile de tenter l'appel.
+    const apiKey = env.get('OPENROUTER_API_KEY') || env.get('OPENAI_API_KEY')
     if (!apiKey) {
       logger.warn('[Training] OPENAI_API_KEY absente, plan générique servi')
       return { plan: fallback(), fromAi: false }
     }
 
     try {
-      const client = new OpenAI({ apiKey })
+      const client = chatClient()
       const response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: chatModel('gpt-4o-mini'),
         temperature: 0.6,
         max_tokens: 4000,
         response_format: { type: 'json_object' },

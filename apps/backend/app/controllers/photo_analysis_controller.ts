@@ -1,15 +1,13 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import OpenAI from 'openai'
 import Pet from '#models/pet'
-import env from '#start/env'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export default class PhotoAnalysisController {
   private openai: OpenAI
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: env.get('OPENAI_API_KEY'),
-    })
+    this.openai = chatClient()
   }
 
   async analyze({ params, auth, request, response }: HttpContext) {
@@ -155,7 +153,7 @@ Réponds en JSON avec ce format :
 
     try {
       const completion = await this.openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: chatModel('gpt-4o'),
         messages: [
           {
             role: 'user',

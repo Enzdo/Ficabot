@@ -1,16 +1,14 @@
 import OpenAI from 'openai'
-import env from '#start/env'
 import type Pet from '#models/pet'
 import type ChatMessage from '#models/chat_message'
 import type HealthBook from '#models/health_book'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export default class OpenAIService {
   private client: OpenAI
 
   constructor() {
-    this.client = new OpenAI({
-      apiKey: env.get('OPENAI_API_KEY'),
-    })
+    this.client = chatClient()
   }
 
   async chat(params: {
@@ -61,7 +59,7 @@ export default class OpenAIService {
         : undefined
 
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: chatModel('gpt-4o-mini'),
         messages,
         max_tokens: 1000,
         temperature: 0.7,
@@ -133,7 +131,7 @@ IMPORTANT: Retourne UNIQUEMENT le JSON, sans texte avant ou après.`
 
     try {
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: chatModel('gpt-4o'),
         messages: [
           { role: 'system', content: systemPrompt },
           {

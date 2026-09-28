@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
-import env from '#start/env'
 import type Pet from '#models/pet'
 import type MedicalRecord from '#models/medical_record'
+import { chatClient, chatModel } from '#services/ai_gateway'
 
 export interface AssistantTurn {
   role: 'user' | 'assistant'
@@ -25,7 +25,7 @@ export default class VetAssistantService {
   private client: OpenAI
 
   constructor() {
-    this.client = new OpenAI({ apiKey: env.get('OPENAI_API_KEY') })
+    this.client = chatClient()
   }
 
   private buildContext(pet: Pet, records: MedicalRecord[]): string {
@@ -125,7 +125,7 @@ export default class VetAssistantService {
     messages.push({ role: 'user', content: question })
 
     const completion = await this.client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: chatModel('gpt-4o-mini'),
       temperature: 0.2,
       messages,
     })

@@ -1,9 +1,9 @@
 import OpenAI from 'openai'
 import { toFile } from 'openai/uploads'
-import env from '#start/env'
 import type Pet from '#models/pet'
 import { type ConsultationTemplate } from '#services/consultation_templates'
 import { resolveTemplate } from '#services/report_template_resolver'
+import { chatClient, chatModel, transcriptionClient } from '#services/ai_gateway'
 
 /**
  * Une rubrique remplie du compte rendu, prête à être relue.
@@ -32,9 +32,12 @@ export const DICTATION_LANGUAGES = [
 
 export default class ConsultationService {
   private client: OpenAI
+  private transcription: OpenAI
 
   constructor() {
-    this.client = new OpenAI({ apiKey: env.get('OPENAI_API_KEY') })
+    // Deux clients : la transcription ne peut pas passer par OpenRouter.
+    this.transcription = transcriptionClient()
+    this.client = chatClient()
   }
 
   /**
@@ -45,7 +48,7 @@ export default class ConsultationService {
   async transcribe(audio: Buffer, filename: string, language = 'fr'): Promise<string> {
     const file = await toFile(audio, filename)
 
-    const result = await this.client.audio.transcriptions.create({
+    const result = await this.transcription.audio.transcriptions.create({
       file,
       model: 'whisper-1',
       language,
@@ -116,7 +119,7 @@ export default class ConsultationService {
       .join('\n')
 
     const completion = await this.client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: chatModel('gpt-4o-mini'),
       temperature: 0.2,
       response_format: { type: 'json_object' },
       messages: [
