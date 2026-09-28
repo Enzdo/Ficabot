@@ -20,9 +20,13 @@ export default class SynthesisService {
             }
 
             const response = await this.client.messages.create({
-                model: 'claude-3-5-sonnet-20241022',
+                // `claude-3-5-sonnet-20241022` a été retiré par Anthropic : chaque appel
+                // repartait en 404, et comme la synthèse n'est pas optionnelle, tout
+                // pré-diagnostic échouait. Remplacé par le modèle de même gamme.
+                model: 'claude-sonnet-5',
                 max_tokens: 2000,
-                temperature: 0.2,
+                // Pas de `temperature` : les modèles de cette génération rejettent les
+                // paramètres d'échantillonnage avec une erreur 400.
                 messages: [
                     {
                         role: 'user',
