@@ -25,6 +25,25 @@ export default defineConfig({
   | will be scanned automatically from the "./commands" directory.
   |
   */
+  /*
+  |--------------------------------------------------------------------------
+  | Fichiers embarqués dans le build
+  |--------------------------------------------------------------------------
+  |
+  | `node ace build` ne copie que le JavaScript compilé. Les gabarits d'e-mail
+  | sont des fichiers Edge : sans cette déclaration, ils restaient dans les
+  | sources et la production levait « Cannot resolve …/welcome_vet.edge » à
+  | chaque envoi. Le défaut était masqué par le refus de domaine chez Resend —
+  | on croyait à un problème d'expéditeur, il y en avait deux.
+  |
+  */
+  metaFiles: [
+    {
+      pattern: 'resources/views/**/*.edge',
+      reloadServer: false,
+    },
+  ],
+
   commands: [
     () => import('@adonisjs/core/commands'),
     () => import('@adonisjs/lucid/commands'),
