@@ -31,6 +31,13 @@ export default class MedicalRecord extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
+  /**
+   * Dernière reprise du compte rendu. Égale à la création tant qu'il n'a pas
+   * été modifié — l'écran s'en sert pour signaler un amendement.
+   */
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+
   @belongsTo(() => Pet)
   declare pet: BelongsTo<typeof Pet>
 }

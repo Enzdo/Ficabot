@@ -69,10 +69,11 @@
     <!-- Records List -->
     <div v-if="!loading && !error" class="space-y-4">
       <div 
-        v-for="record in filteredRecords" 
-        :key="record.id"
+        v-for="record in filteredRecords"
+        :key="`${record.kind}-${record.id}`"
         class="card-hover cursor-pointer"
-        @click="selectedRecord = record" role="button" tabindex="0" @keydown.enter="selectedRecord = record" @keydown.space.prevent="selectedRecord = record"
+        role="button" tabindex="0"
+        @click="openRecord(record)" @keydown.enter="openRecord(record)" @keydown.space.prevent="openRecord(record)"
       >
         <div class="flex items-start gap-4">
           <div class="w-14 h-14 rounded-2xl bg-surface-100 flex items-center justify-center flex-shrink-0">
@@ -86,10 +87,21 @@
               </div>
               <span class="text-sm text-surface-400">{{ formatDate(record.date) }}</span>
             </div>
-            <div class="mt-2">
+            <div class="mt-2 flex items-center gap-2 flex-wrap">
+              <!-- Deux origines dans une même chronologie : la pastille dit
+                   laquelle, et seuls les comptes rendus se modifient. -->
+              <span :class="record.kind === 'report' ? 'badge-primary' : 'badge'">
+                {{ record.kind === 'report' ? 'Compte rendu' : 'Rendez-vous' }}
+              </span>
               <span :class="getTypeClass(record.type)">{{ getTypeLabel(record.type) }}</span>
+              <span v-if="record.amendedAt" class="badge-warning">Repris</span>
             </div>
-            <p class="text-sm text-surface-600 mt-2 line-clamp-2">{{ record.diagnosis }}</p>
+            <p class="text-sm text-surface-900 font-medium mt-2" v-if="record.kind === 'report'">
+              {{ record.title }}
+            </p>
+            <p class="text-sm text-surface-600 mt-1 line-clamp-2">
+              {{ record.kind === 'report' ? record.body : record.diagnosis }}
+            </p>
           </div>
         </div>
       </div>
@@ -129,8 +141,42 @@
           </div>
         </div>
 
-        <!-- Record Details -->
-        <div class="space-y-4">
+        <!-- Compte rendu dicté : modifiable, comme des notes -->
+        <div v-if="selectedRecord.kind === 'report'" class="space-y-4">
+          <p v-if="selectedRecord.amendedAt" class="text-xs text-warning-700 bg-warning-50 border border-warning-200 rounded-lg px-3 py-2">
+            Ce compte rendu a été repris le {{ formatDate(selectedRecord.amendedAt) }}.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="sm:col-span-2">
+              <label class="label" for="rec-titre">Titre</label>
+              <input id="rec-titre" v-model="edit.title" type="text" class="input" />
+            </div>
+            <div>
+              <label class="label" for="rec-date">Date</label>
+              <input id="rec-date" v-model="edit.date" type="date" class="input" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="rec-corps">Compte rendu</label>
+            <textarea
+              id="rec-corps"
+              v-model="edit.body"
+              rows="16"
+              class="input resize-y leading-relaxed font-normal"
+            ></textarea>
+            <p class="text-xs text-surface-500 mt-1">
+              Rédigé par {{ selectedRecord.vetName || 'un praticien du cabinet' }}. Vos
+              corrections remplacent le texte ; la reprise est datée.
+            </p>
+          </div>
+
+          <p v-if="editError" class="workspace-error" role="alert">{{ editError }}</p>
+        </div>
+
+        <!-- Rendez-vous terminé : lecture seule, il se corrige dans l'agenda -->
+        <div v-else class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div class="p-3 bg-surface-50 rounded-xl">
               <p class="text-xs text-surface-500">Date de consultation</p>
@@ -196,19 +242,25 @@
           </div>
         </div>
 
-        <div class="flex gap-3 mt-6 pt-4 border-t border-surface-200">
+        <div v-if="selectedRecord.kind === 'report'" class="flex gap-3 mt-6 pt-4 border-t border-surface-200">
+          <button type="button" class="flex-1 btn-secondary" @click="selectedRecord = null">
+            Annuler
+          </button>
+          <button type="button" class="flex-1 btn-primary" :disabled="savingRecord" @click="saveRecord">
+            {{ savingRecord ? 'Enregistrement…' : 'Enregistrer les modifications' }}
+          </button>
+        </div>
+
+        <div v-else class="flex gap-3 mt-6 pt-4 border-t border-surface-200">
           <button class="flex-1 btn-secondary flex items-center justify-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             Imprimer
           </button>
-          <button class="flex-1 btn-primary flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Modifier
-          </button>
+          <!-- Le bouton « Modifier » d'un rendez-vous n'était relié à rien :
+               mieux vaut ne rien promettre. Un rendez-vous se corrige dans
+               l'agenda, où il vit. -->
         </div>
       </div>
     </div>
@@ -230,6 +282,62 @@ const error = ref('')
 let requestId = 0
 const records = ref<any[]>([])
 const stats = ref({ total: 0, thisMonth: 0, vaccinations: 0, surgeries: 0 })
+
+/**
+ * Brouillon d'édition d'un compte rendu.
+ *
+ * Séparé de la ligne affichée dans la liste : tant que l'enregistrement n'a pas
+ * abouti, la liste ne doit pas montrer un texte qui n'est pas en base.
+ */
+const edit = reactive({ title: '', body: '', date: '' })
+const savingRecord = ref(false)
+const editError = ref('')
+
+const openRecord = (record: any) => {
+  editError.value = ''
+  selectedRecord.value = record
+  if (record.kind === 'report') {
+    edit.title = record.title || ''
+    edit.body = record.body || ''
+    edit.date = record.date || ''
+  }
+}
+
+const saveRecord = async () => {
+  if (!selectedRecord.value || selectedRecord.value.kind !== 'report') return
+
+  if (!edit.body.trim()) {
+    editError.value = 'Le compte rendu ne peut pas être vide.'
+    return
+  }
+
+  savingRecord.value = true
+  editError.value = ''
+
+  const { success, data, message } = await api.put<any>(
+    `/vet/records/reports/${selectedRecord.value.id}`,
+    { title: edit.title, body: edit.body, date: edit.date }
+  )
+
+  savingRecord.value = false
+
+  if (!success) {
+    editError.value = message || "Le compte rendu n'a pas pu être enregistré."
+    return
+  }
+
+  // La liste est mise à jour sur place : recharger ferait sauter la position
+  // de lecture, et le serveur vient de renvoyer la version qui fait foi.
+  const row = records.value.find((r) => r.kind === 'report' && r.id === data?.id)
+  if (row) {
+    row.title = data.title
+    row.body = data.body
+    row.date = data.date
+    row.amendedAt = data.updatedAt
+  }
+
+  selectedRecord.value = null
+}
 
 const fetchRecords = async () => {
   const currentRequest = ++requestId
@@ -276,7 +384,10 @@ const formatDate = (date: Date | string) => {
 const getTypeClass = (type: string) => {
   const classes: Record<string, string> = {
     consultation: 'badge bg-primary-100 text-primary-700',
+    visit: 'badge bg-primary-100 text-primary-700',
     vaccination: 'badge-success',
+    vaccine: 'badge-success',
+    treatment: 'badge bg-accent-100 text-accent-700',
     surgery: 'badge bg-warning-100 text-warning-700',
     checkup: 'badge bg-accent-100 text-accent-700',
     emergency: 'badge-danger',
@@ -286,11 +397,16 @@ const getTypeClass = (type: string) => {
 
 const getTypeLabel = (type: string) => {
   const labels: Record<string, string> = {
+    // Types des rendez-vous
     consultation: 'Consultation',
     vaccination: 'Vaccination',
     surgery: 'Chirurgie',
     checkup: 'Bilan',
     emergency: 'Urgence',
+    // Types des comptes rendus : sans eux, l'écran affichait « visit » brut.
+    visit: 'Consultation',
+    vaccine: 'Vaccination',
+    treatment: 'Traitement',
   }
   return labels[type] || type
 }

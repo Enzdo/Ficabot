@@ -650,6 +650,10 @@ router.group(() => {
 const VetRecordsController = () => import('#controllers/vet_records_controller')
 router.group(() => {
   router.get('/', [VetRecordsController, 'index'])
+  // Un compte rendu dicté se relit et se reprend ; un rendez-vous se corrige
+  // dans l'agenda, d'où l'absence de route équivalente pour lui.
+  router.get('/reports/:id', [VetRecordsController, 'showReport'])
+  router.put('/reports/:id', [VetRecordsController, 'updateReport'])
 }).prefix('/vet/records').use([middleware.vetAuth(), middleware.vetCan({ capability: 'records' })])
 
 // Vet Prescriptions (Ordonnances)
