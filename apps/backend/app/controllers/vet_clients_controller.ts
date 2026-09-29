@@ -9,6 +9,7 @@ import Pet from '#models/pet'
 import Veterinarian from '#models/veterinarian'
 import VetClientInviteNotification from '#mails/vet_client_invite_notification'
 import VetClientAppInviteNotification from '#mails/vet_client_app_invite_notification'
+import logger from '@adonisjs/core/services/logger'
 
 async function ensurePetsHaveVetToken(userId: number) {
   const pets = await Pet.query().where('userId', userId).whereNull('vetToken')
@@ -420,11 +421,52 @@ export default class VetClientsController {
         .where('veterinarian_id', vet.id)
         .first()
 
+      // Un lien existe déjà. Refuser sèchement laissait le praticien devant une
+      // impasse : il veut inviter quelqu'un, le logiciel répond « ça existe »
+      // et ne fait rien. Seuls deux cas méritent un refus — les autres
+      // appellent un renvoi de l'invitation.
       if (existingLink) {
-        return response.conflict({
-          success: false,
-          message: 'Une relation existe déjà avec cet utilisateur',
-          data: { status: existingLink.status },
+        if (existingLink.status === 'accepted') {
+          return response.conflict({
+            success: false,
+            message: 'Ce client fait déjà partie de votre patientèle.',
+            data: { status: existingLink.status },
+          })
+        }
+
+        if (existingLink.status === 'rejected') {
+          // On ne repasse pas par-dessus un refus : c'est la décision du client.
+          return response.conflict({
+            success: false,
+            message: 'Ce client a décliné votre demande de rattachement.',
+            data: { status: existingLink.status },
+          })
+        }
+
+        // Demande en attente : on la renvoie, c'est ce qu'on attend d'un
+        // second clic sur « inviter ».
+        const vetNameForResend =
+          [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+
+        try {
+          await mail.send(
+            new VetClientAppInviteNotification(user.email, vetNameForResend, vet.clinicName)
+          )
+        } catch (error) {
+          // Annoncer « renvoyée » quand rien n'est parti enverrait le praticien
+          // attendre une réponse qui ne viendra pas.
+          logger.error({ err: error, vetId: vet.id }, 'Échec du renvoi d’invitation à un utilisateur')
+          return response.badGateway({
+            success: false,
+            message: "L'invitation n'a pas pu être envoyée. Réessayez dans un instant.",
+          })
+        }
+
+        return response.ok({
+          success: true,
+          type: 'app',
+          message: 'Demande de rattachement renvoyée à ce client.',
+          data: existingLink,
         })
       }
 
@@ -455,11 +497,37 @@ export default class VetClientsController {
       .where('email', email)
       .first()
 
+    // Fiche externe déjà créée — souvent parce que le praticien l'a saisie
+    // lui-même avant d'y penser à l'invitation. On renvoie l'e-mail plutôt que
+    // de l'envoyer chercher le bouton « réinviter » de la fiche.
     if (existingExternal) {
-      return response.conflict({
-        success: false,
-        message: 'Un client externe avec cet email existe déjà',
-        data: { id: existingExternal.id },
+      const vetNameForResend =
+        [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+
+      try {
+        await mail.send(new VetClientInviteNotification(email, vetNameForResend, vet.clinicName))
+      } catch (error) {
+        logger.error({ err: error, vetId: vet.id }, 'Échec du renvoi d’invitation à un client externe')
+        return response.badGateway({
+          success: false,
+          message: "L'invitation n'a pas pu être envoyée. Réessayez dans un instant.",
+        })
+      }
+
+      existingExternal.inviteSentAt = DateTime.now()
+      await existingExternal.save()
+
+      return response.ok({
+        success: true,
+        type: 'external',
+        message: 'Invitation renvoyée à ce client.',
+        data: {
+          id: existingExternal.id,
+          email: existingExternal.email,
+          firstName: existingExternal.firstName,
+          lastName: existingExternal.lastName,
+          inviteSentAt: existingExternal.inviteSentAt,
+        },
       })
     }
 
