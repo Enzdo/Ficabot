@@ -639,6 +639,8 @@ router.group(() => {
   router.get('/:id', [VetInvoicesController, 'show'])
   router.patch('/:id/status', [VetInvoicesController, 'updateStatus'])
   router.delete('/:id', [VetInvoicesController, 'destroy'])
+  // Annuler une facture émise : par un avoir, jamais par suppression.
+  router.post('/:id/credit-note', [VetInvoicesController, 'createCreditNote'])
 }).prefix('/vet/invoices').use([middleware.vetAuth(), middleware.vetCan({ capability: 'billing' })])
 
 // Vet Analytics

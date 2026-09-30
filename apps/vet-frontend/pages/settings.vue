@@ -45,6 +45,50 @@
               <input v-model="clinicInfo.siret" type="text" class="input" />
             </div>
           </div>
+
+          <!-- ─── Facturation ───
+               Ces réglages ne sont pas cosmétiques : ils décident du taux
+               appliqué et des mentions portées sur chaque facture. -->
+          <div class="pt-2 border-t border-surface-200 dark:border-surface-700">
+            <p class="label mb-1">Facturation</p>
+            <p class="text-sm text-surface-500 dark:text-surface-400 mb-4">
+              Le taux et les mentions ci-dessous figurent sur vos factures. Le
+              taux retenu est figé sur chaque facture émise : le changer ici ne
+              réécrit pas le passé.
+            </p>
+
+            <label class="flex items-start gap-2 text-sm mb-4">
+              <input v-model="clinicInfo.vatExempt" type="checkbox" class="rounded mt-0.5" />
+              <span class="text-surface-700 dark:text-surface-300">
+                Franchise en base de TVA
+                <span class="block text-surface-500 dark:text-surface-400">
+                  Aucune TVA n'est facturée, et la mention de l'article 293 B du
+                  CGI est portée sur la facture.
+                </span>
+              </span>
+            </label>
+
+            <div class="grid md:grid-cols-3 gap-4">
+              <div>
+                <label class="label" for="tva-taux">Taux de TVA (%)</label>
+                <input
+                  id="tva-taux"
+                  v-model.number="clinicInfo.vatRate"
+                  type="number" min="0" max="100" step="0.1"
+                  class="input"
+                  :disabled="clinicInfo.vatExempt"
+                />
+              </div>
+              <div>
+                <label class="label" for="tva-num">N° TVA intracommunautaire</label>
+                <input id="tva-num" v-model="clinicInfo.vatNumber" type="text" class="input" placeholder="FR…" />
+              </div>
+              <div>
+                <label class="label" for="delai">Délai de paiement (jours)</label>
+                <input id="delai" v-model.number="clinicInfo.paymentTermsDays" type="number" min="0" max="365" class="input" />
+              </div>
+            </div>
+          </div>
           <div>
             <label class="label">Adresse</label>
             <input v-model="clinicInfo.address" type="text" class="input" />
@@ -590,6 +634,10 @@ const copied = ref(false)
 const clinicInfo = ref({
   name: '',
   siret: '',
+  vatRate: 20,
+  vatExempt: false,
+  vatNumber: '',
+  paymentTermsDays: 30,
   address: '',
   postalCode: '',
   city: '',
@@ -693,6 +741,10 @@ const loadClinicInfo = async () => {
     clinicInfo.value = {
       name: response.data.name || '',
       siret: response.data.siret || '',
+      vatRate: response.data.vatRate ?? 20,
+      vatExempt: !!response.data.vatExempt,
+      vatNumber: response.data.vatNumber || '',
+      paymentTermsDays: response.data.paymentTermsDays ?? 30,
       address: response.data.address || '',
       postalCode: response.data.postalCode || '',
       city: response.data.city || '',

@@ -90,6 +90,12 @@
           <tr v-for="invoice in filteredInvoices" :key="invoice.id" class="border-t border-surface-100 hover:bg-surface-50">
             <td class="py-3 px-4">
               <span class="font-mono text-sm font-medium text-surface-900">{{ invoice.number }}</span>
+              <!-- Une facture annulée reste en place, avec son numéro : c'est
+                   ce qui préserve la continuité de la séquence. On le dit. -->
+              <span v-if="invoice.type === 'credit_note'" class="badge badge-accent ml-2">Avoir</span>
+              <span v-else-if="invoice.cancelledBy" class="badge badge-warning ml-2" :title="`Annulée par ${invoice.cancelledBy}`">
+                Annulée
+              </span>
             </td>
             <td class="py-3 px-4">
               <div>
@@ -345,7 +351,7 @@
           <div class="flex justify-between mb-8">
             <div>
               <h3 class="font-bold text-lg text-surface-900">{{ clinicInfo.name || 'Clinique Vétérinaire' }}</h3>
-              <p class="text-sm text-surface-500">{{ clinicInfo.address || '' }}</p>
+              <p class="text-sm text-surface-500">{{ [clinicInfo.address, [clinicInfo.postalCode, clinicInfo.city].filter(Boolean).join(' ')].filter(Boolean).join(' — ') }}</p>
               <p v-if="clinicInfo.phone" class="text-sm text-surface-500">{{ clinicInfo.phone }}</p>
             </div>
             <div class="text-right">
@@ -398,13 +404,48 @@
           </div>
         </div>
 
-        <div class="flex gap-3">
+        <div class="flex gap-3 flex-wrap">
           <button @click="downloadInvoice(selectedInvoice)" class="flex-1 btn-secondary">
             Télécharger PDF
           </button>
+
+          <!-- Une facture émise ne se supprime pas : elle s'annule par un
+               avoir, qui porte sa propre numérotation et laisse la facture en
+               place. -->
+          <button
+            v-if="selectedInvoice.type !== 'credit_note' && ['pending', 'paid', 'overdue'].includes(selectedInvoice.status)"
+            class="flex-1 btn-secondary"
+            @click="openCreditNote(selectedInvoice)"
+          >
+            Établir un avoir
+          </button>
+
           <button v-if="selectedInvoice.status === 'pending'" @click="markAsPaid(selectedInvoice.id); selectedInvoice = null" class="flex-1 btn-primary">
             Marquer comme payée
           </button>
+        </div>
+
+        <div v-if="creditNoteFor" class="mt-4 pt-4 border-t border-surface-200">
+          <label class="label" for="avoir-motif">Motif de l'avoir</label>
+          <input
+            id="avoir-motif"
+            v-model="creditNoteReason"
+            type="text"
+            class="input"
+            placeholder="Erreur de facturation, geste commercial…"
+          />
+          <p class="text-sm text-surface-500 mt-2">
+            La facture {{ creditNoteFor.number }} sera marquée annulée. Elle
+            restera consultable, avec son numéro — c'est ce qui préserve la
+            continuité de la séquence.
+          </p>
+          <p v-if="creditNoteError" class="workspace-error mt-2" role="alert">{{ creditNoteError }}</p>
+          <div class="flex gap-3 mt-3">
+            <button type="button" class="flex-1 btn-secondary" @click="creditNoteFor = null">Annuler</button>
+            <button type="button" class="flex-1 btn-primary" :disabled="creditNoteLoading" @click="confirmCreditNote">
+              {{ creditNoteLoading ? 'Établissement…' : "Établir l'avoir" }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -632,7 +673,19 @@ const fetchStats = async () => {
   }
 }
 
-const clinicInfo = ref({ name: '', address: '', phone: '' })
+// Les champs fiscaux viennent des réglages du cabinet : ils figurent sur la
+// facture, et le taux de TVA y est celui du praticien, pas une constante.
+const clinicInfo = ref({
+  name: '',
+  address: '',
+  postalCode: '',
+  city: '',
+  phone: '',
+  siret: '',
+  vatNumber: '',
+  vatExempt: false,
+  paymentTermsDays: 30,
+})
 
 const fetchClinicInfo = async () => {
   const response = await api.get<any>('/vet/clinic/info')
@@ -640,8 +693,16 @@ const fetchClinicInfo = async () => {
     const d = response.data
     clinicInfo.value = {
       name: d.name || '',
-      address: [d.address, d.postalCode, d.city].filter(Boolean).join(', '),
+      // La voie seule : le code postal et la ville sont rendus séparément sur
+      // le document, pour une adresse correctement composée.
+      address: d.address || '',
+      postalCode: d.postalCode || '',
+      city: d.city || '',
       phone: d.phone || '',
+      siret: d.siret || '',
+      vatNumber: d.vatNumber || '',
+      vatExempt: !!d.vatExempt,
+      paymentTermsDays: d.paymentTermsDays ?? 30,
     }
   }
 }
@@ -752,7 +813,7 @@ const downloadInvoice = (invoice: any) => {
 
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
-  printWindow.document.write(`<html><head><title>Facture ${invoice.number}</title>
+  printWindow.document.write(`<html><head><title>${invoice.type === 'credit_note' ? 'Avoir' : 'Facture'} ${invoice.number}</title>
 <style>
   body{font-family:system-ui,sans-serif;padding:40px;color:#333;max-width:800px;margin:0 auto}
   table{width:100%;border-collapse:collapse}
@@ -766,13 +827,17 @@ const downloadInvoice = (invoice: any) => {
   .totals-table div{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
   .totals-table .total-row{border-top:2px solid #333;margin-top:8px;padding-top:8px;font-size:18px;font-weight:bold}
   .notes{margin-top:32px;padding:16px;background:#f9fafb;border-radius:8px;font-size:13px;color:#666}
+  .mentions{margin-top:28px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#777;line-height:1.5}
+  .mentions p{margin:2px 0}
   @media print{body{padding:20px}}
 </style></head><body>
   <div class="header">
     <div>
       <h2 style="margin:0">${clinicInfo.value.name || 'Clinique Vétérinaire'}</h2>
-      <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.address || ''}</p>
+      <p style="color:#666;font-size:14px;margin:4px 0">${[clinicInfo.value.address, [clinicInfo.value.postalCode, clinicInfo.value.city].filter(Boolean).join(' ')].filter(Boolean).join(' — ')}</p>
       <p style="color:#666;font-size:14px;margin:4px 0">${clinicInfo.value.phone || ''}</p>
+      ${clinicInfo.value.siret ? `<p style="color:#666;font-size:13px;margin:4px 0">SIRET : ${clinicInfo.value.siret}</p>` : ''}
+      ${clinicInfo.value.vatNumber ? `<p style="color:#666;font-size:13px;margin:4px 0">TVA intracommunautaire : ${clinicInfo.value.vatNumber}</p>` : ''}
     </div>
     <div style="text-align:right">
       <p class="invoice-number">${invoice.number}</p>
@@ -781,7 +846,7 @@ const downloadInvoice = (invoice: any) => {
     </div>
   </div>
   <div style="margin-bottom:24px">
-    <p style="color:#666;font-size:12px;text-transform:uppercase">Facture a:</p>
+    <p style="color:#666;font-size:12px;text-transform:uppercase">${invoice.type === 'credit_note' ? 'Avoir établi pour' : 'Facturé à'}</p>
     <p style="font-weight:600;font-size:16px">${invoice.clientName}</p>
     ${invoice.petName ? `<p style="color:#666;font-size:14px">${invoice.petName}</p>` : ''}
   </div>
@@ -799,14 +864,54 @@ const downloadInvoice = (invoice: any) => {
   <div class="totals">
     <div class="totals-table">
       <div><span>Sous-total HT</span><span>${formatCurrency(invoice.subtotal)}</span></div>
-      <div><span>TVA (20%)</span><span>${formatCurrency(invoice.tax)}</span></div>
+      <div><span>TVA (${Number(invoice.taxRate ?? 20)}%)</span><span>${formatCurrency(invoice.tax)}</span></div>
       <div class="total-row"><span>Total TTC</span><span>${formatCurrency(invoice.total)}</span></div>
     </div>
   </div>
-  ${invoice.notes ? `<div class="notes"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
+  ${invoice.notes ? `<div class="notes"><strong>Notes :</strong> ${invoice.notes}</div>` : ''}
+  ${invoice.type === 'credit_note' && invoice.creditReason ? `<div class="notes"><strong>Motif de l'avoir :</strong> ${invoice.creditReason}</div>` : ''}
+  <div class="mentions">
+    ${clinicInfo.value.vatExempt ? '<p>TVA non applicable, article 293 B du CGI.</p>' : ''}
+    ${invoice.type === 'credit_note' ? '' : `<p>Paiement à ${clinicInfo.value.paymentTermsDays ?? 30} jours à compter de la date de facture.</p>`}
+    ${invoice.type === 'credit_note' ? '' : '<p>En cas de retard de paiement, pénalités au taux de trois fois le taux d’intérêt légal, et indemnité forfaitaire pour frais de recouvrement de 40 €.</p>'}
+  </div>
 </body></html>`)
   printWindow.document.close()
   printWindow.print()
+}
+
+const creditNoteFor = ref<any>(null)
+const creditNoteReason = ref('')
+const creditNoteLoading = ref(false)
+const creditNoteError = ref('')
+
+const openCreditNote = (invoice: any) => {
+  creditNoteError.value = ''
+  creditNoteReason.value = ''
+  creditNoteFor.value = invoice
+}
+
+const confirmCreditNote = async () => {
+  if (!creditNoteFor.value) return
+
+  creditNoteLoading.value = true
+  creditNoteError.value = ''
+
+  const { success, message } = await api.post<any>(
+    `/vet/invoices/${creditNoteFor.value.id}/credit-note`,
+    { reason: creditNoteReason.value }
+  )
+
+  creditNoteLoading.value = false
+
+  if (!success) {
+    creditNoteError.value = message || "L'avoir n'a pas pu être établi."
+    return
+  }
+
+  creditNoteFor.value = null
+  selectedInvoice.value = null
+  await Promise.all([fetchInvoices(), fetchStats()])
 }
 
 const markAsPaid = async (id: number) => {

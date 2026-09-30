@@ -44,6 +44,23 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare siret: string | null
 
+  // ─── Réglages fiscaux de la facturation ───
+
+  /** Taux de TVA appliqué aux factures. Ignoré si `vatExempt`. */
+  @column()
+  declare vatRate: number | null
+
+  /** Franchise en base : aucune TVA, et mention de l'article 293 B du CGI. */
+  @column()
+  declare vatExempt: boolean
+
+  @column()
+  declare vatNumber: string | null
+
+  /** Délai de paiement annoncé sur la facture, en jours. */
+  @column()
+  declare paymentTermsDays: number
+
   @column()
   declare website: string | null
 

@@ -42,13 +42,32 @@ export default class VetInvoicesController {
 
     const invoices = await query
 
+    // Quelles factures ont été annulées par un avoir. Une seule requête pour
+    // toute la page plutôt qu'une par ligne : la liste peut être longue.
+    const avoirs = await VetInvoice.query()
+      .where('veterinarian_id', vet.id)
+      .where('type', 'credit_note')
+      .whereNotNull('cancels_invoice_id')
+      .select('number', 'cancels_invoice_id')
+
+    const annuleePar = new Map<number, string>()
+    for (const avoir of avoirs) {
+      if (avoir.cancelsInvoiceId) annuleePar.set(avoir.cancelsInvoiceId, avoir.number)
+    }
+
     // Le drapeau accompagne chaque ligne : l'écran peut signaler le retard sans
     // refaire le calcul, et sans se fier à un statut stocké qui ne bouge jamais.
     return response.ok({
       success: true,
       data: invoices.map((invoice) => ({
         ...invoice.serialize(),
-        isOverdue: invoice.status === 'pending' && String(invoice.dueDate ?? '') < today,
+        isOverdue:
+          !annuleePar.has(invoice.id) &&
+          invoice.status === 'pending' &&
+          String(invoice.dueDate ?? '') < today,
+        // Numéro de l'avoir qui l'annule, s'il existe. L'annulation ne se lit
+        // pas dans le statut, qui dit où en est le règlement.
+        cancelledBy: annuleePar.get(invoice.id) ?? null,
       })),
     })
   }
@@ -75,8 +94,21 @@ export default class VetInvoicesController {
       ])
 
     const today = now.toFormat('yyyy-MM-dd')
-    const sum = (list: VetInvoice[]) => list.reduce((acc, inv) => acc + Number(inv.total), 0)
+    /**
+     * Un avoir se soustrait.
+     *
+     * Il porte les mêmes montants que la facture qu'il annule ; les additionner
+     * ferait compter la recette deux fois au lieu de la neutraliser — le
+     * chiffre d'affaires gonflerait à chaque annulation.
+     */
+    const sum = (list: VetInvoice[]) =>
+      list.reduce(
+        (acc, inv) => acc + (inv.type === 'credit_note' ? -Number(inv.total) : Number(inv.total)),
+        0
+      )
 
+    // L'avoir entre dans le règlement : il annule une recette encaissée, donc
+    // il pèse sur la même ligne, en négatif via `sum`.
     const paidInvoices = invoices.filter(i => i.status === 'paid')
     // Mêmes règles que la liste, pour que les compteurs correspondent à ce que
     // les onglets affichent : en retard = en attente et échéance dépassée.
@@ -119,9 +151,14 @@ export default class VetInvoicesController {
    * faisait reculer la séquence après chaque suppression, et rejouait donc un
    * numéro déjà utilisé.
    */
-  private async nextInvoiceNumber(veterinarianId: number): Promise<string> {
+  private async nextInvoiceNumber(
+    veterinarianId: number,
+    kind: 'invoice' | 'credit_note' = 'invoice'
+  ): Promise<string> {
     const year = DateTime.now().year
-    const prefix = `FAC-${year}-`
+    // Deux séquences distinctes : mêler avoirs et factures dans la même suite
+    // rendrait illisible la continuité de chacune.
+    const prefix = kind === 'credit_note' ? `AV-${year}-` : `FAC-${year}-`
 
     const existing = await VetInvoice.query()
       .where('veterinarian_id', veterinarianId)
@@ -141,7 +178,13 @@ export default class VetInvoicesController {
     const data = await request.validateUsing(createInvoiceValidator)
 
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
-    const taxRate = 20
+
+    // Le taux vient du cabinet, et non d'une constante : 20 % est la règle pour
+    // les actes vétérinaires, mais un praticien en franchise en base facture
+    // sans TVA — la lui facturer serait une erreur, pas une approximation. Le
+    // taux retenu est figé sur la facture : un changement de régime ne doit pas
+    // réécrire le passé.
+    const taxRate = vet.vatExempt ? 0 : Number(vet.vatRate ?? 20)
     const tax = subtotal * (taxRate / 100)
     const total = subtotal + tax
 
@@ -266,6 +309,122 @@ export default class VetInvoicesController {
     return response.ok({ success: true, data: invoice })
   }
 
+  /**
+   * Établit un avoir annulant une facture émise.
+   *
+   * C'est la seule correction possible : une facture ne se réécrit pas — aucune
+   * route ne le permet — et ne se supprime pas. L'avoir reprend les montants de
+   * la facture d'origine et porte sa propre numérotation ; la facture annulée
+   * change de statut mais reste en place, avec son numéro.
+   */
+  async createCreditNote({ params, request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const invoice = await VetInvoice.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .preload('items')
+      .first()
+
+    if (!invoice) {
+      return response.notFound({ success: false, message: 'Facture non trouvée' })
+    }
+
+    if (invoice.type !== 'invoice') {
+      return response.badRequest({
+        success: false,
+        message: "Un avoir ne s'annule pas par un autre avoir.",
+      })
+    }
+
+    // L'annulation se lit à l'existence de l'avoir, et non dans le statut de la
+    // facture — qui, lui, dit où en est le règlement.
+    const dejaAnnulee = await VetInvoice.query()
+      .where('veterinarian_id', vet.id)
+      .where('cancels_invoice_id', invoice.id)
+      .first()
+
+    if (dejaAnnulee) {
+      return response.conflict({
+        success: false,
+        message: `Cette facture est déjà annulée par l'avoir ${dejaAnnulee.number}.`,
+        code: 'ALREADY_CANCELLED',
+      })
+    }
+
+    if (invoice.status === 'draft') {
+      return response.badRequest({
+        success: false,
+        message: "Un brouillon n'a pas été émis : supprimez-le plutôt que de l'annuler.",
+      })
+    }
+
+    const reason = String(request.input('reason') ?? '').trim()
+
+    let creditNote: VetInvoice | null = null
+    let lastError: unknown = null
+
+    // Même garde que pour les factures : deux créations simultanées peuvent
+    // viser le même rang, on retente plutôt que de renvoyer une erreur brute.
+    for (let attempt = 0; attempt < 5 && !creditNote; attempt++) {
+      try {
+        creditNote = await VetInvoice.create({
+          veterinarianId: vet.id,
+          number: await this.nextInvoiceNumber(vet.id, 'credit_note'),
+          type: 'credit_note',
+          cancelsInvoiceId: invoice.id,
+          creditReason: reason || null,
+          clientName: invoice.clientName,
+          clientEmail: invoice.clientEmail,
+          petName: invoice.petName,
+          date: DateTime.now().toISODate()!,
+          dueDate: DateTime.now().toISODate()!,
+          // Les montants sont repris tels quels : un avoir se lit comme la
+          // facture qu'il annule, et c'est la comptabilité qui les soustrait.
+          subtotal: invoice.subtotal,
+          taxRate: invoice.taxRate,
+          tax: invoice.tax,
+          total: invoice.total,
+          // L'avoir hérite du statut de règlement de la facture. Les deux
+          // pièces tombent ainsi dans le même compteur, où elles s'annulent :
+          // une facture encaissée puis remboursée pèse zéro, une facture en
+          // attente puis annulée aussi.
+          status: invoice.status,
+          notes: `Avoir sur facture ${invoice.number}`,
+        })
+      } catch (error) {
+        lastError = error
+        if ((error as { code?: string })?.code !== '23505') throw error
+      }
+    }
+
+    if (!creditNote) throw lastError
+
+    // Les lignes sont recopiées : l'avoir doit pouvoir être relu seul, sans
+    // dépendre de la facture d'origine.
+    for (const item of invoice.items) {
+      await creditNote.related('items').create({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.total,
+      })
+    }
+
+    // Le statut de la facture n'est pas touché : il dit où en est le
+    // règlement, pas si la pièce a été annulée. L'annulation se lit à
+    // l'existence de l'avoir qui la vise — et c'est cette existence qui la
+    // neutralise dans les compteurs.
+
+    await creditNote.load('items')
+
+    return response.created({
+      success: true,
+      message: `Avoir ${creditNote.number} établi. La facture ${invoice.number} est annulée.`,
+      data: creditNote,
+    })
+  }
+
   async destroy({ params, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
     const invoice = await VetInvoice.query()
@@ -277,7 +436,24 @@ export default class VetInvoicesController {
       return response.notFound({ success: false, message: 'Facture non trouvée' })
     }
 
+    /**
+     * Seul un brouillon s'efface.
+     *
+     * Une facture émise ne se supprime pas : elle s'annule par un avoir. La
+     * supprimer laisserait un trou dans la séquence — ce qu'un contrôle
+     * regarde en premier — et ferait disparaître une pièce que le client
+     * détient peut-être déjà.
+     */
+    if (invoice.status !== 'draft') {
+      return response.conflict({
+        success: false,
+        message:
+          "Une facture émise ne se supprime pas. Établissez un avoir pour l'annuler.",
+        code: 'INVOICE_ISSUED',
+      })
+    }
+
     await invoice.delete()
-    return response.ok({ success: true, message: 'Facture supprimée' })
+    return response.ok({ success: true, message: 'Brouillon supprimé' })
   }
 }

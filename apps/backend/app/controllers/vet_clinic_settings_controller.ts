@@ -26,6 +26,12 @@ export default class VetClinicSettingsController {
         website: vet.website || clinic?.website || '',
         email: vet.email,
         siret: vet.siret || '',
+        // Réglages fiscaux : la facture s'y adosse, et ils figurent sur le
+        // document remis au client.
+        vatRate: vet.vatRate === null || vet.vatRate === undefined ? 20 : Number(vet.vatRate),
+        vatExempt: !!vet.vatExempt,
+        vatNumber: vet.vatNumber || '',
+        paymentTermsDays: vet.paymentTermsDays ?? 30,
         clinicId: clinic?.id || null,
       },
     })
@@ -38,8 +44,10 @@ export default class VetClinicSettingsController {
     const vet = auth.user as Veterinarian
     // `email` n'est volontairement pas repris : c'est l'adresse de connexion, la
     // changer ici modifierait l'accès au compte. Le champ est en lecture seule.
-    const { name, address, phone, website, siret, postalCode, city } = request.only([
+    const { name, address, phone, website, siret, postalCode, city,
+            vatRate, vatExempt, vatNumber, paymentTermsDays } = request.only([
       'name', 'address', 'phone', 'website', 'siret', 'postalCode', 'city',
+      'vatRate', 'vatExempt', 'vatNumber', 'paymentTermsDays',
     ])
 
     await vet.load('clinic')
@@ -51,6 +59,19 @@ export default class VetClinicSettingsController {
     vet.address = address ?? vet.address
     vet.postalCode = postalCode ?? vet.postalCode
     vet.city = city ?? vet.city
+
+    // Un taux hors de [0, 100] n'est pas un taux : on ignore plutôt que
+    // d'enregistrer une valeur qui fausserait toutes les factures suivantes.
+    if (vatRate !== undefined && vatRate !== null && vatRate !== '') {
+      const taux = Number(vatRate)
+      if (Number.isFinite(taux) && taux >= 0 && taux <= 100) vet.vatRate = taux
+    }
+    if (vatExempt !== undefined) vet.vatExempt = !!vatExempt
+    if (vatNumber !== undefined) vet.vatNumber = String(vatNumber).trim() || null
+    if (paymentTermsDays !== undefined && paymentTermsDays !== '') {
+      const jours = Number(paymentTermsDays)
+      if (Number.isInteger(jours) && jours >= 0 && jours <= 365) vet.paymentTermsDays = jours
+    }
     vet.phone = phone ?? vet.phone
     vet.website = website ?? vet.website
     vet.siret = siret ?? vet.siret

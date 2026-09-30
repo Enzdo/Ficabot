@@ -14,6 +14,19 @@ export default class VetInvoice extends BaseModel {
   @column()
   declare number: string
 
+  /**
+   * `invoice` ou `credit_note`. Un avoir annule une facture émise — la seule
+   * correction possible, une facture ne se réécrivant ni ne se supprimant.
+   */
+  @column()
+  declare type: 'invoice' | 'credit_note'
+
+  @column()
+  declare cancelsInvoiceId: number | null
+
+  @column()
+  declare creditReason: string | null
+
   @column()
   declare clientName: string
 
