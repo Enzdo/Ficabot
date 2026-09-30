@@ -100,7 +100,7 @@
               {{ record.title }}
             </p>
             <p class="text-sm text-surface-600 mt-1 line-clamp-2">
-              {{ record.kind === 'report' ? record.body : record.diagnosis }}
+              {{ record.kind === 'report' ? markdownToPlainText(record.body) : record.diagnosis }}
             </p>
           </div>
         </div>
@@ -159,16 +159,32 @@
           </div>
 
           <div>
-            <label class="label" for="rec-corps">Compte rendu</label>
+            <div class="flex items-center justify-between gap-3 mb-1">
+              <label class="label mb-0" for="rec-corps">Compte rendu</label>
+              <button type="button" class="btn-ghost text-sm py-1" @click="preview = !preview">
+                {{ preview ? 'Modifier' : 'Aperçu' }}
+              </button>
+            </div>
+
             <textarea
+              v-if="!preview"
               id="rec-corps"
               v-model="edit.body"
               rows="16"
-              class="input resize-y leading-relaxed font-normal"
+              class="input resize-y leading-relaxed font-mono text-sm"
             ></textarea>
+
+            <!-- Ce que le client lira sur le document remis. -->
+            <div
+              v-else
+              class="prose-compte-rendu rounded-lg border border-surface-200 bg-surface-50 p-4 min-h-[16rem] dark:border-surface-800 dark:bg-surface-950"
+              v-html="bodyHtml"
+            ></div>
             <p class="text-xs text-surface-500 mt-1">
               Rédigé par {{ selectedRecord.vetName || 'un praticien du cabinet' }}. Vos
               corrections remplacent le texte ; la reprise est datée.
+              Markdown accepté&nbsp;: <code>##</code> pour un titre,
+              <code>**gras**</code>, <code>-</code> pour une liste.
             </p>
           </div>
 
@@ -244,7 +260,10 @@
 
         <div v-if="selectedRecord.kind === 'report'" class="flex gap-3 mt-6 pt-4 border-t border-surface-200">
           <button type="button" class="flex-1 btn-secondary" @click="selectedRecord = null">
-            Annuler
+            Fermer
+          </button>
+          <button type="button" class="flex-1 btn-secondary" @click="exportRecord">
+            Remettre au client (PDF)
           </button>
           <button type="button" class="flex-1 btn-primary" :disabled="savingRecord" @click="saveRecord">
             {{ savingRecord ? 'Enregistrement…' : 'Enregistrer les modifications' }}
@@ -268,11 +287,14 @@
 </template>
 
 <script setup lang="ts">
+import { renderMarkdown, markdownToPlainText } from '~/utils/markdown'
+import { openPrintableDocument } from '~/utils/printDocument'
 definePageMeta({
   middleware: 'auth',
 })
 
 const api = useVetApi()
+const authStore = useVetAuthStore()
 const searchQuery = ref('')
 const filterType = ref('')
 const filterSpecies = ref('')
@@ -295,11 +317,43 @@ const editError = ref('')
 
 const openRecord = (record: any) => {
   editError.value = ''
+  preview.value = false
   selectedRecord.value = record
   if (record.kind === 'report') {
     edit.title = record.title || ''
     edit.body = record.body || ''
     edit.date = record.date || ''
+  }
+}
+
+const preview = ref(false)
+const bodyHtml = computed(() => renderMarkdown(edit.body))
+
+/**
+ * Ouvre le compte rendu en document imprimable, à remettre au propriétaire.
+ * C'est le texte en cours d'édition qui part, pas celui enregistré : on remet
+ * ce qu'on a sous les yeux, corrections comprises.
+ */
+const exportRecord = () => {
+  if (!selectedRecord.value) return
+
+  const vet = authStore.vet
+  const ouvert = openPrintableDocument({
+    title: edit.title?.trim() || 'Compte rendu de consultation',
+    subtitle: `${selectedRecord.value.petName} · ${formatDate(edit.date || selectedRecord.value.date)}`,
+    bodyHtml: renderMarkdown(edit.body),
+    header: {
+      clinicName: vet?.clinicName,
+      vetName: selectedRecord.value.vetName || [vet?.firstName, vet?.lastName].filter(Boolean).join(' '),
+      address: vet?.address,
+      phone: vet?.phone,
+    },
+    footerNote: "Document établi à l'issue de la consultation.",
+  })
+
+  if (!ouvert) {
+    editError.value =
+      "La fenêtre d'impression a été bloquée par le navigateur. Autorisez les fenêtres pour ce site, puis réessayez."
   }
 }
 

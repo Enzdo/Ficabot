@@ -132,6 +132,21 @@
   }
 
   /* Rouge plein : réservé aux gestes irréversibles. */
+  /* Rendu d'un compte rendu en Markdown : à l'écran comme à l'impression,
+     les mêmes proportions, pour que l'aperçu ne mente pas. */
+  .prose-compte-rendu {
+    @apply text-sm leading-relaxed text-surface-800 dark:text-surface-200;
+  }
+  .prose-compte-rendu h1 { @apply text-lg font-semibold mt-4 mb-2 first:mt-0 text-surface-900 dark:text-surface-100; }
+  .prose-compte-rendu h2 { @apply text-base font-semibold mt-4 mb-2 first:mt-0 text-surface-900 dark:text-surface-100; }
+  .prose-compte-rendu h3 { @apply text-sm font-semibold mt-3 mb-1 text-surface-900 dark:text-surface-100; }
+  .prose-compte-rendu p { @apply mb-2; }
+  .prose-compte-rendu ul { @apply list-disc ml-5 mb-2; }
+  .prose-compte-rendu ol { @apply list-decimal ml-5 mb-2; }
+  .prose-compte-rendu li { @apply mb-1; }
+  .prose-compte-rendu hr { @apply my-4 border-surface-200 dark:border-surface-800; }
+  .prose-compte-rendu strong { @apply font-semibold text-surface-900 dark:text-surface-100; }
+
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2
            bg-danger-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm

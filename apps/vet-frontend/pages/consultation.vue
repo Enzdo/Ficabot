@@ -632,22 +632,55 @@
                 Laissez vide si les rubriques ci-dessus vous suffisent.
               </p>
             </div>
-            <button
-              v-if="transcript && freeText !== transcript"
-              type="button"
-              class="btn-ghost text-sm shrink-0"
-              @click="freeText = transcript"
-            >
-              Repartir de la dictée
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                class="btn-ghost text-sm"
+                :aria-pressed="freeTextPreview"
+                @click="freeTextPreview = !freeTextPreview"
+              >
+                {{ freeTextPreview ? 'Modifier' : 'Aperçu' }}
+              </button>
+              <button
+                v-if="transcript && freeText !== transcript"
+                type="button"
+                class="btn-ghost text-sm"
+                @click="freeText = transcript"
+              >
+                Repartir de la dictée
+              </button>
+            </div>
           </div>
 
           <textarea
+            v-if="!freeTextPreview"
             v-model="freeText"
-            rows="12"
-            class="input resize-y leading-relaxed"
-            placeholder="Consultation du jour…"
+            rows="14"
+            class="input resize-y leading-relaxed font-mono text-sm"
+            placeholder="## Motif&#10;&#10;Boiterie depuis trois jours.&#10;&#10;- Douleur au grasset&#10;- Pas de fièvre"
           ></textarea>
+
+          <!-- Aperçu : ce que le client lira sur le PDF, au style près. -->
+          <div
+            v-else
+            class="prose-compte-rendu rounded-lg border border-surface-200 bg-surface-50 p-4 dark:border-surface-800 dark:bg-surface-950"
+            v-html="freeTextHtml"
+          ></div>
+
+          <div class="flex items-center justify-between gap-4 mt-3 flex-wrap">
+            <p class="text-xs text-surface-400 dark:text-surface-500">
+              Markdown accepté&nbsp;: <code>##</code> pour un titre,
+              <code>**gras**</code>, <code>-</code> pour une liste.
+            </p>
+            <button
+              v-if="freeText.trim()"
+              type="button"
+              class="btn-secondary text-sm"
+              @click="exportFreeText"
+            >
+              Exporter en PDF
+            </button>
+          </div>
         </div>
 
         <div
@@ -724,6 +757,8 @@
 </template>
 
 <script setup lang="ts">
+import { renderMarkdown } from '~/utils/markdown'
+import { openPrintableDocument } from '~/utils/printDocument'
 import { onBeforeRouteLeave } from 'vue-router'
 import type { PendingDictation } from '~/utils/dictationStore'
 
@@ -1502,6 +1537,49 @@ const draftTemplateLabel = computed(
  * des rubriques.
  */
 const freeText = ref('')
+const freeTextPreview = ref(false)
+
+/** Rendu de l'aperçu, identique à celui du document imprimé. */
+const freeTextHtml = computed(() => renderMarkdown(freeText.value))
+
+/**
+ * Ouvre le compte rendu dans une fenêtre prête à imprimer — donc à enregistrer
+ * en PDF, ce que propose la boîte d'impression de tous les navigateurs. C'est
+ * le document que le praticien remet à son client.
+ */
+const exportFreeText = () => {
+  const vet = authStore.vet
+  const patient = selectedPatient.value
+
+  const ouvert = openPrintableDocument({
+    title: draft.title?.trim() || 'Compte rendu de consultation',
+    subtitle: patient
+      ? `${patient.name}${patient.breed ? ` — ${patient.breed}` : ''} · ${formatDateFr(draft.date)}`
+      : formatDateFr(draft.date),
+    bodyHtml: renderMarkdown(freeText.value),
+    header: {
+      clinicName: vet?.clinicName,
+      vetName: [vet?.firstName, vet?.lastName].filter(Boolean).join(' ') || null,
+      address: vet?.address,
+      phone: vet?.phone,
+    },
+    footerNote: "Document établi à l'issue de la consultation.",
+  })
+
+  if (!ouvert) {
+    saveError.value =
+      "La fenêtre d'impression a été bloquée par le navigateur. Autorisez les fenêtres pour ce site, puis réessayez."
+  }
+}
+
+/** Date en toutes lettres, pour un document remis à un client. */
+const formatDateFr = (iso: string) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
 
 function todayISO() {
   const now = new Date()
