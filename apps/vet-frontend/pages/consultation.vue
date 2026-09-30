@@ -533,7 +533,54 @@
                 <p v-else class="mt-2 text-sm text-surface-500 dark:text-surface-400">
                   Aucun patient ne correspond.
                 </p>
-                <button type="button" class="btn-ghost text-sm mt-2" @click="attaching = false">
+
+                <!-- La dictée précède souvent la fiche : on reçoit, on dicte,
+                     et le client n'existe pas encore dans le logiciel. Sans
+                     cette issue, le compte rendu ne pouvait pas être classé. -->
+                <button
+                  v-if="!creatingPatient"
+                  type="button"
+                  class="btn-secondary text-sm mt-3 w-full"
+                  @click="openCreatePatient"
+                >
+                  Créer le client et son animal
+                </button>
+
+                <form v-else class="mt-3 space-y-3" @submit.prevent="createPatient">
+                  <p class="text-xs text-surface-500 dark:text-surface-400">
+                    Le strict nécessaire pour classer ce compte rendu. Vous
+                    compléterez la fiche plus tard.
+                  </p>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <input v-model="newPatient.clientFirstName" type="text" class="input" placeholder="Prénom du client" />
+                    <input v-model="newPatient.clientLastName" type="text" class="input" placeholder="Nom du client" />
+                  </div>
+                  <input v-model="newPatient.clientPhone" type="tel" class="input" placeholder="Téléphone (facultatif)" />
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <input v-model="newPatient.name" type="text" class="input" placeholder="Nom de l'animal" required />
+                    <select v-model="newPatient.species" class="input">
+                      <option value="dog">Chien</option>
+                      <option value="cat">Chat</option>
+                      <option value="nac">NAC</option>
+                    </select>
+                  </div>
+                  <input v-model="newPatient.breed" type="text" class="input" placeholder="Race (facultatif)" />
+
+                  <p v-if="createPatientError" class="text-sm text-danger-600">{{ createPatientError }}</p>
+
+                  <div class="flex gap-2">
+                    <button type="button" class="btn-ghost text-sm flex-1" @click="creatingPatient = false">
+                      Annuler
+                    </button>
+                    <button type="submit" class="btn-primary text-sm flex-1" :disabled="creatingPatientLoading">
+                      {{ creatingPatientLoading ? 'Création…' : 'Créer et rattacher' }}
+                    </button>
+                  </div>
+                </form>
+
+                <button v-if="!creatingPatient" type="button" class="btn-ghost text-sm mt-2" @click="attaching = false">
                   Annuler
                 </button>
               </div>
@@ -571,29 +618,36 @@
           </div>
         </div>
 
-        <!-- Dictée brute -->
+        <!-- ─── Texte libre ───
+             La dictée brute n'était donnée qu'en lecture, repliée : on pouvait
+             la relire, pas s'en servir. Elle devient une seconde rédaction,
+             modifiable, pour qui préfère une prose suivie aux rubriques. Les
+             deux cohabitent : ce qui est écrit ici s'ajoute au compte rendu. -->
         <div class="card mb-4">
-          <button
-            type="button"
-            class="w-full flex items-center justify-between text-left"
-            :aria-expanded="showTranscript"
-            @click="showTranscript = !showTranscript"
-          >
-            <span class="text-sm font-semibold text-surface-900 dark:text-surface-100">Voir la dictée brute</span>
-            <svg
-              class="w-4 h-4 text-surface-400 transition-transform"
-              :class="showTranscript ? 'rotate-180' : ''"
-              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          <div class="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <h3 class="font-semibold text-surface-900 dark:text-surface-100">Texte libre</h3>
+              <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">
+                La transcription telle que dictée, à retravailler à votre main.
+                Laissez vide si les rubriques ci-dessus vous suffisent.
+              </p>
+            </div>
+            <button
+              v-if="transcript && freeText !== transcript"
+              type="button"
+              class="btn-ghost text-sm shrink-0"
+              @click="freeText = transcript"
             >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div v-if="showTranscript" class="mt-4">
-            <p class="text-xs text-surface-400 mb-2 dark:text-surface-500">
-              Transcription intégrale, telle que dictée. Vérifiez que rien n'a été perdu.
-            </p>
-            <p class="text-sm text-surface-600 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto rounded-lg border border-surface-200 bg-surface-50 p-4 dark:text-surface-300 dark:border-surface-800 dark:bg-surface-950">{{ transcript || 'Transcription indisponible.' }}</p>
+              Repartir de la dictée
+            </button>
           </div>
+
+          <textarea
+            v-model="freeText"
+            rows="12"
+            class="input resize-y leading-relaxed"
+            placeholder="Consultation du jour…"
+          ></textarea>
         </div>
 
         <div
@@ -906,6 +960,89 @@ const openAttach = async () => {
   if (!patients.value.length) await loadPatients()
   await nextTick()
   attachInputRef.value?.focus()
+}
+
+/**
+ * Création d'un client et de son animal depuis la relecture.
+ *
+ * L'ordre des choses en consultation est souvent l'inverse de celui du
+ * logiciel : on reçoit, on dicte, et seulement ensuite on s'occupe de la fiche.
+ * Sans cette issue, un compte rendu dicté pour un nouveau client ne pouvait
+ * être classé nulle part — il fallait quitter la page, créer le client, créer
+ * l'animal, et recommencer la dictée.
+ */
+const creatingPatient = ref(false)
+const creatingPatientLoading = ref(false)
+const createPatientError = ref('')
+const newPatient = reactive({
+  clientFirstName: '',
+  clientLastName: '',
+  clientPhone: '',
+  name: '',
+  species: 'dog',
+  breed: '',
+})
+
+const openCreatePatient = () => {
+  createPatientError.value = ''
+  // Ce que le praticien a déjà tapé dans la recherche est probablement le nom
+  // de l'animal : autant le reprendre plutôt que de le lui faire retaper.
+  newPatient.name = patientSearch.value.trim()
+  creatingPatient.value = true
+}
+
+const createPatient = async () => {
+  if (!newPatient.name.trim()) {
+    createPatientError.value = "Le nom de l'animal est requis."
+    return
+  }
+
+  creatingPatientLoading.value = true
+  createPatientError.value = ''
+
+  // Le client d'abord, pour que l'animal lui soit rattaché. Un client sans nom
+  // n'est pas créé : l'animal existera seul, ce qui reste préférable à une
+  // fiche vide dans la liste des clients.
+  let externalClientId: number | null = null
+  const hasClient = !!(newPatient.clientFirstName.trim() || newPatient.clientLastName.trim())
+
+  if (hasClient) {
+    const client = await api.post<any>('/vet/clients', {
+      firstName: newPatient.clientFirstName.trim() || undefined,
+      lastName: newPatient.clientLastName.trim() || undefined,
+      phone: newPatient.clientPhone.trim() || undefined,
+    })
+
+    if (!client.success) {
+      creatingPatientLoading.value = false
+      createPatientError.value = client.message || "Le client n'a pas pu être créé."
+      return
+    }
+    externalClientId = client.data?.id ?? null
+  }
+
+  const created = await api.post<any>('/vet/patients', {
+    name: newPatient.name.trim(),
+    species: newPatient.species,
+    breed: newPatient.breed.trim() || undefined,
+    externalClientId,
+  })
+
+  creatingPatientLoading.value = false
+
+  if (!created.success) {
+    createPatientError.value = created.message || "Le patient n'a pas pu être créé."
+    return
+  }
+
+  // La liste locale est complétée pour que le patient apparaisse aussitôt,
+  // sans recharger la page et perdre le brouillon en cours.
+  patients.value = [...patients.value, created.data]
+
+  selectedToken.value = created.data.vetToken
+  creatingPatient.value = false
+  attaching.value = false
+  patientSearch.value = ''
 }
 
 const attachPatient = (patient: PatientSummary) => {
@@ -1359,7 +1496,12 @@ const draftTemplateLabel = computed(
   () => templates.value.find((t) => t.id === draft.templateId)?.label || ''
 )
 
-const showTranscript = ref(false)
+/**
+ * Seconde rédaction, en prose. Pré-remplie avec la transcription : c'est le
+ * point de départ le plus utile pour qui veut reformuler plutôt que remplir
+ * des rubriques.
+ */
+const freeText = ref('')
 
 function todayISO() {
   const now = new Date()
@@ -1456,6 +1598,9 @@ const applyDraft = (data: { transcript?: string | null; draft?: any }) => {
   const hasFlatDraft = flatSections.some((s) => s.value.trim().length > 0)
 
   transcript.value = text
+  // La prose part de la dictée : c'est le point de départ le plus utile pour
+  // qui veut reformuler. Vide, la carte n'ajoutera rien au compte rendu.
+  freeText.value = text
   draft.title = (data.draft?.title || '').trim() || 'Consultation'
   draft.templateId = data.draft?.templateId || selectedTemplateId.value
   // Ni rubriques ni champs connus : la dictée est placée telle quelle dans une
@@ -1470,7 +1615,6 @@ const applyDraft = (data: { transcript?: string | null; draft?: any }) => {
       ? flatSections
       : [{ key: 'compteRendu', label: 'Compte rendu', value: text }]
   draft.date = todayISO()
-  showTranscript.value = false
   saveError.value = ''
   step.value = 'review'
 }
@@ -1759,11 +1903,19 @@ const saveReport = async () => {
       token: patient.vetToken,
       title: draft.title.trim() || 'Consultation',
       date,
-      sections: draft.sections.map((section) => ({
-        key: section.key,
-        label: section.label,
-        value: section.value,
-      })),
+      // Le texte libre rejoint le compte rendu comme une rubrique de plus,
+      // en dernier : les rubriques structurées gardent leur ordre, et une
+      // prose vide n'ajoute rien.
+      sections: [
+        ...draft.sections.map((section) => ({
+          key: section.key,
+          label: section.label,
+          value: section.value,
+        })),
+        ...(freeText.value.trim()
+          ? [{ key: 'texteLibre', label: 'Texte libre', value: freeText.value.trim() }]
+          : []),
+      ],
     })
 
     if (!response.success) {
@@ -1801,7 +1953,6 @@ const resetDraft = () => {
   draft.templateId = ''
   draft.sections = []
   draft.date = todayISO()
-  showTranscript.value = false
   saveError.value = ''
 }
 

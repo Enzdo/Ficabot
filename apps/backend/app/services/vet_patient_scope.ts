@@ -16,15 +16,27 @@ import Pet from '#models/pet'
 
 /** Requête Pet déjà restreinte aux patients du vétérinaire. */
 export function scopedPets(veterinarianId: number) {
-  return Pet.query()
-    .whereNotNull('vetToken')
-    .whereIn('userId', (sub) =>
-      sub
-        .from('user_veterinarians')
-        .select('user_id')
-        .where('veterinarian_id', veterinarianId)
-        .where('status', 'accepted')
-    )
+  // Colonnes nommées en base et non par le modèle : dans un groupe imbriqué,
+  // le constructeur de requêtes ne traduit plus `vetToken` en `vet_token`, et
+  // la condition est alors silencieusement sans effet. Sur une fonction de
+  // cloisonnement, une condition sans effet est une fuite.
+  return Pet.query().where((scope) => {
+    // Animaux créés par leur propriétaire, qui a ouvert l'accès au cabinet.
+    scope.where((shared) => {
+      shared.whereNotNull('pets.vet_token').whereIn('pets.user_id', (sub) =>
+        sub
+          .from('user_veterinarians')
+          .select('user_id')
+          .where('veterinarian_id', veterinarianId)
+          .where('status', 'accepted')
+      )
+    })
+
+    // Patients ouverts par le cabinet lui-même : pas de propriétaire inscrit
+    // pour les rattacher, donc c'est le cabinet qui les porte. Le périmètre ne
+    // s'élargit qu'aux dossiers que ce praticien a créés.
+    scope.orWhere('pets.veterinarian_id', veterinarianId)
+  })
 }
 
 /**

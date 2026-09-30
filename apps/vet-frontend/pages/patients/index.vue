@@ -4,8 +4,71 @@
     <div class="flex items-center justify-between mb-6">
       <div>
         <p class="workspace-eyebrow mb-2">Dossiers partagés</p><h1 class="page-title">Vos patients</h1>
-        <p class="page-subtitle">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }} avec accès partagé</p>
+        <p class="page-subtitle">{{ patients.length }} patient{{ patients.length !== 1 ? 's' : '' }}</p>
       </div>
+      <button type="button" class="btn-primary" @click="openCreate">Nouveau patient</button>
+    </div>
+
+    <!-- ─── Ouvrir un dossier ───
+         Un animal n'entrait dans le logiciel que par son propriétaire, depuis
+         l'application client. Le praticien qui reçoit un nouveau client ne
+         pouvait donc rien saisir. -->
+    <div v-if="creating" class="card mb-6 border-primary-200 dark:border-primary-900">
+      <h2 class="font-semibold text-surface-900 dark:text-surface-100 mb-1">Nouveau patient</h2>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-4">
+        Le dossier appartient à votre cabinet. Il rejoindra le compte du
+        propriétaire le jour où celui-ci s'inscrit, sans rien perdre.
+      </p>
+
+      <form class="space-y-4" @submit.prevent="createPatient">
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="label" for="np-nom">Nom de l'animal</label>
+            <input id="np-nom" v-model="form.name" type="text" class="input" required />
+          </div>
+          <div>
+            <label class="label" for="np-espece">Espèce</label>
+            <select id="np-espece" v-model="form.species" class="input">
+              <option value="dog">Chien</option>
+              <option value="cat">Chat</option>
+              <option value="nac">NAC</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="np-race">Race <span class="font-normal normal-case">(facultatif)</span></label>
+            <input id="np-race" v-model="form.breed" type="text" class="input" />
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <div>
+            <label class="label" for="np-naissance">Date de naissance</label>
+            <input id="np-naissance" v-model="form.birthDate" type="date" class="input" />
+          </div>
+          <div>
+            <label class="label" for="np-poids">Poids (kg)</label>
+            <input id="np-poids" v-model="form.weight" type="number" step="0.1" min="0" class="input" />
+          </div>
+          <div>
+            <label class="label" for="np-client">Propriétaire</label>
+            <select id="np-client" v-model="form.externalClientId" class="input">
+              <option :value="null">Aucun pour l'instant</option>
+              <option v-for="client in externalClients" :key="client.id" :value="client.id">
+                {{ client.firstName }} {{ client.lastName }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <p v-if="createError" class="workspace-error" role="alert">{{ createError }}</p>
+
+        <div class="flex justify-end gap-3">
+          <button type="button" class="btn-secondary" @click="creating = false">Annuler</button>
+          <button type="submit" class="btn-primary" :disabled="creatingLoading">
+            {{ creatingLoading ? 'Création…' : 'Créer le dossier' }}
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Search -->
@@ -137,6 +200,54 @@ const filteredPatients = computed(() => {
 const getSpeciesLabel = (species: string) => {
   const labels: Record<string,string> = { dog: 'Chien', cat: 'Chat', rabbit: 'Lapin', bird: 'Oiseau', horse: 'Cheval', reptile: 'Reptile' }
   return labels[species] || 'Autre espèce'
+}
+
+const creating = ref(false)
+const creatingLoading = ref(false)
+const createError = ref('')
+const externalClients = ref<any[]>([])
+const form = reactive({
+  name: '',
+  species: 'dog',
+  breed: '',
+  birthDate: '',
+  weight: '',
+  externalClientId: null as number | null,
+})
+
+const openCreate = async () => {
+  createError.value = ''
+  Object.assign(form, { name: '', species: 'dog', breed: '', birthDate: '', weight: '', externalClientId: null })
+  creating.value = true
+
+  // La liste des clients sans compte, pour rattacher l'animal à son
+  // propriétaire. Son échec n'empêche pas de créer le dossier.
+  const { success, data } = await api.get<any>('/vet/clients')
+  if (success) externalClients.value = data?.external || []
+}
+
+const createPatient = async () => {
+  creatingLoading.value = true
+  createError.value = ''
+
+  const { success, message } = await api.post<any>('/vet/patients', {
+    name: form.name,
+    species: form.species,
+    breed: form.breed || undefined,
+    birthDate: form.birthDate || undefined,
+    weight: form.weight === '' ? undefined : Number(form.weight),
+    externalClientId: form.externalClientId,
+  })
+
+  creatingLoading.value = false
+
+  if (!success) {
+    createError.value = message || "Le patient n'a pas pu être créé."
+    return
+  }
+
+  creating.value = false
+  await loadPatients()
 }
 
 const loadPatients = async () => {

@@ -451,6 +451,7 @@ const VetAssistantController = () => import('#controllers/vet_assistant_controll
 router.group(() => {
   router.get('/', [VetPatientsController, 'index'])
   router.get('/search', [VetPatientsController, 'search'])
+  router.post('/', [VetPatientsController, 'store'])
   router.get('/:token', [VetPatientsController, 'show'])
   router.get('/:token/health-book', [VetPatientsController, 'healthBook'])
   router.post('/:token/notes', [VetPatientsController, 'addNote'])
