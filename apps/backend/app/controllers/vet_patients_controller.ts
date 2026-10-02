@@ -253,32 +253,31 @@ export default class VetPatientsController {
       healthBook = pet.healthBook
     }
 
-    // Add entry based on type
     const entry = { ...data, addedByVet: true, date: new Date().toISOString() }
 
-    switch (type) {
-      case 'vaccine':
-        const vaccines = healthBook.vaccines ? JSON.parse(healthBook.vaccines as any) : []
-        healthBook.vaccines = JSON.stringify([...vaccines, entry]) as any
-        break
-      case 'medication':
-        const medications = healthBook.medications ? JSON.parse(healthBook.medications as any) : []
-        healthBook.medications = JSON.stringify([...medications, entry]) as any
-        break
-      case 'vetVisit':
-        const vetVisits = healthBook.vetVisits ? JSON.parse(healthBook.vetVisits as any) : []
-        healthBook.vetVisits = JSON.stringify([...vetVisits, entry]) as any
-        break
-      case 'surgery':
-        const surgeries = healthBook.surgeries ? JSON.parse(healthBook.surgeries as any) : []
-        healthBook.surgeries = JSON.stringify([...surgeries, entry]) as any
-        break
-      default:
-        return response.badRequest({
-          success: false,
-          message: 'Type de note invalide',
-        })
+    // Quelle rubrique du carnet reçoit l'entrée.
+    const rubriques: Record<string, 'vaccines' | 'medications' | 'vetVisits' | 'surgeries'> = {
+      vaccine: 'vaccines',
+      medication: 'medications',
+      vetVisit: 'vetVisits',
+      surgery: 'surgeries',
     }
+
+    const rubrique = rubriques[type as string]
+
+    if (!rubrique) {
+      return response.badRequest({
+        success: false,
+        message: 'Type de note invalide',
+      })
+    }
+
+    // La lecture passe par `parseArrayField`, qui est celle du modèle : un
+    // `JSON.parse` brut faisait échouer l'ajout en 500 dès que la colonne ne
+    // contenait pas du JSON valide — et le praticien voyait « Unexpected end of
+    // JSON input » à la place de sa note.
+    const existantes = healthBook.parseArrayField(healthBook[rubrique])
+    healthBook[rubrique] = JSON.stringify([...existantes, entry]) as any
 
     await healthBook.save()
 

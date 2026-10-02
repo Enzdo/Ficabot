@@ -310,6 +310,25 @@
             <p v-else class="text-surface-400 text-sm">Aucune chirurgie enregistrée</p>
           </div>
 
+          <!-- Visites. Elles étaient enregistrées mais n'apparaissaient nulle
+               part : le praticien lisait « Note ajoutée avec succès » puis ne
+               retrouvait rien. -->
+          <div class="card">
+            <h3 class="font-semibold text-surface-900 mb-4 flex items-center gap-2">
+              <span class="text-xl">🩺</span> Visites
+            </h3>
+            <div v-if="healthBookData.vetVisits?.length" class="space-y-3">
+              <div v-for="(visite, i) in healthBookData.vetVisits" :key="i" class="p-3 bg-surface-50 rounded-lg">
+                <!-- `reason` est la clé du carnet ; `name` couvre les entrées
+                     déjà enregistrées sous l'ancienne. -->
+                <p class="font-medium text-surface-900">{{ visite.reason || visite.name }}</p>
+                <p class="text-sm text-surface-500">{{ formatDate(visite.date) }}</p>
+                <p v-if="visite.notes" class="mt-1 text-sm text-surface-600">{{ visite.notes }}</p>
+              </div>
+            </div>
+            <p v-else class="text-surface-400 text-sm">Aucune visite enregistrée</p>
+          </div>
+
           <!-- Allergies -->
           <div class="card">
             <h3 class="font-semibold text-surface-900 mb-4 flex items-center gap-2">
@@ -448,8 +467,10 @@
           </div>
 
           <div>
-            <label class="label">Nom / Description</label>
-            <input v-model="noteForm.name" type="text" class="input" placeholder="Ex: Vaccin rage" required />
+            <!-- L'intitulé suit le type : « Nom » n'a pas le même sens pour un
+                 vaccin et pour une visite, dont c'est le motif qu'on saisit. -->
+            <label class="label">{{ intituleNote.label }}</label>
+            <input v-model="noteForm.name" type="text" class="input" :placeholder="intituleNote.exemple" required />
           </div>
 
           <div v-if="noteForm.type === 'medication'">
@@ -615,15 +636,32 @@ const retryAssistant = () => {
   askAssistant(last.content)
 }
 
+/**
+ * Les rubriques du carnet, lues telles qu'elles arrivent.
+ *
+ * Le serveur les renvoie déjà en tableaux, mais d'anciennes réponses pouvaient
+ * les donner en chaîne : on accepte les deux, sans qu'un JSON mal formé fasse
+ * tomber toute la page.
+ */
+const RUBRIQUES = ['vaccines', 'medications', 'surgeries', 'vetVisits', 'allergies'] as const
+
 const healthBookData = computed(() => {
-  if (!patient.value?.healthBook) return {}
-  const hb = patient.value.healthBook
-  return {
-    vaccines: typeof hb.vaccines === 'string' ? JSON.parse(hb.vaccines) : hb.vaccines || [],
-    medications: typeof hb.medications === 'string' ? JSON.parse(hb.medications) : hb.medications || [],
-    surgeries: typeof hb.surgeries === 'string' ? JSON.parse(hb.surgeries) : hb.surgeries || [],
-    allergies: typeof hb.allergies === 'string' ? JSON.parse(hb.allergies) : hb.allergies || [],
+  const hb = patient.value?.healthBook
+  if (!hb) return {} as Record<string, any[]>
+
+  const lire = (valeur: any): any[] => {
+    if (Array.isArray(valeur)) return valeur
+    if (typeof valeur === 'string' && valeur) {
+      try {
+        return JSON.parse(valeur)
+      } catch {
+        return []
+      }
+    }
+    return []
   }
+
+  return Object.fromEntries(RUBRIQUES.map((r) => [r, lire(hb[r])])) as Record<string, any[]>
 })
 
 const getSpeciesLabel = (species: string) => {
@@ -639,17 +677,32 @@ const formatDate = (date: string) => {
   })
 }
 
+const intituleNote = computed(() => {
+  const par: Record<string, { label: string; exemple: string }> = {
+    vaccine: { label: 'Vaccin', exemple: 'Ex : rage, CHPPiL' },
+    medication: { label: 'Médicament', exemple: 'Ex : Milbemax' },
+    vetVisit: { label: 'Motif de la visite', exemple: 'Ex : vermifugation, passeport, visite d’achat' },
+    surgery: { label: 'Intervention', exemple: 'Ex : stérilisation' },
+  }
+  return par[noteForm.value.type] ?? { label: 'Nom / Description', exemple: '' }
+})
+
 const handleAddNote = async () => {
   noteLoading.value = true
   noteError.value = ''
   noteSuccess.value = ''
 
   try {
+    // Une visite se range sous `reason` dans le carnet de santé, pas sous
+    // `name` : c'est la clé que lit l'application du propriétaire.
+    const estVisite = noteForm.value.type === 'vetVisit'
+
     const response = await api.post(`/vet/patients/${route.params.token}/notes`, {
       type: noteForm.value.type,
       data: {
-        name: noteForm.value.name,
-        dosage: noteForm.value.dosage,
+        ...(estVisite
+          ? { reason: noteForm.value.name }
+          : { name: noteForm.value.name, dosage: noteForm.value.dosage }),
         notes: noteForm.value.notes,
       },
     })
