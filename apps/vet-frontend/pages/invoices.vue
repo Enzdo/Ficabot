@@ -13,7 +13,7 @@
           </svg>
           Exporter CSV
         </button>
-        <button @click="showNewInvoice = true" class="btn-primary flex items-center gap-2">
+        <button @click="ouvrirNouvelleFacture" class="btn-primary flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -539,12 +539,48 @@ const monthlyStats = ref({
 
 const invoices = ref<any[]>([])
 
+// Les champs fiscaux viennent des réglages du cabinet : ils figurent sur la
+// facture, et le taux de TVA y est celui du praticien, pas une constante.
+const clinicInfo = ref({
+  name: '',
+  address: '',
+  postalCode: '',
+  city: '',
+  phone: '',
+  siret: '',
+  vatNumber: '',
+  vatExempt: false,
+  paymentTermsDays: 30,
+})
+
+/**
+ * Échéance proposée, dérivée du délai de paiement du cabinet.
+ *
+ * Elle était figée à quinze jours tandis que la facture imprimée annonce
+ * « paiement à N jours » d'après les réglages : le document se contredisait
+ * lui-même sous les yeux du client.
+ */
+const echeanceParDefaut = () => {
+  const jours = Number(clinicInfo.value?.paymentTermsDays ?? 30)
+  const delai = Number.isFinite(jours) && jours >= 0 ? jours : 30
+  return new Date(Date.now() + delai * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+}
+
+/**
+ * Les réglages arrivent après le premier rendu : l'échéance est donc recalculée
+ * à l'ouverture du formulaire, et non figée à sa création.
+ */
+const ouvrirNouvelleFacture = () => {
+  newInvoice.value.dueDate = echeanceParDefaut()
+  showNewInvoice.value = true
+}
+
 const newInvoice = ref({
   clientName: '',
   clientEmail: '',
   petName: '',
   date: new Date().toISOString().split('T')[0],
-  dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  dueDate: echeanceParDefaut(),
   items: [{ description: '', quantity: 1, unitPrice: 0 }],
   notes: '',
 })
@@ -673,19 +709,6 @@ const fetchStats = async () => {
   }
 }
 
-// Les champs fiscaux viennent des réglages du cabinet : ils figurent sur la
-// facture, et le taux de TVA y est celui du praticien, pas une constante.
-const clinicInfo = ref({
-  name: '',
-  address: '',
-  postalCode: '',
-  city: '',
-  phone: '',
-  siret: '',
-  vatNumber: '',
-  vatExempt: false,
-  paymentTermsDays: 30,
-})
 
 const fetchClinicInfo = async () => {
   const response = await api.get<any>('/vet/clinic/info')
@@ -778,7 +801,7 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
     newInvoice.value = {
       clientName: '', clientEmail: '', petName: '',
       date: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      dueDate: echeanceParDefaut(),
       items: [{ description: '', quantity: 1, unitPrice: 0 }],
       notes: '',
     }

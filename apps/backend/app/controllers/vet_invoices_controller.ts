@@ -109,6 +109,19 @@ export default class VetInvoicesController {
 
     // L'avoir entre dans le règlement : il annule une recette encaissée, donc
     // il pèse sur la même ligne, en négatif via `sum`.
+    /**
+     * Combien de factures attendent réellement un règlement.
+     *
+     * Les montants se compensent — une facture et son avoir font zéro — mais
+     * les compter toutes deux affichait « 0,00 € / 2 factures », ce qui ne veut
+     * rien dire. Le compte ne retient donc que les factures encore vivantes :
+     * ni les avoirs, ni celles qu'un avoir a annulées.
+     */
+    const annulees = new Set(
+      invoices.filter((i) => i.cancelsInvoiceId).map((i) => i.cancelsInvoiceId as number)
+    )
+    const vivante = (i: VetInvoice) => i.type === 'invoice' && !annulees.has(i.id)
+
     const paidInvoices = invoices.filter(i => i.status === 'paid')
     // Mêmes règles que la liste, pour que les compteurs correspondent à ce que
     // les onglets affichent : en retard = en attente et échéance dépassée.
@@ -135,11 +148,11 @@ export default class VetInvoicesController {
         total: monthTotal,
         growth,
         paid: sum(paidInvoices),
-        paidCount: paidInvoices.length,
+        paidCount: paidInvoices.filter(vivante).length,
         pending: sum(pendingInvoices),
-        pendingCount: pendingInvoices.length,
+        pendingCount: pendingInvoices.filter(vivante).length,
         overdue: sum(overdueInvoices),
-        overdueCount: overdueInvoices.length,
+        overdueCount: overdueInvoices.filter(vivante).length,
       },
     })
   }
