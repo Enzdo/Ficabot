@@ -330,26 +330,18 @@
         <div class="card">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-surface-900">Courbe de poids</h3>
-            <button @click="showAddWeight = true" class="btn-primary text-sm py-2">+ Ajouter une pesee</button>
+            <button @click="showAddWeight = true" class="btn-primary text-sm py-2">+ Ajouter une pesée</button>
           </div>
 
           <div v-if="weightRecords.length === 0" class="text-center py-8 text-surface-400">
-            <p>Aucune donnee de poids</p>
+            <p>Aucune donnée de poids</p>
           </div>
 
           <div v-else>
-            <div class="h-48 flex items-end gap-1 mb-4 border-b border-l border-surface-200 p-2">
-              <div
-                v-for="(w, i) in weightRecords"
-                :key="i"
-                class="flex-1 bg-primary-500 rounded-t-sm relative group cursor-pointer min-w-[8px]"
-                :style="{ height: getWeightBarHeight(w.weight) + '%' }"
-              >
-                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10">
-                  {{ w.weight }} kg - {{ formatDate(w.date) }}
-                </div>
-              </div>
-            </div>
+            <!-- Une vraie courbe : l'histogramme précédent plaçait les pesées à
+                 intervalles égaux, quelles que soient les dates, et la pente
+                 lue ne correspondait à rien. -->
+            <WeightCurve :records="weightRecords" class="mb-4" />
 
             <div class="space-y-2">
               <div v-for="w in weightRecords" :key="w.id" class="flex items-center justify-between p-3 bg-surface-50 rounded-lg">
@@ -364,7 +356,7 @@
         </div>
 
         <div v-if="showAddWeight" class="card">
-          <h3 class="font-semibold text-surface-900 mb-4">Nouvelle pesee</h3>
+          <h3 class="font-semibold text-surface-900 mb-4">Nouvelle pesée</h3>
           <form @submit.prevent="addWeight" class="flex gap-4 items-end">
             <div class="flex-1">
               <label class="label">Poids (kg)</label>
@@ -388,7 +380,7 @@
       <div v-if="activeTab === 'attachments'" class="space-y-4">
         <div class="card">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="font-semibold text-surface-900">Pieces jointes</h3>
+            <h3 class="font-semibold text-surface-900">Pièces jointes</h3>
             <label class="btn-primary text-sm py-2 cursor-pointer">
               + Ajouter un fichier
               <input type="file" class="hidden" accept="image/*,.pdf,.doc,.docx" @change="uploadFile" />
@@ -698,12 +690,6 @@ const loadWeightRecords = async () => {
   if (response.success && response.data) {
     weightRecords.value = response.data
   }
-}
-
-const getWeightBarHeight = (weight: number) => {
-  if (weightRecords.value.length === 0) return 0
-  const max = Math.max(...weightRecords.value.map((w: any) => w.weight))
-  return max > 0 ? (weight / max) * 100 : 0
 }
 
 const addWeight = async () => {
