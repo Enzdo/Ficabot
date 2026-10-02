@@ -33,19 +33,19 @@
         <p v-else class="text-xs text-surface-400">Pas de comparaison possible</p>
       </div>
       <div class="card">
-        <p class="text-sm text-surface-500">En attente</p>
+        <p class="text-sm text-surface-500">Reste à encaisser</p>
         <p class="text-2xl font-bold text-warning-600">{{ formatCurrency(monthlyStats.pending) }}</p>
-        <p class="text-xs text-surface-500">{{ monthlyStats.pendingCount }} factures</p>
+        <p class="text-xs text-surface-500">sur {{ monthlyStats.pendingCount }} facture(s) en attente</p>
       </div>
       <div class="card">
-        <p class="text-sm text-surface-500">Payées</p>
+        <p class="text-sm text-surface-500">Encaissé</p>
         <p class="text-2xl font-bold text-success-600">{{ formatCurrency(monthlyStats.paid) }}</p>
-        <p class="text-xs text-surface-500">{{ monthlyStats.paidCount }} factures</p>
+        <p class="text-xs text-surface-500">{{ monthlyStats.paidCount }} facture(s) soldée(s)</p>
       </div>
       <div class="card">
         <p class="text-sm text-surface-500">En retard</p>
         <p class="text-2xl font-bold text-danger-600">{{ formatCurrency(monthlyStats.overdue) }}</p>
-        <p class="text-xs text-surface-500">{{ monthlyStats.overdueCount }} factures</p>
+        <p class="text-xs text-surface-500">{{ monthlyStats.overdueCount }} facture(s) échue(s)</p>
       </div>
     </div>
 
@@ -82,6 +82,7 @@
             <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Date</th>
             <th class="text-left py-3 px-4 text-sm font-medium text-surface-500">Échéance</th>
             <th class="text-right py-3 px-4 text-sm font-medium text-surface-500">Montant</th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-surface-500">Reste dû</th>
             <th class="text-center py-3 px-4 text-sm font-medium text-surface-500">Statut</th>
             <th class="text-right py-3 px-4 text-sm font-medium text-surface-500">Actions</th>
           </tr>
@@ -106,6 +107,15 @@
             <td class="py-3 px-4 text-sm text-surface-600">{{ formatDate(invoice.date) }}</td>
             <td class="py-3 px-4 text-sm text-surface-600">{{ formatDate(invoice.dueDate) }}</td>
             <td class="py-3 px-4 text-right font-medium text-surface-900">{{ formatCurrency(invoice.total) }}</td>
+            <!-- Un paiement en deux fois était invisible : la facture restait
+                 « en attente » sans dire qu'elle était à moitié réglée. -->
+            <td class="py-3 px-4 text-right text-sm">
+              <span v-if="invoice.type === 'credit_note' || invoice.cancelledBy" class="text-surface-400">—</span>
+              <span v-else-if="Number(invoice.remaining) <= 0" class="text-success-600">Soldée</span>
+              <span v-else :class="Number(invoice.paid) > 0 ? 'text-warning-600 font-medium' : 'text-surface-600'">
+                {{ formatCurrency(invoice.remaining) }}
+              </span>
+            </td>
             <td class="py-3 px-4 text-center">
               <span :class="getStatusClass(invoice.status)">
                 {{ getStatusLabel(invoice.status) }}
@@ -124,7 +134,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                 </button>
-                <button v-if="invoice.status === 'pending'" @click="markAsPaid(invoice.id)" class="p-2 text-surface-400 hover:text-success-600 hover:bg-success-50 rounded-lg" title="Marquer payée">
+                <!-- Une facture annulée n'attend plus rien : proposer de
+                     l'encaisser mènerait à un refus du serveur. -->
+                <button v-if="invoice.status === 'pending' && invoice.type !== 'credit_note' && !invoice.cancelledBy" @click="viewInvoice(invoice)" class="p-2 text-surface-400 hover:text-success-600 hover:bg-success-50 rounded-lg" title="Enregistrer un règlement">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
@@ -160,7 +172,20 @@
           <div class="grid md:grid-cols-2 gap-4">
             <div>
               <label class="label">Nom du client *</label>
-              <input v-model="newInvoice.clientName" type="text" class="input" required />
+              <!-- Choisir dans le fichier rattache la facture au compte du
+                   client, ce dont dépend son compte auxiliaire comptable. Le
+                   texte libre reste permis : un client de passage n'y est pas
+                   encore. -->
+              <ClientPicker
+                v-model="newInvoice.clientName"
+                :entries="clientEntries"
+                placeholder="Nom du client"
+                required
+                @select="onClientSelect"
+              />
+              <p v-if="newInvoice.userId || newInvoice.externalClientId" class="mt-1 text-xs text-success-600">
+                Rattachée au dossier client
+              </p>
             </div>
             <div>
               <label class="label">Email</label>
@@ -404,6 +429,75 @@
           </div>
         </div>
 
+        <!-- Les règlements, et non un simple drapeau « payée » : un paiement en
+             deux fois, un chèque et des espèces le même jour, un encaissement
+             daté d'hier — rien de cela ne tient dans un statut. Et c'est de ce
+             registre que le journal de banque est tiré. -->
+        <div v-if="selectedInvoice.type !== 'credit_note' && !selectedInvoice.cancelledBy" class="mb-6 rounded-xl border border-surface-200 p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-surface-900">Règlements</h3>
+            <div class="text-right text-sm">
+              <p class="text-surface-500">
+                Encaissé {{ formatCurrency(paymentsPanel.paid) }} sur {{ formatCurrency(paymentsPanel.total) }}
+              </p>
+              <p v-if="paymentsPanel.remaining > 0" class="font-semibold text-warning-600">
+                Reste {{ formatCurrency(paymentsPanel.remaining) }}
+              </p>
+              <p v-else class="font-semibold text-success-600">Soldée</p>
+            </div>
+          </div>
+
+          <ul v-if="paymentsPanel.payments.length" class="mb-4 divide-y divide-surface-100">
+            <li v-for="p in paymentsPanel.payments" :key="p.id" class="flex items-center justify-between py-2 text-sm">
+              <span class="text-surface-700">
+                {{ formatDate(p.date) }} — {{ paymentMethodLabel(p.method) }}
+                <span v-if="p.reference" class="text-surface-400">({{ p.reference }})</span>
+              </span>
+              <span class="flex items-center gap-3">
+                <span class="font-medium text-surface-900">{{ formatCurrency(p.amount) }}</span>
+                <!-- Un règlement d'une période transmise au comptable ne se
+                     retire plus : le bouton est absent, pas seulement inerte. -->
+                <button
+                  v-if="!p.locked"
+                  type="button"
+                  class="text-surface-400 hover:text-danger-600"
+                  title="Retirer ce règlement"
+                  @click="removePayment(p.id)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+                <span v-else class="text-[10px] uppercase tracking-wide text-surface-400" title="Période clôturée">Clos</span>
+              </span>
+            </li>
+          </ul>
+          <p v-else class="mb-4 text-sm text-surface-400">Aucun règlement enregistré.</p>
+
+          <form v-if="paymentsPanel.remaining > 0.009" class="grid gap-3 sm:grid-cols-4" @submit.prevent="addPayment">
+            <div>
+              <label class="label" for="reglement-montant">Montant</label>
+              <input id="reglement-montant" v-model.number="newPayment.amount" type="number" step="0.01" min="0.01" class="input" required />
+            </div>
+            <div>
+              <label class="label" for="reglement-moyen">Moyen</label>
+              <select id="reglement-moyen" v-model="newPayment.method" class="input">
+                <option v-for="m in paymentMethods" :key="m.id" :value="m.id">{{ m.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label" for="reglement-date">Date</label>
+              <input id="reglement-date" v-model="newPayment.date" type="date" class="input" required />
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="btn-primary w-full" :disabled="paymentSaving">
+                {{ paymentSaving ? 'Enregistrement…' : 'Encaisser' }}
+              </button>
+            </div>
+            <p v-if="paymentError" class="workspace-error sm:col-span-4" role="alert">{{ paymentError }}</p>
+          </form>
+        </div>
+
         <div class="flex gap-3 flex-wrap">
           <button @click="downloadInvoice(selectedInvoice)" class="flex-1 btn-secondary">
             Télécharger PDF
@@ -420,9 +514,9 @@
             Établir un avoir
           </button>
 
-          <button v-if="selectedInvoice.status === 'pending'" @click="markAsPaid(selectedInvoice.id); selectedInvoice = null" class="flex-1 btn-primary">
-            Marquer comme payée
-          </button>
+          <!-- Plus de « marquer payée » : le statut découle des règlements
+               ci-dessus, et un drapeau posé sans encaissement correspondant
+               ferait divergir la facture du journal de banque. -->
         </div>
 
         <div v-if="creditNoteFor" class="mt-4 pt-4 border-t border-surface-200">
@@ -579,11 +673,113 @@ const newInvoice = ref({
   clientName: '',
   clientEmail: '',
   petName: '',
+  // Rattachement au dossier client, posé par le sélecteur. C'est de là que
+  // vient le compte auxiliaire comptable, stable là où un nom ne l'est pas.
+  userId: null as number | null,
+  externalClientId: null as number | null,
   date: new Date().toISOString().split('T')[0],
   dueDate: echeanceParDefaut(),
   items: [{ description: '', quantity: 1, unitPrice: 0 }],
   notes: '',
 })
+
+/* ---------- Le fichier clients, pour rattacher la facture ---------- */
+
+const clientEntries = ref<any[]>([])
+
+const loadClients = async () => {
+  // Facturer sans voir le fichier clients reste possible : le nom se tape, et
+  // le serveur rattache par l'adresse quand il la reconnaît.
+  if (!authStore.can('clients')) return
+
+  const response = await api.get<any>('/vet/clients')
+  if (!response.success || !response.data) return
+
+  const inscrits = (response.data.clients || []).map((l: any) => ({
+    key: `u${l.user.id}`,
+    label: [l.user.firstName, l.user.lastName].filter(Boolean).join(' ') || l.user.email,
+    hint: l.user.email,
+    badge: 'Inscrit',
+    payload: { userId: l.user.id, email: l.user.email },
+  }))
+
+  const externes = (response.data.external || []).map((c: any) => ({
+    key: `e${c.id}`,
+    label: [c.firstName, c.lastName].filter(Boolean).join(' ') || c.email || 'Client',
+    hint: c.email || c.phone || '',
+    payload: { externalClientId: c.id, email: c.email },
+  }))
+
+  clientEntries.value = [...inscrits, ...externes]
+}
+
+const onClientSelect = (entry: any) => {
+  const p = entry.payload || {}
+  newInvoice.value.userId = p.userId ?? null
+  newInvoice.value.externalClientId = p.externalClientId ?? null
+  if (p.email) newInvoice.value.clientEmail = p.email
+}
+
+/* ---------- Règlements ---------- */
+
+const paymentMethods = [
+  { id: 'card', label: 'Carte bancaire' },
+  { id: 'cash', label: 'Espèces' },
+  { id: 'check', label: 'Chèque' },
+  { id: 'transfer', label: 'Virement' },
+  { id: 'other', label: 'Autre' },
+]
+
+const paymentMethodLabel = (id: string) =>
+  paymentMethods.find((m) => m.id === id)?.label || id
+
+const paymentsPanel = ref({ total: 0, paid: 0, remaining: 0, payments: [] as any[] })
+const newPayment = ref({ amount: 0, method: 'card', date: new Date().toISOString().split('T')[0] })
+const paymentSaving = ref(false)
+const paymentError = ref('')
+
+const loadPayments = async (invoiceId: number) => {
+  const response = await api.get<any>(`/vet/invoices/${invoiceId}/payments`)
+  if (!response.success || !response.data) return
+
+  paymentsPanel.value = response.data
+  // Le reste dû est pré-rempli : c'est le cas courant, et le retaper à chaque
+  // fois n'apporte rien.
+  newPayment.value.amount = response.data.remaining
+  newPayment.value.date = new Date().toISOString().split('T')[0]
+}
+
+const addPayment = async () => {
+  if (!selectedInvoice.value) return
+  paymentError.value = ''
+  paymentSaving.value = true
+
+  const response = await api.post<any>(
+    `/vet/invoices/${selectedInvoice.value.id}/payments`,
+    { ...newPayment.value },
+    { silent: true }
+  )
+
+  if (response.success) {
+    await loadPayments(selectedInvoice.value.id)
+    await Promise.all([fetchInvoices(), fetchStats()])
+  } else {
+    paymentError.value = response.message || 'Le règlement n’a pas pu être enregistré.'
+  }
+
+  paymentSaving.value = false
+}
+
+const removePayment = async (id: number) => {
+  const response = await api.del<any>(`/vet/accounting/payments/${id}`, { silent: true })
+  if (!response.success) {
+    paymentError.value = response.message || 'Le règlement n’a pas pu être retiré.'
+    return
+  }
+  paymentError.value = ''
+  if (selectedInvoice.value) await loadPayments(selectedInvoice.value.id)
+  await Promise.all([fetchInvoices(), fetchStats()])
+}
 
 /* ---------- Catalogue : prestations et articles en stock ---------- */
 
@@ -735,6 +931,7 @@ onMounted(() => {
   fetchStats()
   fetchClinicInfo()
   loadStays()
+  loadClients()
 })
 
 watch([activeFilter], fetchInvoices)
@@ -800,6 +997,7 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
     showNewInvoice.value = false
     newInvoice.value = {
       clientName: '', clientEmail: '', petName: '',
+      userId: null, externalClientId: null,
       date: new Date().toISOString().split('T')[0],
       dueDate: echeanceParDefaut(),
       items: [{ description: '', quantity: 1, unitPrice: 0 }],
@@ -820,8 +1018,11 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
 const createInvoice = () => submitInvoice('pending')
 const saveAsDraft = () => submitInvoice('draft')
 
-const viewInvoice = (invoice: any) => {
+const viewInvoice = async (invoice: any) => {
   selectedInvoice.value = invoice
+  paymentError.value = ''
+  paymentsPanel.value = { total: Number(invoice.total), paid: 0, remaining: Number(invoice.total), payments: [] }
+  if (invoice.type !== 'credit_note' && !invoice.cancelledBy) await loadPayments(invoice.id)
 }
 
 const downloadInvoice = (invoice: any) => {
@@ -935,14 +1136,6 @@ const confirmCreditNote = async () => {
   creditNoteFor.value = null
   selectedInvoice.value = null
   await Promise.all([fetchInvoices(), fetchStats()])
-}
-
-const markAsPaid = async (id: number) => {
-  const response = await api.patch<any>(`/vet/invoices/${id}/status`, { status: 'paid' })
-  if (response.success) {
-    fetchInvoices()
-    fetchStats()
-  }
 }
 
 const exportInvoices = async () => {

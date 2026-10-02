@@ -61,6 +61,30 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare paymentTermsDays: number
 
+  // ─── Plan de comptes, pour l'export vers le comptable ───
+
+  @column()
+  declare accountSales: string
+
+  @column()
+  declare accountGoods: string
+
+  @column()
+  declare accountVat: string
+
+  @column()
+  declare accountClients: string
+
+  @column()
+  declare accountBank: string
+
+  @column()
+  declare accountCash: string
+
+  /** Dernier mois clôturé (AAAA-MM). Au-delà, les écritures ne bougent plus. */
+  @column()
+  declare accountingClosedThrough: string | null
+
   @column()
   declare website: string | null
 

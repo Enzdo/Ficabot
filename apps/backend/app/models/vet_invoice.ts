@@ -4,6 +4,21 @@ import type { HasMany, BelongsTo } from '@adonisjs/lucid/types/relations'
 import VetInvoiceItem from '#models/vet_invoice_item'
 import Veterinarian from '#models/veterinarian'
 
+/**
+ * Ramène une valeur de colonne `date` à AAAA-MM-JJ.
+ *
+ * Les composantes locales sont lues (et non `toISOString`) : la date a été
+ * écrite à minuit local, et passer par UTC reculerait d'un jour.
+ */
+function jourIso(valeur: unknown): string {
+  if (valeur instanceof Date) {
+    const m = String(valeur.getMonth() + 1).padStart(2, '0')
+    const j = String(valeur.getDate()).padStart(2, '0')
+    return `${valeur.getFullYear()}-${m}-${j}`
+  }
+  return String(valeur ?? '').slice(0, 10)
+}
+
 export default class VetInvoice extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
@@ -27,6 +42,14 @@ export default class VetInvoice extends BaseModel {
   @column()
   declare creditReason: string | null
 
+  /** Propriétaire inscrit, s'il en a un. Sert de compte auxiliaire. */
+  @column()
+  declare userId: number | null
+
+  /** Client sans compte, saisi par le cabinet. */
+  @column()
+  declare externalClientId: number | null
+
   @column()
   declare clientName: string
 
@@ -36,10 +59,19 @@ export default class VetInvoice extends BaseModel {
   @column()
   declare petName: string | null
 
-  @column()
+  /**
+   * Date de la pièce, en AAAA-MM-JJ.
+   *
+   * La colonne est un `date` Postgres, que le pilote rend en objet `Date` à
+   * minuit *local*. Sérialisé, il repart en UTC : une facture du 1er octobre
+   * ressortait datée du 30 septembre 22 h — soit, à cheval sur un mois, dans la
+   * mauvaise période comptable. On ramène donc la valeur à la chaîne que le
+   * type annonce, plutôt que de rattraper le décalage à chaque lecture.
+   */
+  @column({ consume: jourIso })
   declare date: string
 
-  @column()
+  @column({ consume: jourIso })
   declare dueDate: string
 
   @column()

@@ -32,6 +32,17 @@ export default class VetClinicSettingsController {
         vatExempt: !!vet.vatExempt,
         vatNumber: vet.vatNumber || '',
         paymentTermsDays: vet.paymentTermsDays ?? 30,
+        // Plan comptable. Les valeurs par défaut sont celles du plan comptable
+        // général, mais le comptable du cabinet a souvent les siennes : s'il
+        // faut les ressaisir à l'import, l'export perd son intérêt.
+        accounts: {
+          sales: vet.accountSales,
+          goods: vet.accountGoods,
+          vat: vet.accountVat,
+          clients: vet.accountClients,
+          bank: vet.accountBank,
+          cash: vet.accountCash,
+        },
         clinicId: clinic?.id || null,
       },
     })
@@ -45,9 +56,9 @@ export default class VetClinicSettingsController {
     // `email` n'est volontairement pas repris : c'est l'adresse de connexion, la
     // changer ici modifierait l'accès au compte. Le champ est en lecture seule.
     const { name, address, phone, website, siret, postalCode, city,
-            vatRate, vatExempt, vatNumber, paymentTermsDays } = request.only([
+            vatRate, vatExempt, vatNumber, paymentTermsDays, accounts } = request.only([
       'name', 'address', 'phone', 'website', 'siret', 'postalCode', 'city',
-      'vatRate', 'vatExempt', 'vatNumber', 'paymentTermsDays',
+      'vatRate', 'vatExempt', 'vatNumber', 'paymentTermsDays', 'accounts',
     ])
 
     await vet.load('clinic')
@@ -72,6 +83,43 @@ export default class VetClinicSettingsController {
       const jours = Number(paymentTermsDays)
       if (Number.isInteger(jours) && jours >= 0 && jours <= 365) vet.paymentTermsDays = jours
     }
+    // Un numéro de compte est fait de chiffres, et sa classe détermine sa
+    // nature : un compte client en 7 produirait des écritures que le comptable
+    // devrait reprendre une à une. On refuse plutôt que d'enregistrer.
+    if (accounts && typeof accounts === 'object') {
+      // Le libellé est celui de l'écran, et non la clé technique : le message
+      // d'erreur doit désigner le champ tel que le praticien le voit.
+      const attendus: Record<string, { champ: keyof Veterinarian; classe: string; nom: string }> = {
+        sales: { champ: 'accountSales', classe: '7', nom: 'Prestations de services' },
+        goods: { champ: 'accountGoods', classe: '7', nom: 'Ventes de marchandises' },
+        vat: { champ: 'accountVat', classe: '4', nom: 'TVA collectée' },
+        clients: { champ: 'accountClients', classe: '4', nom: 'Clients' },
+        bank: { champ: 'accountBank', classe: '5', nom: 'Banque' },
+        cash: { champ: 'accountCash', classe: '5', nom: 'Caisse' },
+      }
+
+      for (const [cle, regle] of Object.entries(attendus)) {
+        const brut = (accounts as Record<string, unknown>)[cle]
+        if (brut === undefined || brut === null || brut === '') continue
+        const numero = String(brut).trim()
+
+        if (!/^\d{3,12}$/.test(numero)) {
+          return response.badRequest({
+            success: false,
+            message: `Le compte « ${regle.nom} » doit être un numéro de 3 à 12 chiffres.`,
+          })
+        }
+        if (!numero.startsWith(regle.classe)) {
+          return response.badRequest({
+            success: false,
+            message: `Le compte « ${regle.nom} » doit commencer par ${regle.classe} (classe ${regle.classe} du plan comptable général).`,
+          })
+        }
+
+        ;(vet as any)[regle.champ] = numero
+      }
+    }
+
     vet.phone = phone ?? vet.phone
     vet.website = website ?? vet.website
     vet.siret = siret ?? vet.siret

@@ -89,6 +89,38 @@
               </div>
             </div>
           </div>
+
+          <!-- Plan comptable. Les valeurs du plan comptable général sont
+               proposées, mais le comptable du cabinet a souvent les siennes :
+               s'il faut les ressaisir à chaque import, l'export perd son
+               intérêt. -->
+          <div class="rounded-xl border border-surface-200 p-4 dark:border-surface-700">
+            <div class="flex items-center justify-between">
+              <h3 class="font-medium text-surface-900 dark:text-surface-100">Plan comptable</h3>
+              <button type="button" class="text-sm text-primary-600 hover:text-primary-700" @click="showAccounts = !showAccounts">
+                {{ showAccounts ? 'Masquer' : 'Modifier' }}
+              </button>
+            </div>
+            <p class="mt-1 text-sm text-surface-500 dark:text-surface-400">
+              Les comptes utilisés par l'export comptable. Laissez-les tels quels
+              si votre comptable n'en demande pas d'autres.
+            </p>
+
+            <div v-if="showAccounts" class="mt-4 grid gap-4 md:grid-cols-3">
+              <div v-for="c in accountFields" :key="c.id">
+                <label class="label" :for="`compte-${c.id}`">{{ c.label }}</label>
+                <input
+                  :id="`compte-${c.id}`"
+                  v-model="clinicInfo.accounts[c.id]"
+                  type="text"
+                  inputmode="numeric"
+                  class="input font-mono"
+                  :placeholder="c.defaut"
+                />
+                <p class="mt-1 text-xs text-surface-400">Classe {{ c.classe }}</p>
+              </div>
+            </div>
+          </div>
           <div>
             <label class="label">Adresse</label>
             <input v-model="clinicInfo.address" type="text" class="input" />
@@ -631,9 +663,30 @@ const templates = ref<any[]>([])
 const bookingEnabled = ref(false)
 const copied = ref(false)
 
+const showAccounts = ref(false)
+
+/**
+ * Les comptes de l'export, et la classe que chacun doit respecter.
+ *
+ * La classe est rappelée à l'écran parce que le serveur la vérifie : un compte
+ * client en classe 7 produirait des écritures que le comptable devrait
+ * reprendre une à une.
+ */
+const accountFields = [
+  { id: 'sales', label: 'Prestations de services', defaut: '706000', classe: '7 — produits' },
+  { id: 'goods', label: 'Ventes de marchandises', defaut: '707000', classe: '7 — produits' },
+  { id: 'vat', label: 'TVA collectée', defaut: '445710', classe: '4 — tiers' },
+  { id: 'clients', label: 'Clients', defaut: '411000', classe: '4 — tiers' },
+  { id: 'bank', label: 'Banque', defaut: '512000', classe: '5 — financier' },
+  { id: 'cash', label: 'Caisse', defaut: '530000', classe: '5 — financier' },
+]
+
 const clinicInfo = ref({
   name: '',
   siret: '',
+  accounts: {
+    sales: '', goods: '', vat: '', clients: '', bank: '', cash: '',
+  } as Record<string, string>,
   vatRate: 20,
   vatExempt: false,
   vatNumber: '',
@@ -741,6 +794,14 @@ const loadClinicInfo = async () => {
     clinicInfo.value = {
       name: response.data.name || '',
       siret: response.data.siret || '',
+      accounts: {
+        sales: response.data.accounts?.sales || '706000',
+        goods: response.data.accounts?.goods || '707000',
+        vat: response.data.accounts?.vat || '445710',
+        clients: response.data.accounts?.clients || '411000',
+        bank: response.data.accounts?.bank || '512000',
+        cash: response.data.accounts?.cash || '530000',
+      },
       vatRate: response.data.vatRate ?? 20,
       vatExempt: !!response.data.vatExempt,
       vatNumber: response.data.vatNumber || '',

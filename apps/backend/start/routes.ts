@@ -632,6 +632,9 @@ router.group(() => {
 
 // Vet Invoices Management
 const VetInvoicesController = () => import('#controllers/vet_invoices_controller')
+// Déclarée ici car le groupe des factures y renvoie pour ses encaissements, et
+// le callback d'un groupe s'exécute à la définition des routes.
+const VetAccountingController = () => import('#controllers/vet_accounting_controller')
 router.group(() => {
   router.get('/', [VetInvoicesController, 'index'])
   router.get('/stats', [VetInvoicesController, 'stats'])
@@ -641,7 +644,23 @@ router.group(() => {
   router.delete('/:id', [VetInvoicesController, 'destroy'])
   // Annuler une facture émise : par un avoir, jamais par suppression.
   router.post('/:id/credit-note', [VetInvoicesController, 'createCreditNote'])
+  // Les encaissements vivent avec la facture : c'est d'eux que son statut découle.
+  router.get('/:id/payments', [VetAccountingController, 'invoicePayments'])
+  router.post('/:id/payments', [VetAccountingController, 'addPayment'])
 }).prefix('/vet/invoices').use([middleware.vetAuth(), middleware.vetCan({ capability: 'billing' })])
+
+router.group(() => {
+  router.get('/payments', [VetAccountingController, 'listPayments'])
+  router.delete('/payments/:id', [VetAccountingController, 'deletePayment'])
+  router.get('/vat', [VetAccountingController, 'vatSummary'])
+  router.get('/journal', [VetAccountingController, 'journal'])
+  // Fichier des Écritures Comptables, format de l'arrêté du 29 juillet 2013.
+  router.get('/fec', [VetAccountingController, 'fec'])
+  router.get('/closing', [VetAccountingController, 'closingStatus'])
+  // Clôturer est irréversible : réservé au titulaire, comme les paramètres.
+  router.post('/closing', [VetAccountingController, 'close'])
+    .use(middleware.vetCan({ capability: 'settings' }))
+}).prefix('/vet/accounting').use([middleware.vetAuth(), middleware.vetCan({ capability: 'billing' })])
 
 // Vet Analytics
 const VetAnalyticsController = () => import('#controllers/vet_analytics_controller')

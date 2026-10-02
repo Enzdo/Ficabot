@@ -1,6 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import VetInvoice from '#models/vet_invoice'
 import Veterinarian from '#models/veterinarian'
+import VetPayment from '#models/vet_payment'
+import { balanceOf, isClosed, monthOf, round2 } from '#services/vet_accounting'
+import UserVeterinarian from '#models/user_veterinarian'
+import VetExternalClient from '#models/vet_external_client'
 import { createInvoiceValidator, updateInvoiceStatusValidator } from '#validators/vet_invoice'
 import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
@@ -55,6 +59,20 @@ export default class VetInvoicesController {
       if (avoir.cancelsInvoiceId) annuleePar.set(avoir.cancelsInvoiceId, avoir.number)
     }
 
+    // Ce qui a été encaissé sur chaque facture, en une requête groupée. Sans
+    // cela, un paiement en deux fois est invisible : la facture reste « en
+    // attente » sans dire qu'elle est à moitié réglée.
+    const encaissements = await VetPayment.query()
+      .where('veterinarian_id', vet.id)
+      .select('invoice_id')
+      .sum('amount as total')
+      .groupBy('invoice_id')
+
+    const regle = new Map<number, number>()
+    for (const ligne of encaissements) {
+      regle.set(Number(ligne.invoiceId), round2(Number((ligne as any).$extras.total ?? 0)))
+    }
+
     // Le drapeau accompagne chaque ligne : l'écran peut signaler le retard sans
     // refaire le calcul, et sans se fier à un statut stocké qui ne bouge jamais.
     return response.ok({
@@ -68,6 +86,14 @@ export default class VetInvoicesController {
         // Numéro de l'avoir qui l'annule, s'il existe. L'annulation ne se lit
         // pas dans le statut, qui dit où en est le règlement.
         cancelledBy: annuleePar.get(invoice.id) ?? null,
+        // Encaissé et reste dû. Ni un avoir, ni une facture qu'un avoir a
+        // annulée, n'attendent de règlement : afficher un reste dû sur elles
+        // ferait croire à une somme à recouvrer.
+        paid: regle.get(invoice.id) ?? 0,
+        remaining:
+          invoice.type === 'credit_note' || annuleePar.has(invoice.id)
+            ? 0
+            : round2(Number(invoice.total) - (regle.get(invoice.id) ?? 0)),
       })),
     })
   }
@@ -122,6 +148,24 @@ export default class VetInvoicesController {
     )
     const vivante = (i: VetInvoice) => i.type === 'invoice' && !annulees.has(i.id)
 
+    /**
+     * Ce qui reste réellement à encaisser, et non le total facturé.
+     *
+     * Une facture à moitié réglée comptait pour son total entier dans « En
+     * attente » : le praticien lisait 120 € à recouvrer là où 70 € manquaient.
+     * Et une facture annulée par un avoir n'attend plus rien du tout.
+     */
+    const encaissements = await VetPayment.query()
+      .where('veterinarian_id', vet.id)
+      .select('invoice_id')
+      .sum('amount as total')
+      .groupBy('invoice_id')
+
+    const regle = new Map<number, number>()
+    for (const l of encaissements) {
+      regle.set(Number(l.invoiceId), Number((l as any).$extras.total ?? 0))
+    }
+
     const paidInvoices = invoices.filter(i => i.status === 'paid')
     // Mêmes règles que la liste, pour que les compteurs correspondent à ce que
     // les onglets affichent : en retard = en attente et échéance dépassée.
@@ -131,6 +175,14 @@ export default class VetInvoicesController {
     const pendingInvoices = invoices.filter(
       i => i.status === 'pending' && String(i.dueDate ?? '') >= today
     )
+
+    /** Reste à encaisser sur un lot : les annulées et les avoirs ne pèsent pas. */
+    const resteDu = (list: VetInvoice[]) =>
+      round2(
+        list
+          .filter(vivante)
+          .reduce((acc, i) => acc + Math.max(0, Number(i.total) - (regle.get(i.id) ?? 0)), 0)
+      )
 
     // Les brouillons ne sont pas du chiffre d'affaires : ils gonflaient le
     // total du mois alors qu'ils ne sont pas encore des factures.
@@ -147,11 +199,13 @@ export default class VetInvoicesController {
       data: {
         total: monthTotal,
         growth,
-        paid: sum(paidInvoices),
+        paid: round2(
+          invoices.filter(vivante).reduce((acc, i) => acc + (regle.get(i.id) ?? 0), 0)
+        ),
         paidCount: paidInvoices.filter(vivante).length,
-        pending: sum(pendingInvoices),
+        pending: resteDu(pendingInvoices),
         pendingCount: pendingInvoices.filter(vivante).length,
-        overdue: sum(overdueInvoices),
+        overdue: resteDu(overdueInvoices),
         overdueCount: overdueInvoices.filter(vivante).length,
       },
     })
@@ -164,6 +218,55 @@ export default class VetInvoicesController {
    * faisait reculer la séquence après chaque suppression, et rejouait donc un
    * numéro déjà utilisé.
    */
+  /**
+   * À quel client rattacher une facture.
+   *
+   * L'identifiant explicite l'emporte, et il est vérifié : un client d'un autre
+   * cabinet passé dans la requête rattacherait la facture hors du cloisonnement.
+   * À défaut, l'adresse électronique sert de point d'accroche — le nom, jamais :
+   * rattacher une facture au mauvais client est pire que ne pas la rattacher.
+   */
+  private async resolveClient(
+    veterinarianId: number,
+    data: { userId?: number; externalClientId?: number; clientEmail?: string }
+  ): Promise<{ userId: number | null; externalClientId: number | null }> {
+    if (data.userId) {
+      const lien = await UserVeterinarian.query()
+        .where('veterinarian_id', veterinarianId)
+        .where('user_id', data.userId)
+        .where('status', 'accepted')
+        .first()
+      if (lien) return { userId: data.userId, externalClientId: null }
+    }
+
+    if (data.externalClientId) {
+      const client = await VetExternalClient.query()
+        .where('id', data.externalClientId)
+        .where('veterinarian_id', veterinarianId)
+        .first()
+      if (client) return { userId: null, externalClientId: client.id }
+    }
+
+    const email = String(data.clientEmail ?? '').trim().toLowerCase()
+    if (!email) return { userId: null, externalClientId: null }
+
+    const parUser = await UserVeterinarian.query()
+      .where('veterinarian_id', veterinarianId)
+      .where('status', 'accepted')
+      .whereHas('user', (q) => q.whereRaw('lower(email) = ?', [email]))
+      .preload('user')
+      .first()
+    if (parUser) return { userId: parUser.userId, externalClientId: null }
+
+    const parExterne = await VetExternalClient.query()
+      .where('veterinarian_id', veterinarianId)
+      .whereRaw('lower(email) = ?', [email])
+      .first()
+    if (parExterne) return { userId: null, externalClientId: parExterne.id }
+
+    return { userId: null, externalClientId: null }
+  }
+
   private async nextInvoiceNumber(
     veterinarianId: number,
     kind: 'invoice' | 'credit_note' = 'invoice'
@@ -190,6 +293,22 @@ export default class VetInvoicesController {
     const vet = auth.user as Veterinarian
     const data = await request.validateUsing(createInvoiceValidator)
 
+    // Une facture datée d'une période transmise au comptable changerait un mois
+    // déjà clos : on refuse avant d'attribuer un numéro, qu'il faudrait sinon
+    // laisser trouer la séquence.
+    if (isClosed(vet, data.date)) {
+      return response.conflict({
+        success: false,
+        message: `La période ${monthOf(data.date)} est clôturée. Datez cette facture d'une période ouverte.`,
+        code: 'PERIOD_CLOSED',
+      })
+    }
+
+    // Rattachement au client. Fourni par l'écran quand le praticien l'a choisi
+    // dans sa liste, retrouvé par l'adresse sinon — jamais par le nom, qu'une
+    // homonymie suffirait à faire pointer vers le mauvais compte.
+    const lien = await this.resolveClient(vet.id, data)
+
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
 
     // Le taux vient du cabinet, et non d'une constante : 20 % est la règle pour
@@ -213,6 +332,8 @@ export default class VetInvoicesController {
           number: await this.nextInvoiceNumber(vet.id),
           clientName: data.clientName,
           clientEmail: data.clientEmail || null,
+          userId: lien.userId,
+          externalClientId: lien.externalClientId,
           petName: data.petName || null,
           date: data.date,
           dueDate: data.dueDate,
@@ -297,7 +418,23 @@ export default class VetInvoicesController {
       return response.notFound({ success: false, message: 'Facture non trouvée' })
     }
 
-    return response.ok({ success: true, data: invoice })
+    const payments = await VetPayment.query().where('invoice_id', invoice.id).orderBy('date', 'asc')
+
+    return response.ok({
+      success: true,
+      data: {
+        ...invoice.serialize(),
+        paid: round2(payments.reduce((sum, p) => sum + Number(p.amount), 0)),
+        remaining: balanceOf(invoice, payments),
+        payments: payments.map((p) => ({
+          id: p.id,
+          date: p.date?.toISODate() ?? null,
+          amount: Number(p.amount),
+          method: p.method,
+          reference: p.reference,
+        })),
+      },
+    })
   }
 
   async updateStatus({ params, request, response, auth }: HttpContext) {
@@ -313,10 +450,46 @@ export default class VetInvoicesController {
       return response.notFound({ success: false, message: 'Facture non trouvée' })
     }
 
-    invoice.status = status
-    if (status === 'paid') {
-      invoice.paidAt = DateTime.now()
+    const payments = await VetPayment.query().where('invoice_id', invoice.id)
+    const encaisse = round2(payments.reduce((sum, p) => sum + Number(p.amount), 0))
+
+    // Le statut découle désormais du registre des règlements. Le poser à la
+    // main sans encaissement correspondant ferait raconter deux histoires
+    // différentes à la facture et au journal de banque — alors c'est le
+    // registre qui est complété, pas le statut qui est forcé.
+    if (status === 'paid' && invoice.type !== 'credit_note') {
+      const reste = balanceOf(invoice, payments)
+      if (reste > 0.009) {
+        if (isClosed(vet, DateTime.now().toISODate())) {
+          return response.conflict({
+            success: false,
+            message: 'La période en cours est clôturée : enregistrez le règlement à une date postérieure.',
+            code: 'PERIOD_CLOSED',
+          })
+        }
+        await VetPayment.create({
+          invoiceId: invoice.id,
+          veterinarianId: vet.id,
+          date: DateTime.now(),
+          amount: reste,
+          method: 'other',
+          note: 'Règlement enregistré depuis le statut de la facture',
+        })
+      }
     }
+
+    // À l'inverse, rouvrir une facture déjà encaissée demande de retirer le
+    // règlement : c'est une pièce comptable, pas un drapeau d'affichage.
+    if (status !== 'paid' && encaisse > 0.009) {
+      return response.conflict({
+        success: false,
+        message: `Cette facture porte ${encaisse.toFixed(2)} € de règlements. Retirez-les avant de changer son statut.`,
+        code: 'PAYMENTS_EXIST',
+      })
+    }
+
+    invoice.status = status
+    invoice.paidAt = status === 'paid' ? (invoice.paidAt ?? DateTime.now()) : null
     await invoice.save()
 
     return response.ok({ success: true, data: invoice })
@@ -372,6 +545,17 @@ export default class VetInvoicesController {
       })
     }
 
+    // L'avoir est daté du jour, non de la facture : il n'a pas à rouvrir le mois
+    // où celle-ci a été émise. En revanche, le mois courant doit être ouvert.
+    const aujourdhui = DateTime.now().toISODate()!
+    if (isClosed(vet, aujourdhui)) {
+      return response.conflict({
+        success: false,
+        message: `La période ${monthOf(aujourdhui)} est clôturée : l'avoir ne peut pas y être enregistré.`,
+        code: 'PERIOD_CLOSED',
+      })
+    }
+
     const reason = String(request.input('reason') ?? '').trim()
 
     let creditNote: VetInvoice | null = null
@@ -389,6 +573,10 @@ export default class VetInvoicesController {
           creditReason: reason || null,
           clientName: invoice.clientName,
           clientEmail: invoice.clientEmail,
+          // Même compte auxiliaire que la facture : sans cela l'annulation
+          // n'apparaîtrait pas sur le compte du client qu'elle concerne.
+          userId: invoice.userId,
+          externalClientId: invoice.externalClientId,
           petName: invoice.petName,
           date: DateTime.now().toISODate()!,
           dueDate: DateTime.now().toISODate()!,
