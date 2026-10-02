@@ -63,7 +63,11 @@
           {{ data.prospects.length }}
         </span>
       </button>
+      <!-- Onglet conservé tant qu'il reste des invitations parties avant
+           l'arrêt de l'envoi : les masquer empêcherait de les annuler. Il
+           disparaît de lui-même une fois la liste vide. -->
       <button
+        v-if="sentCount > 0"
         @click="activeTab = 'invitations'"
         :class="[
           'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -89,7 +93,7 @@
           </svg>
         </div>
         <p class="text-surface-500">{{ search ? 'Aucun client trouvé pour cette recherche' : 'Aucun client pour le moment' }}</p>
-        <p v-if="!search" class="text-sm text-surface-400 mt-1">Invitez des clients ou attendez leurs demandes</p>
+        <p v-if="!search" class="text-sm text-surface-400 mt-1">Créez un client, ou attendez leurs demandes</p>
       </div>
 
       <!-- App clients -->
@@ -157,7 +161,10 @@
                 {{ client.firstName || '' }} {{ client.lastName || '' }}
                 <span v-if="!client.firstName && !client.lastName" class="text-surface-500 font-normal">—</span>
               </h3>
-              <span class="text-xs bg-surface-100 text-surface-500 px-2 py-0.5 rounded-full">{{ client.inviteSentAt ? 'Invitation envoyée' : 'Fiche locale' }}</span>
+              <!-- Seules les invitations déjà parties se signalent : « fiche
+                   locale » est devenu le cas de tous les clients, et ne
+                   distingue donc plus rien. -->
+              <span v-if="client.inviteSentAt" class="text-xs bg-surface-100 text-surface-500 px-2 py-0.5 rounded-full">Invitation envoyée</span>
             </div>
             <p class="text-sm text-surface-500">{{ client.email || 'Sans adresse email' }}</p>
             <p v-if="client.phone" class="text-sm text-surface-400">{{ client.phone }}</p>
@@ -166,17 +173,9 @@
             <p class="text-xs text-surface-400">Ajouté le {{ formatDate(client.createdAt) }}</p>
           </div>
           <div class="flex items-center gap-2">
-            <!-- Rattachement différé : la fiche a pu être créée sans adresse,
-                 l'invitation part quand le client la donne. -->
-            <button
-              v-if="!client.inviteSentAt"
-              :disabled="!client.email || invitingId === client.id"
-              @click="inviteExisting(client)"
-              class="btn-secondary !py-1.5 !px-3 text-sm disabled:opacity-40"
-              :title="client.email ? 'Envoyer l’invitation' : 'Ajoutez une adresse email pour inviter'"
-            >
-              {{ invitingId === client.id ? 'Envoi…' : 'Inviter' }}
-            </button>
+            <!-- Le bouton « Inviter » reviendra avec l'application mobile :
+                 inviter à installer ce qui n'est pas publié n'a nulle part où
+                 mener. -->
             <button
               @click="removeExternalClient(client.id)"
               class="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
@@ -343,7 +342,7 @@
           </button>
         </div>
 
-        <form @submit.prevent="inviteClient" class="space-y-4">
+        <form @submit.prevent="createClient" class="space-y-4">
           <div>
             <label class="label">Email du client</label>
             <input
@@ -352,10 +351,11 @@
               class="input"
               placeholder="client@email.com"
             />
-            <!-- Plus obligatoire : un client de passage laisse souvent un nom et
-                 un téléphone, sans adresse. Elle reste nécessaire pour inviter. -->
+            <!-- Facultatif : un client de passage laisse souvent un nom et un
+                 téléphone, sans adresse. Elle servira à l'inviter sur
+                 l'application mobile, quand celle-ci sortira. -->
             <p class="mt-1 text-xs text-surface-500">
-              Facultatif. Nécessaire seulement pour envoyer une invitation.
+              Facultatif. Elle servira à l'inviter sur l'application mobile.
             </p>
           </div>
 
@@ -386,41 +386,29 @@
           </div>
 
           <div>
-            <label class="label">Message (optionnel)</label>
+            <label class="label">Notes (optionnel)</label>
             <textarea
               v-model="inviteForm.note"
               class="input"
               rows="3"
-              placeholder="Bonjour, je vous invite à rejoindre mon espace client..."
+              placeholder="Habitudes, préférences, remarques…"
             ></textarea>
-          </div>
-
-          <!-- Result message after invite -->
-          <div v-if="inviteResult" :class="[
-            'px-4 py-3 rounded-xl text-sm flex items-start gap-2',
-            inviteResult.type === 'app' ? 'bg-success-50 text-success-700' : 'bg-primary-50 text-primary-700'
-          ]">
-            <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{{ inviteResult.message }}</span>
           </div>
 
           <div v-if="inviteError" class="bg-danger-50 text-danger-600 px-4 py-3 rounded-xl text-sm">
             {{ inviteError }}
           </div>
 
+          <!-- Une seule action : créer la fiche. Rien n'est envoyé au client —
+               l'application mobile n'est pas sortie, et une invitation à
+               l'installer n'aurait nulle part où mener. Le bouton viendra avec
+               elle. -->
           <div class="flex flex-wrap gap-3 pt-4">
             <button type="button" @click="closeInviteModal" class="btn-secondary flex-1">
               Annuler
             </button>
-            <!-- Créer sans rien envoyer : la fiche existe, l'invitation viendra
-                 plus tard si le client donne son adresse. -->
-            <button type="button" :disabled="inviteLoading" @click="createClient" class="btn-secondary flex-1 disabled:opacity-50">
-              Créer la fiche
-            </button>
-            <button type="submit" :disabled="inviteLoading || !inviteForm.email" class="btn-primary flex-1 disabled:opacity-50">
-              {{ inviteLoading ? 'Envoi...' : 'Créer et inviter' }}
+            <button type="submit" :disabled="inviteLoading" class="btn-primary flex-1 disabled:opacity-50">
+              {{ inviteLoading ? 'Création…' : 'Créer le client' }}
             </button>
           </div>
         </form>
@@ -454,7 +442,6 @@ const data = ref<{
 const showInviteModal = ref(false)
 const inviteLoading = ref(false)
 const inviteError = ref('')
-const inviteResult = ref<{ type: string; message: string } | null>(null)
 const inviteForm = ref({
   email: '',
   firstName: '',
@@ -463,20 +450,21 @@ const inviteForm = ref({
   note: '',
 })
 
-const invitingId = ref<number | null>(null)
-
 /** Initiale d'une fiche externe, qui peut n'avoir ni nom ni adresse. */
 const externalInitial = (client: any) =>
   (client.firstName?.[0] || client.lastName?.[0] || client.email?.[0] || '?').toUpperCase()
 
 /**
- * Crée la fiche sans rien envoyer. C'est le cas du client de passage : on note
- * son nom au comptoir, l'invitation viendra s'il laisse une adresse.
+ * Crée le client. Rien n'est envoyé.
+ *
+ * L'invitation à rejoindre l'application a été retirée du parcours : tant que
+ * l'application mobile n'est pas publiée, elle mènerait le client nulle part.
+ * Les points d'entrée côté serveur restent en place pour le jour où le bouton
+ * « inviter à installer l'application » apparaîtra.
  */
 const createClient = async () => {
   inviteLoading.value = true
   inviteError.value = ''
-  inviteResult.value = null
 
   const response = await api.post<any>('/vet/clients', {
     email: inviteForm.value.email || undefined,
@@ -494,14 +482,6 @@ const createClient = async () => {
   }
 
   inviteLoading.value = false
-}
-
-/** Envoie l'invitation à une fiche déjà créée, et la rattache si le compte existe. */
-const inviteExisting = async (client: any) => {
-  invitingId.value = client.id
-  const response = await api.post<any>(`/vet/clients/external/${client.id}/invite`, {}, { silent: true })
-  if (response.success) await loadAll()
-  invitingId.value = null
 }
 
 const search = ref('')
@@ -613,53 +593,19 @@ const removeExternalClient = async (id: number) => {
   }
 }
 
+/** Un formulaire vierge. Le téléphone y manquait, et restait d'une fiche à l'autre. */
+const formulaireVide = () => ({ email: '', firstName: '', lastName: '', phone: '', note: '' })
+
 const openInviteModal = () => {
-  inviteForm.value = { email: '', firstName: '', lastName: '', note: '' }
+  inviteForm.value = formulaireVide()
   inviteError.value = ''
-  inviteResult.value = null
   showInviteModal.value = true
 }
 
 const closeInviteModal = () => {
   showInviteModal.value = false
-  inviteResult.value = null
   inviteError.value = ''
-  // Le formulaire n'était pas vidé : la fiche suivante repartait avec les
-  // coordonnées de la précédente.
-  inviteForm.value = { email: '', firstName: '', lastName: '', phone: '', note: '' }
-}
-
-const inviteClient = async () => {
-  inviteLoading.value = true
-  inviteError.value = ''
-  inviteResult.value = null
-
-  try {
-    const response = await api.post<any>('/vet/clients/invite', {
-      email: inviteForm.value.email,
-      firstName: inviteForm.value.firstName || undefined,
-      lastName: inviteForm.value.lastName || undefined,
-      note: inviteForm.value.note || undefined,
-    })
-
-    if (response.success) {
-      const isApp = response.type === 'app'
-      inviteResult.value = {
-        type: response.type,
-        message: isApp
-          ? 'Utilisateur Ficana trouvé — une invitation lui a été envoyée dans l\'application.'
-          : 'Cet email n\'a pas de compte Ficana — un email d\'invitation lui a été envoyé.',
-      }
-      inviteForm.value = { email: '', firstName: '', lastName: '', note: '' }
-      await loadAll()
-    } else {
-      inviteError.value = response.message || 'Erreur lors de l\'envoi de l\'invitation'
-    }
-  } catch (e: any) {
-    inviteError.value = e?.data?.message || 'Erreur de connexion'
-  } finally {
-    inviteLoading.value = false
-  }
+  inviteForm.value = formulaireVide()
 }
 
 const formatDate = (dateStr: string) => {
