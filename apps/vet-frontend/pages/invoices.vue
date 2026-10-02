@@ -295,6 +295,17 @@
                 </div>
                 <input v-model.number="item.quantity" type="number" class="input w-20" placeholder="Qté" min="1" />
                 <input v-model.number="item.unitPrice" type="number" step="0.01" class="input w-24" placeholder="Prix" />
+                <!-- Le taux se choisit par ligne : l'acte et le médicament ne
+                     relèvent pas forcément du même. Masqué en franchise en
+                     base, où il n'y a rien à choisir. -->
+                <select
+                  v-if="!clinicInfo.vatExempt"
+                  v-model.number="item.taxRate"
+                  class="input w-24"
+                  title="Taux de TVA de cette ligne"
+                >
+                  <option v-for="t in TAUX_TVA" :key="t" :value="t">{{ t }} %</option>
+                </select>
                 <div class="w-24 py-2 text-right font-medium text-surface-900">
                   {{ formatCurrency(item.quantity * item.unitPrice) }}
                 </div>
@@ -313,9 +324,14 @@
               <span class="text-surface-600">Sous-total HT</span>
               <span class="font-medium text-surface-900">{{ formatCurrency(subtotal) }}</span>
             </div>
-            <div class="flex justify-between text-sm mb-2">
-              <span class="text-surface-600">TVA (20%)</span>
-              <span class="font-medium text-surface-900">{{ formatCurrency(tax) }}</span>
+            <!-- Une ligne par taux : dès qu'une facture en mêle plusieurs,
+                 un total de TVA seul ne permet plus de la vérifier. -->
+            <div v-for="part in ventilation" :key="part.rate" class="flex justify-between text-sm mb-2">
+              <span class="text-surface-600">
+                TVA {{ part.rate }} %
+                <span v-if="ventilation.length > 1" class="text-surface-400">sur {{ formatCurrency(part.base) }}</span>
+              </span>
+              <span class="font-medium text-surface-900">{{ formatCurrency(part.tva) }}</span>
             </div>
             <div class="flex justify-between text-lg font-bold border-t border-surface-200 pt-2 mt-2">
               <span class="text-surface-900">Total TTC</span>
@@ -417,9 +433,14 @@
                 <span class="text-surface-500">Sous-total</span>
                 <span class="text-surface-900">{{ formatCurrency(selectedInvoice.subtotal) }}</span>
               </div>
-              <div class="flex justify-between text-sm mb-1">
-                <span class="text-surface-500">TVA (20%)</span>
-                <span class="text-surface-900">{{ formatCurrency(selectedInvoice.tax) }}</span>
+              <div v-for="part in ventilationDe(selectedInvoice)" :key="part.rate" class="flex justify-between text-sm mb-1">
+                <span class="text-surface-500">
+                  TVA {{ part.rate }} %
+                  <span v-if="ventilationDe(selectedInvoice).length > 1" class="text-surface-400">
+                    sur {{ formatCurrency(part.base) }}
+                  </span>
+                </span>
+                <span class="text-surface-900">{{ formatCurrency(part.tva) }}</span>
               </div>
               <div class="flex justify-between font-bold text-lg border-t border-surface-200 pt-2 mt-2">
                 <span>Total</span>
@@ -603,6 +624,7 @@ const pullConsumables = async () => {
         description: l.unit ? `${l.description} (${l.unit})` : l.description,
         quantity: l.quantity,
         unitPrice: l.unitPrice,
+        taxRate: l.vatRate ?? tauxCabinet.value,
       })),
     ]
     pulledMovementIds.value = [...pulledMovementIds.value, ...lines.map((l: any) => l.movementId)]
@@ -642,6 +664,7 @@ const clinicInfo = ref({
   city: '',
   phone: '',
   siret: '',
+  vatRate: 20,
   vatNumber: '',
   vatExempt: false,
   paymentTermsDays: 30,
@@ -666,6 +689,11 @@ const echeanceParDefaut = () => {
  */
 const ouvrirNouvelleFacture = () => {
   newInvoice.value.dueDate = echeanceParDefaut()
+  // Les réglages arrivent après le premier rendu : les lignes encore sans taux
+  // reçoivent celui du cabinet à l'ouverture, et non à leur création.
+  for (const item of newInvoice.value.items) {
+    if (item.taxRate === null || item.taxRate === undefined) item.taxRate = tauxCabinet.value
+  }
   showNewInvoice.value = true
 }
 
@@ -679,7 +707,7 @@ const newInvoice = ref({
   externalClientId: null as number | null,
   date: new Date().toISOString().split('T')[0],
   dueDate: echeanceParDefaut(),
-  items: [{ description: '', quantity: 1, unitPrice: 0 }],
+  items: [{ description: '', quantity: 1, unitPrice: 0, taxRate: null as number | null }],
   notes: '',
 })
 
@@ -799,6 +827,8 @@ interface CatalogEntry {
   category: string
   /** Pour un article en stock seulement : ce qu'il en reste. */
   stock: number | null
+  /** Taux propre à l'entrée. `null` = celui du cabinet. */
+  vatRate: number | null
 }
 
 const catalog = ref<CatalogEntry[]>([])
@@ -829,6 +859,7 @@ const loadCatalog = async () => {
         unit: '',
         category: 'Prestation',
         stock: null,
+        vatRate: s.vatRate ?? null,
       })
     }
   }
@@ -843,6 +874,7 @@ const loadCatalog = async () => {
         unit: i.unit || '',
         category: i.category || 'Article',
         stock: typeof i.quantity === 'number' ? i.quantity : null,
+        vatRate: i.vatRate ?? null,
       })
     }
   }
@@ -869,6 +901,9 @@ const pickEntry = (index: number, entry: CatalogEntry) => {
   const line = newInvoice.value.items[index]
   line.description = entry.unit ? `${entry.label} (${entry.unit})` : entry.label
   line.unitPrice = entry.price
+  // Le taux suit l'article choisi : c'est tout l'intérêt de le renseigner au
+  // catalogue plutôt que de le reposer à chaque ligne.
+  line.taxRate = entry.vatRate ?? tauxCabinet.value
   openPicker.value = null
   pickerQuery.value = ''
 }
@@ -877,10 +912,79 @@ const closePicker = () => {
   openPicker.value = null
 }
 
-const subtotal = computed(() => {
-  return newInvoice.value.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
+/** Les taux proposés : ceux en vigueur en France, plus l'exonération. */
+const TAUX_TVA = [20, 10, 5.5, 2.1, 0]
+
+/** Le taux du cabinet, qui s'applique à défaut. Zéro en franchise en base. */
+const tauxCabinet = computed(() =>
+  clinicInfo.value.vatExempt ? 0 : Number(clinicInfo.value.vatRate ?? 20)
+)
+
+/**
+ * La ventilation par taux de l'aperçu.
+ *
+ * Elle reprend la règle du serveur : la TVA est arrondie sur le cumul de
+ * chaque taux, pas ligne à ligne, sinon l'aperçu et la facture émise
+ * diffèrent d'un centime par ligne.
+ */
+const ventilation = computed(() => {
+  const parTaux = new Map<number, number>()
+
+  for (const item of newInvoice.value.items) {
+    const taux = clinicInfo.value.vatExempt ? 0 : Number(item.taxRate ?? tauxCabinet.value)
+    const base = Number(item.quantity) * Number(item.unitPrice)
+    if (!Number.isFinite(base)) continue
+    parTaux.set(taux, (parTaux.get(taux) ?? 0) + base)
+  }
+
+  return [...parTaux.entries()]
+    .map(([rate, base]) => ({
+      rate,
+      base: Math.round(base * 100) / 100,
+      tva: Math.round(((base * rate) / 100) * 100) / 100,
+    }))
+    .sort((a, b) => b.rate - a.rate)
 })
-const tax = computed(() => subtotal.value * 0.2)
+
+/**
+ * La ventilation d'une facture émise, lue sur ses lignes.
+ *
+ * Dès qu'une facture mêle plusieurs taux, la mention de chacun avec sa base
+ * est obligatoire sur le document remis au client : un total de TVA seul ne
+ * s'y vérifie pas. Les lignes anciennes, antérieures au taux par ligne,
+ * retombent sur le taux de la facture.
+ */
+const ventilationDe = (invoice: any) => {
+  const parTaux = new Map<number, number>()
+
+  for (const item of invoice?.items ?? []) {
+    const taux = Number(item.taxRate ?? invoice.taxRate ?? 0)
+    parTaux.set(taux, (parTaux.get(taux) ?? 0) + Number(item.total ?? 0))
+  }
+
+  // Facture sans lignes chargées : on rend ce que la facture dit d'elle-même,
+  // plutôt qu'un tableau vide qui effacerait la TVA du document.
+  if (parTaux.size === 0) {
+    return [
+      {
+        rate: Number(invoice?.taxRate ?? 0),
+        base: Number(invoice?.subtotal ?? 0),
+        tva: Number(invoice?.tax ?? 0),
+      },
+    ]
+  }
+
+  return [...parTaux.entries()]
+    .map(([rate, base]) => ({
+      rate,
+      base: Math.round(base * 100) / 100,
+      tva: Math.round(((base * rate) / 100) * 100) / 100,
+    }))
+    .sort((a, b) => b.rate - a.rate)
+}
+
+const subtotal = computed(() => ventilation.value.reduce((s, v) => s + v.base, 0))
+const tax = computed(() => ventilation.value.reduce((s, v) => s + v.tva, 0))
 const total = computed(() => subtotal.value + tax.value)
 
 const fetchInvoices = async () => {
@@ -919,6 +1023,7 @@ const fetchClinicInfo = async () => {
       city: d.city || '',
       phone: d.phone || '',
       siret: d.siret || '',
+      vatRate: d.vatRate ?? 20,
       vatNumber: d.vatNumber || '',
       vatExempt: !!d.vatExempt,
       paymentTermsDays: d.paymentTermsDays ?? 30,
@@ -972,7 +1077,12 @@ const getStatusLabel = (status: string) => {
 }
 
 const addItem = () => {
-  newInvoice.value.items.push({ description: '', quantity: 1, unitPrice: 0 })
+  newInvoice.value.items.push({
+    description: '',
+    quantity: 1,
+    unitPrice: 0,
+    taxRate: tauxCabinet.value,
+  })
 }
 
 const removeItem = (index: number) => {
@@ -1000,7 +1110,7 @@ const submitInvoice = async (status: 'pending' | 'draft') => {
       userId: null, externalClientId: null,
       date: new Date().toISOString().split('T')[0],
       dueDate: echeanceParDefaut(),
-      items: [{ description: '', quantity: 1, unitPrice: 0 }],
+      items: [{ description: '', quantity: 1, unitPrice: 0, taxRate: tauxCabinet.value }],
       notes: '',
     }
     pulledMovementIds.value = []
@@ -1088,7 +1198,14 @@ const downloadInvoice = (invoice: any) => {
   <div class="totals">
     <div class="totals-table">
       <div><span>Sous-total HT</span><span>${formatCurrency(invoice.subtotal)}</span></div>
-      <div><span>TVA (${Number(invoice.taxRate ?? 20)}%)</span><span>${formatCurrency(invoice.tax)}</span></div>
+      ${ventilationDe(invoice)
+        .map(
+          (part) =>
+            `<div><span>TVA ${part.rate} %${
+              ventilationDe(invoice).length > 1 ? ` sur ${formatCurrency(part.base)}` : ''
+            }</span><span>${formatCurrency(part.tva)}</span></div>`
+        )
+        .join('')}
       <div class="total-row"><span>Total TTC</span><span>${formatCurrency(invoice.total)}</span></div>
     </div>
   </div>

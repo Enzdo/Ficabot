@@ -19,6 +19,10 @@ export default class VetService extends BaseModel {
   @column()
   declare price: number
 
+  /** Taux de TVA propre à cette entrée. `null` = celui du cabinet. */
+  @column()
+  declare vatRate: number | null
+
   @column()
   declare icon: string | null
 

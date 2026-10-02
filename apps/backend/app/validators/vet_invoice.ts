@@ -19,6 +19,9 @@ export const createInvoiceValidator = vine.compile(
         description: vine.string(),
         quantity: vine.number().min(1),
         unitPrice: vine.number().min(0),
+        // Taux propre à la ligne. Absent, celui du cabinet s'applique — c'est
+        // le cas courant, et l'écran n'a pas à le répéter sur chaque ligne.
+        taxRate: vine.number().min(0).max(100).optional(),
       })
     ).minLength(1),
   })

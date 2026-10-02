@@ -2,7 +2,14 @@ import type { HttpContext } from '@adonisjs/core/http'
 import VetInvoice from '#models/vet_invoice'
 import Veterinarian from '#models/veterinarian'
 import VetPayment from '#models/vet_payment'
-import { balanceOf, isClosed, monthOf, round2 } from '#services/vet_accounting'
+import {
+  balanceOf,
+  isClosed,
+  monthOf,
+  round2,
+  totauxDepuisVentilation,
+  ventilerParTaux,
+} from '#services/vet_accounting'
 import { enregistrer, ouvrirSiNecessaire } from '#services/vet_accounting_chain'
 import UserVeterinarian from '#models/user_veterinarian'
 import VetExternalClient from '#models/vet_external_client'
@@ -310,16 +317,28 @@ export default class VetInvoicesController {
     // homonymie suffirait à faire pointer vers le mauvais compte.
     const lien = await this.resolveClient(vet.id, data)
 
-    const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0)
+    /**
+     * Le taux de chaque ligne.
+     *
+     * Celui que l'écran transmet l'emporte ; à défaut, celui du cabinet. En
+     * franchise en base, rien n'est taxé : la règle du régime prime sur toute
+     * valeur reçue, sans quoi un formulaire mal réglé facturerait de la TVA à
+     * un praticien qui n'en collecte pas.
+     * Les taux sont figés à l'émission — un changement ultérieur, au catalogue
+     * ou dans la loi, ne réécrit pas une facture déjà remise.
+     */
+    const tauxCabinet = vet.vatExempt ? 0 : Number(vet.vatRate ?? 20)
 
-    // Le taux vient du cabinet, et non d'une constante : 20 % est la règle pour
-    // les actes vétérinaires, mais un praticien en franchise en base facture
-    // sans TVA — la lui facturer serait une erreur, pas une approximation. Le
-    // taux retenu est figé sur la facture : un changement de régime ne doit pas
-    // réécrire le passé.
-    const taxRate = vet.vatExempt ? 0 : Number(vet.vatRate ?? 20)
-    const tax = subtotal * (taxRate / 100)
-    const total = subtotal + tax
+    const lignes = data.items.map((item) => ({
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      total: round2(item.quantity * item.unitPrice),
+      taxRate: vet.vatExempt ? 0 : (item.taxRate ?? tauxCabinet),
+    }))
+
+    const ventilation = ventilerParTaux(lignes, tauxCabinet)
+    const { subtotal, tax, total, taxRate } = totauxDepuisVentilation(ventilation)
 
     // Deux créations simultanées peuvent viser le même rang : on retente sur
     // collision plutôt que de renvoyer une erreur 500 au praticien.
@@ -414,12 +433,14 @@ export default class VetInvoicesController {
       }
     }
 
-    for (const item of data.items) {
+    for (const ligne of lignes) {
       await invoice.related('items').create({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.quantity * item.unitPrice,
+        description: ligne.description,
+        quantity: ligne.quantity,
+        unitPrice: ligne.unitPrice,
+        total: ligne.total,
+        taxRate: ligne.taxRate,
+        tax: round2((ligne.total * ligne.taxRate) / 100),
       })
     }
 
@@ -668,6 +689,10 @@ export default class VetInvoicesController {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        // Le taux de la facture annulée, et non celui du jour : un avoir doit
+        // neutraliser exactement la TVA qui a été collectée.
+        taxRate: item.taxRate,
+        tax: item.tax,
       })
     }
 

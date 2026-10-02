@@ -204,6 +204,9 @@
             </div>
             <div class="text-right">
               <p class="font-bold text-surface-900">{{ service.price }}€</p>
+              <p v-if="service.vatRate !== null && service.vatRate !== undefined" class="text-xs text-surface-400">
+                TVA {{ service.vatRate }} %
+              </p>
             </div>
             <div class="flex gap-2">
               <button @click="editService(service)" class="p-2 text-surface-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg">
@@ -533,7 +536,7 @@
             <label class="label">Nom du service</label>
             <input v-model="serviceForm.name" type="text" class="input" required />
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-3 gap-4">
             <div>
               <label class="label">Durée (min)</label>
               <input v-model="serviceForm.duration" type="number" class="input" required />
@@ -541,6 +544,16 @@
             <div>
               <label class="label">Prix (€)</label>
               <input v-model="serviceForm.price" type="number" step="0.01" class="input" required />
+            </div>
+            <div>
+              <!-- Renseigné ici, le taux arrive tout seul sur la ligne de
+                   facture : c'est ce qui évite de le reposer à chaque saisie,
+                   et donc de se tromper. -->
+              <label class="label" for="service-tva">TVA</label>
+              <select id="service-tva" v-model="serviceForm.vatRate" class="input">
+                <option :value="null">Celle du cabinet</option>
+                <option v-for="t in TAUX_TVA" :key="t" :value="t">{{ t }} %</option>
+              </select>
             </div>
           </div>
           <div>
@@ -713,10 +726,15 @@ const weekDays = ref([...defaultDays])
 
 const services = ref<any[]>([])
 
+/** Les taux en vigueur en France, plus l'exonération. */
+const TAUX_TVA = [20, 10, 5.5, 2.1, 0]
+
 const serviceForm = ref({
   name: '',
   duration: 30,
   price: 0,
+  /** `null` = le taux du cabinet s'applique, et suivra ses changements. */
+  vatRate: null as number | null,
   icon: '🩺',
 })
 
@@ -868,7 +886,13 @@ const saveHours = async () => {
 
 const editService = (service: any) => {
   editingService.value = service
-  serviceForm.value = { name: service.name, duration: service.duration, price: service.price, icon: service.icon }
+  serviceForm.value = {
+    name: service.name,
+    duration: service.duration,
+    price: service.price,
+    vatRate: service.vatRate ?? null,
+    icon: service.icon,
+  }
   showAddService.value = true
 }
 
@@ -910,7 +934,7 @@ const saveService = async () => {
 const closeServiceModal = () => {
   showAddService.value = false
   editingService.value = null
-  serviceForm.value = { name: '', duration: 30, price: 0, icon: '🩺' }
+  serviceForm.value = { name: '', duration: 30, price: 0, vatRate: null, icon: '🩺' }
 }
 
 // Modèles

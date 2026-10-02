@@ -77,8 +77,14 @@ export default class VetInvoice extends BaseModel {
   @column()
   declare subtotal: number
 
+  /**
+   * Taux unique de la facture, ou `null` quand elle en mêle plusieurs.
+   *
+   * La ventilation fait foi et se lit sur les lignes ; ce champ n'est qu'un
+   * raccourci pour le cas courant, où un seul taux s'applique.
+   */
   @column()
-  declare taxRate: number
+  declare taxRate: number | null
 
   @column()
   declare tax: number

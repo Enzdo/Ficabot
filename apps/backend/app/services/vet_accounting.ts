@@ -23,6 +23,59 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   other: 'Autre',
 }
 
+/** Les taux de TVA en vigueur en France, plus l'exonération. */
+export const VAT_RATES = [20, 10, 5.5, 2.1, 0] as const
+
+/**
+ * Ventile une facture par taux de TVA.
+ *
+ * C'est la seule lecture juste dès qu'une facture mêle plusieurs taux : ni le
+ * total, ni un taux unique ne la décrivent. Elle sert au calcul des totaux, à
+ * la mention obligatoire sur le document remis au client, au récapitulatif de
+ * TVA et aux écritures — d'où sa place ici plutôt que dans un contrôleur.
+ */
+export interface VentilationTva {
+  rate: number
+  base: number
+  tva: number
+}
+
+export function ventilerParTaux(
+  lignes: { total: number | string; taxRate?: number | string | null }[],
+  tauxParDefaut = 0
+): VentilationTva[] {
+  const parTaux = new Map<number, { base: number; tva: number }>()
+
+  for (const l of lignes) {
+    const taux = l.taxRate === null || l.taxRate === undefined ? tauxParDefaut : Number(l.taxRate)
+    const base = Number(l.total)
+    if (!Number.isFinite(base)) continue
+
+    const courant = parTaux.get(taux) ?? { base: 0, tva: 0 }
+    courant.base = round2(courant.base + base)
+    // La TVA est arrondie sur le cumul du taux, non ligne à ligne : arrondir
+    // chaque ligne puis sommer dérive d'un centime par ligne.
+    parTaux.set(taux, courant)
+  }
+
+  return [...parTaux.entries()]
+    .map(([rate, v]) => ({ rate, base: v.base, tva: round2((v.base * rate) / 100) }))
+    .sort((a, b) => b.rate - a.rate)
+}
+
+/** Les totaux d'une facture, déduits de sa ventilation. */
+export function totauxDepuisVentilation(ventilation: VentilationTva[]) {
+  const ht = round2(ventilation.reduce((s, v) => s + v.base, 0))
+  const tva = round2(ventilation.reduce((s, v) => s + v.tva, 0))
+  return {
+    subtotal: ht,
+    tax: tva,
+    total: round2(ht + tva),
+    // Un taux unique se résume par lui-même ; plusieurs ne se résument pas.
+    taxRate: ventilation.length === 1 ? ventilation[0].rate : null,
+  }
+}
+
 /** Arrondi au centime. Les sommes de décimaux dérivent sans cela. */
 export function round2(value: number): number {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100
@@ -96,12 +149,14 @@ export function compteAuxiliaire(invoice: VetInvoice): { num: string; lib: strin
 
 /**
  * Écritures de vente d'une facture : le TTC au débit du client, le HT au crédit
- * des prestations, la TVA au crédit de son compte. Un avoir inverse le sens.
+ * des prestations et la TVA au crédit de son compte — ventilés par taux. Un
+ * avoir inverse le sens.
  */
 export function ecrituresVente(
   vet: Veterinarian,
   invoice: VetInvoice,
-  numero: string
+  numero: string,
+  ventilation: VentilationTva[]
 ): LigneEcriture[] {
   const avoir = invoice.type === 'credit_note'
   const aux = compteAuxiliaire(invoice)
@@ -118,8 +173,6 @@ export function ecrituresVente(
   }
 
   const ttc = round2(Number(invoice.total))
-  const ht = round2(Number(invoice.subtotal))
-  const tva = round2(Number(invoice.tax))
 
   const lignes: LigneEcriture[] = [
     {
@@ -131,25 +184,37 @@ export function ecrituresVente(
       debit: avoir ? 0 : ttc,
       credit: avoir ? ttc : 0,
     },
-    {
-      ...base,
-      compteNum: vet.accountSales,
-      compteLib: 'Prestations de services',
-      debit: avoir ? ht : 0,
-      credit: avoir ? 0 : ht,
-    },
   ]
 
-  // Pas de ligne de TVA à zéro : en franchise en base, elle n'a pas lieu d'être
-  // et un import la rejetterait comme écriture vide.
-  if (tva !== 0) {
-    lignes.push({
-      ...base,
-      compteNum: vet.accountVat,
-      compteLib: 'TVA collectée',
-      debit: avoir ? tva : 0,
-      credit: avoir ? 0 : tva,
-    })
+  /**
+   * Une ligne de produit et une ligne de TVA par taux.
+   *
+   * Le comptable rapproche base et TVA taux par taux : une base globale en
+   * face d'une TVA globale ne se vérifie pas dès que la facture en mêle
+   * plusieurs. C'est aussi ce que la ventilation de TVA attend à la clôture.
+   */
+  for (const part of ventilation) {
+    if (part.base !== 0) {
+      lignes.push({
+        ...base,
+        compteNum: vet.accountSales,
+        compteLib: `Prestations de services${ventilation.length > 1 ? ` — TVA ${part.rate} %` : ''}`,
+        debit: avoir ? part.base : 0,
+        credit: avoir ? 0 : part.base,
+      })
+    }
+
+    // Pas de ligne de TVA à zéro : en franchise en base elle n'a pas lieu
+    // d'être, et un import la rejetterait comme écriture vide.
+    if (part.tva !== 0) {
+      lignes.push({
+        ...base,
+        compteNum: vet.accountVat,
+        compteLib: `TVA collectée ${part.rate} %`,
+        debit: avoir ? part.tva : 0,
+        credit: avoir ? 0 : part.tva,
+      })
+    }
   }
 
   return lignes

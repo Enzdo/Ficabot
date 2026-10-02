@@ -13,6 +13,7 @@ import {
   round2,
   versFec,
   type PaymentMethod,
+  ventilerParTaux,
 } from '#services/vet_accounting'
 import {
   TYPE_LABELS,
@@ -281,17 +282,32 @@ export default class VetAccountingController {
       .where('veterinarian_id', vet.id)
       .whereNot('status', 'draft')
       .whereBetween('date', [from, to])
+      .preload('items')
 
     const parTaux = new Map<number, { base: number; tva: number; pieces: number }>()
 
+    /**
+     * La ventilation se fait ligne à ligne.
+     *
+     * Rapporter une facture entière à son taux global rangerait toute une
+     * facture mixte sous un seul taux — c'est-à-dire déclarer faux.
+     */
     for (const inv of invoices) {
-      const taux = Number(inv.taxRate ?? 0)
       const signe = inv.type === 'credit_note' ? -1 : 1
-      const ligne = parTaux.get(taux) ?? { base: 0, tva: 0, pieces: 0 }
-      ligne.base = round2(ligne.base + signe * Number(inv.subtotal))
-      ligne.tva = round2(ligne.tva + signe * Number(inv.tax))
-      ligne.pieces += 1
-      parTaux.set(taux, ligne)
+      const vus = new Set<number>()
+
+      for (const part of ventilerParTaux(inv.items, Number(inv.taxRate ?? 0))) {
+        const ligne = parTaux.get(part.rate) ?? { base: 0, tva: 0, pieces: 0 }
+        ligne.base = round2(ligne.base + signe * part.base)
+        ligne.tva = round2(ligne.tva + signe * part.tva)
+        // Une facture mixte compte une fois dans chaque taux qu'elle porte,
+        // jamais deux fois dans le même.
+        if (!vus.has(part.rate)) {
+          ligne.pieces += 1
+          vus.add(part.rate)
+        }
+        parTaux.set(part.rate, ligne)
+      }
     }
 
     const lignes = [...parTaux.entries()]
@@ -321,10 +337,12 @@ export default class VetAccountingController {
    * de registre d'écritures, il les dérive des pièces.
    */
   private async ecritures(vet: Veterinarian, from: string, to: string) {
+    // Les lignes sont nécessaires : la ventilation par taux s'en déduit.
     const invoices = await VetInvoice.query()
       .where('veterinarian_id', vet.id)
       .whereNot('status', 'draft')
       .whereBetween('date', [from, to])
+      .preload('items')
       .orderBy('date', 'asc')
       .orderBy('id', 'asc')
 
@@ -340,7 +358,8 @@ export default class VetAccountingController {
 
     for (const inv of invoices) {
       rang += 1
-      lignes.push(...ecrituresVente(vet, inv, `VE${String(rang).padStart(6, '0')}`))
+      const ventilation = ventilerParTaux(inv.items, Number(inv.taxRate ?? 0))
+      lignes.push(...ecrituresVente(vet, inv, `VE${String(rang).padStart(6, '0')}`, ventilation))
     }
 
     rang = 0

@@ -2,6 +2,19 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Veterinarian from '#models/veterinarian'
 import VetService from '#models/vet_service'
 
+/**
+ * Le taux d'une entrée du catalogue, ou `null` pour « celui du cabinet ».
+ *
+ * Une valeur hors de [0, 100] n'est pas un taux : on retombe sur le cabinet
+ * plutôt que de l'enregistrer, car elle fausserait toutes les factures
+ * suivantes sans rien signaler.
+ */
+function tauxValide(valeur: unknown): number | null {
+  if (valeur === null || valeur === undefined || valeur === '') return null
+  const taux = Number(valeur)
+  return Number.isFinite(taux) && taux >= 0 && taux <= 100 ? taux : null
+}
+
 export default class VetClinicSettingsController {
   /**
    * Get clinic info for the authenticated vet
@@ -201,6 +214,7 @@ export default class VetClinicSettingsController {
         name: s.name,
         duration: s.duration,
         price: Number(s.price),
+        vatRate: s.vatRate === null || s.vatRate === undefined ? null : Number(s.vatRate),
         icon: s.icon,
         colorClass: s.colorClass,
         isActive: s.isActive,
@@ -213,8 +227,8 @@ export default class VetClinicSettingsController {
    */
   async createService({ request, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
-    const { name, duration, price, icon, colorClass } = request.only([
-      'name', 'duration', 'price', 'icon', 'colorClass',
+    const { name, duration, price, icon, colorClass, vatRate } = request.only([
+      'name', 'duration', 'price', 'icon', 'colorClass', 'vatRate',
     ])
 
     const service = await VetService.create({
@@ -222,6 +236,9 @@ export default class VetClinicSettingsController {
       name,
       duration: duration || 30,
       price: price || 0,
+      // `null` = le taux du cabinet s'applique. On ne copie pas sa valeur :
+      // elle serait figée, et ne suivrait plus un changement de régime.
+      vatRate: tauxValide(vatRate),
       icon: icon || '🩺',
       colorClass: colorClass || 'bg-primary-100',
     })
@@ -233,6 +250,7 @@ export default class VetClinicSettingsController {
         name: service.name,
         duration: service.duration,
         price: Number(service.price),
+        vatRate: service.vatRate === null || service.vatRate === undefined ? null : Number(service.vatRate),
         icon: service.icon,
         colorClass: service.colorClass,
         isActive: service.isActive,
@@ -255,11 +273,12 @@ export default class VetClinicSettingsController {
       return response.notFound({ success: false, message: 'Service non trouvé' })
     }
 
-    const { name, duration, price, icon, colorClass } = request.only([
-      'name', 'duration', 'price', 'icon', 'colorClass',
+    const { name, duration, price, icon, colorClass, vatRate } = request.only([
+      'name', 'duration', 'price', 'icon', 'colorClass', 'vatRate',
     ])
 
     service.merge({ name, duration, price, icon, colorClass })
+    if (vatRate !== undefined) service.vatRate = tauxValide(vatRate)
     await service.save()
 
     return response.ok({
@@ -269,6 +288,7 @@ export default class VetClinicSettingsController {
         name: service.name,
         duration: service.duration,
         price: Number(service.price),
+        vatRate: service.vatRate === null || service.vatRate === undefined ? null : Number(service.vatRate),
         icon: service.icon,
         colorClass: service.colorClass,
         isActive: service.isActive,

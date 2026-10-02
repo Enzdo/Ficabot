@@ -22,6 +22,18 @@ export default class VetInvoiceItem extends BaseModel {
   @column()
   declare total: number
 
+  /**
+   * Taux de TVA de la ligne, figé à l'émission.
+   *
+   * Il ne se recalcule jamais : un changement de taux, au catalogue ou dans la
+   * loi, ne doit pas réécrire une facture déjà remise au client.
+   */
+  @column()
+  declare taxRate: number | null
+
+  @column()
+  declare tax: number | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
