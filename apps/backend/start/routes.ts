@@ -656,6 +656,9 @@ router.group(() => {
   router.get('/journal', [VetAccountingController, 'journal'])
   // Fichier des Écritures Comptables, format de l'arrêté du 29 juillet 2013.
   router.get('/fec', [VetAccountingController, 'fec'])
+  // Le journal inaltérable : son état, et sa lecture.
+  router.get('/chain', [VetAccountingController, 'chain'])
+  router.get('/chain/entries', [VetAccountingController, 'chainEntries'])
   router.get('/closing', [VetAccountingController, 'closingStatus'])
   // Clôturer est irréversible : réservé au titulaire, comme les paramètres.
   router.post('/closing', [VetAccountingController, 'close'])

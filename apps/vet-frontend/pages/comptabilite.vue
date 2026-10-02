@@ -161,6 +161,83 @@
       <p v-else class="text-sm text-surface-400">Aucun encaissement sur cette période.</p>
     </div>
 
+    <!-- Journal inaltérable -->
+    <div class="card p-5">
+      <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 class="font-semibold text-surface-900">Journal inaltérable</h2>
+          <p class="mt-1 text-sm text-surface-500">
+            Chaque facture, avoir et règlement y est inscrit avec une signature
+            qui dépend de la précédente. Modifier ou retirer une ligne rompt la
+            chaîne, et le contrôle ci-dessous le voit.
+          </p>
+        </div>
+        <button type="button" class="btn-secondary" :disabled="verifying" @click="verifierChaine">
+          {{ verifying ? 'Vérification…' : 'Vérifier la chaîne' }}
+        </button>
+      </div>
+
+      <div
+        class="rounded-xl border p-4"
+        :class="chain.intacte
+          ? 'border-success-200 bg-success-50 dark:border-success-800 dark:bg-success-900/20'
+          : 'border-danger-200 bg-danger-50 dark:border-danger-800 dark:bg-danger-900/20'"
+      >
+        <p class="font-medium" :class="chain.intacte ? 'text-success-700 dark:text-success-300' : 'text-danger-700 dark:text-danger-300'">
+          <template v-if="!chain.evenements">Journal vide — il s'ouvrira à votre première pièce émise.</template>
+          <template v-else-if="chain.intacte">
+            Chaîne intacte — {{ chain.evenements }} événement(s) vérifié(s).
+          </template>
+          <template v-else>Chaîne rompue à l'événement {{ chain.rompueAu }}.</template>
+        </p>
+        <p v-if="chain.motif" class="mt-1 text-sm text-danger-600 dark:text-danger-400">{{ chain.motif }}</p>
+
+        <dl v-if="chain.evenements" class="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+          <div>
+            <dt class="text-surface-500">Grand total perpétuel</dt>
+            <dd class="font-semibold text-surface-900 dark:text-surface-100">{{ euros(chain.grandTotalPerpetuel) }}</dd>
+          </div>
+          <div>
+            <dt class="text-surface-500">Pièces émises</dt>
+            <dd class="font-semibold text-surface-900 dark:text-surface-100">{{ chain.piecesEmises }}</dd>
+          </div>
+          <div>
+            <dt class="text-surface-500">Encaissements cumulés</dt>
+            <dd class="font-semibold text-surface-900 dark:text-surface-100">{{ euros(chain.encaissementsCumules) }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div v-if="entries.length" class="mt-4">
+        <button type="button" class="text-sm text-primary-600 hover:text-primary-700" @click="showEntries = !showEntries">
+          {{ showEntries ? 'Masquer le journal' : 'Voir le journal' }}
+        </button>
+
+        <div v-if="showEntries" class="mt-3 max-h-80 overflow-auto">
+          <table class="w-full text-xs">
+            <thead class="sticky top-0 bg-white dark:bg-surface-900">
+              <tr class="border-b border-surface-200 text-surface-500">
+                <th class="py-2 pr-3 text-left font-medium">N°</th>
+                <th class="py-2 pr-3 text-left font-medium">Événement</th>
+                <th class="py-2 pr-3 text-left font-medium">Pièce</th>
+                <th class="py-2 pr-3 text-left font-medium">Enregistré le</th>
+                <th class="py-2 text-left font-medium">Signature</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="e in entries" :key="e.sequence" class="border-b border-surface-50">
+                <td class="py-1.5 pr-3 font-mono text-surface-500">{{ e.sequence }}</td>
+                <td class="py-1.5 pr-3 text-surface-900 dark:text-surface-100">{{ e.label }}</td>
+                <td class="py-1.5 pr-3 font-mono text-surface-600">{{ e.reference || '—' }}</td>
+                <td class="py-1.5 pr-3 text-surface-600">{{ instant(e.recordedAt) }}</td>
+                <td class="py-1.5 font-mono text-surface-400">{{ e.signature }}…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- Clôture -->
     <div class="card p-5">
       <h2 class="font-semibold text-surface-900">Clôture des périodes</h2>
@@ -236,6 +313,19 @@ const journal = ref({ entries: [] as any[], totalDebit: 0, totalCredit: 0, balan
 const payments = ref<any[]>([])
 const closedThrough = ref<string | null>(null)
 
+const chain = ref({
+  evenements: 0,
+  intacte: true,
+  rompueAu: null as number | null,
+  motif: null as string | null,
+  grandTotalPerpetuel: 0,
+  piecesEmises: 0,
+  encaissementsCumules: 0,
+})
+const entries = ref<any[]>([])
+const showEntries = ref(false)
+const verifying = ref(false)
+
 const clotureMois = ref(moisCourant())
 const demandeCloture = ref(false)
 const closing = ref(false)
@@ -280,17 +370,21 @@ const loadAll = async () => {
 
   // Les quatre sources sont indépendantes : l'échec de l'une ne vide pas les
   // autres.
-  const [v, j, p, c] = await Promise.all([
+  const [v, j, p, c, ch, en] = await Promise.all([
     api.get<any>(`/vet/accounting/vat?${q}`),
     api.get<any>(`/vet/accounting/journal?${q}`),
     api.get<any>(`/vet/accounting/payments?${q}`),
     api.get<any>('/vet/accounting/closing'),
+    api.get<any>('/vet/accounting/chain'),
+    api.get<any>('/vet/accounting/chain/entries?limit=100'),
   ])
 
   if (v.success && v.data) vat.value = v.data
   if (j.success && j.data) journal.value = j.data
   if (p.success) payments.value = p.data || []
   if (c.success && c.data) closedThrough.value = c.data.closedThrough
+  if (ch.success && ch.data) chain.value = ch.data
+  if (en.success) entries.value = en.data || []
 
   loading.value = false
 }
@@ -333,6 +427,38 @@ const exportFec = async () => {
     exporting.value = false
   }
 }
+
+/**
+ * Le contrôle à la demande.
+ *
+ * Il n'est pas qu'un bouton : c'est ce qui rend l'inaltérabilité démontrable
+ * par le cabinet lui-même, à tout moment, plutôt que seulement affirmée.
+ */
+const verifierChaine = async () => {
+  verifying.value = true
+  const response = await api.get<any>('/vet/accounting/chain', { silent: false })
+  if (response.success && response.data) {
+    chain.value = response.data
+    push(
+      response.data.intacte
+        ? `Chaîne intacte — ${response.data.evenements} événement(s) vérifié(s).`
+        : `Chaîne rompue à l'événement ${response.data.rompueAu}.`,
+      response.data.intacte ? 'success' : 'error'
+    )
+  }
+  verifying.value = false
+}
+
+const instant = (d: string) =>
+  d
+    ? new Date(d).toLocaleString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : ''
 
 const confirmerCloture = () => {
   closeError.value = ''

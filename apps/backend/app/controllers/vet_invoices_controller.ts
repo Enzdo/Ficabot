@@ -3,6 +3,7 @@ import VetInvoice from '#models/vet_invoice'
 import Veterinarian from '#models/veterinarian'
 import VetPayment from '#models/vet_payment'
 import { balanceOf, isClosed, monthOf, round2 } from '#services/vet_accounting'
+import { enregistrer, ouvrirSiNecessaire } from '#services/vet_accounting_chain'
 import UserVeterinarian from '#models/user_veterinarian'
 import VetExternalClient from '#models/vet_external_client'
 import { createInvoiceValidator, updateInvoiceStatusValidator } from '#validators/vet_invoice'
@@ -359,6 +360,27 @@ export default class VetInvoicesController {
       })
     }
 
+    // Le journal inaltérable reçoit la pièce. Un brouillon n'y entre pas : il
+    // n'est pas encore une pièce, et il est encore modifiable.
+    if (invoice.status !== 'draft') {
+      await ouvrirSiNecessaire(vet)
+      await enregistrer(vet.id, 'invoice', invoice.number, {
+        numero: invoice.number,
+        date: invoice.date,
+        client: invoice.clientName,
+        clientId: lien.userId ?? lien.externalClientId ?? null,
+        ht: Number(invoice.subtotal),
+        tauxTva: Number(invoice.taxRate),
+        tva: Number(invoice.tax),
+        ttc: Number(invoice.total),
+        lignes: data.items.map((i) => ({
+          description: i.description,
+          quantite: i.quantity,
+          prixUnitaire: i.unitPrice,
+        })),
+      })
+    }
+
     // Les consommations reprises sont marquées facturées, pour qu'elles ne
     // soient pas reproposées sur la facture suivante. Fait après la création :
     // si l'insertion échoue, rien n'a été consommé côté marquage.
@@ -457,25 +479,15 @@ export default class VetInvoicesController {
     // main sans encaissement correspondant ferait raconter deux histoires
     // différentes à la facture et au journal de banque — alors c'est le
     // registre qui est complété, pas le statut qui est forcé.
-    if (status === 'paid' && invoice.type !== 'credit_note') {
-      const reste = balanceOf(invoice, payments)
-      if (reste > 0.009) {
-        if (isClosed(vet, DateTime.now().toISODate())) {
-          return response.conflict({
-            success: false,
-            message: 'La période en cours est clôturée : enregistrez le règlement à une date postérieure.',
-            code: 'PERIOD_CLOSED',
-          })
-        }
-        await VetPayment.create({
-          invoiceId: invoice.id,
-          veterinarianId: vet.id,
-          date: DateTime.now(),
-          amount: reste,
-          method: 'other',
-          note: 'Règlement enregistré depuis le statut de la facture',
-        })
-      }
+    const resteAEncaisser =
+      status === 'paid' && invoice.type !== 'credit_note' ? balanceOf(invoice, payments) : 0
+
+    if (resteAEncaisser > 0.009 && isClosed(vet, DateTime.now().toISODate())) {
+      return response.conflict({
+        success: false,
+        message: 'La période en cours est clôturée : enregistrez le règlement à une date postérieure.',
+        code: 'PERIOD_CLOSED',
+      })
     }
 
     // À l'inverse, rouvrir une facture déjà encaissée demande de retirer le
@@ -488,9 +500,56 @@ export default class VetInvoicesController {
       })
     }
 
+    // Un brouillon qui passe au statut émis devient une pièce : c'est à cet
+    // instant qu'il entre au journal, et pas avant.
+    const devientPiece = invoice.status === 'draft' && status !== 'draft'
+
     invoice.status = status
     invoice.paidAt = status === 'paid' ? (invoice.paidAt ?? DateTime.now()) : null
     await invoice.save()
+
+    await ouvrirSiNecessaire(vet)
+
+    if (devientPiece) {
+      await invoice.load('items')
+      await enregistrer(vet.id, 'invoice', invoice.number, {
+        numero: invoice.number,
+        date: invoice.date,
+        client: invoice.clientName,
+        clientId: invoice.userId ?? invoice.externalClientId ?? null,
+        ht: Number(invoice.subtotal),
+        tauxTva: Number(invoice.taxRate),
+        tva: Number(invoice.tax),
+        ttc: Number(invoice.total),
+        lignes: invoice.items.map((i) => ({
+          description: i.description,
+          quantite: Number(i.quantity),
+          prixUnitaire: Number(i.unitPrice),
+        })),
+      })
+    }
+
+    // Le règlement vient après la pièce, dans le journal comme dans la réalité :
+    // on n'encaisse pas une facture qui n'a pas encore été émise.
+    if (resteAEncaisser > 0.009) {
+      const reglement = await VetPayment.create({
+        invoiceId: invoice.id,
+        veterinarianId: vet.id,
+        date: DateTime.now(),
+        amount: resteAEncaisser,
+        method: 'other',
+        note: 'Règlement enregistré depuis le statut de la facture',
+      })
+
+      await enregistrer(vet.id, 'payment', invoice.number, {
+        reglementId: reglement.id,
+        facture: invoice.number,
+        date: reglement.date?.toISODate() ?? null,
+        montant: Number(reglement.amount),
+        moyen: reglement.method,
+        origine: 'statut de la facture',
+      })
+    }
 
     return response.ok({ success: true, data: invoice })
   }
@@ -618,6 +677,22 @@ export default class VetInvoicesController {
     // neutralise dans les compteurs.
 
     await creditNote.load('items')
+
+    // L'annulation est elle aussi un événement : c'est la seule trace qu'une
+    // facture a été neutralisée, et elle doit être aussi inaltérable que la
+    // facture qu'elle vise.
+    await ouvrirSiNecessaire(vet)
+    await enregistrer(vet.id, 'credit_note', creditNote.number, {
+      numero: creditNote.number,
+      date: creditNote.date,
+      annuleLaFacture: invoice.number,
+      motif: reason || null,
+      client: creditNote.clientName,
+      ht: Number(creditNote.subtotal),
+      tauxTva: Number(creditNote.taxRate),
+      tva: Number(creditNote.tax),
+      ttc: Number(creditNote.total),
+    })
 
     return response.created({
       success: true,

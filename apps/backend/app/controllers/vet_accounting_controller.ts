@@ -14,6 +14,15 @@ import {
   versFec,
   type PaymentMethod,
 } from '#services/vet_accounting'
+import {
+  TYPE_LABELS,
+  enregistrer,
+  ouvrirSiNecessaire,
+  totauxCumules,
+  verifier,
+  type EventType,
+} from '#services/vet_accounting_chain'
+import db from '@adonisjs/lucid/services/db'
 
 /**
  * Ce que le cabinet transmet à son comptable.
@@ -150,6 +159,16 @@ export default class VetAccountingController {
       note: String(request.input('note') ?? '').trim() || null,
     })
 
+    await ouvrirSiNecessaire(vet)
+    await enregistrer(vet.id, 'payment', invoice.number, {
+      reglementId: payment.id,
+      facture: invoice.number,
+      date,
+      montant: round2(amount),
+      moyen: method,
+      reference: payment.reference,
+    })
+
     const apres = await VetPayment.query().where('invoice_id', invoice.id)
     const resteApres = balanceOf(invoice, apres)
 
@@ -186,6 +205,19 @@ export default class VetAccountingController {
     }
 
     const invoice = payment.invoice
+
+    // Le retrait s'inscrit avant d'avoir lieu : si l'écriture au journal
+    // échoue, le règlement est toujours là, et les deux restent d'accord.
+    // L'inverse laisserait une suppression sans trace.
+    await ouvrirSiNecessaire(vet)
+    await enregistrer(vet.id, 'payment_void', invoice?.number ?? null, {
+      reglementId: payment.id,
+      facture: invoice?.number ?? null,
+      date: payment.date?.toISODate() ?? null,
+      montant: Number(payment.amount),
+      moyen: payment.method,
+    })
+
     await payment.delete()
 
     if (invoice) {
@@ -389,6 +421,50 @@ export default class VetAccountingController {
 
   // ─────────────────────────── Clôture ───────────────────────────
 
+  // ─────────────────────────── Journal inaltérable ───────────────────────────
+
+  /**
+   * L'état de la chaîne, et son contrôle.
+   *
+   * C'est ce qui rend l'inaltérabilité démontrable plutôt que déclarée : le
+   * cabinet peut vérifier lui-même, à tout moment, que rien n'a bougé.
+   */
+  async chain({ response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    const [controle, totaux] = await Promise.all([verifier(vet.id), totauxCumules(vet.id)])
+
+    return response.ok({
+      success: true,
+      data: { ...controle, ...totaux },
+    })
+  }
+
+  /** Les derniers événements, pour pouvoir lire le journal et non seulement le vérifier. */
+  async chainEntries({ request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    const limite = Math.min(Math.max(Number(request.input('limit') ?? 50), 1), 200)
+
+    const lignes = await db
+      .from('vet_accounting_events')
+      .where('veterinarian_id', vet.id)
+      .orderBy('sequence', 'desc')
+      .limit(limite)
+
+    return response.ok({
+      success: true,
+      data: lignes.map((l) => ({
+        sequence: Number(l.sequence),
+        type: l.type,
+        label: TYPE_LABELS[l.type as EventType] ?? l.type,
+        reference: l.reference,
+        recordedAt: l.recorded_at,
+        // Les huit premiers caractères suffisent à l'œil : la vérification se
+        // fait par le calcul, pas en comparant des empreintes à la main.
+        signature: String(l.signature).slice(0, 12),
+      })),
+    })
+  }
+
   async closingStatus({ response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
     return response.ok({
@@ -457,6 +533,17 @@ export default class VetAccountingController {
 
     vet.accountingClosedThrough = through
     await vet.save()
+
+    // La clôture porte les totaux cumulés, dont le grand total perpétuel : il
+    // ne se remet jamais à zéro, et c'est sa continuité d'une clôture à l'autre
+    // qui rend une pièce disparue visible.
+    await ouvrirSiNecessaire(vet)
+    const totaux = await totauxCumules(vet.id)
+    await enregistrer(vet.id, 'closure', through, {
+      periodeClotureeJusqua: through,
+      clotureeLe: DateTime.now().toISO(),
+      ...totaux,
+    })
 
     return response.ok({
       success: true,
