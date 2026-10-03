@@ -111,9 +111,12 @@
               <td class="py-1.5 pr-3 font-mono text-surface-500">{{ e.journalCode }}</td>
               <td class="py-1.5 pr-3 font-mono text-surface-500">{{ e.ecritureNum }}</td>
               <td class="py-1.5 pr-3 text-surface-600">{{ jour(e.ecritureDate) }}</td>
-              <td class="py-1.5 pr-3 font-mono text-surface-900">
-                {{ e.compteNum }}
-                <span v-if="e.compAuxNum" class="text-surface-400">/ {{ e.compAuxNum }}</span>
+              <td class="py-1.5 pr-3 text-surface-900">
+                <span class="font-mono">{{ e.compteNum }}</span>
+                <span v-if="e.compAuxNum" class="font-mono text-surface-400">/ {{ e.compAuxNum }}</span>
+                <!-- Le libellé du compte porte le taux : sans lui, deux lignes
+                     706000 d'une facture à deux taux sont indiscernables. -->
+                <span class="block text-[11px] text-surface-400">{{ e.compteLib }}</span>
               </td>
               <td class="py-1.5 pr-3 text-surface-600">{{ e.ecritureLib }}</td>
               <td class="py-1.5 pr-3 text-right text-surface-900">{{ e.debit ? euros(e.debit) : '' }}</td>
