@@ -6,6 +6,8 @@ import UserVeterinarian from '#models/user_veterinarian'
 import VetExternalClient from '#models/vet_external_client'
 import User from '#models/user'
 import Pet from '#models/pet'
+import VetInvoice from '#models/vet_invoice'
+import VetPayment from '#models/vet_payment'
 import Veterinarian from '#models/veterinarian'
 import VetClientInviteNotification from '#mails/vet_client_invite_notification'
 import VetClientAppInviteNotification from '#mails/vet_client_app_invite_notification'
@@ -150,6 +152,172 @@ export default class VetClientsController {
   /**
    * Delete an external client
    */
+  /**
+   * GET /vet/clients/external/:id — la fiche d'un client du cabinet.
+   *
+   * Elle n'existait que pour les clients inscrits sur l'application. Comme
+   * celle-ci n'est pas publiée, tous les clients sont des fiches créées au
+   * cabinet : aucune n'était donc consultable, et le dossier d'un client se
+   * réduisait à une ligne dans une liste.
+   */
+  async showExternal({ params, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const client = await VetExternalClient.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!client) {
+      return response.notFound({ success: false, message: 'Client non trouvé' })
+    }
+
+    const pets = await Pet.query()
+      .where('external_client_id', client.id)
+      .where('veterinarian_id', vet.id)
+      .orderBy('name', 'asc')
+
+    const invoices = await VetInvoice.query()
+      .where('external_client_id', client.id)
+      .where('veterinarian_id', vet.id)
+      .orderBy('date', 'desc')
+
+    // Ce qui a été encaissé sur chaque facture, en une requête pour toutes.
+    const encaissements = await VetPayment.query()
+      .where('veterinarian_id', vet.id)
+      .whereIn(
+        'invoice_id',
+        invoices.map((i) => i.id)
+      )
+      .select('invoice_id')
+      .sum('amount as total')
+      .groupBy('invoice_id')
+
+    const regle = new Map<number, number>()
+    for (const l of encaissements) {
+      regle.set(Number(l.invoiceId), Number((l as any).$extras.total ?? 0))
+    }
+
+    // Les avoirs et les factures qu'ils annulent ne sont dus par personne.
+    const annulees = new Set(
+      invoices.filter((i) => i.cancelsInvoiceId).map((i) => i.cancelsInvoiceId as number)
+    )
+
+    const vivantes = invoices.filter((i) => i.type === 'invoice' && !annulees.has(i.id))
+
+    return response.ok({
+      success: true,
+      data: {
+        id: client.id,
+        email: client.email,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        phone: client.phone,
+        notes: client.notes,
+        createdAt: client.createdAt,
+        pets: pets.map((p) => ({
+          id: p.id,
+          name: p.name,
+          species: p.species,
+          breed: p.breed,
+          birthDate: p.birthDate,
+          weight: p.weight,
+          vetToken: p.vetToken,
+        })),
+        invoices: invoices.map((i) => ({
+          id: i.id,
+          number: i.number,
+          type: i.type,
+          date: i.date,
+          dueDate: i.dueDate,
+          total: Number(i.total),
+          status: i.status,
+          cancelled: annulees.has(i.id),
+          paid: regle.get(i.id) ?? 0,
+          remaining:
+            i.type === 'credit_note' || annulees.has(i.id)
+              ? 0
+              : Math.round((Number(i.total) - (regle.get(i.id) ?? 0)) * 100) / 100,
+        })),
+        totals: {
+          facture: Math.round(vivantes.reduce((s, i) => s + Number(i.total), 0) * 100) / 100,
+          encaisse:
+            Math.round(vivantes.reduce((s, i) => s + (regle.get(i.id) ?? 0), 0) * 100) / 100,
+          resteDu:
+            Math.round(
+              vivantes.reduce(
+                (s, i) => s + Math.max(0, Number(i.total) - (regle.get(i.id) ?? 0)),
+                0
+              ) * 100
+            ) / 100,
+        },
+      },
+    })
+  }
+
+  /**
+   * PUT /vet/clients/external/:id — corriger les coordonnées.
+   *
+   * Consulter une fiche sans pouvoir y rectifier un numéro mal noté n'est
+   * qu'une demi-fiche.
+   */
+  async updateExternal({ params, request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const client = await VetExternalClient.query()
+      .where('id', params.id)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!client) {
+      return response.notFound({ success: false, message: 'Client non trouvé' })
+    }
+
+    const { email, firstName, lastName, phone, notes } = request.only([
+      'email',
+      'firstName',
+      'lastName',
+      'phone',
+      'notes',
+    ])
+
+    const nouvelEmail = String(email ?? '').trim().toLowerCase() || null
+
+    // Même garde qu'à la création : deux fiches sur la même adresse rendraient
+    // le rattachement des factures ambigu.
+    if (nouvelEmail && nouvelEmail !== (client.email ?? '').toLowerCase()) {
+      const doublon = await VetExternalClient.query()
+        .where('veterinarian_id', vet.id)
+        .whereRaw('lower(email) = ?', [nouvelEmail])
+        .whereNot('id', client.id)
+        .first()
+
+      if (doublon) {
+        return response.conflict({
+          success: false,
+          message: 'Un autre client porte déjà cette adresse email.',
+        })
+      }
+    }
+
+    if (email !== undefined) client.email = nouvelEmail
+    if (firstName !== undefined) client.firstName = String(firstName).trim() || null
+    if (lastName !== undefined) client.lastName = String(lastName).trim() || null
+    if (phone !== undefined) client.phone = String(phone).trim() || null
+    if (notes !== undefined) client.notes = String(notes).trim() || null
+
+    if (!client.email && !client.firstName && !client.lastName) {
+      return response.badRequest({
+        success: false,
+        message: 'Renseignez au moins un nom ou une adresse email.',
+      })
+    }
+
+    await client.save()
+
+    return response.ok({ success: true, message: 'Fiche mise à jour', data: { id: client.id } })
+  }
+
   async deleteExternal({ params, response, auth }: HttpContext) {
     const vet = auth.user as Veterinarian
 

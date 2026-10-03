@@ -508,11 +508,16 @@ router.group(() => {
   router.get('/', [VetClientsController, 'index'])
   router.get('/pending', [VetClientsController, 'pending'])
   router.get('/prospects', [VetClientsController, 'prospects'])
-  router.get('/external', [VetClientsController, 'external'])
   router.get('/search-users', [VetClientsController, 'searchUsers'])
+  // Les fiches créées au cabinet. `/external` précède `/:id`, qui capterait
+  // sinon le mot comme un identifiant ; les routes à deux segments, elles, ne
+  // se chevauchent pas.
+  router.get('/external', [VetClientsController, 'external'])
+  router.get('/external/:id', [VetClientsController, 'showExternal'])
   router.get('/:id', [VetClientsController, 'show'])
   router.post('/', [VetClientsController, 'store'])
   router.post('/invite', [VetClientsController, 'invite'])
+  router.put('/external/:id', [VetClientsController, 'updateExternal'])
   router.post('/external/:id/invite', [VetClientsController, 'inviteExternal'])
   router.post('/:id/accept', [VetClientsController, 'accept'])
   router.post('/:id/reject', [VetClientsController, 'reject'])
