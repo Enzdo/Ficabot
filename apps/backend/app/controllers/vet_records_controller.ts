@@ -252,4 +252,25 @@ export default class VetRecordsController {
       data: this.reportPayload(record),
     })
   }
+
+  /**
+   * Retire un compte rendu classé par erreur.
+   *
+   * Un compte rendu n'est pas une pièce comptable : il ne porte pas de
+   * numérotation continue, et rien n'impose de le conserver après une dictée
+   * rangée dans le mauvais dossier. On le supprime donc, là où une facture
+   * émise ne s'annule que par un avoir.
+   */
+  async destroyReport({ params, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+    const record = await this.findReport(vet, params.id)
+
+    if (!record) {
+      return response.notFound({ success: false, message: 'Compte rendu introuvable' })
+    }
+
+    await record.delete()
+
+    return response.ok({ success: true, message: 'Compte rendu supprimé' })
+  }
 }

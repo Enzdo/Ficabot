@@ -438,17 +438,135 @@
       <div v-if="activeTab === 'records'" class="card">
         <h3 class="font-semibold text-surface-900 mb-4">Historique médical</h3>
         <div v-if="patient.medicalRecords?.length" class="space-y-4">
-          <div v-for="record in patient.medicalRecords" :key="record.id" class="p-4 border border-surface-200 rounded-xl">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="font-medium text-surface-900">{{ record.type }}</p>
-                <p class="text-sm text-surface-500 mt-1">{{ record.description }}</p>
+          <article
+            v-for="record in patient.medicalRecords"
+            :key="record.id"
+            class="rounded-xl border border-surface-200 p-4 dark:border-surface-700"
+          >
+            <!-- En-tête : le titre réel du compte rendu, sa nature, sa date.
+                 C'est `type` qui s'affichait ici — le praticien lisait
+                 « visit » en guise de titre. -->
+            <header class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <h4 class="font-medium text-surface-900 dark:text-surface-100">
+                  {{ record.title || labelTypeRecord(record.type) }}
+                </h4>
+                <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-surface-400">
+                  <span class="rounded-full bg-surface-100 px-2 py-0.5 dark:bg-surface-800">
+                    {{ labelTypeRecord(record.type) }}
+                  </span>
+                  <!-- La date tenait dans une colonne étroite et se cassait sur
+                       trois lignes. Elle reste ici d'un seul tenant. -->
+                  <span class="whitespace-nowrap">{{ formatDate(record.date || record.createdAt) }}</span>
+                  <span v-if="record.vetName" class="whitespace-nowrap">— {{ record.vetName }}</span>
+                </p>
               </div>
-              <span class="text-xs text-surface-400">{{ formatDate(record.createdAt) }}</span>
+
+              <div class="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  class="rounded-lg bg-surface-900 p-2 text-white transition-colors hover:bg-surface-700 dark:bg-surface-700 dark:hover:bg-surface-600"
+                  title="Modifier ce compte rendu"
+                  @click="ouvrirEditionRecord(record)"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="rounded-lg p-2 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
+                  title="Supprimer ce compte rendu"
+                  @click="recordASupprimer = record"
+                >
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </header>
+
+            <!-- Le compte rendu est écrit en sections « intitulé / contenu ».
+                 Rendu dans un paragraphe, tout se collait en un bloc illisible :
+                 « Motif Boiterie… Anamnèse Le propriétaire… ». -->
+            <div v-if="record.description" class="mt-3 space-y-2.5">
+              <div v-for="(section, i) in sectionsDuRecord(record.description)" :key="i">
+                <p v-if="section.titre" class="text-xs font-semibold uppercase tracking-wide text-surface-400">
+                  {{ section.titre }}
+                </p>
+                <p class="whitespace-pre-line text-sm leading-relaxed text-surface-700 dark:text-surface-300">
+                  {{ section.texte }}
+                </p>
+              </div>
             </div>
-          </div>
+          </article>
         </div>
         <p v-else class="text-surface-400 text-center py-8">Aucun enregistrement médical</p>
+      </div>
+
+      <!-- Reprise d'un compte rendu -->
+      <div v-if="recordEnEdition" class="modal-overlay">
+        <div class="modal-panel max-w-2xl p-6">
+          <div class="mb-6 flex items-center justify-between">
+            <h2 class="text-xl font-bold text-surface-900">Modifier le compte rendu</h2>
+            <button class="rounded-lg p-2 hover:bg-surface-100" @click="recordEnEdition = null">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <form class="space-y-4" @submit.prevent="enregistrerRecord">
+            <div class="grid gap-4 sm:grid-cols-3">
+              <div class="sm:col-span-2">
+                <label class="label" for="cr-titre">Titre</label>
+                <input id="cr-titre" v-model="formRecord.title" type="text" class="input" required />
+              </div>
+              <div>
+                <label class="label" for="cr-date">Date</label>
+                <input id="cr-date" v-model="formRecord.date" type="date" class="input" />
+              </div>
+            </div>
+
+            <div>
+              <label class="label" for="cr-corps">Compte rendu</label>
+              <!-- Les intitulés de section sont sur leur propre ligne : on
+                   édite le texte tel qu'il est rangé, sans forme imposée. -->
+              <textarea id="cr-corps" v-model="formRecord.body" class="input font-mono text-sm" rows="16" required></textarea>
+              <p class="mt-1 text-xs text-surface-400">
+                Une ligne seule fait un intitulé de section, le texte suit en dessous.
+              </p>
+            </div>
+
+            <p v-if="erreurRecord" class="workspace-error" role="alert">{{ erreurRecord }}</p>
+
+            <div class="flex gap-3 pt-2">
+              <button type="button" class="btn-secondary flex-1" @click="recordEnEdition = null">Annuler</button>
+              <button type="submit" class="btn-primary flex-1" :disabled="enregistrementRecord">
+                {{ enregistrementRecord ? 'Enregistrement…' : 'Enregistrer' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Suppression : confirmée, parce qu'elle ne se défait pas -->
+      <div v-if="recordASupprimer" class="modal-overlay">
+        <div class="modal-panel max-w-md p-6">
+          <h2 class="text-lg font-bold text-surface-900">Supprimer ce compte rendu ?</h2>
+          <p class="mt-2 text-sm text-surface-600">
+            « {{ recordASupprimer.title || labelTypeRecord(recordASupprimer.type) }} » du
+            {{ formatDate(recordASupprimer.date || recordASupprimer.createdAt) }} sera retiré du
+            dossier de {{ patient?.name }}. Cette suppression ne se défait pas.
+          </p>
+          <p v-if="erreurRecord" class="workspace-error mt-3" role="alert">{{ erreurRecord }}</p>
+          <div class="mt-5 flex gap-3">
+            <button type="button" class="btn-secondary flex-1" @click="recordASupprimer = null">Annuler</button>
+            <button type="button" class="btn-danger flex-1" :disabled="suppressionRecord" @click="supprimerRecord">
+              {{ suppressionRecord ? 'Suppression…' : 'Supprimer' }}
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Add Note Tab -->
@@ -675,6 +793,96 @@ const formatDate = (date: string) => {
     month: 'long',
     year: 'numeric',
   })
+}
+
+/* ---------- Comptes rendus du dossier ---------- */
+
+const TYPES_RECORD: Record<string, string> = {
+  visit: 'Visite',
+  vaccine: 'Vaccination',
+  treatment: 'Traitement',
+}
+
+const labelTypeRecord = (type: string) => TYPES_RECORD[type] ?? 'Compte rendu'
+
+/**
+ * Découpe un compte rendu en sections.
+ *
+ * Il est rangé sous la forme « intitulé, retour à la ligne, contenu », les
+ * sections séparées par une ligne vide. Rendu tel quel dans un paragraphe,
+ * tout se collait : « Motif Boiterie… Anamnèse Le propriétaire… ».
+ */
+const sectionsDuRecord = (description: string) => {
+  return String(description ?? '')
+    .split(/\n\s*\n/)
+    .map((bloc) => bloc.trim())
+    .filter(Boolean)
+    .map((bloc) => {
+      const lignes = bloc.split('\n')
+      // Une première ligne courte et sans ponctuation finale est un intitulé ;
+      // un bloc d'un seul tenant reste du texte libre.
+      const premiere = lignes[0].trim()
+      const estIntitule = lignes.length > 1 && premiere.length <= 40 && !/[.!?]$/.test(premiere)
+      return estIntitule
+        ? { titre: premiere, texte: lignes.slice(1).join('\n').trim() }
+        : { titre: '', texte: bloc }
+    })
+}
+
+const recordEnEdition = ref<any>(null)
+const recordASupprimer = ref<any>(null)
+const formRecord = ref({ title: '', body: '', date: '' })
+const enregistrementRecord = ref(false)
+const suppressionRecord = ref(false)
+const erreurRecord = ref('')
+
+const ouvrirEditionRecord = (record: any) => {
+  recordEnEdition.value = record
+  erreurRecord.value = ''
+  formRecord.value = {
+    title: record.title || '',
+    body: record.description || '',
+    date: String(record.date || record.createdAt || '').slice(0, 10),
+  }
+}
+
+const enregistrerRecord = async () => {
+  enregistrementRecord.value = true
+  erreurRecord.value = ''
+
+  const response = await api.put<any>(
+    `/vet/records/reports/${recordEnEdition.value.id}`,
+    { ...formRecord.value },
+    { silent: true }
+  )
+
+  if (response.success) {
+    recordEnEdition.value = null
+    await fetchPatient()
+  } else {
+    erreurRecord.value = response.message || "Le compte rendu n'a pas pu être enregistré."
+  }
+
+  enregistrementRecord.value = false
+}
+
+const supprimerRecord = async () => {
+  suppressionRecord.value = true
+  erreurRecord.value = ''
+
+  const response = await api.del<any>(
+    `/vet/records/reports/${recordASupprimer.value.id}`,
+    { silent: true }
+  )
+
+  if (response.success) {
+    recordASupprimer.value = null
+    await fetchPatient()
+  } else {
+    erreurRecord.value = response.message || "Le compte rendu n'a pas pu être supprimé."
+  }
+
+  suppressionRecord.value = false
 }
 
 const intituleNote = computed(() => {

@@ -684,6 +684,7 @@ router.group(() => {
   // dans l'agenda, d'où l'absence de route équivalente pour lui.
   router.get('/reports/:id', [VetRecordsController, 'showReport'])
   router.put('/reports/:id', [VetRecordsController, 'updateReport'])
+  router.delete('/reports/:id', [VetRecordsController, 'destroyReport'])
 }).prefix('/vet/records').use([middleware.vetAuth(), middleware.vetCan({ capability: 'records' })])
 
 // Vet Prescriptions (Ordonnances)
