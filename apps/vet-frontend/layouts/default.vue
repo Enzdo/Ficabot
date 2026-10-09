@@ -391,7 +391,13 @@ const openActiveGroup = () => {
   }
 }
 
-const sidebarCollapsed = ref(false)
+/**
+ * Repliée par défaut.
+ *
+ * L'état initial vaut aussi pour le rendu serveur : partir de `false` ferait
+ * apparaître la barre dépliée le temps d'un battement, puis se refermer.
+ */
+const sidebarCollapsed = ref(true)
 const mounted = ref(false)
 const isMobile = useMediaQuery('(max-width: 1023px)')
 const mobileOpen = ref(false)
@@ -525,7 +531,9 @@ onMounted(() => {
   if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) {
     metaKey.value = '⌘'
   }
-  sidebarCollapsed.value = localStorage.getItem(SIDEBAR_KEY) === 'true'
+  // Seul un dépliage explicite rouvre la barre : en l'absence de préférence
+  // enregistrée, elle reste repliée.
+  sidebarCollapsed.value = localStorage.getItem(SIDEBAR_KEY) !== 'false'
   try {
     const saved = JSON.parse(localStorage.getItem(GROUPS_KEY) || '[]')
     if (Array.isArray(saved)) closedGroups.value = saved

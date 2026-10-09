@@ -31,7 +31,15 @@
         <NuxtLink v-if="appointmentPatient(nextAppointment, patients)" :to="`/patients/${appointmentPatient(nextAppointment, patients)?.vetToken}`" class="btn-secondary">Ouvrir le dossier</NuxtLink>
       </div>
     </section>
-    <section aria-label="Vue d’ensemble" class="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8" :aria-busy="loading">
+    <!-- La grille suit le nombre de pastilles : fixée à quatre colonnes, elle
+         laissait des trous dès qu'une permission en retirait une. -->
+    <section
+      v-if="metrics.length"
+      aria-label="Vue d’ensemble"
+      class="grid grid-cols-2 gap-3 sm:gap-4 mb-8"
+      :class="grilleMetriques"
+      :aria-busy="loading"
+    >
       <NuxtLink v-for="metric in metrics" :key="metric.label" :to="metric.to" class="card dashboard-metric">
         <div class="flex items-center justify-between gap-2">
           <span class="dashboard-metric-label">{{ metric.label }}</span><span class="text-surface-400" aria-hidden="true">↗</span>
@@ -56,12 +64,11 @@
           <span class="dashboard-empty-icon" aria-hidden="true">☷</span>
           <h3 class="font-semibold mb-2">Votre planning est libre aujourd’hui</h3>
           <p>Ajoutez un rendez-vous, ou retrouvez les prochains dans le planning.</p>
-          <div class="mt-5 flex flex-wrap justify-center gap-3">
-            <NuxtLink v-if="authStore.can('agenda')" to="/appointments?nouveau" class="btn-primary">
-              Ajouter un rendez-vous
-            </NuxtLink>
-            <NuxtLink to="/appointments" class="btn-secondary">Gérer les rendez-vous</NuxtLink>
-          </div>
+          <!-- « Voir le planning → » figure déjà dans le titre de la section :
+               un second lien vers le même écran n'y ajoutait rien. -->
+          <NuxtLink v-if="authStore.can('agenda')" to="/appointments?nouveau" class="btn-primary mt-5">
+            Ajouter un rendez-vous
+          </NuxtLink>
         </div>
         <div v-else class="space-y-2">
           <div v-for="appointment in todayAppointments.slice(0,6)" :key="appointment.id" class="dashboard-appointment">
@@ -149,11 +156,18 @@ onMounted(() => { refreshClock(); clockTimer = setInterval(refreshClock, 60000) 
 onBeforeUnmount(() => clearInterval(clockTimer))
 const nextAppointment = computed(() => todayAppointments.value.find(a => !['completed','no_show'].includes(a.status) && a.time >= clockTime.value))
 const todayAppointments = computed(() => appointments.value.filter(a => a.date?.slice(0,10) === today.value && a.status !== 'cancelled').sort((a,b) => (a.time || a.startTime || '').localeCompare(b.time || b.startTime || '')))
+/**
+ * Les compteurs d'en-tête.
+ *
+ * « Rendez-vous du jour » et « Animaux hospitalisés » n'y figurent plus : la
+ * section « Votre journée » liste les rendez-vous du jour, et « Les priorités »
+ * reprend les hospitalisations. Un compteur au-dessus d'une section qui dit la
+ * même chose en mieux n'ajoute rien, et donne au tableau de bord l'air de se
+ * répéter.
+ */
 const metrics = computed(() => [
-  { label: 'Rendez-vous', value: failures.appointments ? null : todayAppointments.value.length, hint: 'Aujourd’hui, hors annulations', to: '/appointments' , capability: 'agenda' },
   { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' , capability: 'patients' },
   { label: 'Rappels à venir', value: failures.reminders ? null : reminders.value.upcomingCount, hint: 'Sur les 7 prochains jours', to: '/reminders' , capability: 'reminders' },
-  { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization', capability: 'hospitalization' },
 ].filter((metric) => !metric.capability || authStore.can(metric.capability as Capability)))
 /** Raccourcis : seuls ceux qui mènent quelque part pour cette personne. */
 const shortcuts = computed(() =>
@@ -168,6 +182,16 @@ const priorities = computed(() => [
   { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' , capability: 'stock' },
   { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization', action: 'Voir les suivis', capability: 'hospitalization' },
 ].filter((priority) => !priority.capability || authStore.can(priority.capability as Capability)))
+/** Les classes Tailwind sont statiques : on les choisit, on ne les compose pas. */
+const grilleMetriques = computed(
+  () =>
+    ({
+      1: 'xl:grid-cols-1',
+      2: 'xl:grid-cols-2',
+      3: 'xl:grid-cols-3',
+    })[metrics.value.length] ?? 'xl:grid-cols-4'
+)
+
 const statusLabel = (status: string) => (({ confirmed: 'Confirmé', pending: 'À confirmer', completed: 'Terminé', scheduled: 'Planifié' } as Record<string,string>)[status] || 'Planifié')
 const speciesLabel = (species: string) => (({ dog: 'Chien', cat: 'Chat', bird: 'Oiseau', rabbit: 'Lapin' } as Record<string,string>)[species] || 'Autre espèce')
 const loadDashboard = async () => {
