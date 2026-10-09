@@ -2,6 +2,10 @@ import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
 import { DateTime } from 'luxon'
 import Pet from '#models/pet'
+import type Veterinarian from '#models/veterinarian'
+import { can } from '#services/vet_actor'
+import { outilsAutorises } from '#services/vet_assistant_tools'
+import type { Capability } from '#services/vet_permissions'
 import VetAssistantConversation from '#models/vet_assistant_conversation'
 import VetAssistantMessage from '#models/vet_assistant_message'
 import VetAssistantService from '#services/vet_assistant_service'
@@ -157,7 +161,7 @@ export default class VetAssistantConversationsController {
   }
 
   /** POST /vet/assistant/conversations/:id/messages — body : { question } */
-  async message({ params, request, response, auth }: HttpContext) {
+  async message({ params, request, response, auth, vetActor }: HttpContext) {
     const conversation = await this.find(params.id, auth)
     if (!conversation) {
       return response.notFound({ success: false, message: 'Discussion introuvable' })
@@ -192,11 +196,26 @@ export default class VetAssistantConversationsController {
     }
 
     try {
+      /**
+       * Les outils que cet utilisateur a le droit d'employer.
+       *
+       * La grille de permissions s'applique ici comme partout ailleurs : sans
+       * ce filtre, l'assistant deviendrait le contournement du cloisonnement,
+       * et une secrétaire obtiendrait par la conversation le chiffre
+       * d'affaires qu'un écran lui refuse.
+       *
+       * En l'absence d'acteur — cas du titulaire sans grille —, tout est
+       * ouvert : c'est la même règle que le reste de l'application.
+       */
+      const peut = (capability: Capability) => (vetActor ? can(vetActor, capability) : true)
+
       const service = new VetAssistantService()
       const result = await service.ask({
         question,
         pet,
         records,
+        vet: auth.user as Veterinarian,
+        outils: outilsAutorises(peut),
         history: history
           .reverse()
           .map((m) => ({ role: m.role, content: m.content })),
@@ -225,6 +244,9 @@ export default class VetAssistantConversationsController {
             id: reply.id,
             content: result.answer,
             sources: result.sources ?? [],
+            // Ce que l'assistant est allé lire. Le praticien voit sur quoi la
+            // réponse s'appuie, au lieu d'avoir à la croire sur parole.
+            consultations: result.consultations ?? [],
           },
         },
       })
