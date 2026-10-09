@@ -204,10 +204,13 @@ export default class VetAssistantConversationsController {
        * et une secrétaire obtiendrait par la conversation le chiffre
        * d'affaires qu'un écran lui refuse.
        *
-       * En l'absence d'acteur — cas du titulaire sans grille —, tout est
-       * ouvert : c'est la même règle que le reste de l'application.
+       * Sans acteur, aucun outil : le middleware d'authentification en pose
+       * toujours un — titulaire compris, avec la grille complète —, donc son
+       * absence signale une anomalie et non un titulaire. Accorder par défaut
+       * ferait de ce chemin le seul de l'application à s'ouvrir quand il ne
+       * sait pas à qui il parle.
        */
-      const peut = (capability: Capability) => (vetActor ? can(vetActor, capability) : true)
+      const peut = (capability: Capability) => (vetActor ? can(vetActor, capability) : false)
 
       const service = new VetAssistantService()
       const result = await service.ask({
