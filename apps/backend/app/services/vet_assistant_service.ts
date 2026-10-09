@@ -4,6 +4,7 @@ import type Pet from '#models/pet'
 import type MedicalRecord from '#models/medical_record'
 import { chatClient, chatModel } from '#services/ai_gateway'
 import type Veterinarian from '#models/veterinarian'
+import type VetAssistantConversation from '#models/vet_assistant_conversation'
 import {
   definitionsOutils,
   type OutilAssistant,
@@ -20,6 +21,8 @@ export interface AssistantAnswer {
   sources: Array<{ label: string; date: string | null }>
   /** Les interrogations réellement faites, pour que la réponse soit traçable. */
   consultations?: Array<{ outil: string; arguments: Record<string, unknown> }>
+  /** Les corrections suggérées, en attente de validation du praticien. */
+  propositions?: Array<Record<string, any>>
 }
 
 /**
@@ -96,8 +99,18 @@ export default class VetAssistantService {
     /** Le cabinet, quand l'assistant a le droit d'interroger ses données. */
     vet?: Veterinarian | null
     outils?: OutilAssistant[]
+    /** Transmise aux outils : l'assistant peut s'y rattacher un dossier. */
+    conversation?: VetAssistantConversation | null
   }): Promise<AssistantAnswer> {
-    const { question, pet, records, history = [], vet = null, outils = [] } = params
+    const {
+      question,
+      pet,
+      records,
+      history = [],
+      vet = null,
+      outils = [],
+      conversation = null,
+    } = params
 
     // Les outils ne servent que hors dossier : rattachée à un patient, la
     // discussion doit rester enfermée dans ce dossier — c'est sa raison d'être.
@@ -158,6 +171,7 @@ export default class VetAssistantService {
      * répondre.
      */
     const consultations: Array<{ outil: string; arguments: Record<string, unknown> }> = []
+    const propositions: Array<Record<string, any>> = []
     const definitions = outilsActifs.length ? definitionsOutils(outilsActifs) : undefined
     let completion
 
@@ -195,8 +209,14 @@ export default class VetAssistantService {
           }
 
           try {
-            resultat = await outil.executer(vet as Veterinarian, args)
+            resultat = await outil.executer({ vet: vet as Veterinarian, conversation }, args)
             consultations.push({ outil: outil.nom, arguments: args })
+
+            // Une proposition n'est pas une modification : elle remonte à
+            // l'écran, qui la soumet au praticien.
+            if ((resultat as any)?.propose === true) {
+              propositions.push(resultat as Record<string, any>)
+            }
           } catch (error) {
             logger.error({ err: error, outil: outil.nom }, 'Échec d’un outil de l’assistant')
             resultat = { erreur: "Cette donnée n'a pas pu être lue." }
@@ -222,6 +242,6 @@ export default class VetAssistantService {
       .slice(0, 5)
       .map((r) => ({ label: r.title, date: r.date.toFormat('dd/MM/yyyy') }))
 
-    return { answer, sources, consultations }
+    return { answer, sources, consultations, propositions }
   }
 }

@@ -164,6 +164,104 @@ export default class VetPatientsController {
     })
   }
 
+  /**
+   * PUT /vet/patients/:token — corriger la fiche d'un patient.
+   *
+   * Elle n'existait pas : on pouvait ouvrir un dossier, jamais rectifier une
+   * race mal saisie ou une date de naissance approximative.
+   *
+   * Le propriétaire ne se change pas ici — déplacer un animal d'un client à
+   * un autre touche à sa facturation et à son historique, et mérite un geste
+   * explicite plutôt qu'un champ parmi d'autres.
+   */
+  async update({ auth, params, request, response }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const pet = await findScopedPetByToken(vet.id, params.token)
+
+    if (!pet) {
+      return response.notFound({
+        success: false,
+        message: 'Patient non trouvé ou accès révoqué',
+      })
+    }
+
+    const { name, species, breed, birthDate, weight } = request.only([
+      'name',
+      'species',
+      'breed',
+      'birthDate',
+      'weight',
+    ])
+
+    if (name !== undefined) {
+      const propre = String(name).trim()
+      if (!propre) {
+        return response.badRequest({ success: false, message: "Le nom de l'animal est requis." })
+      }
+      pet.name = propre
+    }
+
+    // Même contrainte qu'à la création : l'espèce commande le dossier, les
+    // rappels et les affichages. Une valeur inconnue casserait tout en aval.
+    if (species !== undefined) {
+      const ESPECES = ['dog', 'cat', 'nac']
+      if (!ESPECES.includes(String(species))) {
+        return response.badRequest({
+          success: false,
+          message: 'Espèce invalide : attendu chien, chat ou NAC.',
+        })
+      }
+      pet.species = species
+    }
+
+    if (breed !== undefined) pet.breed = String(breed).trim() || null
+
+    if (birthDate !== undefined) {
+      if (birthDate === null || birthDate === '') {
+        pet.birthDate = null as any
+      } else {
+        const date = DateTime.fromISO(String(birthDate))
+        if (!date.isValid) {
+          return response.badRequest({ success: false, message: 'Date de naissance invalide.' })
+        }
+        if (date > DateTime.now()) {
+          return response.badRequest({
+            success: false,
+            message: 'La date de naissance ne peut pas être à venir.',
+          })
+        }
+        pet.birthDate = date
+      }
+    }
+
+    if (weight !== undefined) {
+      if (weight === null || weight === '') {
+        pet.weight = null as any
+      } else {
+        const valeur = Number(weight)
+        if (!Number.isFinite(valeur) || valeur <= 0 || valeur > 1000) {
+          return response.badRequest({ success: false, message: 'Poids invalide.' })
+        }
+        pet.weight = valeur
+      }
+    }
+
+    await pet.save()
+
+    return response.ok({
+      success: true,
+      message: 'Fiche mise à jour',
+      data: {
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed,
+        birthDate: pet.birthDate ? pet.birthDate.toISODate() : null,
+        weight: pet.weight ? Number(pet.weight) : null,
+      },
+    })
+  }
+
   async show({ auth, params, response }: HttpContext) {
     const vet = auth.user as Veterinarian
 

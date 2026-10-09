@@ -83,6 +83,10 @@
       </section>
 
       <div class="space-y-6">
+        <section v-if="shortcuts.length" class="dashboard-shortcuts">
+          <p class="workspace-eyebrow mb-2">Accès rapide</p><h2 class="font-semibold mb-4">Passer à l’action</h2>
+          <NuxtLink v-for="shortcut in shortcuts" :key="shortcut.to" :to="shortcut.to">{{ shortcut.label }} <span aria-hidden="true">→</span></NuxtLink>
+        </section>
         <section class="card">
           <div class="workspace-section-heading"><div><p class="workspace-eyebrow mb-2">À suivre</p><h2>Les priorités de la clinique</h2></div></div>
           <div v-if="loading" class="h-32 bg-surface-100 dark:bg-surface-800 rounded-xl animate-pulse" />
@@ -93,10 +97,6 @@
               <span class="dashboard-row-action">{{ item.action }} →</span>
             </NuxtLink>
           </template>
-        </section>
-        <section v-if="shortcuts.length" class="dashboard-shortcuts">
-          <p class="workspace-eyebrow mb-2">Accès rapide</p><h2 class="font-semibold mb-4">Passer à l’action</h2>
-          <NuxtLink v-for="shortcut in shortcuts" :key="shortcut.to" :to="shortcut.to">{{ shortcut.label }} <span aria-hidden="true">→</span></NuxtLink>
         </section>
       </div>
     </div>
@@ -159,15 +159,14 @@ const todayAppointments = computed(() => appointments.value.filter(a => a.date?.
 /**
  * Les compteurs d'en-tête.
  *
- * « Rendez-vous du jour » et « Animaux hospitalisés » n'y figurent plus : la
- * section « Votre journée » liste les rendez-vous du jour, et « Les priorités »
- * reprend les hospitalisations. Un compteur au-dessus d'une section qui dit la
- * même chose en mieux n'ajoute rien, et donne au tableau de bord l'air de se
- * répéter.
+ * « Rendez-vous du jour » n'y figure plus : la section « Votre journée » juste
+ * en dessous liste les rendez-vous du jour, et un compteur au-dessus d'elle ne
+ * faisait que répéter ce qu'elle montre en mieux.
  */
 const metrics = computed(() => [
-  { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' , capability: 'patients' },
+  { label: 'Hospitalisations', value: failures.hospital ? null : hospital.value.active, hint: 'Animaux pris en charge', to: '/hospitalization', capability: 'hospitalization' },
   { label: 'Rappels à venir', value: failures.reminders ? null : reminders.value.upcomingCount, hint: 'Sur les 7 prochains jours', to: '/reminders' , capability: 'reminders' },
+  { label: 'Patients', value: failures.patients ? null : patients.value.length, hint: 'Dossiers partagés avec vous', to: '/patients' , capability: 'patients' },
 ].filter((metric) => !metric.capability || authStore.can(metric.capability as Capability)))
 /** Raccourcis : seuls ceux qui mènent quelque part pour cette personne. */
 const shortcuts = computed(() =>

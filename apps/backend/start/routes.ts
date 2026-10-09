@@ -453,6 +453,7 @@ router.group(() => {
   router.get('/search', [VetPatientsController, 'search'])
   router.post('/', [VetPatientsController, 'store'])
   router.get('/:token', [VetPatientsController, 'show'])
+  router.put('/:token', [VetPatientsController, 'update'])
   router.get('/:token/health-book', [VetPatientsController, 'healthBook'])
   router.post('/:token/notes', [VetPatientsController, 'addNote'])
   router.put('/:token/diet/vet-notes', [WeightGoalsController, 'updateVetNotes'])

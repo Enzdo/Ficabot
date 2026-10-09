@@ -261,6 +261,7 @@ export default class VetAssistantConversationsController {
         records,
         vet: auth.user as Veterinarian,
         outils: outilsAutorises(peut),
+        conversation,
         history: history
           .reverse()
           .map((m) => ({ role: m.role, content: m.content })),
@@ -292,6 +293,9 @@ export default class VetAssistantConversationsController {
             // Ce que l'assistant est allé lire. Le praticien voit sur quoi la
             // réponse s'appuie, au lieu d'avoir à la croire sur parole.
             consultations: result.consultations ?? [],
+            // Corrections suggérées, à valider par le praticien avant d'être
+            // enregistrées. L'assistant ne modifie jamais de lui-même.
+            propositions: result.propositions ?? [],
           },
         },
       })

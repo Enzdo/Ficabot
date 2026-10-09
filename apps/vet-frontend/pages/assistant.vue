@@ -336,6 +336,56 @@
                         </span>
                       </span>
                     </div>
+
+                    <!-- Corrections suggérées. L'assistant ne modifie rien de
+                         lui-même : il prépare, le praticien valide. -->
+                    <div
+                      v-for="(prop, pi) in message.propositions"
+                      :key="`${message.key}-prop-${pi}`"
+                      class="mt-3 rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/60"
+                    >
+                      <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">
+                        Modification proposée — {{ prop.cible.libelle }}
+                      </p>
+
+                      <dl class="mt-2 space-y-1 text-sm">
+                        <div v-for="(valeur, champ) in prop.changements" :key="champ" class="flex flex-wrap items-baseline gap-2">
+                          <dt class="text-surface-500">{{ libelleChamp(champ) }}</dt>
+                          <dd class="flex items-baseline gap-2">
+                            <span class="text-surface-400 line-through">{{ valeur.avant ?? '—' }}</span>
+                            <span aria-hidden="true" class="text-surface-400">→</span>
+                            <span class="font-medium text-surface-900 dark:text-surface-100">{{ valeur.apres ?? '—' }}</span>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <p v-if="prop.etat === 'applique'" class="mt-2 text-sm text-success-600">
+                        Enregistrée.
+                      </p>
+                      <p v-else-if="prop.etat === 'refuse'" class="mt-2 text-sm text-surface-500">
+                        Écartée.
+                      </p>
+                      <p v-else-if="prop.erreur" class="workspace-error mt-2" role="alert">{{ prop.erreur }}</p>
+
+                      <div v-if="!prop.etat" class="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          class="btn-primary !py-1.5 !px-3 text-sm"
+                          :disabled="prop.enCours"
+                          @click="appliquerProposition(prop)"
+                        >
+                          {{ prop.enCours ? 'Enregistrement…' : 'Appliquer' }}
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-secondary !py-1.5 !px-3 text-sm"
+                          :disabled="prop.enCours"
+                          @click="prop.etat = 'refuse'"
+                        >
+                          Écarter
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -374,16 +424,17 @@
                 ref="composerEl"
                 v-model="question"
                 rows="1"
-                class="input max-h-40 resize-none leading-relaxed"
+                class="input max-h-40 h-[45px] min-h-[45px] resize-none leading-relaxed"
                 :disabled="sending"
                 :placeholder="sending ? 'L\'assistant consulte le dossier…' : 'Posez votre question…'"
                 aria-label="Votre question"
                 @input="resizeComposer"
                 @keydown.enter.exact.prevent="send()"
               ></textarea>
+              <!-- Carré, à la hauteur exacte d'une ligne de saisie. -->
               <button
                 type="button"
-                class="btn-primary shrink-0 px-4"
+                class="btn-primary h-[45px] w-[45px] shrink-0 !px-0"
                 :disabled="sending || !question.trim()"
                 :class="sending || !question.trim() ? 'opacity-50 cursor-not-allowed' : ''"
                 aria-label="Envoyer la question"
@@ -542,6 +593,8 @@ interface ThreadMessage {
   role: 'user' | 'assistant'
   content: string
   sources: MessageSource[]
+  /** Corrections suggérées, en attente de validation. */
+  propositions: any[]
   status: 'sent' | 'sending' | 'failed'
   error: string
   empty: boolean
@@ -658,11 +711,22 @@ const scrollToBottom = () => {
   })
 }
 
+/**
+ * Hauteur d'une ligne de saisie, bordures comprises.
+ *
+ * Le bouton d'envoi porte la même : il faisait 44 px pour un champ de 45, et
+ * ce pixel d'écart se voyait.
+ */
+const HAUTEUR_COMPOSEUR = 45
+
 const resizeComposer = () => {
   const el = composerEl.value
   if (!el) return
   el.style.height = 'auto'
-  el.style.height = `${Math.min(el.scrollHeight + 2, 160)}px`
+  // Les deux pixels compensent les bordures : `scrollHeight` les exclut, la
+  // hauteur en `border-box` les inclut. Les retirer faisait déborder le texte
+  // dès la deuxième ligne.
+  el.style.height = `${Math.min(Math.max(el.scrollHeight + 2, HAUTEUR_COMPOSEUR), 160)}px`
 }
 
 const toThreadMessage = (raw: any): ThreadMessage => ({
@@ -671,6 +735,7 @@ const toThreadMessage = (raw: any): ThreadMessage => ({
   role: raw?.role === 'assistant' ? 'assistant' : 'user',
   content: typeof raw?.content === 'string' ? raw.content : '',
   sources: Array.isArray(raw?.sources) ? raw.sources : [],
+  propositions: [],
   status: 'sent',
   error: '',
   empty: !String(raw?.content || '').trim(),
@@ -867,6 +932,11 @@ const deliver = async (message: ThreadMessage) => {
         answer ||
         "L'assistant n'a renvoyé aucune réponse. Reformulez votre question, ou réessayez dans un instant.",
       sources: Array.isArray(data.answer?.sources) ? data.answer.sources : [],
+      // Rendues réactives : la carte suit son propre état (en cours, appliquée,
+      // écartée) sans repasser par le serveur.
+      propositions: (Array.isArray(data.answer?.propositions) ? data.answer.propositions : []).map(
+        (p: any) => ({ ...p, etat: null, enCours: false, erreur: '' })
+      ),
       status: 'sent',
       error: '',
       empty: !answer,
@@ -899,6 +969,7 @@ const send = async (prompt?: string) => {
     role: 'user',
     content,
     sources: [],
+    propositions: [],
     status: 'sending',
     error: '',
     empty: false,
@@ -1174,6 +1245,47 @@ const choosePatient = async (patient: PatientSummary) => {
   } finally {
     attaching.value = false
   }
+}
+
+const LIBELLES_CHAMPS: Record<string, string> = {
+  name: 'Nom', species: 'Espèce', breed: 'Race',
+  birthDate: 'Naissance', weight: 'Poids',
+  firstName: 'Prénom', lastName: 'Nom', email: 'Email',
+  phone: 'Téléphone', notes: 'Notes',
+}
+
+const libelleChamp = (champ: string) => LIBELLES_CHAMPS[champ] ?? champ
+
+/**
+ * Applique une correction suggérée.
+ *
+ * Elle passe par les mêmes routes que les formulaires : l'assistant n'a fait
+ * que préparer la saisie, et le serveur valide exactement comme si le
+ * praticien avait rempli le champ lui-même.
+ */
+const appliquerProposition = async (prop: any) => {
+  prop.enCours = true
+  prop.erreur = ''
+
+  const valeurs: Record<string, unknown> = {}
+  for (const [champ, v] of Object.entries(prop.changements as Record<string, any>)) {
+    valeurs[champ] = v.apres
+  }
+
+  const chemin =
+    prop.cible.type === 'patient'
+      ? `/vet/patients/${prop.cible.token}`
+      : `/vet/clients/external/${prop.cible.id}`
+
+  const response = await api.put<any>(chemin, valeurs, { silent: true })
+
+  if (response.success) {
+    prop.etat = 'applique'
+  } else {
+    prop.erreur = response.message || "La modification n'a pas pu être enregistrée."
+  }
+
+  prop.enCours = false
 }
 
 /* ---------- Dates ---------- */

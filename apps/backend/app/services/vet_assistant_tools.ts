@@ -5,6 +5,8 @@ import VetInvoice from '#models/vet_invoice'
 import VetPayment from '#models/vet_payment'
 import VetReminder from '#models/vet_reminder'
 import Veterinarian from '#models/veterinarian'
+import VetAssistantConversation from '#models/vet_assistant_conversation'
+import VetExternalClient from '#models/vet_external_client'
 import { balanceOf, round2 } from '#services/vet_accounting'
 import { scopedPets } from '#services/vet_patient_scope'
 import type { Capability } from '#services/vet_permissions'
@@ -30,6 +32,18 @@ import type { Capability } from '#services/vet_permissions'
 /** Plafond de lignes rendues. Au-delà, on résume plutôt que de tout verser. */
 const MAX_LIGNES = 40
 
+/**
+ * Ce que l'outil reçoit en plus de ses arguments.
+ *
+ * La discussion en fait partie pour que l'assistant puisse s'y rattacher un
+ * dossier lui-même — le seul effet de bord qu'on lui accorde, parce qu'il ne
+ * touche aucune donnée clinique et se défait d'un clic.
+ */
+export interface ContexteOutil {
+  vet: Veterinarian
+  conversation?: VetAssistantConversation | null
+}
+
 export interface OutilAssistant {
   nom: string
   description: string
@@ -37,7 +51,7 @@ export interface OutilAssistant {
   capability: Capability | null
   /** Absent quand l'outil n'attend aucun paramètre. */
   parametres?: Record<string, unknown>
-  executer: (vet: Veterinarian, args: Record<string, any>) => Promise<unknown>
+  executer: (contexte: ContexteOutil, args: Record<string, any>) => Promise<unknown>
 }
 
 /* ───────────────────────────── Dates ───────────────────────────── */
@@ -105,7 +119,7 @@ export const OUTILS: OutilAssistant[] = [
         description: 'Statut du rendez-vous. Omettre pour tous les statuts.',
       },
     },
-    async executer(vet, args) {
+    async executer({ vet }, args) {
       const { du, au } = periode(args)
 
       let q = ClinicAppointment.query()
@@ -149,7 +163,7 @@ export const OUTILS: OutilAssistant[] = [
       'Liste ou dénombre les factures encore dues, avec le reste à encaisser et le retard éventuel. ' +
       'À utiliser pour les questions sur les impayés, les créances ou les relances.',
     capability: 'billing',
-    async executer(vet) {
+    async executer({ vet }) {
       const factures = await VetInvoice.query()
         .where('veterinarian_id', vet.id)
         .whereNot('status', 'draft')
@@ -203,7 +217,7 @@ export const OUTILS: OutilAssistant[] = [
       'À utiliser pour les questions de recettes, de TVA ou de comparaison entre mois.',
     capability: 'billing',
     parametres: { ...PERIODE_PARAMS },
-    async executer(vet, args) {
+    async executer({ vet }, args) {
       const { du, au } = periode(args)
 
       const pieces = await VetInvoice.query()
@@ -252,7 +266,7 @@ export const OUTILS: OutilAssistant[] = [
         description: 'Inclure les rappels déjà effectués. Faux par défaut.',
       },
     },
-    async executer(vet, args) {
+    async executer({ vet }, args) {
       const { du, au } = periode(args)
 
       let q = VetReminder.query()
@@ -293,7 +307,7 @@ export const OUTILS: OutilAssistant[] = [
         description: 'Fragment du nom d’un article. Omettre pour n’obtenir que les alertes.',
       },
     },
-    async executer(vet, args) {
+    async executer({ vet }, args) {
       let q = VetInventoryItem.query().where('veterinarian_id', vet.id).where('is_active', true)
 
       const recherche = String(args.recherche ?? '').trim()
@@ -340,7 +354,7 @@ export const OUTILS: OutilAssistant[] = [
       proprietaire: { type: 'string', description: 'Nom ou prénom du propriétaire seulement.' },
       espece: { type: 'string', enum: ['dog', 'cat', 'nac'], description: 'Espèce.' },
     },
-    async executer(vet, args) {
+    async executer({ vet }, args) {
       let q = scopedPets(vet.id).preload('externalClient').preload('user')
 
       const recherche = String(args.recherche ?? '').trim()
@@ -408,6 +422,216 @@ export const OUTILS: OutilAssistant[] = [
           proprietaire: nomProprietaire(p),
         })),
         tronque: pets.length > MAX_LIGNES,
+      }
+    },
+  },
+
+  {
+    nom: 'rattacher_dossier',
+    description:
+      'Rattache la discussion en cours au dossier d’un patient, pour pouvoir ensuite répondre ' +
+      'à partir de son carnet de santé et de ses comptes rendus. À utiliser dès que la ' +
+      'conversation porte sur un animal précis — « parlons de Gaston », « ouvre le dossier de ' +
+      'Noisette », « le chien de M. Durand ». Un seul patient doit correspondre : en cas de ' +
+      'doute, utiliser d’abord `patients` et demander lequel.',
+    capability: 'patients',
+    parametres: {
+      patient: {
+        type: 'string',
+        description: 'Nom de l’animal, ou nom de son propriétaire.',
+      },
+    },
+    async executer({ vet, conversation }, args) {
+      if (!conversation) {
+        return { erreur: "Aucune discussion à rattacher." }
+      }
+
+      const terme = String(args.patient ?? '').trim()
+      if (!terme) return { erreur: 'Indiquez quel patient rattacher.' }
+
+      const trouves = (await OUTILS.find((o) => o.nom === 'patients')!.executer(
+        { vet, conversation },
+        { recherche: terme }
+      )) as { total: number; patients: any[] }
+
+      if (trouves.total === 0) {
+        return { rattache: false, motif: `Aucun patient ne correspond à « ${terme} ».` }
+      }
+
+      // Plusieurs correspondances : on ne choisit pas à la place du praticien.
+      // Se tromper de dossier est pire que de poser la question.
+      if (trouves.total > 1) {
+        return {
+          rattache: false,
+          motif: 'Plusieurs patients correspondent : demandez lequel.',
+          candidats: trouves.patients.map((p) => ({ nom: p.nom, proprietaire: p.proprietaire })),
+        }
+      }
+
+      const nom = trouves.patients[0].nom
+      const pet = await scopedPets(vet.id).where('pets.name', nom).first()
+
+      if (!pet?.vetToken) {
+        return { rattache: false, motif: 'Ce dossier n’est pas consultable.' }
+      }
+
+      conversation.petId = pet.id
+      if (conversation.title === 'Nouvelle discussion') {
+        conversation.title = `À propos de ${pet.name}`
+      }
+      await conversation.save()
+
+      return {
+        rattache: true,
+        patient: pet.name,
+        // Le dossier n'est lu qu'au message suivant : le dire évite que
+        // l'assistant prétende déjà le connaître.
+        note: 'Le dossier sera lisible dès la prochaine question.',
+      }
+    },
+  },
+
+  {
+    nom: 'proposer_modification_patient',
+    description:
+      'Prépare une correction de la fiche d’un patient : nom, espèce, race, date de naissance, ' +
+      'poids. Ne l’applique pas — la modification est soumise au praticien, qui la valide d’un ' +
+      'clic. À utiliser quand il dicte une correction : « Gaston pèse 29 kg », « Noisette est ' +
+      'née en mars 2018 ». N’indiquer que les champs à changer.',
+    capability: 'patients',
+    parametres: {
+      patient: { type: 'string', description: 'Nom de l’animal, ou de son propriétaire.' },
+      name: { type: 'string', description: 'Nouveau nom.' },
+      species: { type: 'string', enum: ['dog', 'cat', 'nac'], description: 'Nouvelle espèce.' },
+      breed: { type: 'string', description: 'Nouvelle race.' },
+      birthDate: { type: 'string', description: 'Date de naissance, AAAA-MM-JJ.' },
+      weight: { type: 'number', description: 'Poids en kilogrammes.' },
+    },
+    async executer({ vet, conversation }, args) {
+      const terme = String(args.patient ?? '').trim()
+
+      // Dans une discussion déjà rattachée, le patient est connu : inutile de
+      // le renommer à chaque correction.
+      let pet = conversation?.petId
+        ? await scopedPets(vet.id).where('pets.id', conversation.petId).first()
+        : null
+
+      if (!pet && terme) {
+        const trouves = (await OUTILS.find((o) => o.nom === 'patients')!.executer(
+          { vet, conversation },
+          { recherche: terme }
+        )) as { total: number; patients: any[] }
+
+        if (trouves.total === 0) return { propose: false, motif: `Aucun patient ne correspond à « ${terme} ».` }
+        if (trouves.total > 1) {
+          return {
+            propose: false,
+            motif: 'Plusieurs patients correspondent : demandez lequel.',
+            candidats: trouves.patients.map((p) => ({ nom: p.nom, proprietaire: p.proprietaire })),
+          }
+        }
+        pet = await scopedPets(vet.id).where('pets.name', trouves.patients[0].nom).first()
+      }
+
+      if (!pet?.vetToken) return { propose: false, motif: 'Précisez de quel patient il s’agit.' }
+
+      const CHAMPS = ['name', 'species', 'breed', 'birthDate', 'weight'] as const
+      const actuel: Record<string, unknown> = {
+        name: pet.name,
+        species: pet.species,
+        breed: pet.breed,
+        birthDate: pet.birthDate ? pet.birthDate.toISODate() : null,
+        weight: pet.weight ? Number(pet.weight) : null,
+      }
+
+      const changements: Record<string, { avant: unknown; apres: unknown }> = {}
+      for (const champ of CHAMPS) {
+        if (args[champ] === undefined) continue
+        const apres = champ === 'weight' ? Number(args[champ]) : args[champ]
+        // Une valeur identique n'est pas un changement : la proposer ferait
+        // valider une modification qui ne modifie rien.
+        if (String(actuel[champ] ?? '') === String(apres ?? '')) continue
+        changements[champ] = { avant: actuel[champ], apres }
+      }
+
+      if (Object.keys(changements).length === 0) {
+        return { propose: false, motif: 'Rien à changer : les valeurs sont déjà celles-là.' }
+      }
+
+      return {
+        propose: true,
+        cible: { type: 'patient', token: pet.vetToken, libelle: pet.name },
+        changements,
+        note: 'Proposition soumise au praticien. Elle n’est pas encore enregistrée.',
+      }
+    },
+  },
+
+  {
+    nom: 'proposer_modification_client',
+    description:
+      'Prépare une correction de la fiche d’un client : prénom, nom, email, téléphone, notes. ' +
+      'Ne l’applique pas — la modification est soumise au praticien, qui la valide d’un clic. ' +
+      'N’indiquer que les champs à changer.',
+    capability: 'clients',
+    parametres: {
+      client: { type: 'string', description: 'Nom du client, ou de son animal.' },
+      firstName: { type: 'string', description: 'Nouveau prénom.' },
+      lastName: { type: 'string', description: 'Nouveau nom.' },
+      email: { type: 'string', description: 'Nouvelle adresse email.' },
+      phone: { type: 'string', description: 'Nouveau téléphone.' },
+      notes: { type: 'string', description: 'Notes sur le client.' },
+    },
+    async executer({ vet }, args) {
+      const terme = String(args.client ?? '').trim()
+      if (!terme) return { propose: false, motif: 'Précisez de quel client il s’agit.' }
+
+      const trouves = await VetExternalClient.query()
+        .where('veterinarian_id', vet.id)
+        .whereRaw(
+          "COALESCE(first_name, '') || ' ' || COALESCE(last_name, '') ILIKE ?",
+          [`%${terme}%`]
+        )
+
+      if (trouves.length === 0) return { propose: false, motif: `Aucun client ne correspond à « ${terme} ».` }
+      if (trouves.length > 1) {
+        return {
+          propose: false,
+          motif: 'Plusieurs clients correspondent : demandez lequel.',
+          candidats: trouves.map((c) => `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim()),
+        }
+      }
+
+      const client = trouves[0]
+      const CHAMPS = ['firstName', 'lastName', 'email', 'phone', 'notes'] as const
+      const actuel: Record<string, unknown> = {
+        firstName: client.firstName,
+        lastName: client.lastName,
+        email: client.email,
+        phone: client.phone,
+        notes: client.notes,
+      }
+
+      const changements: Record<string, { avant: unknown; apres: unknown }> = {}
+      for (const champ of CHAMPS) {
+        if (args[champ] === undefined) continue
+        if (String(actuel[champ] ?? '') === String(args[champ] ?? '')) continue
+        changements[champ] = { avant: actuel[champ], apres: args[champ] }
+      }
+
+      if (Object.keys(changements).length === 0) {
+        return { propose: false, motif: 'Rien à changer : les valeurs sont déjà celles-là.' }
+      }
+
+      return {
+        propose: true,
+        cible: {
+          type: 'client',
+          id: client.id,
+          libelle: `${client.firstName ?? ''} ${client.lastName ?? ''}`.trim() || client.email,
+        },
+        changements,
+        note: 'Proposition soumise au praticien. Elle n’est pas encore enregistrée.',
       }
     },
   },
