@@ -833,7 +833,12 @@ export const OUTILS: OutilAssistant[] = [
             dosage: { type: 'string', description: 'Dose fixe, si elle ne dépend pas du poids.' },
             frequence: { type: 'string', description: 'Ex. : une fois par jour, matin et soir.' },
             duree: { type: 'string', description: 'Ex. : 5 jours, 3 semaines.' },
-            instructions: { type: 'string', description: 'Au cours du repas, etc.' },
+            instructions: {
+              type: 'string',
+              description:
+                'Consigne de prise : au cours du repas, à jeun, par voie orale… ' +
+                'À renseigner dès que le praticien en mentionne une.',
+            },
             quantite: { type: 'number', description: 'Nombre de boîtes ou de flacons à délivrer.' },
           },
           required: ['nom'],

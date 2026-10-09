@@ -405,6 +405,85 @@
                         </div>
                       </template>
 
+                      <!-- ─── Ordonnance ─── -->
+                      <template v-else-if="prop.type === 'ordonnance'">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">
+                          Ordonnance — {{ prop.cible.libelle }}
+                          <span v-if="prop.cible.poids" class="font-normal normal-case text-surface-400">
+                            · {{ prop.cible.poids }} kg
+                          </span>
+                        </p>
+
+                        <div class="mt-2 space-y-3">
+                          <div v-if="prop.ordonnance.diagnostic || !prop.etat">
+                            <label class="label" :for="`${message.key}-diag-${pi}`">Motif</label>
+                            <input
+                              :id="`${message.key}-diag-${pi}`"
+                              v-model="prop.ordonnance.diagnostic"
+                              type="text"
+                              class="input"
+                              :disabled="!!prop.etat"
+                            />
+                          </div>
+
+                          <div
+                            v-for="(med, mi) in prop.ordonnance.medicaments"
+                            :key="mi"
+                            class="rounded-lg border border-surface-200 p-2.5 dark:border-surface-700"
+                          >
+                            <input
+                              v-model="med.medicationName"
+                              type="text"
+                              class="input font-medium"
+                              placeholder="Médicament"
+                              :disabled="!!prop.etat"
+                            />
+                            <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                              <input v-model="med.dosage" type="text" class="input" placeholder="Dose" :disabled="!!prop.etat" />
+                              <input v-model="med.frequency" type="text" class="input" placeholder="Fréquence" :disabled="!!prop.etat" />
+                              <input v-model="med.duration" type="text" class="input" placeholder="Durée" :disabled="!!prop.etat" />
+                            </div>
+                            <!-- D'où sort la dose : le praticien vérifie le calcul
+                                 d'un coup d'œil au lieu de le refaire. -->
+                            <p v-if="med.calcul" class="mt-1.5 text-[11px] text-surface-400">
+                              Calculé&nbsp;: {{ med.calcul }}
+                            </p>
+                            <input
+                              v-model="med.instructions"
+                              type="text"
+                              class="input mt-2"
+                              placeholder="Instructions (facultatif)"
+                              :disabled="!!prop.etat"
+                            />
+                          </div>
+                        </div>
+
+                        <p v-if="prop.etat === 'applique'" class="mt-2 text-sm text-success-600">
+                          Ordonnance créée.
+                        </p>
+                        <p v-else-if="prop.etat === 'refuse'" class="mt-2 text-sm text-surface-500">Écartée.</p>
+                        <p v-else-if="prop.erreur" class="workspace-error mt-2" role="alert">{{ prop.erreur }}</p>
+
+                        <div v-if="!prop.etat" class="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            class="btn-primary !py-1.5 !px-3 text-sm"
+                            :disabled="prop.enCours"
+                            @click="creerOrdonnance(prop)"
+                          >
+                            {{ prop.enCours ? 'Création…' : 'Créer l’ordonnance' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-secondary !py-1.5 !px-3 text-sm"
+                            :disabled="prop.enCours"
+                            @click="prop.etat = 'refuse'"
+                          >
+                            Écarter
+                          </button>
+                        </div>
+                      </template>
+
                       <!-- ─── Correction de fiche ─── -->
                       <template v-else>
                       <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">
@@ -1334,6 +1413,46 @@ const choosePatient = async (patient: PatientSummary) => {
   } finally {
     attaching.value = false
   }
+}
+
+/**
+ * Crée l'ordonnance telle qu'elle est à l'écran.
+ *
+ * Prescrire engage le praticien : l'assistant a préparé les lignes et calculé
+ * les doses, mais c'est la version affichée — relue, éventuellement corrigée —
+ * qui est enregistrée.
+ */
+const creerOrdonnance = async (prop: any) => {
+  prop.enCours = true
+  prop.erreur = ''
+
+  const response = await api.post<any>(
+    '/vet/prescriptions',
+    {
+      petId: prop.cible.petId,
+      petName: prop.cible.libelle,
+      clientName: prop.cible.client,
+      diagnosis: prop.ordonnance.diagnostic || null,
+      notes: prop.ordonnance.notes || null,
+      items: prop.ordonnance.medicaments.map((m: any) => ({
+        medicationName: m.medicationName,
+        dosage: m.dosage,
+        frequency: m.frequency,
+        duration: m.duration,
+        instructions: m.instructions || null,
+        quantity: m.quantity ?? 1,
+      })),
+    },
+    { silent: true }
+  )
+
+  if (response.success) {
+    prop.etat = 'applique'
+  } else {
+    prop.erreur = response.message || "L'ordonnance n'a pas pu être créée."
+  }
+
+  prop.enCours = false
 }
 
 /* ---------- Dictée ---------- */

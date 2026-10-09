@@ -139,6 +139,10 @@ export default class VetAssistantService {
       `Nous sommes le ${DateTime.now().setLocale('fr').toFormat('cccc d LLLL yyyy')}.`,
       '',
       'Règles absolues :',
+      // Les cartes affichent déjà le détail, en champs modifiables. Le répéter
+      // en texte donnait deux fois la même chose, dont une en markdown brut.
+      "- JAMAIS de markdown. Pas d'astérisques, pas de dièses, pas de listes à puces :\n  le texte s'affiche tel quel, les signes restent visibles.",
+      "- Quand tu prépares quelque chose à valider — ordonnance, message, correction de\n  fiche —, l'écran l'affiche en entier, en champs modifiables. Réponds alors en UNE\n  phrase, sans recopier aucun détail : ni médicament, ni dose, ni objet, ni corps.\n  Exemple : « L'ordonnance est prête, relisez-la ci-dessous. »",
       aDossier
         ? "- Réponds UNIQUEMENT à partir du dossier fourni ci-dessous. N'invente rien."
         : "- Aucun dossier patient n'est joint : ne fais référence à aucun cas précis.",
