@@ -173,14 +173,26 @@ const shortcuts = computed(() =>
   [
     { to: '/patients', label: 'Retrouver un patient', capability: 'patients' },
     { to: '/consultation', label: 'Ouvrir la dictée', capability: 'consultation' },
-    { to: '/chat', label: 'Consulter les messages', capability: 'messages' },
-  ].filter((shortcut) => authStore.can(shortcut.capability as Capability))
+    // En essai comme l'entrée de menu : un raccourci vers un écran masqué
+    // serait la seule porte restée ouverte.
+    { to: '/chat', label: 'Consulter les messages', capability: 'messages', beta: true },
+  ].filter(
+    (shortcut) =>
+      (!(shortcut as any).beta || authStore.betaFeatures === true) &&
+      authStore.can(shortcut.capability as Capability)
+  )
 )
 const priorities = computed(() => [
   { label: 'Rappels de soins', detail: failures.reminders ? 'Données indisponibles' : reminders.value.overdueCount ? `${reminders.value.overdueCount} rappel(s) en retard à vérifier` : 'Aucun rappel en retard', alert: !failures.reminders && reminders.value.overdueCount > 0, to: '/reminders', action: 'Voir les rappels' , capability: 'reminders' },
-  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' , capability: 'stock' },
+  { label: 'Stocks à surveiller', detail: failures.inventory ? 'Données indisponibles' : inventory.value.lowStockCount ? `${inventory.value.lowStockCount} produit(s) sous le seuil` : 'Aucune alerte de stock', alert: !failures.inventory && inventory.value.lowStockCount > 0, to: '/inventory', action: 'Voir les stocks' , capability: 'stock', beta: true },
   { label: 'Animaux hospitalisés', detail: failures.hospital ? 'Données indisponibles' : hospital.value.active ? `${hospital.value.active} suivi(s) en cours` : 'Aucune hospitalisation en cours', alert: false, to: '/hospitalization', action: 'Voir les suivis', capability: 'hospitalization' },
-].filter((priority) => !priority.capability || authStore.can(priority.capability as Capability)))
+].filter(
+  (priority) =>
+    // Même raison que pour les raccourcis : une carte qui mène à un écran
+    // masqué le déverrouillerait par la bande.
+    (!(priority as any).beta || authStore.betaFeatures === true) &&
+    (!priority.capability || authStore.can(priority.capability as Capability))
+))
 /** Les classes Tailwind sont statiques : on les choisit, on ne les compose pas. */
 const grilleMetriques = computed(
   () =>

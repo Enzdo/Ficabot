@@ -807,6 +807,130 @@ export const OUTILS: OutilAssistant[] = [
       }
     },
   },
+
+  {
+    nom: 'proposer_ordonnance',
+    description:
+      'Prépare une ordonnance pour un patient. Ne la crée pas : elle est soumise au praticien, ' +
+      'qui la relit, la corrige et la valide — prescrire est son acte, pas celui de l’assistant. ' +
+      'Pour une posologie au poids, indiquer `dosePoids` (quantité par kilogramme) et `unite` : ' +
+      'la dose est calculée à partir du poids réel du dossier. Ne JAMAIS calculer soi-même, ni ' +
+      'inventer un poids. Pour une dose fixe, utiliser `dosage` directement.',
+    capability: 'prescriptions',
+    parametres: {
+      patient: { type: 'string', description: 'Nom de l’animal, ou de son propriétaire.' },
+      diagnostic: { type: 'string', description: 'Motif ou diagnostic, en une ligne.' },
+      notes: { type: 'string', description: 'Consignes générales au propriétaire.' },
+      medicaments: {
+        type: 'array',
+        description: 'Les lignes de l’ordonnance.',
+        items: {
+          type: 'object',
+          properties: {
+            nom: { type: 'string', description: 'Nom du médicament.' },
+            dosePoids: { type: 'number', description: 'Quantité par kilogramme, pour une posologie au poids.' },
+            unite: { type: 'string', description: 'Unité de la dose : mg, ml, µg…' },
+            dosage: { type: 'string', description: 'Dose fixe, si elle ne dépend pas du poids.' },
+            frequence: { type: 'string', description: 'Ex. : une fois par jour, matin et soir.' },
+            duree: { type: 'string', description: 'Ex. : 5 jours, 3 semaines.' },
+            instructions: { type: 'string', description: 'Au cours du repas, etc.' },
+            quantite: { type: 'number', description: 'Nombre de boîtes ou de flacons à délivrer.' },
+          },
+          required: ['nom'],
+        },
+      },
+    },
+    async executer({ vet, conversation }, args) {
+      const lignes = Array.isArray(args.medicaments) ? args.medicaments : []
+      if (lignes.length === 0) {
+        return { propose: false, motif: 'Indiquez au moins un médicament.' }
+      }
+
+      let pet = conversation?.petId
+        ? await scopedPets(vet.id).where('pets.id', conversation.petId).preload('externalClient').first()
+        : null
+
+      if (!pet) {
+        const terme = String(args.patient ?? '').trim()
+        if (!terme) return { propose: false, motif: 'Précisez pour quel patient.' }
+        const resolu = await resoudrePatient(vet, terme)
+        if ('erreur' in resolu) return { propose: false, ...resolu.erreur }
+        pet = resolu.pet
+        await pet.load('externalClient')
+      }
+
+      const poids = pet.weight ? Number(pet.weight) : null
+
+      /**
+       * La dose se calcule ici, jamais dans le modèle.
+       *
+       * Un modèle de langage se trompe en arithmétique, et une erreur de dose
+       * sur une ordonnance ne se rattrape pas. Il fournit la posologie, le
+       * code la multiplie par le poids réel du dossier.
+       */
+      const besoinPoids = lignes.some((l: any) => Number.isFinite(Number(l.dosePoids)))
+
+      if (besoinPoids && !poids) {
+        return {
+          propose: false,
+          motif:
+            `Le poids de ${pet.name} n'est pas renseigné : une posologie au poids ne peut pas ` +
+            'être calculée. Pesez l’animal, ou donnez une dose fixe.',
+        }
+      }
+
+      const medicaments = lignes.map((l: any) => {
+        const nom = String(l.nom ?? '').trim()
+        const dosePoids = Number(l.dosePoids)
+        const unite = String(l.unite ?? 'mg').trim()
+
+        let dosage = String(l.dosage ?? '').trim()
+        let calcul: string | null = null
+
+        if (Number.isFinite(dosePoids) && dosePoids > 0 && poids) {
+          // Deux décimales au plus : au-delà, la précision est illusoire et
+          // ne correspond à aucune forme délivrable.
+          const dose = Math.round(dosePoids * poids * 100) / 100
+          dosage = `${dose} ${unite}`
+          calcul = `${dosePoids} ${unite}/kg × ${poids} kg`
+        }
+
+        return {
+          medicationName: nom,
+          dosage: dosage || '—',
+          frequency: String(l.frequence ?? '').trim() || '—',
+          duration: String(l.duree ?? '').trim() || '—',
+          instructions: String(l.instructions ?? '').trim() || null,
+          quantity: Number.isFinite(Number(l.quantite)) ? Number(l.quantite) : 1,
+          // Affiché à l'écran : le praticien voit d'où sort la dose.
+          calcul,
+        }
+      })
+
+      const client = (pet as any).externalClient
+      const nomClient = client
+        ? `${client.firstName ?? ''} ${client.lastName ?? ''}`.trim() || client.email
+        : null
+
+      return {
+        propose: true,
+        type: 'ordonnance',
+        cible: {
+          type: 'patient',
+          petId: pet.id,
+          libelle: pet.name,
+          poids,
+          client: nomClient,
+        },
+        ordonnance: {
+          diagnostic: String(args.diagnostic ?? '').trim(),
+          notes: String(args.notes ?? '').trim(),
+          medicaments,
+        },
+        note: 'Ordonnance préparée. Elle n’existe pas tant que le praticien ne l’a pas validée.',
+      }
+    },
+  },
 ]
 
 /**
