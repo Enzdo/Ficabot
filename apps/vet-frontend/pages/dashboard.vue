@@ -6,7 +6,17 @@
         <h1 class="page-title">Bonjour{{ greetingName }}.</h1>
         <p class="page-subtitle">Une vue claire sur votre journée et les patients à suivre.</p>
       </div>
-      <NuxtLink to="/appointments" class="btn-primary">Ouvrir mon planning <span aria-hidden="true">↗</span></NuxtLink>
+      <div class="flex flex-wrap gap-3">
+        <!-- Le geste le plus courant de la journée méritait sa place ici :
+             il fallait jusque-là ouvrir le planning et y chercher le bouton. -->
+        <NuxtLink v-if="authStore.can('agenda')" to="/appointments?nouveau" class="btn-primary flex items-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Ajouter un rendez-vous
+        </NuxtLink>
+        <NuxtLink to="/appointments" class="btn-secondary">Ouvrir mon planning <span aria-hidden="true">↗</span></NuxtLink>
+      </div>
     </section>
 
     <div v-if="failedSections.length" class="workspace-error mb-6" role="alert">
@@ -45,8 +55,13 @@
         <div v-else-if="!todayAppointments.length" class="workspace-empty">
           <span class="dashboard-empty-icon" aria-hidden="true">☷</span>
           <h3 class="font-semibold mb-2">Votre planning est libre aujourd’hui</h3>
-          <p>Retrouvez vos prochains rendez-vous ou ajoutez-en un depuis le planning.</p>
-          <NuxtLink to="/appointments" class="btn-secondary mt-5">Gérer les rendez-vous</NuxtLink>
+          <p>Ajoutez un rendez-vous, ou retrouvez les prochains dans le planning.</p>
+          <div class="mt-5 flex flex-wrap justify-center gap-3">
+            <NuxtLink v-if="authStore.can('agenda')" to="/appointments?nouveau" class="btn-primary">
+              Ajouter un rendez-vous
+            </NuxtLink>
+            <NuxtLink to="/appointments" class="btn-secondary">Gérer les rendez-vous</NuxtLink>
+          </div>
         </div>
         <div v-else class="space-y-2">
           <div v-for="appointment in todayAppointments.slice(0,6)" :key="appointment.id" class="dashboard-appointment">

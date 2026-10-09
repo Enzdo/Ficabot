@@ -478,6 +478,7 @@ const tabs = [
 
 const activeTab = ref('all')
 const viewMode = ref<'list' | 'calendar'>('list')
+const route = useRoute()
 const showNewAppointment = ref(false)
 const saving = ref(false)
 const formError = ref('')
@@ -540,6 +541,13 @@ const editingEmployee = ref<any>(null)
 // Load data on mount
 onMounted(async () => {
   await Promise.all([loadAppointments(), loadEmployees(), loadClients(), loadSharedPatients()])
+
+  // Ouverture directe depuis ailleurs : le tableau de bord propose d'ajouter un
+  // rendez-vous, et atterrir sur le planning avec le formulaire déjà ouvert
+  // épargne un clic — et surtout la recherche du bon bouton.
+  // Les listes sont chargées d'abord, pour que le formulaire ait ses clients
+  // et ses patients dès son ouverture.
+  if (route.query.nouveau !== undefined) openNewAppointment()
 })
 
 const loadAppointments = async () => {
