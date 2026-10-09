@@ -479,6 +479,13 @@ router.group(() => {
   router.post('/', [VetOnboardingController, 'update'])
 }).prefix('/vet/onboarding').use([middleware.vetAuth(), middleware.vetCan({ capability: 'settings' })])
 
+// Composition du tableau de bord, propre à chaque praticien.
+const VetDashboardController = () => import('#controllers/vet_dashboard_controller')
+router.group(() => {
+  router.get('/layout', [VetDashboardController, 'show'])
+  router.put('/layout', [VetDashboardController, 'update'])
+}).prefix('/vet/dashboard').use(middleware.vetAuth())
+
 // Discussions avec l'assistant
 router.group(() => {
   router.get('/suggestions', [VetAssistantConversationsController, 'suggestions'])

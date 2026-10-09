@@ -75,6 +75,17 @@ export default class VetEmployee extends compose(BaseModel, AuthFinder) {
   @column()
   declare capabilities: Partial<Record<Capability, boolean>> | null
 
+  /**
+   * Composition du tableau de bord, propre à cette personne.
+   *
+   * Distincte de celle du titulaire : le jeton désignant le cabinet, une seule
+   * colonne aurait fait écrire tout le monde au même endroit.
+   */
+  @column({
+    prepare: (value) => (value === null || value === undefined ? null : JSON.stringify(value)),
+  })
+  declare dashboardLayout: Array<{ key: string; size: string }> | null
+
   @column.dateTime()
   declare lastLoginAt: DateTime | null
 

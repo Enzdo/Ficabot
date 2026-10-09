@@ -11,6 +11,10 @@ export default {
     './layouts/**/*.vue',
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
+    // Les modules du tableau de bord y déclarent leurs largeurs. Sans ce
+    // chemin, Tailwind ne voyait pas `md:col-span-4` et les grands blocs
+    // tenaient la moitié de l'écran, sans erreur pour le signaler.
+    './utils/**/*.{js,ts}',
     './app.vue',
   ],
   theme: {

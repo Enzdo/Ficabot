@@ -89,6 +89,15 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare betaFeatures: boolean
 
+  /**
+   * Composition du tableau de bord : une liste de `{ key, size }`.
+   * `null` = jamais personnalisé, donc disposition par défaut.
+   */
+  @column({
+    prepare: (value) => (value === null || value === undefined ? null : JSON.stringify(value)),
+  })
+  declare dashboardLayout: Array<{ key: string; size: string }> | null
+
   @column()
   declare website: string | null
 
