@@ -52,6 +52,8 @@ interface AuthState {
    * refuse de toute façon ce qui n'est pas permis.
    */
   actor: Actor | null
+  /** Accès aux écrans encore en essai. `null` tant que le serveur n'a rien dit. */
+  betaFeatures: boolean | null
 }
 
 /**
@@ -84,6 +86,7 @@ const SUBSCRIPTION_COOKIE = 'vet_subscription_active'
  * au moment de l'hydratation.
  */
 const ACTOR_COOKIE = 'vet_actor'
+const BETA_COOKIE = 'vet_beta_features'
 
 const cookieOptions = () => ({
   maxAge: 60 * 60 * 24 * 30,
@@ -104,6 +107,7 @@ const onboardingCookie = () => useCookie<string | null>(ONBOARDING_COOKIE, cooki
 const subscriptionCookie = () => useCookie<string | null>(SUBSCRIPTION_COOKIE, cookieOptions())
 
 const actorCookie = () => useCookie<Actor | null>(ACTOR_COOKIE, cookieOptions())
+const betaCookie = () => useCookie<string | null>(BETA_COOKIE, cookieOptions())
 
 export const useVetAuthStore = defineStore('vetAuth', {
   state: (): AuthState => ({
@@ -112,6 +116,7 @@ export const useVetAuthStore = defineStore('vetAuth', {
     onboardingCompleted: null,
     subscriptionActive: null,
     actor: null,
+    betaFeatures: null,
   }),
 
   getters: {
@@ -142,10 +147,25 @@ export const useVetAuthStore = defineStore('vetAuth', {
       this.vet = vet
       this.token = token
       sessionCookie().value = token
+      if (typeof (vet as any)?.betaFeatures === 'boolean') {
+        this.setBetaFeatures((vet as any).betaFeatures)
+      }
       if (import.meta.client) {
         localStorage.setItem('vet_token', token)
         localStorage.setItem('vet_user', JSON.stringify(vet))
       }
+    },
+
+    /**
+     * Les écrans en essai sont-ils ouverts à ce cabinet ?
+     *
+     * Tant que la réponse est inconnue, ils restent masqués : mieux vaut
+     * cacher une seconde de trop que montrer une fonction inachevée à un
+     * compte d'essai.
+     */
+    setBetaFeatures(enabled: boolean) {
+      this.betaFeatures = enabled
+      betaCookie().value = enabled ? '1' : '0'
     },
 
     setActor(actor: Actor | null) {
@@ -202,6 +222,8 @@ export const useVetAuthStore = defineStore('vetAuth', {
       this.onboardingCompleted = null
       this.subscriptionActive = null
       this.actor = null
+      this.betaFeatures = null
+      betaCookie().value = null
       sessionCookie().value = null
       onboardingCookie().value = null
       subscriptionCookie().value = null
@@ -225,6 +247,11 @@ export const useVetAuthStore = defineStore('vetAuth', {
       const subscription = subscriptionCookie()
       this.subscriptionActive =
         subscription.value === '1' ? true : subscription.value === '0' ? false : null
+
+      // Même lecture pour les écrans en essai, à une nuance près : l'inconnu y
+      // vaut « fermé » à l'affichage, là où l'abonnement inconnu reste passant.
+      const beta = betaCookie()
+      this.betaFeatures = beta.value === '1' ? true : beta.value === '0' ? false : null
 
       // Le cookie fait foi pour l'acteur, des deux côtés : c'est le seul support
       // lisible pendant le rendu serveur, et il est écrit en même temps que

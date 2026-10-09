@@ -41,6 +41,9 @@ export default class VetAuthController {
       specialization: vet.specialization,
       isVerified: vet.isVerified,
       subscriptionActive: hasActiveAccess(vet),
+      // Les écrans en essai. Transmis à la connexion comme à chaque `me`, pour
+      // qu'un changement côté serveur n'attende pas une reconnexion.
+      betaFeatures: !!vet.betaFeatures,
     }
   }
 

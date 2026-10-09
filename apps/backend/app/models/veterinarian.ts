@@ -85,6 +85,10 @@ export default class Veterinarian extends compose(BaseModel, AuthFinder) {
   @column()
   declare accountingClosedThrough: string | null
 
+  /** Accès aux écrans encore en essai : stock, facturation, comptabilité, statistiques. */
+  @column()
+  declare betaFeatures: boolean
+
   @column()
   declare website: string | null
 

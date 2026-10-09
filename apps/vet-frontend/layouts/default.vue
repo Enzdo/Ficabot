@@ -332,6 +332,8 @@ const ALL_NAV_GROUPS = [
   {
     id: 'gestion',
     label: 'Gestion',
+    // Écrans encore en essai : ouverts aux seuls comptes qui les évaluent.
+    beta: true,
     items: [
       { capability: 'stock', to: '/inventory', label: 'Stock', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
       { capability: 'billing', to: '/invoices', label: 'Facturation', icon: 'M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z' },
@@ -357,12 +359,18 @@ const ALL_NAV_GROUPS = [
  * le serveur, et de nouveau par le garde-fou de navigation.
  */
 const navGroups = computed(() =>
-  ALL_NAV_GROUPS.map((group) => ({
-    ...group,
-    items: group.items.filter(
-      (item) => !item.capability || authStore.can(item.capability as Capability)
-    ),
-  })).filter((group) => group.items.length > 0)
+  ALL_NAV_GROUPS
+    // Les groupes marqués `beta` attendent que le cabinet y ait droit. Tant que
+    // la réponse du serveur n'est pas arrivée, ils restent cachés : mieux vaut
+    // les montrer une seconde trop tard qu'exposer une fonction inachevée.
+    .filter((group) => !(group as any).beta || authStore.betaFeatures === true)
+    .map((group) => ({
+      ...group,
+      items: group.items.filter(
+        (item) => !item.capability || authStore.can(item.capability as Capability)
+      ),
+    }))
+    .filter((group) => group.items.length > 0)
 )
 
 // Groupes repliés/dépliés, à la Notion. L'état est conservé entre les sessions ;
@@ -472,7 +480,7 @@ const onClickOutside = (e: MouseEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('click', onClickOutside)
 
   // Load dark mode preference
@@ -480,6 +488,18 @@ onMounted(() => {
   if (savedDarkMode === 'true') {
     isDark.value = true
     document.documentElement.classList.add('dark')
+  }
+
+  /**
+   * L'accès aux écrans en essai se relit à chaque chargement.
+   *
+   * Sans cela, l'ouvrir ou le fermer côté serveur n'aurait d'effet qu'à la
+   * prochaine reconnexion — et une session ouverte avant l'indicateur ne le
+   * connaîtrait jamais.
+   */
+  const me = await useVetApi().get<any>('/vet/auth/me')
+  if (me.success && typeof me.data?.betaFeatures === 'boolean') {
+    authStore.setBetaFeatures(me.data.betaFeatures)
   }
 })
 
