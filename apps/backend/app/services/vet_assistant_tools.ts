@@ -698,6 +698,112 @@ export const OUTILS: OutilAssistant[] = [
       }
     },
   },
+
+  {
+    nom: 'proposer_email',
+    description:
+      'Rédige un e-mail destiné à un client du cabinet — compte rendu de consultation, ' +
+      'consignes de soin, rappel. Ne l’envoie pas : le message est soumis au praticien, qui le ' +
+      'relit, le corrige au besoin, puis l’envoie. Rédiger en français, d’un ton professionnel ' +
+      'et clair, sans jargon inutile, et signer du nom du cabinet. Si la discussion porte sur ' +
+      'un dossier, s’appuyer sur son contenu réel plutôt que d’inventer.',
+    capability: 'clients',
+    parametres: {
+      destinataire: {
+        type: 'string',
+        description:
+          'Nom du client, ou de son animal. Facultatif si la discussion est rattachée à un dossier.',
+      },
+      sujet: { type: 'string', description: 'Objet de l’e-mail.' },
+      corps: {
+        type: 'string',
+        description: 'Corps du message, en texte simple. Les retours à la ligne sont conservés.',
+      },
+    },
+    async executer({ vet, conversation }, args) {
+      const sujet = String(args.sujet ?? '').trim()
+      const corps = String(args.corps ?? '').trim()
+
+      if (!sujet || !corps) {
+        return { propose: false, motif: 'Indiquez un objet et un corps de message.' }
+      }
+
+      /** Le client visé : celui du dossier rattaché, ou celui qu'on nomme. */
+      let client: VetExternalClient | null = null
+      let viaDossier: string | null = null
+
+      if (conversation?.petId) {
+        const pet = await scopedPets(vet.id)
+          .where('pets.id', conversation.petId)
+          .preload('externalClient')
+          .first()
+
+        if (pet?.externalClient) {
+          client = pet.externalClient
+          viaDossier = pet.name
+        }
+      }
+
+      const terme = String(args.destinataire ?? '').trim()
+
+      if (!client && terme) {
+        const candidats = await VetExternalClient.query()
+          .where('veterinarian_id', vet.id)
+          .whereRaw(
+            "COALESCE(first_name, '') || ' ' || COALESCE(last_name, '') ILIKE ?",
+            [`%${terme}%`]
+          )
+
+        if (candidats.length === 0) {
+          // Peut-être a-t-on nommé l'animal plutôt que son maître.
+          const parAnimal = await resoudrePatient(vet, terme)
+          if ('pet' in parAnimal) {
+            await parAnimal.pet.load('externalClient')
+            client = (parAnimal.pet as any).externalClient ?? null
+            viaDossier = parAnimal.pet.name
+          }
+        } else if (candidats.length > 1) {
+          return {
+            propose: false,
+            motif: 'Plusieurs clients correspondent : demandez lequel.',
+            candidats: candidats.map((c) =>
+              `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.email
+            ),
+          }
+        } else {
+          client = candidats[0]
+        }
+      }
+
+      if (!client) {
+        return { propose: false, motif: 'Précisez à quel client ce message est destiné.' }
+      }
+
+      // Sans adresse, rien à envoyer : le dire plutôt que de préparer un
+      // message qui échouera au moment du clic.
+      if (!client.email) {
+        return {
+          propose: false,
+          motif: `${client.firstName ?? ''} ${client.lastName ?? ''}`.trim() +
+            " n'a pas d'adresse email. Ajoutez-la à sa fiche pour pouvoir lui écrire.",
+        }
+      }
+
+      return {
+        propose: true,
+        type: 'email',
+        cible: {
+          type: 'client',
+          id: client.id,
+          libelle: `${client.firstName ?? ''} ${client.lastName ?? ''}`.trim() || client.email,
+          email: client.email,
+          apropos: viaDossier,
+        },
+        email: { sujet, corps },
+        note: 'Message préparé. Il n’est pas envoyé tant que le praticien ne l’a pas validé.',
+      }
+    },
+  },
 ]
 
 /**

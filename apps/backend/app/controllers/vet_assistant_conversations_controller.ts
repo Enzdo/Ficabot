@@ -2,6 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
 import { DateTime } from 'luxon'
 import Pet from '#models/pet'
+import VetExternalClient from '#models/vet_external_client'
+import VetMessageNotification from '#mails/vet_message_notification'
+import mail from '@adonisjs/mail/services/main'
+import { readFile } from 'node:fs/promises'
+import ConsultationService from '#services/consultation_service'
 import type Veterinarian from '#models/veterinarian'
 import { can } from '#services/vet_actor'
 import { outilsAutorises } from '#services/vet_assistant_tools'
@@ -311,6 +316,115 @@ export default class VetAssistantConversationsController {
         message: "L'assistant n'a pas pu répondre. Réessayez dans un instant.",
       })
     }
+  }
+
+  /**
+   * POST /vet/assistant/transcribe — une question dictée, rendue en texte.
+   *
+   * Distincte de la transcription de consultation, qui structure le propos en
+   * compte rendu : ici on veut la phrase telle quelle, pour l'envoyer à
+   * l'assistant comme si elle avait été tapée.
+   */
+  async transcribe({ request, response }: HttpContext) {
+    const audio = request.file('audio', {
+      size: '18mb',
+      extnames: ['webm', 'ogg', 'mp3', 'mp4', 'm4a', 'wav'],
+    })
+
+    if (!audio || !audio.isValid) {
+      return response.badRequest({
+        success: false,
+        message: audio?.errors?.[0]?.message || 'Aucun enregistrement exploitable reçu.',
+      })
+    }
+
+    try {
+      const buffer = await readFile(audio.tmpPath!)
+      const service = new ConsultationService()
+      const texte = await service.transcribe(buffer, `question.${audio.extname || 'webm'}`, 'fr')
+
+      if (!texte?.trim()) {
+        return response.unprocessableEntity({
+          success: false,
+          message: "L'enregistrement n'a produit aucun texte. Réessayez en parlant plus près du micro.",
+        })
+      }
+
+      return response.ok({ success: true, data: { text: texte.trim() } })
+    } catch (error) {
+      logger.error({ err: error }, 'Échec de transcription d’une question dictée')
+      return response.internalServerError({
+        success: false,
+        message: "La transcription a échoué. L'enregistrement n'a pas été conservé.",
+      })
+    }
+  }
+
+  /**
+   * POST /vet/assistant/email — envoie un message préparé par l'assistant.
+   *
+   * Le corps vient de l'écran, pas du modèle : le praticien l'a relu et
+   * peut-être réécrit. Le serveur ne fait donc confiance qu'à deux choses —
+   * que le client appartienne bien à ce cabinet, et que le texte ne soit pas
+   * vide. Le reste est la responsabilité de qui signe.
+   */
+  async sendEmail({ request, response, auth }: HttpContext) {
+    const vet = auth.user as Veterinarian
+
+    const clientId = Number(request.input('clientId'))
+    const sujet = String(request.input('sujet') ?? '').trim()
+    const corps = String(request.input('corps') ?? '').trim()
+
+    if (!sujet || !corps) {
+      return response.badRequest({
+        success: false,
+        message: 'Un objet et un message sont nécessaires.',
+      })
+    }
+
+    // Le destinataire se relit en base, jamais depuis la requête : une adresse
+    // transmise par l'écran permettrait d'écrire à n'importe qui depuis ce
+    // compte.
+    const client = await VetExternalClient.query()
+      .where('id', clientId)
+      .where('veterinarian_id', vet.id)
+      .first()
+
+    if (!client) {
+      return response.notFound({ success: false, message: 'Client non trouvé' })
+    }
+
+    if (!client.email) {
+      return response.badRequest({
+        success: false,
+        message: "Ce client n'a pas d'adresse email.",
+      })
+    }
+
+    const praticien = [vet.firstName, vet.lastName].filter(Boolean).join(' ') || vet.email
+
+    try {
+      await mail.send(
+        new VetMessageNotification(client.email, sujet, corps, {
+          nom: vet.clinicName || praticien,
+          praticien,
+          email: vet.email,
+          adresse: [vet.address, vet.postalCode, vet.city].filter(Boolean).join(', ') || null,
+          telephone: vet.phone || null,
+        })
+      )
+    } catch (error) {
+      logger.error({ err: error, vetId: vet.id, clientId }, 'Échec d’envoi d’un message client')
+      return response.internalServerError({
+        success: false,
+        message: "Le message n'a pas pu être envoyé. Réessayez dans un instant.",
+      })
+    }
+
+    return response.ok({
+      success: true,
+      message: `Message envoyé à ${client.email}.`,
+    })
   }
 
   private async find(id: string, auth: HttpContext['auth']) {

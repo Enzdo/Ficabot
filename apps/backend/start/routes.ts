@@ -488,6 +488,9 @@ router.group(() => {
   router.patch('/conversations/:id', [VetAssistantConversationsController, 'update'])
   router.delete('/conversations/:id', [VetAssistantConversationsController, 'destroy'])
   router.post('/conversations/:id/messages', [VetAssistantConversationsController, 'message'])
+  // Transcription d'une question dictée, et envoi d'un message préparé.
+  router.post('/transcribe', [VetAssistantConversationsController, 'transcribe'])
+  router.post('/email', [VetAssistantConversationsController, 'sendEmail'])
 }).prefix('/vet/assistant').use([middleware.vetAuth(), middleware.vetCan({ capability: 'assistant' })])
 
 // Bibliothèque de modèles de compte rendu.

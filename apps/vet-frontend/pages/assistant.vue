@@ -337,13 +337,76 @@
                       </span>
                     </div>
 
-                    <!-- Corrections suggérées. L'assistant ne modifie rien de
-                         lui-même : il prépare, le praticien valide. -->
+                    <!-- Préparations de l'assistant : correction de fiche ou
+                         message à envoyer. Il ne fait jamais l'acte lui-même —
+                         il prépare, le praticien relit et valide. -->
                     <div
                       v-for="(prop, pi) in message.propositions"
                       :key="`${message.key}-prop-${pi}`"
                       class="mt-3 rounded-xl border border-surface-200 bg-surface-50 p-3 dark:border-surface-700 dark:bg-surface-800/60"
                     >
+                      <!-- ─── Message à envoyer ─── -->
+                      <template v-if="prop.type === 'email'">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">
+                          Message à {{ prop.cible.libelle }}
+                          <span class="font-normal normal-case text-surface-400">· {{ prop.cible.email }}</span>
+                        </p>
+
+                        <div class="mt-2 space-y-2">
+                          <div>
+                            <label class="label" :for="`${message.key}-sujet-${pi}`">Objet</label>
+                            <input
+                              :id="`${message.key}-sujet-${pi}`"
+                              v-model="prop.email.sujet"
+                              type="text"
+                              class="input"
+                              :disabled="!!prop.etat"
+                            />
+                          </div>
+                          <div>
+                            <label class="label" :for="`${message.key}-corps-${pi}`">Message</label>
+                            <!-- Librement réécrivable : c'est le praticien qui
+                                 signe, pas l'assistant. -->
+                            <textarea
+                              :id="`${message.key}-corps-${pi}`"
+                              v-model="prop.email.corps"
+                              rows="9"
+                              class="input resize-y leading-relaxed"
+                              :disabled="!!prop.etat"
+                            ></textarea>
+                          </div>
+                        </div>
+
+                        <p v-if="prop.etat === 'applique'" class="mt-2 text-sm text-success-600">
+                          Envoyé à {{ prop.cible.email }}.
+                        </p>
+                        <p v-else-if="prop.etat === 'refuse'" class="mt-2 text-sm text-surface-500">
+                          Écarté.
+                        </p>
+                        <p v-else-if="prop.erreur" class="workspace-error mt-2" role="alert">{{ prop.erreur }}</p>
+
+                        <div v-if="!prop.etat" class="mt-3 flex gap-2">
+                          <button
+                            type="button"
+                            class="btn-primary !py-1.5 !px-3 text-sm"
+                            :disabled="prop.enCours || !prop.email.sujet.trim() || !prop.email.corps.trim()"
+                            @click="envoyerEmail(prop)"
+                          >
+                            {{ prop.enCours ? 'Envoi…' : 'Envoyer' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn-secondary !py-1.5 !px-3 text-sm"
+                            :disabled="prop.enCours"
+                            @click="prop.etat = 'refuse'"
+                          >
+                            Écarter
+                          </button>
+                        </div>
+                      </template>
+
+                      <!-- ─── Correction de fiche ─── -->
+                      <template v-else>
                       <p class="text-xs font-semibold uppercase tracking-wide text-surface-500">
                         Modification proposée — {{ prop.cible.libelle }}
                       </p>
@@ -385,6 +448,7 @@
                           Écarter
                         </button>
                       </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -431,6 +495,29 @@
                 @input="resizeComposer"
                 @keydown.enter.exact.prevent="send()"
               ></textarea>
+              <!-- Dicter plutôt que taper : l'enregistrement est transcrit,
+                   puis envoyé comme une question écrite. -->
+              <button
+                type="button"
+                class="h-[45px] w-[45px] shrink-0 rounded-lg border transition-colors"
+                :class="enregistrement
+                  ? 'border-danger-500 bg-danger-50 text-danger-600 animate-pulse dark:bg-danger-900/30'
+                  : 'border-surface-200 text-surface-500 hover:border-primary-400 hover:text-primary-700 dark:border-surface-700 dark:text-surface-400'"
+                :disabled="sending || transcription"
+                :title="enregistrement ? 'Arrêter et envoyer' : 'Dicter la question'"
+                :aria-label="enregistrement ? 'Arrêter la dictée et envoyer' : 'Dicter la question'"
+                :aria-pressed="enregistrement"
+                @click="basculerDictee()"
+              >
+                <span v-if="transcription" class="mx-auto block h-4 w-4 animate-spin rounded-full border-2 border-surface-400 border-t-transparent"></span>
+                <svg v-else-if="enregistrement" class="mx-auto h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <rect x="6" y="6" width="12" height="12" rx="2" />
+                </svg>
+                <svg v-else class="mx-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-14 0m7 7v4m0-4a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </button>
+
               <!-- Carré, à la hauteur exacte d'une ligne de saisie. -->
               <button
                 type="button"
@@ -617,6 +704,8 @@ interface PatientSummary {
 
 // useVetApi() se charge du 401 : déconnexion puis redirection vers /login.
 const api = useVetApi()
+// Le jeton sert à l'envoi du fichier audio, que `useVetApi` ne gère pas.
+const authStore = useVetAuthStore()
 
 const NETWORK_ERROR =
   "Le serveur est injoignable. Vérifiez votre connexion, puis réessayez."
@@ -1245,6 +1334,130 @@ const choosePatient = async (patient: PatientSummary) => {
   } finally {
     attaching.value = false
   }
+}
+
+/* ---------- Dictée ---------- */
+
+const enregistrement = ref(false)
+const transcription = ref(false)
+let enregistreur: MediaRecorder | null = null
+let morceaux: Blob[] = []
+let fluxMicro: MediaStream | null = null
+
+/**
+ * Dicter une question plutôt que la taper.
+ *
+ * Un clic démarre, un second arrête : l'enregistrement part se faire
+ * transcrire, et le texte obtenu est envoyé comme s'il avait été écrit. La
+ * phrase reste visible dans le fil, donc une transcription approximative se
+ * voit tout de suite.
+ */
+const basculerDictee = async () => {
+  if (enregistrement.value) {
+    enregistreur?.stop()
+    return
+  }
+
+  actionError.value = ''
+
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+    actionError.value = "Ce navigateur ne permet pas la dictée. Tapez votre question."
+    return
+  }
+
+  try {
+    fluxMicro = await navigator.mediaDevices.getUserMedia({ audio: true })
+  } catch {
+    // Refus du micro, ou aucun périphérique : les deux se disent pareil au
+    // praticien, qui n'a qu'une chose à faire — autoriser, ou écrire.
+    actionError.value = "Le micro n'est pas accessible. Autorisez-le, ou tapez votre question."
+    return
+  }
+
+  morceaux = []
+  enregistreur = new MediaRecorder(fluxMicro)
+
+  enregistreur.ondataavailable = (e) => {
+    if (e.data.size > 0) morceaux.push(e.data)
+  }
+
+  enregistreur.onstop = async () => {
+    enregistrement.value = false
+    fluxMicro?.getTracks().forEach((t) => t.stop())
+    fluxMicro = null
+
+    const audio = new Blob(morceaux, { type: enregistreur?.mimeType || 'audio/webm' })
+    // Trop court pour contenir une phrase : on s'arrête là plutôt que
+    // d'envoyer un fichier vide au service de transcription.
+    if (audio.size < 2000) {
+      actionError.value = 'Enregistrement trop court.'
+      return
+    }
+
+    transcription.value = true
+    try {
+      const formulaire = new FormData()
+      formulaire.append('audio', audio, 'question.webm')
+
+      const config = useRuntimeConfig()
+      const reponse = await fetch(`${config.public.apiBase}/vet/assistant/transcribe`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authStore.token}` },
+        body: formulaire,
+      })
+
+      const data = await reponse.json()
+
+      if (!data?.success || !data.data?.text) {
+        actionError.value = data?.message || "La dictée n'a pas pu être transcrite."
+        return
+      }
+
+      await send(data.data.text)
+    } catch {
+      actionError.value = 'Erreur de connexion pendant la transcription.'
+    } finally {
+      transcription.value = false
+    }
+  }
+
+  enregistreur.start()
+  enregistrement.value = true
+}
+
+onBeforeUnmount(() => {
+  // Quitter la page ne doit pas laisser le micro ouvert.
+  if (enregistrement.value) enregistreur?.stop()
+  fluxMicro?.getTracks().forEach((t) => t.stop())
+})
+
+/**
+ * Envoie un message préparé, tel qu'il est à l'écran.
+ *
+ * Le corps part du champ, pas de ce que le modèle avait écrit : le praticien
+ * a pu le réécrire entièrement, et c'est sa version qui fait foi.
+ */
+const envoyerEmail = async (prop: any) => {
+  prop.enCours = true
+  prop.erreur = ''
+
+  const response = await api.post<any>(
+    '/vet/assistant/email',
+    {
+      clientId: prop.cible.id,
+      sujet: prop.email.sujet,
+      corps: prop.email.corps,
+    },
+    { silent: true }
+  )
+
+  if (response.success) {
+    prop.etat = 'applique'
+  } else {
+    prop.erreur = response.message || "Le message n'a pas pu être envoyé."
+  }
+
+  prop.enCours = false
 }
 
 const LIBELLES_CHAMPS: Record<string, string> = {
