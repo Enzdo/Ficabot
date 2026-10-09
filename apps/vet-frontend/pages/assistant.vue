@@ -316,12 +316,19 @@
                 <!-- Tour de l'assistant -->
                 <div v-else class="flex justify-start">
                   <div class="max-w-[85%]">
+                    <!-- Le markdown est rendu, pas affiché.
+                         La consigne « pas de markdown » ne vaut que pour les
+                         réponses à venir : celles déjà en base gardent leurs
+                         astérisques, et un modèle peut toujours en remettre.
+                         Le rendu échappe le texte d'abord et ne réintroduit
+                         qu'une grammaire fermée — aucune balise ne passe. -->
                     <div
-                      class="whitespace-pre-wrap rounded-2xl rounded-bl-md border border-surface-200 bg-white px-4 py-3 text-sm leading-relaxed dark:border-surface-800 dark:bg-surface-900"
+                      class="prose-compte-rendu rounded-2xl rounded-bl-md border border-surface-200 bg-white px-4 py-3 text-sm leading-relaxed dark:border-surface-800 dark:bg-surface-900"
                       :class="message.empty
                         ? 'text-surface-500 dark:text-surface-400'
                         : 'text-surface-800 dark:text-surface-200'"
-                    >{{ message.content }}</div>
+                      v-html="renderMarkdown(message.content)"
+                    ></div>
 
                     <!-- Entrées du dossier réellement consultées -->
                     <div v-if="message.sources && message.sources.length" class="mt-2 flex flex-wrap gap-1.5">
@@ -782,6 +789,8 @@ interface PatientSummary {
 }
 
 // useVetApi() se charge du 401 : déconnexion puis redirection vers /login.
+import { renderMarkdown } from '~/utils/markdown'
+
 const api = useVetApi()
 // Le jeton sert à l'envoi du fichier audio, que `useVetApi` ne gère pas.
 const authStore = useVetAuthStore()
