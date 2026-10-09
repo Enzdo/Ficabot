@@ -490,7 +490,11 @@ router.group(() => {
   router.post('/conversations/:id/messages', [VetAssistantConversationsController, 'message'])
   // Transcription d'une question dictée, et envoi d'un message préparé.
   router.post('/transcribe', [VetAssistantConversationsController, 'transcribe'])
+  // Écrire à un client exige le même domaine que l'outil qui rédige : sans ce
+  // garde, un employé privé du fichier clients pouvait quand même leur écrire
+  // en appelant la route directement, l'assistant seul suffisant à l'ouvrir.
   router.post('/email', [VetAssistantConversationsController, 'sendEmail'])
+    .use(middleware.vetCan({ capability: 'clients' }))
 }).prefix('/vet/assistant').use([middleware.vetAuth(), middleware.vetCan({ capability: 'assistant' })])
 
 // Bibliothèque de modèles de compte rendu.
