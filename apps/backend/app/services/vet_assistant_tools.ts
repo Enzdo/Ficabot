@@ -7,6 +7,7 @@ import VetReminder from '#models/vet_reminder'
 import Veterinarian from '#models/veterinarian'
 import VetAssistantConversation from '#models/vet_assistant_conversation'
 import VetExternalClient from '#models/vet_external_client'
+import type Pet from '#models/pet'
 import { balanceOf, round2 } from '#services/vet_accounting'
 import { scopedPets } from '#services/vet_patient_scope'
 import type { Capability } from '#services/vet_permissions'
@@ -97,6 +98,97 @@ const PERIODE_PARAMS = {
 }
 
 /* ───────────────────────────── Outils ───────────────────────────── */
+
+/** Mots de liaison : les retenir ramènerait tout le fichier. */
+const MOTS_VIDES = new Set([
+  'le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'mon', 'ma', 'mes',
+  'chien', 'chienne', 'chat', 'chatte', 'animal', 'patient', 'dossier',
+  'fiche', 'pour', 'avec', 'sur',
+])
+
+/**
+ * Retrouve LE patient désigné par un terme, ou dit pourquoi c'est impossible.
+ *
+ * Les outils repassaient par le nom pour récupérer la fiche après l'avoir
+ * cherchée : deux animaux homonymes chez deux clients différents, et c'est
+ * l'autre dossier qui sortait — celui qu'on allait rattacher ou modifier. On
+ * garde donc l'enregistrement trouvé, au lieu de le redemander par son nom.
+ */
+async function resoudrePatient(
+  vet: Veterinarian,
+  terme: string
+): Promise<{ pet: Pet } | { erreur: Record<string, unknown> }> {
+  const nomComplet = "COALESCE(first_name, '') || ' ' || COALESCE(last_name, '')"
+
+  const chercher = (motif: string) =>
+    scopedPets(vet.id)
+      .where((sur) => {
+        sur.whereILike('pets.name', motif)
+        sur.orWhereIn('pets.external_client_id', (sub: any) =>
+          sub
+            .from('vet_external_clients')
+            .select('id')
+            .where('veterinarian_id', vet.id)
+            .whereRaw(`${nomComplet} ILIKE ?`, [motif])
+        )
+        sur.orWhereIn('pets.user_id', (sub: any) =>
+          sub.from('users').select('id').whereRaw(`${nomComplet} ILIKE ?`, [motif])
+        )
+      })
+      .preload('externalClient')
+      .preload('user')
+      .orderBy('pets.name', 'asc')
+
+  let pets = await chercher(`%${terme}%`)
+
+  /**
+   * Second passage, mot à mot.
+   *
+   * Le modèle transmet volontiers la phrase entière — « le chien de Marc
+   * Delaunay » — qui ne correspond à aucun champ. On retente alors sur chaque
+   * mot significatif, et l'on ne garde que les fiches trouvées par tous : un
+   * seul mot commun suffirait sinon à ramener la moitié du fichier.
+   */
+  if (pets.length === 0) {
+    const mots = terme
+      .split(/\s+/)
+      .map((m) => m.replace(/[^\p{L}\p{N}-]/gu, ''))
+      .filter((m) => m.length >= 3 && !MOTS_VIDES.has(m.toLowerCase()))
+
+    if (mots.length) {
+      const parMot = await Promise.all(mots.map((m) => chercher(`%${m}%`)))
+      const communs = parMot.reduce<number[] | null>((acc, lot) => {
+        const ids = lot.map((p) => p.id)
+        return acc === null ? ids : acc.filter((id) => ids.includes(id))
+      }, null)
+
+      const retenus = new Set(communs ?? [])
+      pets = parMot.flat().filter((p, i, tous) =>
+        retenus.has(p.id) && tous.findIndex((q) => q.id === p.id) === i
+      )
+    }
+  }
+
+  if (pets.length === 0) {
+    return { erreur: { motif: `Aucun patient ne correspond à « ${terme} ».` } }
+  }
+
+  // Homonymes compris : on ne choisit jamais à la place du praticien.
+  if (pets.length > 1) {
+    return {
+      erreur: {
+        motif: 'Plusieurs patients correspondent : demandez lequel.',
+        candidats: pets.map((p) => {
+          const c = (p as any).externalClient ?? (p as any).user
+          const proprietaire = c ? [c.firstName, c.lastName].filter(Boolean).join(' ') : null
+          return { nom: p.name, proprietaire }
+        }),
+      },
+    }
+  }
+
+  return { pet: pets[0] }
+}
 
 export const OUTILS: OutilAssistant[] = [
   {
@@ -449,29 +541,11 @@ export const OUTILS: OutilAssistant[] = [
       const terme = String(args.patient ?? '').trim()
       if (!terme) return { erreur: 'Indiquez quel patient rattacher.' }
 
-      const trouves = (await OUTILS.find((o) => o.nom === 'patients')!.executer(
-        { vet, conversation },
-        { recherche: terme }
-      )) as { total: number; patients: any[] }
+      const resolu = await resoudrePatient(vet, terme)
+      if ('erreur' in resolu) return { rattache: false, ...resolu.erreur }
 
-      if (trouves.total === 0) {
-        return { rattache: false, motif: `Aucun patient ne correspond à « ${terme} ».` }
-      }
-
-      // Plusieurs correspondances : on ne choisit pas à la place du praticien.
-      // Se tromper de dossier est pire que de poser la question.
-      if (trouves.total > 1) {
-        return {
-          rattache: false,
-          motif: 'Plusieurs patients correspondent : demandez lequel.',
-          candidats: trouves.patients.map((p) => ({ nom: p.nom, proprietaire: p.proprietaire })),
-        }
-      }
-
-      const nom = trouves.patients[0].nom
-      const pet = await scopedPets(vet.id).where('pets.name', nom).first()
-
-      if (!pet?.vetToken) {
+      const pet = resolu.pet
+      if (!pet.vetToken) {
         return { rattache: false, motif: 'Ce dossier n’est pas consultable.' }
       }
 
@@ -517,20 +591,9 @@ export const OUTILS: OutilAssistant[] = [
         : null
 
       if (!pet && terme) {
-        const trouves = (await OUTILS.find((o) => o.nom === 'patients')!.executer(
-          { vet, conversation },
-          { recherche: terme }
-        )) as { total: number; patients: any[] }
-
-        if (trouves.total === 0) return { propose: false, motif: `Aucun patient ne correspond à « ${terme} ».` }
-        if (trouves.total > 1) {
-          return {
-            propose: false,
-            motif: 'Plusieurs patients correspondent : demandez lequel.',
-            candidats: trouves.patients.map((p) => ({ nom: p.nom, proprietaire: p.proprietaire })),
-          }
-        }
-        pet = await scopedPets(vet.id).where('pets.name', trouves.patients[0].nom).first()
+        const resolu = await resoudrePatient(vet, terme)
+        if ('erreur' in resolu) return { propose: false, ...resolu.erreur }
+        pet = resolu.pet
       }
 
       if (!pet?.vetToken) return { propose: false, motif: 'Précisez de quel patient il s’agit.' }
