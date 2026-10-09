@@ -1120,11 +1120,17 @@ const openPatientModal = () => {
   if (!patientsLoaded.value) loadPatients()
 }
 
-// L'API ne rattache pas un patient après coup : si la discussion existe déjà,
-// on en ouvre une dédiée au patient plutôt que de perdre l'échange en cours.
+/**
+ * Rattache un dossier à la discussion en cours.
+ *
+ * Elle en ouvrait une nouvelle : on choisissait un patient et l'échange en
+ * cours disparaissait. Le serveur sait désormais rattacher après coup, donc le
+ * fil se poursuit, dossier en main.
+ */
 const choosePatient = async (patient: PatientSummary) => {
   if (attaching.value) return
 
+  // Discussion pas encore créée : le patient attend le premier message.
   if (!activeId.value) {
     draftPet.value = { name: patient.name, token: patient.vetToken }
     showPatientModal.value = false
@@ -1133,9 +1139,38 @@ const choosePatient = async (patient: PatientSummary) => {
   }
 
   attaching.value = true
+  actionError.value = ''
+
   try {
-    const created = await createConversation(patient.vetToken)
-    if (created) showPatientModal.value = false
+    const response = await api.patch<any>(
+      `/vet/assistant/conversations/${activeId.value}`,
+      { petToken: patient.vetToken },
+      { silent: true }
+    )
+
+    if (!response.success) {
+      actionError.value = response.message || "Le dossier n'a pas pu être rattaché."
+      return
+    }
+
+    const titre = response.data?.title ?? conversation.value?.title ?? ''
+
+    if (conversation.value) {
+      conversation.value.petName = response.data?.petName ?? patient.name
+      conversation.value.petToken = response.data?.petToken ?? patient.vetToken
+      conversation.value.title = titre
+    }
+
+    // La liste de gauche doit suivre, sinon elle annonce encore « discussion
+    // générale » pour un fil désormais rattaché.
+    const resume = conversations.value.find((c) => c.id === activeId.value)
+    if (resume) {
+      resume.title = titre
+      resume.petName = response.data?.petName ?? patient.name
+    }
+
+    showPatientModal.value = false
+    nextTick(() => composerEl.value?.focus())
   } finally {
     attaching.value = false
   }

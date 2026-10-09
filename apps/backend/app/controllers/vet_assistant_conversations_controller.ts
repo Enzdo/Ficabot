@@ -138,15 +138,57 @@ export default class VetAssistantConversationsController {
       return response.notFound({ success: false, message: 'Discussion introuvable' })
     }
 
+    const vet = auth.user as any
     const title = (request.input('title') ?? '').trim()
-    if (!title) {
+    const petToken = request.input('petToken')
+
+    /**
+     * Rattacher un dossier à une discussion déjà ouverte.
+     *
+     * Faute de ce chemin, l'écran créait une discussion neuve et l'échange en
+     * cours était abandonné : on choisissait un patient et on se retrouvait
+     * devant une page vide. Le fil est le même, il gagne simplement un dossier.
+     *
+     * `petToken: null` détache, pour revenir à une discussion générale.
+     */
+    if (petToken !== undefined) {
+      if (petToken === null || petToken === '') {
+        conversation.petId = null
+      } else {
+        const pet = await findScopedPetByToken(vet.id, petToken)
+        if (!pet) {
+          return response.notFound({
+            success: false,
+            message: 'Patient non trouvé ou accès révoqué',
+          })
+        }
+        conversation.petId = pet.id
+
+        // Le titre suit le dossier, sauf s'il a été écrit à la main : une
+        // discussion renommée par le praticien ne doit pas perdre son nom.
+        if (!title && conversation.title === 'Nouvelle discussion') {
+          conversation.title = `À propos de ${pet.name}`
+        }
+      }
+    }
+
+    if (title) conversation.title = title.slice(0, 120)
+
+    if (!title && petToken === undefined) {
       return response.badRequest({ success: false, message: 'Titre vide' })
     }
 
-    conversation.title = title.slice(0, 120)
     await conversation.save()
+    await conversation.load('pet')
 
-    return response.ok({ success: true, data: { title: conversation.title } })
+    return response.ok({
+      success: true,
+      data: {
+        title: conversation.title,
+        petName: conversation.pet?.name ?? null,
+        petToken: conversation.pet?.vetToken ?? null,
+      },
+    })
   }
 
   /** DELETE /vet/assistant/conversations/:id */
