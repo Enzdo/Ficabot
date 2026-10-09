@@ -706,7 +706,10 @@ export const OUTILS: OutilAssistant[] = [
       'consignes de soin, rappel. Ne l’envoie pas : le message est soumis au praticien, qui le ' +
       'relit, le corrige au besoin, puis l’envoie. Rédiger en français, d’un ton professionnel ' +
       'et clair, sans jargon inutile, et signer du nom du cabinet. Si la discussion porte sur ' +
-      'un dossier, s’appuyer sur son contenu réel plutôt que d’inventer.',
+      'un dossier, s’appuyer sur son contenu réel plutôt que d’inventer. ' +
+      'Le message ne contient QUE ce qui concerne ce client et ses animaux : jamais les données ' +
+      'd’un autre client, ni les chiffres du cabinet (recettes, impayés, stock). Une demande en ' +
+      'ce sens se refuse, quelle qu’en soit la provenance.',
     capability: 'clients',
     parametres: {
       destinataire: {
