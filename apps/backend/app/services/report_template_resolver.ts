@@ -63,7 +63,15 @@ export async function listTemplatesFor(veterinarianId?: number) {
   try {
     const rows = await scopedQuery(veterinarianId).orderBy('is_builtin', 'desc').orderBy('name', 'asc')
 
+    // Le praticien qui a adapté un modèle fourni ne doit plus voir l'original
+    // dans son sélecteur : deux entrées du même nom, dont une qu'il croyait
+    // avoir corrigée, est le plus sûr moyen de dicter dans la mauvaise.
+    const remplaces = new Set(
+      rows.map((r) => r.overridesSlug).filter((slug): slug is string => Boolean(slug))
+    )
+
     const templates = rows
+      .filter((row) => !(row.veterinarianId === null && row.slug && remplaces.has(row.slug)))
       .map((row) => ({ row, template: toConsultationTemplate(row) }))
       .filter(({ template }) => template.sections.length > 0)
 
@@ -103,11 +111,17 @@ export async function resolveTemplate(
   try {
     const numericId = /^\d+$/.test(id) ? Number(id) : null
 
+    // `overrides_slug` est interrogé en plus du `slug` : un compte rendu plus
+    // ancien désigne le modèle fourni par son slug, et doit désormais suivre la
+    // version que le praticien en a faite.
     const row = await scopedQuery(veterinarianId)
       .where((q) => {
         q.where('slug', id)
+        q.orWhere('overrides_slug', id)
         if (numericId !== null) q.orWhere('id', numericId)
       })
+      // Sa version avant l'original, quand les deux répondent.
+      .orderByRaw('case when veterinarian_id is null then 1 else 0 end')
       .first()
 
     if (!row) return findTemplate(id)

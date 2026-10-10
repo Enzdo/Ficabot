@@ -112,6 +112,7 @@
             <div class="mt-2 flex flex-wrap items-center gap-1.5">
               <span v-if="template.category" class="badge-accent">{{ template.category }}</span>
               <span v-if="template.builtin" class="badge-primary">Fourni</span>
+              <span v-else-if="template.adapte" class="badge-primary">Adapté</span>
             </div>
           </div>
 
@@ -182,6 +183,7 @@
               <div class="mt-2 flex flex-wrap items-center gap-1.5">
                 <span v-if="preview.category" class="badge-accent">{{ preview.category }}</span>
                 <span v-if="preview.builtin" class="badge-primary">Fourni</span>
+                <span v-else-if="preview.adapte" class="badge-primary">Adapté</span>
               </div>
             </div>
             <button type="button" class="btn-ghost shrink-0 px-2" aria-label="Fermer l'aperçu" @click="closePreview">
@@ -195,12 +197,20 @@
             {{ preview.description }}
           </p>
 
-          <!-- Un modèle fourni ne se modifie pas : on le dit avant que le bouton ne manque -->
+          <!-- Le modèle fourni est partagé par tous les cabinets. On annonce donc
+               ce que « Modifier » va faire, plutôt que de retirer le bouton. -->
           <p
             v-if="preview.builtin"
             class="mt-4 rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5 text-xs leading-relaxed text-surface-500 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-400"
           >
-            Ce modèle est fourni avec le produit&nbsp;: dupliquez-le pour l'adapter à votre façon de travailler.
+            Ce modèle est fourni avec le produit. En le modifiant, vous en obtenez votre version&nbsp;:
+            elle prendra sa place chez vous, sans rien changer pour les autres cabinets.
+          </p>
+          <p
+            v-else-if="preview.adapte"
+            class="mt-4 rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5 text-xs leading-relaxed text-surface-500 dark:border-surface-800 dark:bg-surface-900 dark:text-surface-400"
+          >
+            Votre version d'un modèle fourni. La retirer rétablit l'original.
           </p>
 
           <div class="mt-6">
@@ -240,9 +250,9 @@
               :disabled="duplicating"
               @click="askDelete(preview)"
             >
-              Supprimer
+              {{ preview.adapte ? 'Rétablir l’original' : 'Supprimer' }}
             </button>
-            <button v-if="!preview.builtin" type="button" class="btn-secondary" :disabled="duplicating" @click="openEdit(preview)">
+            <button type="button" class="btn-secondary" :disabled="duplicating" @click="openEdit(preview)">
               Modifier
             </button>
             <button type="button" class="btn-primary" :disabled="duplicating" :class="duplicating ? 'opacity-60 cursor-not-allowed' : ''" @click="duplicate(preview)">
@@ -401,9 +411,15 @@
       <div v-if="deleteTarget" class="modal-overlay z-[60]" role="dialog" aria-modal="true" aria-label="Confirmer la suppression" @click.self="closeDelete">
         <div class="ql-panel modal-panel max-w-md p-6">
           <h2 class="text-lg font-semibold tracking-tighter text-primary-700 dark:text-surface-50">
-            Supprimer ce modèle&nbsp;?
+            {{ deleteTarget.adapte ? 'Rétablir le modèle fourni ?' : 'Supprimer ce modèle ?' }}
           </h2>
-          <p class="mt-2 text-sm leading-relaxed text-surface-500 dark:text-surface-400">
+          <!-- Retirer une version adaptée ne détruit rien d'irremplaçable : le
+               modèle fourni reprend sa place. Le dire évite une hésitation. -->
+          <p v-if="deleteTarget.adapte" class="mt-2 text-sm leading-relaxed text-surface-500 dark:text-surface-400">
+            Vos modifications de «&nbsp;{{ deleteTarget.name }}&nbsp;» seront perdues et le modèle fourni
+            reprendra sa place. Les comptes rendus déjà rédigés ne sont pas touchés.
+          </p>
+          <p v-else class="mt-2 text-sm leading-relaxed text-surface-500 dark:text-surface-400">
             «&nbsp;{{ deleteTarget.name }}&nbsp;» sera retiré de votre bibliothèque. Les comptes rendus déjà
             rédigés avec ce modèle ne sont pas touchés. Cette action est définitive.
           </p>
@@ -425,7 +441,7 @@
               @click="confirmDelete"
             >
               <span v-if="deleting" class="animate-spin w-4 h-4 rounded-full border-2 border-white border-t-transparent"></span>
-              {{ deleting ? 'Suppression…' : 'Supprimer' }}
+              {{ deleting ? 'Retrait…' : deleteTarget.adapte ? 'Rétablir' : 'Supprimer' }}
             </button>
           </div>
         </div>
@@ -454,6 +470,8 @@ interface ReportTemplate {
   sections: TemplateSection[]
   sectionCount: number
   builtin: boolean
+  /** Version personnelle d'un modèle fourni, par opposition à un modèle créé de rien. */
+  adapte: boolean
   favorite: boolean
 }
 
@@ -523,6 +541,7 @@ const normalize = (raw: any): ReportTemplate => {
     sections,
     sectionCount: typeof raw?.sectionCount === 'number' ? raw.sectionCount : sections.length,
     builtin: Boolean(raw?.builtin),
+    adapte: Boolean(raw?.adapte),
     favorite: Boolean(raw?.favorite),
   }
 }
@@ -721,6 +740,7 @@ const duplicate = async (template: ReportTemplate) => {
 
 const formOpen = ref(false)
 const editingId = ref<number | null>(null)
+const editingBuiltin = ref(false)
 const isEditing = computed(() => editingId.value !== null)
 const saving = ref(false)
 const saveError = ref('')
@@ -755,6 +775,7 @@ const resetForm = () => {
 const openCreate = () => {
   closePreview()
   editingId.value = null
+  editingBuiltin.value = false
   saveError.value = ''
   resetForm()
   formOpen.value = true
@@ -762,6 +783,9 @@ const openCreate = () => {
 
 const openEdit = (template: ReportTemplate) => {
   editingId.value = template.id
+  // Modifier un modèle fourni ne le modifie pas : le serveur en fait une
+  // version personnelle. L'écran doit l'annoncer, puis le confirmer.
+  editingBuiltin.value = template.builtin
   saveError.value = ''
   form.name = template.name
   form.category = template.category ?? ''
@@ -777,6 +801,7 @@ const closeForm = () => {
   formOpen.value = false
   saveError.value = ''
   editingId.value = null
+  editingBuiltin.value = false
 }
 
 const addSection = () => {
@@ -834,9 +859,12 @@ const save = async () => {
     if (response.success && response.data) {
       const saved = normalize(response.data)
       const wasEditing = isEditing.value
+      const depuisFourni = editingBuiltin.value
       closeForm()
       if (wasEditing) {
-        flash.value = `« ${saved.name} » a été mis à jour.`
+        flash.value = depuisFourni
+          ? `Votre version de « ${saved.name} » remplace désormais le modèle fourni.`
+          : `« ${saved.name} » a été mis à jour.`
         await load()
       } else {
         await revealPersonal(`« ${saved.name} » a été ajouté à vos modèles personnels.`)
@@ -882,7 +910,9 @@ const confirmDelete = async () => {
     if (response.success) {
       closeDelete()
       closePreview()
-      flash.value = `« ${target.name} » a été supprimé.`
+      flash.value = target.adapte
+        ? `Le modèle fourni « ${target.name} » a repris sa place.`
+        : `« ${target.name} » a été supprimé.`
       await load()
     } else {
       deleteError.value = response.message || "Le modèle n'a pas pu être supprimé."

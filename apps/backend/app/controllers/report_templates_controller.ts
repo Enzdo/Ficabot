@@ -36,6 +36,14 @@ export default class ReportTemplatesController {
 
     let templates = await query
 
+    // Un modèle fourni que ce praticien a adapté laisse sa place à sa version :
+    // les afficher tous deux donnerait deux entrées du même nom, sans rien pour
+    // dire laquelle la dictée appliquera.
+    const remplaces = await this.slugsRemplaces(vet.id)
+    if (remplaces.size) {
+      templates = templates.filter((t) => !(t.veterinarianId === null && t.slug && remplaces.has(t.slug)))
+    }
+
     if (q) {
       templates = templates.filter(
         (t) =>
@@ -91,18 +99,29 @@ export default class ReportTemplatesController {
     return response.created({ success: true, data: this.present(template, false) })
   }
 
-  /** PUT /vet/templates/:id — les modèles fournis ne sont pas modifiables */
+  /**
+   * PUT /vet/templates/:id
+   *
+   * Modifier un modèle fourni ne le modifie pas : il est partagé par tous les
+   * cabinets. Le praticien obtient sa propre version, qui prend la place de
+   * l'original chez lui seul. Il n'a donc rien à dupliquer avant d'adapter —
+   * c'est le geste qu'on attend de lui, et le détour n'apprenait rien.
+   */
   async update({ params, request, response, auth }: HttpContext) {
     const vet = auth.user as any
-    const template = await ReportTemplate.query()
-      .where('id', params.id)
-      .where('veterinarianId', vet.id)
-      .first()
+    const cible = await this.findVisible(params.id, auth)
+
+    if (!cible) {
+      return response.notFound({ success: false, message: 'Modèle introuvable' })
+    }
+
+    const template =
+      cible.veterinarianId === vet.id ? cible : await this.versionPersonnelle(cible, vet.id)
 
     if (!template) {
-      return response.notFound({
+      return response.badRequest({
         success: false,
-        message: "Ce modèle est fourni avec le produit : dupliquez-le pour l'adapter.",
+        message: "Ce modèle ne peut pas être adapté : dupliquez-le pour l'ajuster.",
       })
     }
 
@@ -164,8 +183,11 @@ export default class ReportTemplatesController {
       })
     }
 
+    const slugRetabli = template.overridesSlug
     await template.delete()
-    return response.ok({ success: true, data: { deleted: true } })
+    // Le modèle fourni reparaît de lui-même : il n'avait jamais été touché,
+    // seulement masqué par la version du praticien.
+    return response.ok({ success: true, data: { deleted: true, restored: slugRetabli } })
   }
 
   /** POST /vet/templates/:id/favorite — bascule */
@@ -197,6 +219,63 @@ export default class ReportTemplatesController {
       created_at: new Date(),
     })
     return response.ok({ success: true, data: { favorite: true } })
+  }
+
+  /** Les modèles fournis que ce praticien a remplacés par sa propre version. */
+  private async slugsRemplaces(veterinarianId: number) {
+    const rows = await ReportTemplate.query()
+      .where('veterinarianId', veterinarianId)
+      .whereNotNull('overridesSlug')
+      .select('overrides_slug')
+
+    return new Set(rows.map((r) => r.overridesSlug as string))
+  }
+
+  /**
+   * La version personnelle d'un modèle fourni, créée au besoin.
+   *
+   * Rendue à l'identique au premier appel : la modification demandée s'applique
+   * ensuite dessus, si bien qu'adapter une seule rubrique ne fait pas perdre
+   * les autres. Renvoie `null` pour un modèle fourni sans `slug`, qu'on ne
+   * saurait pas retrouver pour le masquer.
+   */
+  private async versionPersonnelle(fourni: ReportTemplate, veterinarianId: number) {
+    if (!fourni.slug) return null
+
+    const existante = await ReportTemplate.query()
+      .where('veterinarianId', veterinarianId)
+      .where('overridesSlug', fourni.slug)
+      .first()
+
+    if (existante) return existante
+
+    const copie = await ReportTemplate.create({
+      veterinarianId,
+      name: fourni.name,
+      category: fourni.category,
+      description: fourni.description,
+      sections: fourni.sections,
+      isBuiltin: false,
+      overridesSlug: fourni.slug,
+    })
+
+    // Le favori suit la version : sans cela, l'onglet « Favoris » pointerait
+    // vers l'original désormais masqué, et la ligne y disparaîtrait.
+    const favori = await db
+      .from('report_template_favorites')
+      .where('veterinarian_id', veterinarianId)
+      .where('template_id', fourni.id)
+      .first()
+
+    if (favori) {
+      await db
+        .from('report_template_favorites')
+        .where('veterinarian_id', veterinarianId)
+        .where('template_id', fourni.id)
+        .update({ template_id: copie.id })
+    }
+
+    return copie
   }
 
   private async findVisible(id: string, auth: HttpContext['auth']) {
@@ -254,6 +333,8 @@ export default class ReportTemplatesController {
       sections,
       sectionCount: sections.length,
       builtin: Boolean(t.isBuiltin || t.veterinarianId === null),
+      /** Version adaptée d'un modèle fourni, par opposition à un modèle créé de rien. */
+      adapte: Boolean(t.overridesSlug),
       favorite,
     }
   }

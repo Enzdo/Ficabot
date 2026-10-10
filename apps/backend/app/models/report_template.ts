@@ -30,6 +30,13 @@ export default class ReportTemplate extends BaseModel {
   @column()
   declare isBuiltin: boolean
 
+  /**
+   * `slug` du modèle fourni dont cette ligne prend la place pour son praticien.
+   * Nul pour un modèle fourni comme pour un modèle créé de toutes pièces.
+   */
+  @column()
+  declare overridesSlug: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
